@@ -1,0 +1,81 @@
+<!-- public/offline.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paaṭha AI - Offline</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      text-align: center;
+      padding: 30px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      color: #555;
+    }
+    .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #2563eb;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📶</div>
+    <h1>You're offline</h1>
+    <p>It looks like you've lost your internet connection. Some features of Paaṭha AI are available offline, but you'll need to reconnect to access all functionality.</p>
+    <p>Check your network connection and try again.</p>
+    <button class="btn" onclick="tryReconnect()">Try Again</button>
+  </div>
+
+  <script>
+    function tryReconnect() {
+      // Try to reload the page
+      window.location.reload();
+    }
+    
+    // Listen for online events
+    window.addEventListener('online', function() {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env.local
+.env.*.local
+.Python
+env/
+paathanewENV/
+.paathanewENV/

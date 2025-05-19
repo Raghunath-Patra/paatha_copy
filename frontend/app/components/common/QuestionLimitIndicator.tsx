@@ -1,0 +1,108 @@
+// frontend/app/components/common/QuestionLimitIndicator.tsx
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getAuthHeaders } from '../../utils/auth';
+
+interface TokenStatus {
+  input_limit: number;
+  output_limit: number;
+  input_used: number;
+  output_used: number;
+  input_remaining: number;
+  output_remaining: number;
+  limit_reached: boolean;
+  questions_used_today: number;
+  plan_name: string;
+  display_name: string;
+}
+
+const QuestionLimitIndicator: React.FC = () => {
+  const [status, setStatus] = useState<TokenStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        setLoading(true);
+        const { headers, isAuthorized } = await getAuthHeaders();
+        
+        if (!isAuthorized) {
+          console.log('Not authorized to fetch token status');
+          return;
+        }
+        
+        const response = await fetch(`${API_URL}/api/user/token-status`, { headers });
+        
+        if (!response.ok) {
+          console.error('Failed to fetch token status', response.status, response.statusText);
+          return;
+        }
+        
+        const data = await response.json();
+        setStatus(data);
+      } catch (error) {
+        console.error('Error fetching token status:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchStatus();
+    
+    // Refresh status every minute
+    const intervalId = setInterval(fetchStatus, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, [API_URL]);
+  
+  if (loading || !status) return null;
+  
+  // Calculate percentage of usage
+  const calculateUsagePercentage = () => {
+    // Calculate based on tokens (whichever is higher percentage)
+    const inputPercentage = (status.input_used / status.input_limit) * 100;
+    const outputPercentage = (status.output_used / status.output_limit) * 100;
+    
+    // Use the higher percentage
+    return Math.min(100, Math.max(inputPercentage, outputPercentage));
+  };
+  
+  // Determine color based on usage percentage
+  const getBarColor = () => {
+    const percentage = calculateUsagePercentage();
+    if (percentage >= 80) return 'bg-red-500';
+    if (percentage >= 50) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+  
+  return (
+    <div className="bg-white rounded-md shadow-sm p-3 w-full">
+      <div className="space-y-2">
+        <div className="flex justify-between items-center text-sm mb-1">
+          <span className="text-gray-600">Today's Usage:</span>
+          <span className="font-medium">
+            {status.questions_used_today} questions
+          </span>
+        </div>
+        
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className={`h-2 rounded-full ${getBarColor()}`} 
+            style={{ width: `${calculateUsagePercentage()}%` }} 
+          />
+        </div>
+        
+        {status.limit_reached && (
+          <div className="text-xs text-red-600 font-medium">
+            Daily limit reached. Upgrade to Premium for more usage.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default QuestionLimitIndicator;

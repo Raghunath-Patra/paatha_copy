@@ -1,0 +1,155 @@
+/* globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+/* Base font sizes and spacing */
+:root {
+  --base-font-size: 16px;
+  --heading-font-size: 20px;
+  --question-font-size: 16px;
+  --metadata-font-size: 12px;
+  --spacing-unit: 16px;
+}
+
+/* Small mobile devices (less than 480px) */
+@media (max-width: 479px) {
+  :root {
+    --base-font-size: 14px;
+    --heading-font-size: 18px;
+    --question-font-size: 15px;
+    --metadata-font-size: 10px;
+    --spacing-unit: 12px;
+  }
+  
+  /* Reduce padding on question cards */
+  .question-card {
+    padding: 12px !important;
+  }
+  
+  /* Arrange metadata tags better on small screens */
+  .metadata-tags {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+  
+  /* Make option labels more compact */
+  .option-label {
+    padding: 8px !important;
+  }
+  
+  /* Fix chapter grid */
+  .chapter-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+/* Medium mobile devices (480px - 639px) */
+@media (min-width: 480px) and (max-width: 639px) {
+  :root {
+    --base-font-size: 15px;
+    --heading-font-size: 19px;
+    --question-font-size: 16px;
+    --metadata-font-size: 11px;
+    --spacing-unit: 14px;
+  }
+  
+  /* Adjust chapter grid for medium mobile */
+  .chapter-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+  }
+}
+
+/* Apply font sizes */
+body {
+  font-size: var(--base-font-size);
+}
+
+h1, h2, h3 {
+  font-size: var(--heading-font-size);
+}
+
+.question-text {
+  font-size: var(--question-font-size);
+}
+
+.metadata-tag {
+  font-size: var(--metadata-font-size);
+  padding: 2px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Fix spacing in question/answer layout */
+@media (max-width: 1023px) {
+  .question-answer-layout {
+    flex-direction: column;
+  }
+  
+  .question-container,
+  .answer-container {
+    width: 100% !important;
+  }
+}
+
+/* Ensure forms are always visible on screen */
+.answer-form {
+  position: relative;
+  padding-bottom: 60px;
+}
+
+.submit-button {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding-top: 8px;
+  margin-top: 16px;
+  z-index: 10;
+}
+
+/* Fix image preview */
+.image-preview {
+  max-height: 200px;
+  object-fit: contain;
+  width: auto;
+  margin: 0 auto;
+}
+
+@layer base {
+  :root {
+    --background: #fafafa;
+    --foreground: #171717;
+    --card: #ffffff;
+    --card-hover: #fafafa;
+    --primary: #41c1ba;
+    --primary-hover: #35a8a2;
+  }
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* Add to globals.css */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.5s ease-out forwards;
+}
