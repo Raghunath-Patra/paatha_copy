@@ -10,6 +10,7 @@ import InstallButton from '../common/InstallButton';
 
 const Navigation = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [menuHeight, setMenuHeight] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -18,6 +19,31 @@ const Navigation = () => {
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const { profile, logout, loading: authLoading, refreshSession } = useSupabaseAuth();
+
+  // Toggle menu and measure content height
+  const toggleMenu = useCallback(() => {
+    if (!isUserMenuOpen && menuContentRef.current) {
+      // When opening, measure content height first
+      const contentHeight = menuContentRef.current.scrollHeight;
+      setMenuHeight(contentHeight);
+    }
+    
+    setIsUserMenuOpen(prev => !prev);
+  }, [isUserMenuOpen]);
+
+  // Update height when menu state changes
+  useEffect(() => {
+    if (!isUserMenuOpen) {
+      // When closing, set height to 0
+      const timer = setTimeout(() => {
+        setMenuHeight(0);
+      }, 10); // Small delay to ensure the transition starts
+      return () => clearTimeout(timer);
+    } else if (menuContentRef.current) {
+      // When opening, set to content height
+      setMenuHeight(menuContentRef.current.scrollHeight);
+    }
+  }, [isUserMenuOpen]);
 
   // Safe navigation function - simplify to use direct URL changes for reliability
   const safeNavigate = useCallback((path: string) => {
@@ -78,7 +104,7 @@ const Navigation = () => {
         !menuRef.current.contains(event.target as Node) &&
         !avatarRef.current.contains(event.target as Node)
       ) {
-        setIsUserMenuOpen(false);
+        toggleMenu();
       }
     };
 
@@ -86,7 +112,7 @@ const Navigation = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, toggleMenu]);
 
   const handleRouteChange = useCallback((path: string) => {
     // Skip if already navigating
@@ -133,9 +159,11 @@ const Navigation = () => {
       <style jsx>{`
         .menu-container {
           overflow: hidden;
-          transition: max-height 0.5s ease;
-          max-height: ${isUserMenuOpen ? '1000px' : '0'};
+          transition: height 0.3s ease, opacity 0.3s ease;
+          height: ${menuHeight}px;
           opacity: ${isUserMenuOpen ? '1' : '0'};
+          visibility: ${menuHeight === 0 ? 'hidden' : 'visible'};
+          transform-origin: top right;
         }
       `}</style>
       <div className="relative z-50 flex items-center justify-end w-full gap-4">
@@ -149,7 +177,7 @@ const Navigation = () => {
         <div className="relative">
           <div 
             ref={avatarRef}
-            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            onClick={toggleMenu}
             className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium hover:bg-blue-600 cursor-pointer transition-colors"
           >
             {profile.full_name?.[0]?.toUpperCase() || '?'}
