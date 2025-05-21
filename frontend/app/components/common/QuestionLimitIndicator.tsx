@@ -34,7 +34,7 @@ const QuestionLimitIndicator: React.FC = () => {
           return;
         }
         
-        const response = await fetch(`${API_URL}/api/user/token-status`, { headers });
+        const response = await fetch(`${API_URL}/api/user/question-status`, { headers });
         
         if (!response.ok) {
           console.error('Failed to fetch token status', response.status, response.statusText);
