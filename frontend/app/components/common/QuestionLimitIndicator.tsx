@@ -18,15 +18,31 @@ interface TokenStatus {
 }
 
 const QuestionLimitIndicator: React.FC = () => {
-  const [status, setStatus] = useState<TokenStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize with default values instead of null
+  const [status, setStatus] = useState<TokenStatus>({
+    input_limit: 0,
+    output_limit: 0,
+    input_used: 0,
+    output_used: 0,
+    input_remaining: 0,
+    output_remaining: 0,
+    limit_reached: false,
+    questions_used_today: 0,
+    plan_name: '',
+    display_name: ''
+  });
+  
+  // Use isRefreshing instead of loading to indicate data refresh
+  const [isRefreshing, setIsRefreshing] = useState(true);
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
   useEffect(() => {
     const fetchStatus = async () => {
+      // Start refreshing but don't clear existing data
+      setIsRefreshing(true);
+      
       try {
-        setLoading(true);
         const { headers, isAuthorized } = await getAuthHeaders();
         
         if (!isAuthorized) {
@@ -40,14 +56,14 @@ const QuestionLimitIndicator: React.FC = () => {
           console.error('Failed to fetch token status', response.status, response.statusText);
           return;
         }
-        console.log('Token status response:', response);
+        
         const data = await response.json();
         console.log('Token status data:', data);
         setStatus(data);
       } catch (error) {
         console.error('Error fetching token status:', error);
       } finally {
-        setLoading(false);
+        setIsRefreshing(false);
       }
     };
     
@@ -59,7 +75,8 @@ const QuestionLimitIndicator: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [API_URL]);
   
-  if (loading || !status) return null;
+  // Never return null, always render the component
+  // The key change is removing this line: if (loading || !status) return null;
   
   // Calculate percentage of usage
   const calculateUsagePercentage = () => {
@@ -68,7 +85,7 @@ const QuestionLimitIndicator: React.FC = () => {
     const outputPercentage = (status.output_used / status.output_limit) * 100;
     
     // Use the higher percentage
-    return Math.min(100, Math.max(inputPercentage, outputPercentage));
+    return Math.min(100, Math.max(inputPercentage, outputPercentage) || 0); // Add fallback for NaN
   };
   
   // Determine color based on usage percentage
@@ -80,7 +97,7 @@ const QuestionLimitIndicator: React.FC = () => {
   };
   
   return (
-    <div className="bg-white rounded-md shadow-sm p-3 w-full">
+    <div className={`bg-white rounded-md shadow-sm p-3 w-full transition-opacity duration-300 ${isRefreshing ? 'opacity-70' : 'opacity-100'}`}>
       <div className="space-y-2">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm mb-1">
           <span className="text-gray-600">Today's usage:</span>
