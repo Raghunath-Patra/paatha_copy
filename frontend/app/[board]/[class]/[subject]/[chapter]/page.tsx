@@ -572,8 +572,8 @@ export default function ChapterPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 items-start">
-              <QuestionLimitIndicator />
               <Navigation />
+              <QuestionLimitIndicator />
             </div>
           </div>
 
