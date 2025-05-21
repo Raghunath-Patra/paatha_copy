@@ -133,7 +133,7 @@ const Navigation = () => {
       <style jsx>{`
         .menu-container {
           overflow: hidden;
-          transition: max-height 0.3s ease;
+          transition: max-height 0.5s ease;
           max-height: ${isUserMenuOpen ? '1000px' : '0'};
           opacity: ${isUserMenuOpen ? '1' : '0'};
         }
