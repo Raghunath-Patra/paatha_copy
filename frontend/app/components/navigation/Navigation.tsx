@@ -37,7 +37,7 @@ const Navigation = () => {
       // When closing, set height to 0
       const timer = setTimeout(() => {
         setMenuHeight(0);
-      }, 10); // Small delay to ensure the transition starts
+      }, 300); // Small delay to ensure the transition starts
       return () => clearTimeout(timer);
     } else if (menuContentRef.current) {
       // When opening, set to content height
