@@ -51,7 +51,7 @@ const Navigation = () => {
     if (!isUserMenuOpen) {
       setTimeout(() => {
         setIsMenuAnimating(false);
-      }, 200); // Match this timing with CSS transition duration
+      }, 1000); // Match this timing with CSS transition duration
     }
   }, [isUserMenuOpen, isMenuAnimating]);
 
@@ -159,7 +159,7 @@ const Navigation = () => {
         .menu-enter {
           opacity: 0;
           transform: translateY(-10px) scale(0.95);
-          transition: opacity 200ms ease, transform 200ms ease;
+          transition: opacity 1000ms ease, transform 1000ms ease;
         }
         
         .menu-enter-active {
@@ -170,7 +170,7 @@ const Navigation = () => {
         .menu-exit {
           opacity: 1;
           transform: translateY(0) scale(1);
-          transition: opacity 200ms ease, transform 200ms ease;
+          transition: opacity 1000ms ease, transform 1000ms ease;
         }
         
         .menu-exit-active {
