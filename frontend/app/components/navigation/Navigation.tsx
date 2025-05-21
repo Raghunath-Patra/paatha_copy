@@ -13,6 +13,7 @@ const Navigation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuContentRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
@@ -128,141 +129,151 @@ const Navigation = () => {
   if (!profile) return null;
 
   return (
-    <div className="relative z-50 flex items-center justify-end w-full gap-4">
-      {isNavigating && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-        </div>
-      )}
-      
-      <InstallButton />
-      <div className="relative">
-        <div 
-          ref={avatarRef}
-          onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-          className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium hover:bg-blue-600 cursor-pointer transition-colors"
-        >
-          {profile.full_name?.[0]?.toUpperCase() || '?'}
-        </div>
+    <>
+      <style jsx>{`
+        .menu-container {
+          overflow: hidden;
+          transition: max-height 0.3s ease;
+          max-height: ${isUserMenuOpen ? '1000px' : '0'};
+          opacity: ${isUserMenuOpen ? '1' : '0'};
+        }
+      `}</style>
+      <div className="relative z-50 flex items-center justify-end w-full gap-4">
+        {isNavigating && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+        
+        <InstallButton />
+        <div className="relative">
+          <div 
+            ref={avatarRef}
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium hover:bg-blue-600 cursor-pointer transition-colors"
+          >
+            {profile.full_name?.[0]?.toUpperCase() || '?'}
+          </div>
 
-        {isUserMenuOpen && (
           <div 
             ref={menuRef}
-            className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200"
+            className="menu-container absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200"
           >
-            <div className="px-4 py-3 border-b border-neutral-200">
-              <p className="text-sm font-medium text-neutral-900 truncate">
-                {profile.full_name}
-              </p>
-              {profile.board && (
-                <p className="text-xs text-neutral-500 truncate uppercase">
-                  {profile.board} - Class {profile.class_level}
+            <div ref={menuContentRef}>
+              <div className="px-4 py-3 border-b border-neutral-200">
+                <p className="text-sm font-medium text-neutral-900 truncate">
+                  {profile.full_name}
                 </p>
-              )}
-            </div>
-            <div className="py-1">
-              <button
-                onClick={() => window.location.href = '/profile'}
-                className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
-              >
-                Settings
-              </button>
-              
-              {/* Upgrade button for non-premium users */}
-              {!profile?.is_premium && (
+                {profile.board && (
+                  <p className="text-xs text-neutral-500 truncate uppercase">
+                    {profile.board} - Class {profile.class_level}
+                  </p>
+                )}
+              </div>
+              <div className="py-1">
                 <button
-                  onClick={() => window.location.href = '/upgrade'}
-                  className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                  onClick={() => window.location.href = '/profile'}
+                  className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
                 >
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    Upgrade to Premium
-                  </div>
+                  Settings
                 </button>
-              )}
-              
-              {/* Premium status indicator for premium users */}
-              {profile?.is_premium && (
-                <div className="block w-full text-left px-4 py-2 text-sm text-green-600 bg-green-50">
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Premium Member
+                
+                {/* Upgrade button for non-premium users */}
+                {!profile?.is_premium && (
+                  <button
+                    onClick={() => window.location.href = '/upgrade'}
+                    className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                  >
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      Upgrade to Premium
+                    </div>
+                  </button>
+                )}
+                
+                {/* Premium status indicator for premium users */}
+                {profile?.is_premium && (
+                  <div className="block w-full text-left px-4 py-2 text-sm text-green-600 bg-green-50">
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Premium Member
+                    </div>
                   </div>
+                )}
+                
+                {/* Daily Challenge link - ADDED NEW ITEM HERE */}
+                <div className="border-t border-neutral-200 pt-1">
+                  <button
+                    onClick={() => window.location.href = '/try'}
+                    className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                  >
+                    🔥 Daily Challenge
+                  </button>
                 </div>
-              )}
-              
-              {/* Daily Challenge link - ADDED NEW ITEM HERE */}
-              <div className="border-t border-neutral-200 pt-1">
-                <button
-                  onClick={() => window.location.href = '/try'}
-                  className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
-                >
-                  🔥 Daily Challenge
-                </button>
-              </div>
-              
-              {/* Core Links */}
-              <div className="border-t border-neutral-200 pt-1">
-                <button
-                  onClick={() => window.location.href = '/pricing'}
-                  className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
-                >
-                  Pricing
-                </button>
-                <button
-                  onClick={() => window.location.href = '/contact'}
-                  className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
-                >
-                  Contact Us
-                </button>
-              </div>
-              
-              {/* Legal links */}
-              <div className="border-t border-neutral-200 pt-1">
-                <button
-                  onClick={() => window.location.href = '/about'}
-                  className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
-                >
-                  About Us
-                </button>
-                <button
-                  onClick={() => window.location.href = '/privacy'}
-                  className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
-                >
-                  Privacy Policy
-                </button>
-                <button
-                  onClick={() => window.location.href = '/terms'}
-                  className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
-                >
-                  Terms & Conditions
-                </button>
-                <button
-                  onClick={() => window.location.href = '/refund'}
-                  className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
-                >
-                  Refund Policy
-                </button>
-              </div>
-              
-              {/* Sign Out */}
-              <div className="border-t border-neutral-200 pt-1">
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-neutral-900 hover:bg-neutral-100"
-                >
-                  Sign Out
-                </button>
+                
+                {/* Core Links */}
+                <div className="border-t border-neutral-200 pt-1">
+                  <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                  >
+                    Pricing
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/contact'}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                  >
+                    Contact Us
+                  </button>
+                </div>
+                
+                {/* Legal links */}
+                <div className="border-t border-neutral-200 pt-1">
+                  <button
+                    onClick={() => window.location.href = '/about'}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                  >
+                    About Us
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/privacy'}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                  >
+                    Privacy Policy
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/terms'}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                  >
+                    Terms & Conditions
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/refund'}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                  >
+                    Refund Policy
+                  </button>
+                </div>
+                
+                {/* Sign Out */}
+                <div className="border-t border-neutral-200 pt-1">
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-neutral-900 hover:bg-neutral-100"
+                  >
+                    Sign Out
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
