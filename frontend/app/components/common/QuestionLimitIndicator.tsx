@@ -82,8 +82,8 @@ const QuestionLimitIndicator: React.FC = () => {
   return (
     <div className="bg-white rounded-md shadow-sm p-3 w-full">
       <div className="space-y-2">
-        <div className="flex justify-between items-center text-sm mb-1">
-          <span className="text-gray-600">Today's Usage:</span>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm mb-1">
+          <span className="text-gray-600">Today's usage:</span>
           <span className="font-medium">
             {status.questions_used_today} questions
           </span>
