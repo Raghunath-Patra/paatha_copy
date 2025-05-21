@@ -17,6 +17,21 @@ interface TokenStatus {
   display_name: string;
 }
 
+// Define the keyframes animation
+const pulseAnimation = `
+@keyframes pulse-animation {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+`;
+
 const QuestionLimitIndicator: React.FC = () => {
   // Initialize with default values instead of null
   const [status, setStatus] = useState<TokenStatus>({
@@ -36,6 +51,9 @@ const QuestionLimitIndicator: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(true);
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  
+  // Add a new state to track when data has been updated
+  const [recentlyUpdated, setRecentlyUpdated] = useState(false);
   
   useEffect(() => {
     const fetchStatus = async () => {
@@ -59,6 +77,15 @@ const QuestionLimitIndicator: React.FC = () => {
         
         const data = await response.json();
         console.log('Token status data:', data);
+        
+        // Only trigger animation if data has changed
+        if (data.questions_used_today !== status.questions_used_today || 
+            data.input_used !== status.input_used ||
+            data.output_used !== status.output_used) {
+          setRecentlyUpdated(true);
+          setTimeout(() => setRecentlyUpdated(false), 2000); // Reset after animation duration
+        }
+        
         setStatus(data);
       } catch (error) {
         console.error('Error fetching token status:', error);
@@ -97,29 +124,41 @@ const QuestionLimitIndicator: React.FC = () => {
   };
   
   return (
-    <div className={`bg-white rounded-md shadow-sm p-3 w-full transition-opacity duration-300 ${isRefreshing ? 'opacity-70' : 'opacity-100'}`}>
-      <div className="space-y-2">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs mb-1">
-          <span className="text-gray-600 whitespace-nowrap">Today's usage:</span>
-          <span className="font-medium mt-0.5 sm:mt-0">
-            {status.questions_used_today} questions
-          </span>
-        </div>
-        
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className={`h-2 rounded-full ${getBarColor()}`} 
-            style={{ width: `${calculateUsagePercentage()}%` }} 
-          />
-        </div>
-        
-        {status.limit_reached && (
-          <div className="text-xs text-red-600 font-medium">
-            Daily limit reached. Upgrade to Premium for more usage.
+    <>
+      <style jsx>{`
+        @keyframes pulse-animation {
+          0% { opacity: 0.7; }
+          50% { opacity: 1; }
+          100% { opacity: 0.7; }
+        }
+        .pulse-bar {
+          animation: pulse-animation 1.5s infinite;
+        }
+      `}</style>
+      <div className={`bg-white rounded-md shadow-sm p-3 w-full transition-opacity duration-300 ${isRefreshing ? 'opacity-70' : 'opacity-100'}`}>
+        <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs mb-1">
+            <span className="text-gray-600 whitespace-nowrap">Today's usage:</span>
+            <span className={`font-medium mt-0.5 sm:mt-0 transition-all duration-300 ${recentlyUpdated ? 'text-blue-600 scale-110' : ''}`}>
+              {status.questions_used_today} questions
+            </span>
           </div>
-        )}
+          
+          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div 
+              className={`h-2 rounded-full ${getBarColor()} transition-all duration-1000 ease-out ${recentlyUpdated ? 'pulse-bar' : ''}`}
+              style={{ width: `${calculateUsagePercentage()}%` }} 
+            />
+          </div>
+          
+          {status.limit_reached && (
+            <div className="text-xs text-red-600 font-medium">
+              Daily limit reached. Upgrade to Premium for more usage.
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
