@@ -42,6 +42,7 @@ const QuestionLimitIndicator: React.FC = () => {
         }
         console.log('Token status response:', response);
         const data = await response.json();
+        console.log('Token status data:', data);
         setStatus(data);
       } catch (error) {
         console.error('Error fetching token status:', error);
