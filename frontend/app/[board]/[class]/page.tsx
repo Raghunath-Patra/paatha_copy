@@ -4,9 +4,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Navigation from '../../../components/navigation/Navigation';
-import { getAuthHeaders } from '../../../utils/auth';
-import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
+import Navigation from '../../components/navigation/Navigation';
+import { getAuthHeaders } from '../../utils/auth';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { ChevronDown, BarChart3, TrendingUp, BookOpen } from 'lucide-react';
 
 // Define a mapping for subject codes to user-friendly names
