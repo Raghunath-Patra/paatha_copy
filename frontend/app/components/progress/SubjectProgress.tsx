@@ -4,6 +4,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthHeaders } from '../../utils/auth';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface ChapterProgress {
   attempted: number;
@@ -34,27 +35,8 @@ interface Props {
 }
 
 export default function SubjectProgress({ board, classLevel, subjects, progress }: Props) {
-  const [hoveredChapter, setHoveredChapter] = useState<{subject: string, chapter: Chapter} | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const [isMobile, setIsMobile] = useState(false);
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const router = useRouter();
-  const tooltipRef = useRef<HTMLDivElement>(null);
-
-  // Check if we're on mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // Check initially
-    checkMobile();
-    
-    // Listen for resize events
-    window.addEventListener('resize', checkMobile);
-    
-    // Cleanup
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Add debugging logs
   console.log('SubjectProgress props:', { board, classLevel, subjects, progress });
@@ -66,7 +48,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
     return 'bg-red-500';
   };
 
-  const getProgressHeight = (attempted: number, total: number) => {
+  const getProgressWidth = (attempted: number, total: number) => {
     if (total === 0) {
       // If there are attempts but no questions found, show full progress
       if (attempted > 0) return '100%';
@@ -208,157 +190,106 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
     }
   };
 
-  // Improved tooltip positioning that takes screen boundaries into account
-  const handleMouseEnter = (
-    event: React.MouseEvent, 
-    subject: string, 
-    chapter: Chapter
-  ) => {
-    // Capture the target element's bounding rectangle
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    
-    // Get window dimensions
-    const windowWidth = window.innerWidth;
-    
-    // Calculate initial position (centered above the element)
-    let x = rect.left + (rect.width / 2);
-    let y = rect.top - 10;
-    
-    // Store position
-    setTooltipPosition({ x, y });
-    setHoveredChapter({ subject, chapter });
+  const toggleChapterExpansion = (subject: string, chapterNum: number) => {
+    const key = `${subject}-${chapterNum}`;
+    setExpandedChapters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
   };
 
-  // Effect to adjust tooltip position if it would be cut off
-  useEffect(() => {
-    if (hoveredChapter && tooltipRef.current) {
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      
-      let newX = tooltipPosition.x;
-      let newY = tooltipPosition.y;
-      
-      // Adjust horizontal position if tooltip would go off-screen
-      if (tooltipRect.right > windowWidth - 20) {
-        // If on mobile, center the tooltip
-        if (isMobile) {
-          newX = windowWidth / 2;
-        } else {
-          // If not mobile, shift it left
-          newX = windowWidth - tooltipRect.width / 2 - 20;
-        }
-      } else if (tooltipRect.left < 20) {
-        newX = tooltipRect.width / 2 + 20;
-      }
-      
-      // Adjust vertical position if needed
-      if (tooltipRect.top < 20) {
-        // If tooltip would go above screen, position it below the element
-        newY = tooltipRect.height + 30;
-      }
-      
-      // Update position if changed
-      if (newX !== tooltipPosition.x || newY !== tooltipPosition.y) {
-        setTooltipPosition({ x: newX, y: newY });
-      }
-    }
-  }, [hoveredChapter, isMobile, tooltipPosition]);
-
-  // Get a className for the tooltip that respects screen boundaries
-  const getTooltipClassName = () => {
-    let className = "fixed z-[100] w-64 pointer-events-none transform -translate-y-full";
-    
-    // On mobile, center the tooltip and make it wider
-    if (isMobile) {
-      className = "fixed z-[100] w-[85vw] max-w-md pointer-events-none transform -translate-y-full -translate-x-1/2";
-    } else {
-      className = "fixed z-[100] w-64 pointer-events-none transform -translate-y-full -translate-x-1/2";
-    }
-    
-    return className;
+  const isChapterExpanded = (subject: string, chapterNum: number) => {
+    return expandedChapters.has(`${subject}-${chapterNum}`);
   };
 
   return (
-    <div className="space-y-6 pb-6 relative overflow-visible">
+    <div className="space-y-6 pb-6">
       {subjects.map((subject) => (
-        <div key={subject.name} className="bg-white rounded-lg p-4 shadow-sm relative overflow-visible">
-          <div className={`flex ${isMobile ? 'flex-col items-center' : 'items-start gap-8'}`}>
-            <h2 className={`font-medium ${isMobile ? 'text-xl mb-4 text-center' : 'text-lg w-48 pt-2'}`}>
-              {subject.name}
-            </h2>
-            
-            <div className={`${isMobile ? 'w-full' : 'flex-1'} relative overflow-visible`}>
-              <div className="text-sm font-medium text-gray-600 mb-3 text-center">Chapters</div>
-              <div className={`flex flex-wrap gap-3 ${isMobile ? 'justify-center' : ''}`}>
-                {subject.chapters.map((chapter) => {
-                  const chapterProgress = getChapterProgress(subject.name, chapter.number);
+        <div key={subject.name} className="bg-white rounded-lg p-6 shadow-sm">
+          <h2 className="text-xl font-medium mb-4 text-gray-800">
+            {subject.name}:
+          </h2>
+          
+          <div className="space-y-3">
+            {subject.chapters.map((chapter) => {
+              const chapterProgress = getChapterProgress(subject.name, chapter.number);
+              const isExpanded = isChapterExpanded(subject.name, chapter.number);
 
-                  return (
+              return (
+                <div key={chapter.number} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
                     <div 
-                      key={chapter.number}
-                      className="relative w-14 h-20 overflow-visible z-10"
-                      onMouseEnter={(e) => handleMouseEnter(e, subject.name, chapter)}
-                      onMouseLeave={() => setHoveredChapter(null)}
+                      className="flex-1 cursor-pointer"
                       onClick={() => handleChapterClick(subject.name, chapter.number)}
                     >
-                      <div className="absolute inset-0 bg-gray-100 rounded cursor-pointer 
-                                  hover:bg-gray-50 transition-colors border border-gray-200">
+                      <div className="flex items-center mb-2">
+                        <span className="text-gray-600 text-sm font-medium mr-2">
+                          {chapter.number}.
+                        </span>
+                        <span className="text-gray-800 font-medium">
+                          {chapter.name}
+                        </span>
+                      </div>
+                      
+                      {/* Horizontal Progress Bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className={`absolute bottom-0 w-full transition-all duration-300 ${
+                          className={`h-2 rounded-full transition-all duration-300 ${
                             getProgressColor(chapterProgress.averageScore)}`}
                           style={{ 
-                            height: getProgressHeight(chapterProgress.attempted, chapterProgress.total),
-                            opacity: 0.7
+                            width: getProgressWidth(chapterProgress.attempted, chapterProgress.total),
+                            opacity: 0.8
                           }}
                         />
-                        <div className="absolute inset-0 flex items-center justify-center text-sm font-medium">
-                          {chapter.number}
+                      </div>
+                    </div>
+                    
+                    {/* Dropdown Arrow */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleChapterExpansion(subject.name, chapter.number);
+                      }}
+                      className="ml-4 p-1 hover:bg-gray-200 rounded-full transition-colors"
+                    >
+                      {isExpanded ? (
+                        <ChevronDown size={20} className="text-gray-600" />
+                      ) : (
+                        <ChevronRight size={20} className="text-gray-600" />
+                      )}
+                    </button>
+                  </div>
+                  
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 text-sm text-gray-600">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="font-medium">Progress:</span>
+                          <span className="ml-2">
+                            {chapterProgress.attempted}/{Math.max(chapterProgress.attempted, chapterProgress.total)} questions
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Average Score:</span>
+                          <span className="ml-2">
+                            {chapterProgress.averageScore.toFixed(1)}/10
+                          </span>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
-      
-      {/* Tooltip - repositioned for visibility */}
-      {hoveredChapter && (
-        <div 
-          ref={tooltipRef}
-          className={getTooltipClassName()}
-          style={{ 
-            left: `${tooltipPosition.x}px`,
-            top: `${tooltipPosition.y}px`
-          }}>
-          <div className="bg-gray-800 text-white rounded-lg p-3 shadow-lg">
-            <p className="font-medium text-sm break-words">
-              Chapter {hoveredChapter.chapter.number}: {hoveredChapter.chapter.name}
-            </p>
-            <p className="text-xs mt-1">
-              {(() => {
-                const chapterProgress = getChapterProgress(
-                  hoveredChapter.subject, 
-                  hoveredChapter.chapter.number
-                );
-                return (
-                  <>
-                    Progress: {chapterProgress.attempted}/{Math.max(chapterProgress.attempted, chapterProgress.total)} questions
-                    <br />
-                    Average Score: {chapterProgress.averageScore.toFixed(1)}/10
-                  </>
-                );
-              })()}
-            </p>
-            <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-full">
-              <div className="border-4 border-transparent border-t-gray-800" />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
