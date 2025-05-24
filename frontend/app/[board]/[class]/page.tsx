@@ -38,6 +38,15 @@ const CLASS_DISPLAY_NAMES: Record<string, string> = {
   'puc-2': 'PUC-II'
 };
 
+// Cache configuration
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+interface CachedData {
+  subjects: Subject[];
+  progress: any;
+  timestamp: number;
+}
+
 export default function ClassPage() {
   const params = useParams();
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -49,8 +58,98 @@ export default function ClassPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
+  // Generate cache key based on board and class
+  const getCacheKey = (board: string, classLevel: string) => {
+    return `subjects_${board}_${classLevel}`;
+  };
+  
+  // Get cached data if available and not expired
+  const getCachedData = (board: string, classLevel: string): { subjects: Subject[], progress: any } | null => {
+    try {
+      const cacheKey = getCacheKey(board, classLevel);
+      const cached = sessionStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const parsedCache: CachedData = JSON.parse(cached);
+        const now = Date.now();
+        
+        // Check if cache is still valid (not expired)
+        if (now - parsedCache.timestamp < CACHE_DURATION) {
+          console.log('Using cached subjects and progress data');
+          return { 
+            subjects: parsedCache.subjects, 
+            progress: parsedCache.progress || {} 
+          };
+        } else {
+          // Cache expired, remove it
+          sessionStorage.removeItem(cacheKey);
+          console.log('Cache expired, removing cached data');
+        }
+      }
+    } catch (error) {
+      console.warn('Error reading cache:', error);
+      // If there's an error reading cache, clear it
+      try {
+        const cacheKey = getCacheKey(board, classLevel);
+        sessionStorage.removeItem(cacheKey);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }
+    
+    return null;
+  };
+  
+  // Save data to cache
+  const setCachedData = (board: string, classLevel: string, subjects: Subject[], progress: any = {}) => {
+    try {
+      const cacheKey = getCacheKey(board, classLevel);
+      const cacheData: CachedData = {
+        subjects,
+        progress,
+        timestamp: Date.now()
+      };
+      
+      sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      console.log('Subjects and progress data cached successfully');
+    } catch (error) {
+      console.warn('Error caching data:', error);
+      // If storage is full or there's another error, continue without caching
+    }
+  };
+  
+  // Clear all cached data (useful for logout or when switching users)
+  const clearAllCache = () => {
+    try {
+      // Clear all cache keys (subjects with progress)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('subjects_')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => {
+        sessionStorage.removeItem(key);
+      });
+      
+      console.log('All cache cleared');
+    } catch (error) {
+      console.warn('Error clearing cache:', error);
+    }
+  };
+  
+  // Clear cache when user changes or logs out
   useEffect(() => {
-    const fetchData = async () => {
+    // If no profile (user logged out), clear cache
+    if (!authLoading && !profile) {
+      clearAllCache();
+    }
+  }, [profile, authLoading]);
+  
+  useEffect(() => {
+    const fetchSubjects = async () => {
       try {
         if (authLoading) return;
         if (!profile) {
@@ -59,10 +158,22 @@ export default function ClassPage() {
           return;
         }
 
+        const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
+        const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
+        
+        // Check cache first
+        const cachedData = getCachedData(board, classLevel);
+        if (cachedData) {
+          setSubjects(cachedData.subjects);
+          setProgress(cachedData.progress);
+          setLoading(false);
+          return; // Use cached data, no need to fetch
+        }
+
         setLoading(true);
         setError(null);
 
-        console.log('Fetching data for:', params);
+        console.log('Fetching subjects for:', params);
         const authHeaders = await getAuthHeaders();
         if (!authHeaders.isAuthorized) {
           console.log('No auth headers, redirecting to login');
@@ -70,7 +181,7 @@ export default function ClassPage() {
           return;
         }
 
-        // Fetch subjects
+        // Only fetch subjects list (without chapters)
         const subjectsResponse = await fetch(
           `${API_URL}/api/subjects/${params.board}/${params.class}`,
           { headers: authHeaders.headers }
@@ -82,9 +193,12 @@ export default function ClassPage() {
 
         const subjectsData = await subjectsResponse.json();
         console.log('Fetched subjects:', subjectsData);
-        setSubjects(subjectsData.subjects);
-
-        // Fetch progress
+        
+        // Keep the full subject data structure (with chapters)
+        setSubjects(subjectsData.subjects || []);
+        
+        // Fetch progress data
+        let progressData = {};
         try {
           const progressResponse = await fetch(
             `${API_URL}/api/progress/user/${params.board}/${params.class}`,
@@ -92,27 +206,149 @@ export default function ClassPage() {
           );
 
           if (progressResponse.ok) {
-            const progressData = await progressResponse.json();
-            console.log('Fetched progress:', progressData);
-            setProgress(progressData.progress || {});
+            const progressResponse_data = await progressResponse.json();
+            console.log('Fetched progress:', progressResponse_data);
+            progressData = progressResponse_data.progress || {};
+            setProgress(progressData);
           }
         } catch (progressError) {
           console.warn('Progress fetch error:', progressError);
           setProgress({});
         }
+        
+        // Cache the fetched data (both subjects and progress)
+        setCachedData(board, classLevel, subjectsData.subjects || [], progressData);
 
       } catch (error) {
-        console.error('Error fetching data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load data');
+        console.error('Error fetching subjects:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load subjects');
       } finally {
         setLoading(false);
       }
     };
 
     if (params.board && params.class) {
-      fetchData();
+      fetchSubjects();
     }
   }, [API_URL, params.board, params.class, router, profile, authLoading]);
+
+  // Function to fetch chapters for a specific subject (with caching)
+  const fetchSubjectChapters = async (subjectCode: string) => {
+    try {
+      // Check cache first
+      const chaptersCacheKey = `chapters_${board}_${classLevel}_${subjectCode}`;
+      try {
+        const cachedChapters = sessionStorage.getItem(chaptersCacheKey);
+        if (cachedChapters) {
+          const parsedCache = JSON.parse(cachedChapters);
+          const now = Date.now();
+          
+          if (now - parsedCache.timestamp < CACHE_DURATION) {
+            console.log('Using cached chapters data for:', subjectCode);
+            return parsedCache.chapters;
+          } else {
+            sessionStorage.removeItem(chaptersCacheKey);
+          }
+        }
+      } catch (cacheError) {
+        console.warn('Error reading chapters cache:', cacheError);
+      }
+
+      const authHeaders = await getAuthHeaders();
+      if (!authHeaders.isAuthorized) {
+        router.push('/login');
+        return null;
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/subjects/${params.board}/${params.class}/${subjectCode}/chapters`,
+        { headers: authHeaders.headers }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch chapters');
+      }
+
+      const data = await response.json();
+      
+      // Cache the chapters data
+      try {
+        const cacheData = {
+          chapters: data.chapters,
+          timestamp: Date.now()
+        };
+        sessionStorage.setItem(chaptersCacheKey, JSON.stringify(cacheData));
+        console.log('Chapters data cached for:', subjectCode);
+      } catch (cacheError) {
+        console.warn('Error caching chapters:', cacheError);
+      }
+      
+      return data.chapters;
+    } catch (error) {
+      console.error('Error fetching chapters:', error);
+      return null;
+    }
+  };
+
+  // Function to fetch progress for a specific subject (with caching)
+  const fetchSubjectProgress = async (subjectCode: string) => {
+    try {
+      // Check cache first
+      const progressCacheKey = `progress_${board}_${classLevel}_${subjectCode}`;
+      try {
+        const cachedProgress = sessionStorage.getItem(progressCacheKey);
+        if (cachedProgress) {
+          const parsedCache = JSON.parse(cachedProgress);
+          const now = Date.now();
+          
+          // Use shorter cache duration for progress (5 minutes) since it changes more frequently
+          const PROGRESS_CACHE_DURATION = 5 * 60 * 1000;
+          
+          if (now - parsedCache.timestamp < PROGRESS_CACHE_DURATION) {
+            console.log('Using cached progress data for:', subjectCode);
+            return parsedCache.progress;
+          } else {
+            sessionStorage.removeItem(progressCacheKey);
+          }
+        }
+      } catch (cacheError) {
+        console.warn('Error reading progress cache:', cacheError);
+      }
+
+      const authHeaders = await getAuthHeaders();
+      if (!authHeaders.isAuthorized) {
+        return {};
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/progress/user/${params.board}/${params.class}/${subjectCode}`,
+        { headers: authHeaders.headers }
+      );
+
+      let progressData = {};
+      if (response.ok) {
+        const data = await response.json();
+        progressData = data.progress || {};
+        
+        // Cache the progress data
+        try {
+          const cacheData = {
+            progress: progressData,
+            timestamp: Date.now()
+          };
+          sessionStorage.setItem(progressCacheKey, JSON.stringify(cacheData));
+          console.log('Progress data cached for:', subjectCode);
+        } catch (cacheError) {
+          console.warn('Error caching progress:', cacheError);
+        }
+      }
+      
+      return progressData;
+    } catch (error) {
+      console.warn('Progress fetch error for subject:', subjectCode, error);
+      return {};
+    }
+  };
 
   const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
   const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
