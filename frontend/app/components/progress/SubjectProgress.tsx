@@ -217,7 +217,7 @@ export default function SubjectProgress({
                 ) : subjectData?.chapters ? (
                   subjectData.chapters.map((chapter) => {
                     const chapterProgress = getChapterProgress(subject.code, chapter.number);
-                    const chapterExpanded = isChapterExpanded(subject.code, chapter.number);
+                    const isChapterExpanded = isChapterExpanded(subject.code, chapter.number);
 
                     return (
                       <div key={chapter.number} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
@@ -256,7 +256,7 @@ export default function SubjectProgress({
                             }}
                             className="ml-4 p-1 hover:bg-gray-200 rounded-full transition-colors"
                           >
-                            {chapterExpanded ? (
+                            {isChapterExpanded ? (
                               <ChevronDown size={16} className="text-gray-600" />
                             ) : (
                               <ChevronRight size={16} className="text-gray-600" />
@@ -265,7 +265,7 @@ export default function SubjectProgress({
                         </div>
                         
                         {/* Chapter Expanded Details */}
-                        {chapterExpanded && (
+                        {isChapterExpanded && (
                           <div className="mt-3 pt-3 border-t border-gray-200 text-sm text-gray-600">
                             <div className="grid grid-cols-2 gap-4">
                               <div>

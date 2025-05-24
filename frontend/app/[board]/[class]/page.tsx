@@ -12,7 +12,11 @@ import { Home } from 'lucide-react';
 
 interface Subject {
   name: string;
-  code: string;
+  code: string; // Make code required
+  chapters: Array<{
+    number: number;
+    name: string;
+  }>;
 }
 
 // Define a mapping for better display names
@@ -37,6 +41,7 @@ const CLASS_DISPLAY_NAMES: Record<string, string> = {
 export default function ClassPage() {
   const params = useParams();
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [progress, setProgress] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -45,7 +50,7 @@ export default function ClassPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchData = async () => {
       try {
         if (authLoading) return;
         if (!profile) {
@@ -57,7 +62,7 @@ export default function ClassPage() {
         setLoading(true);
         setError(null);
 
-        console.log('Fetching subjects for:', params);
+        console.log('Fetching data for:', params);
         const authHeaders = await getAuthHeaders();
         if (!authHeaders.isAuthorized) {
           console.log('No auth headers, redirecting to login');
@@ -65,7 +70,7 @@ export default function ClassPage() {
           return;
         }
 
-        // Only fetch subjects list (without chapters)
+        // Fetch subjects
         const subjectsResponse = await fetch(
           `${API_URL}/api/subjects/${params.board}/${params.class}`,
           { headers: authHeaders.headers }
@@ -77,77 +82,37 @@ export default function ClassPage() {
 
         const subjectsData = await subjectsResponse.json();
         console.log('Fetched subjects:', subjectsData);
-        
-        // Extract only subject names and codes, no chapters
-        const subjectsOnly = subjectsData.subjects.map((subject: any) => ({
-          name: subject.name,
-          code: subject.code
-        }));
-        
-        setSubjects(subjectsOnly);
+        setSubjects(subjectsData.subjects);
+
+        // Fetch progress
+        try {
+          const progressResponse = await fetch(
+            `${API_URL}/api/progress/user/${params.board}/${params.class}`,
+            { headers: authHeaders.headers }
+          );
+
+          if (progressResponse.ok) {
+            const progressData = await progressResponse.json();
+            console.log('Fetched progress:', progressData);
+            setProgress(progressData.progress || {});
+          }
+        } catch (progressError) {
+          console.warn('Progress fetch error:', progressError);
+          setProgress({});
+        }
 
       } catch (error) {
-        console.error('Error fetching subjects:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load subjects');
+        console.error('Error fetching data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
     if (params.board && params.class) {
-      fetchSubjects();
+      fetchData();
     }
   }, [API_URL, params.board, params.class, router, profile, authLoading]);
-
-  // Function to fetch chapters for a specific subject
-  const fetchSubjectChapters = async (subjectCode: string) => {
-    try {
-      const authHeaders = await getAuthHeaders();
-      if (!authHeaders.isAuthorized) {
-        router.push('/login');
-        return null;
-      }
-
-      const response = await fetch(
-        `${API_URL}/api/subjects/${params.board}/${params.class}/${subjectCode}/chapters`,
-        { headers: authHeaders.headers }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch chapters');
-      }
-
-      const data = await response.json();
-      return data.chapters;
-    } catch (error) {
-      console.error('Error fetching chapters:', error);
-      return null;
-    }
-  };
-
-  // Function to fetch progress for a specific subject
-  const fetchSubjectProgress = async (subjectCode: string) => {
-    try {
-      const authHeaders = await getAuthHeaders();
-      if (!authHeaders.isAuthorized) {
-        return {};
-      }
-
-      const response = await fetch(
-        `${API_URL}/api/progress/user/${params.board}/${params.class}/${subjectCode}`,
-        { headers: authHeaders.headers }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.progress || {};
-      }
-      return {};
-    } catch (error) {
-      console.warn('Progress fetch error for subject:', subjectCode, error);
-      return {};
-    }
-  };
 
   const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
   const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
@@ -199,8 +164,7 @@ export default function ClassPage() {
               board={board}
               classLevel={classLevel}
               subjects={subjects}
-              fetchSubjectChapters={fetchSubjectChapters}
-              fetchSubjectProgress={fetchSubjectProgress}
+              progress={progress}
             />
           </div>
         </div>
