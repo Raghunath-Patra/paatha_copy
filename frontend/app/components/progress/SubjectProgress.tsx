@@ -260,7 +260,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                       {isExpanded ? (
                         <ChevronDown size={20} className="text-gray-600" />
                       ) : (
-                        <ChevronRight size={20} className="text-gray-600" />
+                        <ChevronUp size={20} className="text-gray-600" />
                       )}
                     </button>
                   </div>
