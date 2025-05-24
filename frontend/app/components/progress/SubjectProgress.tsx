@@ -256,7 +256,7 @@ export default function SubjectProgress({
                             }}
                             className="ml-4 p-1 hover:bg-gray-200 rounded-full transition-colors"
                           >
-                            {isChapterExpanded ? (
+                            {chapterExpanded ? (
                               <ChevronDown size={16} className="text-gray-600" />
                             ) : (
                               <ChevronRight size={16} className="text-gray-600" />
@@ -265,7 +265,7 @@ export default function SubjectProgress({
                         </div>
                         
                         {/* Chapter Expanded Details */}
-                        {isChapterExpanded && (
+                        {chapterExpanded && (
                           <div className="mt-3 pt-3 border-t border-gray-200 text-sm text-gray-600">
                             <div className="grid grid-cols-2 gap-4">
                               <div>
