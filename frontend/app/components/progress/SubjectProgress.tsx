@@ -217,7 +217,7 @@ export default function SubjectProgress({
                 ) : subjectData?.chapters ? (
                   subjectData.chapters.map((chapter) => {
                     const chapterProgress = getChapterProgress(subject.code, chapter.number);
-                    const isChapterExpanded = isChapterExpanded(subject.code, chapter.number);
+                    const chapterExpanded = isChapterExpanded(subject.code, chapter.number);
 
                     return (
                       <div key={chapter.number} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
