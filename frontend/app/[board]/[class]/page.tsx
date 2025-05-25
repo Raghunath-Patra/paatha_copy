@@ -389,9 +389,6 @@ export default function ClassPage() {
   const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
   const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
   
-  const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
-  const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
-  
   // Get friendly display names for board and class
   const boardDisplayName = BOARD_DISPLAY_NAMES[board] || board?.toUpperCase() || '';
   const classDisplayName = CLASS_DISPLAY_NAMES[classLevel] || classLevel?.toUpperCase() || '';
