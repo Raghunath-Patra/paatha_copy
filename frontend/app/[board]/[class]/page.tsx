@@ -355,8 +355,78 @@ export default function ClassPage() {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex flex-col bg-neutral-50">
+        <div className="container-fluid px-8 py-6">
+          <div className="max-w-[1600px] mx-auto w-full">
+            <div className="flex items-center justify-between mb-4">
+              {/* Skeleton Header */}
+              <div className="h-9 bg-gray-200 rounded w-64 animate-pulse"></div>
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            
+            <div className="max-w-5xl mx-auto overflow-y-auto">
+              {/* Skeleton Subject Cards */}
+              <div className="space-y-6 pb-6">
+                {[1, 2].map((subjectIndex) => (
+                  <div key={subjectIndex} className="bg-white rounded-lg p-6 shadow-sm">
+                    {/* Skeleton Subject Title */}
+                    <div className="h-7 bg-gray-200 rounded w-40 mb-4 animate-pulse"></div>
+                    
+                    {/* Skeleton Chapters */}
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4, 5].map((chapterIndex) => (
+                        <div key={chapterIndex} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              {/* Skeleton Chapter Name */}
+                              <div className="flex items-center mb-2">
+                                <div className="h-4 bg-gray-200 rounded w-6 mr-2 animate-pulse"></div>
+                                <div className="h-5 bg-gray-200 rounded w-48 animate-pulse"></div>
+                              </div>
+                              
+                              {/* Skeleton Progress Bar */}
+                              <div className="w-full bg-gray-200 rounded-full h-2 animate-pulse">
+                                <div className="h-2 bg-gray-300 rounded-full animate-pulse" 
+                                     style={{ 
+                                       width: `${Math.random() * 80 + 20}%`,
+                                       animationDelay: `${chapterIndex * 200}ms`
+                                     }}>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Skeleton Dropdown Arrow */}
+                            <div className="ml-4 w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Skeleton CSS with Shimmer Effect */}
+        <style jsx>{`
+          @keyframes shimmer {
+            0% {
+              background-position: -200px 0;
+            }
+            100% {
+              background-position: calc(200px + 100%) 0;
+            }
+          }
+          
+          .animate-pulse {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
+          }
+        `}</style>
       </div>
     );
   }
