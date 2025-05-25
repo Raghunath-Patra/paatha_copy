@@ -288,20 +288,14 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                           {/* Enhanced Progress Bar */}
                           <div className="w-full bg-gray-200/80 rounded-full h-2.5 sm:h-3 relative overflow-hidden">
                             <div 
-                              className={`h-full rounded-full transition-all duration-1000 ease-out ${getProgressColor(chapterProgress.averageScore)}`}
+                              className={`h-full rounded-full transition-all duration-700 ease-out ${getProgressColor(chapterProgress.averageScore)}`}
                               style={{ 
                                 width: getProgressWidth(chapterProgress.attempted, chapterProgress.total),
-                                transitionProperty: 'width, background-color',
-                                transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
                               }}
                             />
                             {/* Shimmer effect for active progress bars */}
                             {chapterProgress.attempted > 0 && (
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                            )}
-                            {/* Subtle pulse for empty progress bars */}
-                            {chapterProgress.attempted === 0 && (
-                              <div className="absolute inset-0 bg-gradient-to-r from-red-100/50 via-orange-100/50 to-yellow-100/50 rounded-full animate-pulse opacity-30"></div>
                             )}
                           </div>
                           
