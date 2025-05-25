@@ -35,11 +35,21 @@ interface Props {
 
 export default function SubjectProgress({ board, classLevel, subjects, progress }: Props) {
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  const [animateProgress, setAnimateProgress] = useState(false);
   const router = useRouter();
 
   // Add debugging logs
   console.log('SubjectProgress props:', { board, classLevel, subjects, progress });
   console.log('Progress keys:', Object.keys(progress || {}));
+
+  // Trigger progress animation after component mounts and data is loaded
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimateProgress(true);
+    }, 300); // Small delay to ensure smooth animation
+
+    return () => clearTimeout(timer);
+  }, [subjects, progress]);
 
   const getProgressColor = (score: number) => {
     if (score >= 8) return 'bg-gradient-to-r from-green-400 to-green-500';
@@ -285,17 +295,26 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                             </div>
                           </div>
                           
-                          {/* Enhanced Progress Bar */}
+                          {/* Enhanced Progress Bar with Width Animation */}
                           <div className="w-full bg-gray-200/80 rounded-full h-2.5 sm:h-3 relative overflow-hidden">
                             <div 
-                              className={`h-full rounded-full transition-all duration-700 ease-out ${getProgressColor(chapterProgress.averageScore)}`}
+                              className={`h-full rounded-full transition-all duration-1000 ease-out ${getProgressColor(chapterProgress.averageScore)}`}
                               style={{ 
-                                width: getProgressWidth(chapterProgress.attempted, chapterProgress.total),
+                                width: animateProgress 
+                                  ? getProgressWidth(chapterProgress.attempted, chapterProgress.total)
+                                  : '0%',
+                                transitionProperty: 'width, background-color',
+                                transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                                transitionDelay: `${chapterIndex * 100}ms` // Staggered animation
                               }}
                             />
                             {/* Shimmer effect for active progress bars */}
-                            {chapterProgress.attempted > 0 && (
+                            {chapterProgress.attempted > 0 && animateProgress && (
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                            )}
+                            {/* Subtle pulse for empty progress bars */}
+                            {chapterProgress.attempted === 0 && (
+                              <div className="absolute inset-0 bg-gradient-to-r from-red-100/50 via-orange-100/50 to-yellow-100/50 rounded-full animate-pulse opacity-30"></div>
                             )}
                           </div>
                           
