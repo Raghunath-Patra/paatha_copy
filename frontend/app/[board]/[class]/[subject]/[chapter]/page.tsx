@@ -1,3 +1,4 @@
+// frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx - Enhanced with theme
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -66,7 +67,7 @@ interface Feedback {
     display_name: string;
     requests_per_question: number;
   };
-  follow_up_questions?: string[]; // Added follow-up questions
+  follow_up_questions?: string[];
 }
 
 interface ChapterInfo {
@@ -81,7 +82,48 @@ interface PerformancePageParams {
   chapter: string;
 }
 
-export default function ChapterPage() {
+// Enhanced loading skeleton with theme
+const ThemedQuestionSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
+    {/* Subtle gradient overlay */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-50/30 to-transparent opacity-50"></div>
+    
+    <div className="relative z-10 space-y-4">
+      {/* Skeleton metadata tags */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full w-16 animate-pulse" 
+               style={{ animationDelay: `${i * 100}ms` }} />
+        ))}
+      </div>
+      
+      {/* Skeleton question text */}
+      <div className="space-y-3">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse" 
+               style={{ 
+                 width: i === 3 ? '70%' : '100%',
+                 animationDelay: `${i * 150}ms` 
+               }} />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const ThemedAnswerSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
+    {/* Subtle gradient overlay */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-50/30 to-transparent opacity-50"></div>
+    
+    <div className="relative z-10 space-y-4">
+      <div className="h-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+      <div className="h-12 bg-gradient-to-r from-blue-200 to-blue-300 rounded-lg animate-pulse"></div>
+    </div>
+  </div>
+);
+
+export default function ThemedChapterPage() {
   const params = useParams() as unknown as PerformancePageParams;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -97,9 +139,7 @@ export default function ChapterPage() {
   const [showUpgradeButton, setShowUpgradeButton] = useState(false);
   const [showTokenWarning, setShowTokenWarning] = useState(false);
   const [tokenWarningAllowClose, setTokenWarningAllowClose] = useState(true);
-  // Add this state variable to track which error display is active
   const [errorDisplayMode, setErrorDisplayMode] = useState<'none' | 'token-warning' | 'error-message'>('none');
-  // Remove the showNextControls state variable since we'll always show the controls
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -128,10 +168,8 @@ export default function ChapterPage() {
       }
     };
     
-    // Check on initial load
     checkTokenStatus();
     
-    // Also check when URL parameters change (in case we came from a "token_limit=true" redirect)
     if (searchParams?.get('token_limit') === 'true') {
       setShowTokenWarning(true);
       setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
@@ -139,46 +177,36 @@ export default function ChapterPage() {
       setErrorDisplayMode('token-warning');
     }
     
-    // Check every minute
     const interval = setInterval(checkTokenStatus, 60000);
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
   
-  // Add this useEffect to listen for the custom event
+  // Add event listener for token limit events
   useEffect(() => {
-    // Listen for the token limit reached event from BottomNavigation
     const handleTokenLimitReached = (event: CustomEvent) => {
       console.log('Token limit reached event received', event.detail);
       
-      // Get detail props
       const isPremium = event.detail?.isPremium || false;
-      const allowClose = event.detail?.allowClose !== false; // Default to true if not specified
+      const allowClose = event.detail?.allowClose !== false;
       
-      // Set token warning to show, but hide any other error messages
       setShowTokenWarning(true);
       setTokenWarningAllowClose(allowClose);
       setErrorDisplayMode('token-warning');
-      
-      // Still set these for the button but don't show the error text
       setShowUpgradeButton(true);
       setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
     };
-    // Add event listener with type assertion
+
     window.addEventListener('tokenLimitReached', handleTokenLimitReached as EventListener);
     
-    // Cleanup
     return () => {
       window.removeEventListener('tokenLimitReached', handleTokenLimitReached as EventListener);
     };
   }, []);
   
-  // Remove the useEffect that controls showing/hiding next controls based on feedback
-  
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
       setError(null);
       setLoading(true);
-      // Reset error display state
       setErrorDisplayMode('none');
 
       const { headers, isAuthorized } = await getAuthHeaders();
@@ -196,10 +224,8 @@ export default function ChapterPage() {
 
       const response = await fetch(url, { headers });
 
-      // Handle usage limit errors with better messaging
       if (!response.ok) {
         if (response.status === 402) {
-          // This is a token limit error - show the token warning
           setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
           setShowUpgradeButton(true);
           setShowTokenWarning(true);
@@ -208,20 +234,17 @@ export default function ChapterPage() {
           return undefined;
         }
         
-        // Check if the error response contains a message about token limits
         const responseText = await response.text();
         let isTokenLimitError = false;
         
         try {
           const errorData = JSON.parse(responseText);
-          // Check for common token limit error messages
           isTokenLimitError = 
             (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
             (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
             (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
             (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
         } catch (e) {
-          // Not JSON or parse error, check the raw response text
           isTokenLimitError = 
             responseText.toLowerCase().includes('token limit') ||
             responseText.toLowerCase().includes('usage limit') ||
@@ -230,7 +253,6 @@ export default function ChapterPage() {
         }
         
         if (isTokenLimitError) {
-          // Handle as a token limit error
           setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
           setShowUpgradeButton(true);
           setShowTokenWarning(true);
@@ -239,7 +261,6 @@ export default function ChapterPage() {
           return undefined;
         }
         
-        // For other errors, throw to be caught below
         throw new Error('Failed to fetch question');
       }
 
@@ -249,7 +270,6 @@ export default function ChapterPage() {
     } catch (err) {
       console.error('Error fetching question:', err);
       
-      // Don't set generic error message if we already have a usage limit message showing
       if (!showUpgradeButton && !showTokenWarning) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setErrorDisplayMode('error-message');
@@ -267,18 +287,14 @@ export default function ChapterPage() {
         return;
       }
 
-      // Timer should already be stopped via the stopTimerImmediately function
-      // But we'll make sure it's stopped here too as a fallback
       setShouldStopTimer(true);
-      
-      // Capture final time
       const finalTime = timeTaken;
       
       setIsSubmitting(true);
       setError(null);
       setShowUpgradeButton(false);
-      setShowTokenWarning(false); // Reset token warning on new submission
-      setErrorDisplayMode('none'); // Reset error display mode
+      setShowTokenWarning(false);
+      setErrorDisplayMode('none');
 
       const { headers, isAuthorized } = await getAuthHeaders();
       if (!isAuthorized) {
@@ -293,26 +309,22 @@ export default function ChapterPage() {
         body: JSON.stringify({
           answer,
           question_id: question?.id,
-          time_taken: finalTime, // Use the final time that was captured
+          time_taken: finalTime,
           image_data: imageData
         }),
       });
       
       if (!response.ok) {
-        // First, try to parse the error response
         let errorDetail = "Failed to submit answer";
         
         try {
           const errorResponse = await response.json();
           errorDetail = errorResponse.detail || errorDetail;
         } catch (e) {
-          // If parsing fails, try to get text
           errorDetail = await response.text() || errorDetail;
         }
         
-        // Handle specific status codes
         if (response.status === 402) {
-          // Usage limit reached - Payment Required
           setError("You've reached your daily usage limit. Please upgrade to Premium or try again tomorrow.");
           setShowTokenWarning(true);
           setShowUpgradeButton(true);
@@ -342,16 +354,13 @@ export default function ChapterPage() {
         follow_up_questions: result.follow_up_questions || []
       });
       
-      // Add auto-scroll to feedback for PWA users
+      // Auto-scroll to feedback for PWA users
       setTimeout(() => {
-        // Check if we're in PWA mode
         const isPWA = window.matchMedia('(display-mode: standalone)').matches;
         
         if (isPWA) {
-          // Find the feedback element
           const feedbackElement = document.querySelector('.feedback-card');
           if (feedbackElement) {
-            // Scroll to the feedback element with smooth behavior
             feedbackElement.scrollIntoView({ 
               behavior: 'smooth', 
               block: 'start'
@@ -361,7 +370,6 @@ export default function ChapterPage() {
       }, 300);
     } catch (err) {
       console.error('Error submitting answer:', err);
-      // Don't show generic error if we're already showing a usage limit message
       if (!showUpgradeButton && !showTokenWarning) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setErrorDisplayMode('error-message');
@@ -372,18 +380,15 @@ export default function ChapterPage() {
   };
 
   const handleNextQuestion = useCallback(async () => {
-    // Reset feedback and timer when fetching a new question
     setFeedback(null);
     setShouldStopTimer(false);
     setErrorDisplayMode('none');
     setShowTokenWarning(false);
-    // Remove the line that hides controls while loading
     
     try {
       const newQuestion = await fetchQuestion();
       
       if (newQuestion?.id) {
-        // Use router.push to ensure proper navigation and state update
         const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
         router.push(newUrl);
       }
@@ -424,15 +429,14 @@ export default function ChapterPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.limit_reached) {
-            // User has already reached their token limit
             setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
             setShowUpgradeButton(true);
             setShowTokenWarning(true);
             setErrorDisplayMode('token-warning');
-            return true; // Indicate that limit was reached
+            return true;
           }
         }
-        return false; // No limit reached
+        return false;
       } catch (error) {
         console.error('Error checking token status:', error);
         return false;
@@ -452,7 +456,6 @@ export default function ChapterPage() {
       }
 
       if (params.board && params.class && params.subject && params.chapter) {
-        // Check for usage limit flag in URL (supporting both token_limit and usage_limit)
         if (searchParams?.get('token_limit') === 'true' || searchParams?.get('usage_limit') === 'true') {
           setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
           setShowUpgradeButton(true);
@@ -461,32 +464,24 @@ export default function ChapterPage() {
           return;
         }
         
-        // Pro-actively check token status before attempting to fetch a question
         const limitReached = await checkTokenStatus();
         if (limitReached) {
-          // If limit reached, don't proceed with fetching a question
           setLoading(false);
           return;
         }
         
-        // Check for the new question flag and reset feedback state if present
         const isNewQuestion = searchParams?.get('newq') === '1';
         if (isNewQuestion) {
           setFeedback(null);
           setShouldStopTimer(false);
-          // Remove the flag from the URL without navigating
           const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${searchParams?.get('q')}`;
           window.history.replaceState({}, '', newUrl);
         }
         
-        // Get question ID from query params
         const questionId = searchParams?.get('q');
         
-        // Always fetch a question - either the specified one or a random one
         fetchQuestion(questionId || undefined).then(newQuestion => {
-          // If we fetched a random question (no ID specified), update the URL
           if (!questionId && newQuestion?.id) {
-            // Update URL without triggering a new navigation
             const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
             window.history.replaceState({}, '', newUrl);
           }
@@ -522,17 +517,15 @@ export default function ChapterPage() {
     initializePage();
   }, [params.board, params.class, params.subject, params.chapter, router, profile, authLoading, searchParams, API_URL]);
 
-  // Updated formatSubjectName function to use the mapping
+  // Format subject name function
   const formatSubjectName = (subject: string) => {
     if (!subject) return '';
     
-    // Check if we have a mapping for this subject code
     const mappedName = SUBJECT_CODE_TO_NAME[subject.toLowerCase()];
     if (mappedName) {
       return mappedName;
     }
     
-    // Fall back to the original formatting logic for unknown codes
     const parts = subject.split('-');
     return parts.map(part => {
       if (/^[IVX]+$/i.test(part)) return part.toUpperCase();
@@ -542,8 +535,31 @@ export default function ChapterPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
+        {/* Animated background decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
+               style={{animationDuration: '3s'}} />
+          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+               style={{animationDuration: '4s'}} />
+          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+               style={{animationDuration: '2s'}} />
+        </div>
+        
+        <div className="text-center relative z-10">
+          <div className="relative mb-8">
+            <div className="w-16 h-16 border-4 border-red-200 rounded-full animate-spin border-t-red-500 mx-auto"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent rounded-full animate-ping border-t-red-300 mx-auto"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-center space-x-1">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            </div>
+            <p className="text-gray-600 animate-pulse">Loading your question...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -553,31 +569,41 @@ export default function ChapterPage() {
     : '';
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-50">
-      <div className="container-fluid px-8 py-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+      {/* Animated background decorations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
+             style={{animationDuration: '3s'}} />
+        <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+             style={{animationDuration: '4s'}} />
+        <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+             style={{animationDuration: '2s'}} />
+      </div>
+
+      <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto w-full">
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-medium mb-2">
+              <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
                 {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {displayChapter}
                 {chapterName && (
-                  <span className="ml-2 text-neutral-600">
+                  <span className="ml-2 text-gray-600">
                     : {chapterName}
                   </span>
                 )}
               </h1>
-              <p className="text-sm text-neutral-600">
+              <p className="text-sm text-gray-600">
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2 items-start">
+            <div className="flex flex-wrap gap-2 items-start relative z-[100]">
               <Navigation />
               <QuestionLimitIndicator />
             </div>
           </div>
 
-          {/* Only show TokenLimitWarning if that's the active display mode */}
+          {/* Token Warning */}
           {errorDisplayMode === 'token-warning' && (
             <TokenLimitWarning 
               isVisible={showTokenWarning}
@@ -590,9 +616,9 @@ export default function ChapterPage() {
             />
           )}
 
-          {/* Only show the error message with upgrade button if that's the active display mode */}
+          {/* Error Message */}
           {errorDisplayMode === 'error-message' && error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
+            <div className="bg-red-50/90 backdrop-blur-sm text-red-600 p-4 rounded-xl mb-6 border border-red-200 shadow-sm">
               {error}
               {showUpgradeButton && !profile?.is_premium && (
                 <div className="mt-4">
@@ -601,7 +627,7 @@ export default function ChapterPage() {
                       e.preventDefault();
                       window.location.href = '/upgrade';
                     }}
-                    className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="w-full py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Upgrade to Premium
                   </button>
@@ -615,20 +641,22 @@ export default function ChapterPage() {
             </div>
           )}
 
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="w-full md:w-1/2">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="w-full lg:w-1/2">
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Loading question...</p>
+                <div className="space-y-6">
+                  <ThemedQuestionSkeleton />
+                  <ThemedAnswerSkeleton />
                 </div>
               ) : question && (
                 <div className="space-y-6">
                   <div className="flex justify-end">
-                    <QuestionTimer 
-                      onTimeUpdate={setTimeTaken}
-                      shouldStop={shouldStopTimer}
-                    />
+                    <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
+                      <QuestionTimer 
+                        onTimeUpdate={setTimeTaken}
+                        shouldStop={shouldStopTimer}
+                      />
+                    </div>
                   </div>
                   
                   <QuestionCard
@@ -648,13 +676,13 @@ export default function ChapterPage() {
                     options={question.options}
                     isDisabled={!!feedback}
                     stopTimer={stopTimerImmediately}
-                    errorMessage={error || undefined} // Convert null to undefined to match expected type
+                    errorMessage={error || undefined}
                   />
                 </div>
               )}
             </div>
 
-            <div className="w-full md:w-1/2 mt-6 md:mt-0">
+            <div className="w-full lg:w-1/2 mt-6 lg:mt-0">
               {feedback ? (
                 <FeedbackCard
                   score={feedback.score}
@@ -665,16 +693,19 @@ export default function ChapterPage() {
                   userAnswer={feedback.user_answer}
                   className="feedback-card"
                   questionId={question?.id}
-                  followUpQuestions={feedback.follow_up_questions} // Add the follow-up questions prop
+                  followUpQuestions={feedback.follow_up_questions}
                 />
               ) : (
-                <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-                  <div className="py-8">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center border border-white/50 relative overflow-hidden">
+                  {/* Decorative gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
+                  
+                  <div className="relative z-10 py-8">
                     <div className="text-4xl mb-4">📝</div>
-                    <h3 className="text-lg font-medium text-neutral-600 mb-2">
+                    <h3 className="text-lg font-medium text-gray-600 mb-2">
                       Feedback will appear here
                     </h3>
-                    <p className="text-sm text-neutral-500">
+                    <p className="text-sm text-gray-500">
                       Submit your answer to see feedback and explanation
                     </p>
                   </div>
@@ -685,12 +716,12 @@ export default function ChapterPage() {
         </div>
       </div>
       
-      {/* Floating Next Question Button - always show on desktop */}
+      {/* Floating Next Question Button - desktop */}
       <FloatingNextQuestionButton
         onNextQuestion={handleNextQuestion}
       />
       
-      {/* Swipe to Next Question - always show on mobile */}
+      {/* Swipe to Next Question - mobile */}
       <SwipeToNextQuestion
         onNextQuestion={handleNextQuestion}
       />
