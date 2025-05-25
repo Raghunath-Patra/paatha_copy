@@ -98,9 +98,9 @@ const ThemedHeaderSkeleton = () => (
   </div>
 );
 
-// Timer skeleton component
+// Timer skeleton component - now left-aligned
 const ThemedTimerSkeleton = () => (
-  <div className="flex justify-end mb-6">
+  <div className="flex justify-start mb-6">
     <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
       <div className="h-6 w-16 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></div>
     </div>
@@ -778,11 +778,11 @@ export default function ThemedChapterPage() {
 
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-full lg:w-1/2">
-              {/* Timer section - show skeleton during question loading */}
+              {/* Timer section - now left-aligned and show skeleton during question loading */}
               {questionLoading ? (
                 <ThemedTimerSkeleton />
               ) : question && (
-                <div className="flex justify-end mb-6">
+                <div className="flex justify-start mb-6">
                   <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
                     <QuestionTimer 
                       onTimeUpdate={setTimeTaken}
