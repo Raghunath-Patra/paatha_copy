@@ -270,27 +270,29 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                     </button>
                   </div>
                   
-                  {/* Expanded Details with Smooth Height Animation */}
+                  {/* Expanded Details with Smoother Close Animation */}
                   <div 
-                    className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                    className={`transition-all ease-in-out overflow-hidden ${
                       isExpanded 
-                        ? 'max-h-40 opacity-100 py-3' 
-                        : 'max-h-0 opacity-0 py-0'
+                        ? 'max-h-40 opacity-100 py-3 duration-500' 
+                        : 'max-h-0 opacity-0 py-0 duration-700'
                     }`}
                     style={{
                       transitionTimingFunction: isExpanded 
-                        ? 'cubic-bezier(0.4, 0, 0.2, 1)' // Ease out when expanding
-                        : 'cubic-bezier(0.4, 0, 1, 1)'   // Ease in when collapsing
+                        ? 'cubic-bezier(0.4, 0, 0.2, 1)'     // Ease out when expanding (quick)
+                        : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' // Smoother ease when closing (gentle)
                     }}
                   >
-                    <div className={`px-4 border-t border-gray-200 text-sm text-gray-600 transform transition-all duration-400 ${
+                    <div className={`px-4 border-t border-gray-200 text-sm text-gray-600 transform transition-all ${
                       isExpanded 
-                        ? 'translate-y-0 opacity-100' 
-                        : '-translate-y-2 opacity-0'
+                        ? 'translate-y-0 opacity-100 duration-400 delay-100' 
+                        : '-translate-y-2 opacity-0 duration-200 delay-0'
                     }`}>
                       <div className="grid grid-cols-2 gap-4 pt-3">
-                        <div className={`flex items-center space-x-2 transition-all duration-300 delay-100 ${
-                          isExpanded ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'
+                        <div className={`flex items-center space-x-2 transition-all ${
+                          isExpanded 
+                            ? 'translate-x-0 opacity-100 duration-300 delay-200' 
+                            : '-translate-x-4 opacity-0 duration-150 delay-0'
                         }`}>
                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                           <span className="font-medium">Progress:</span>
@@ -298,8 +300,10 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                             {chapterProgress.attempted}/{Math.max(chapterProgress.attempted, chapterProgress.total)} questions
                           </span>
                         </div>
-                        <div className={`flex items-center space-x-2 transition-all duration-300 delay-200 ${
-                          isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                        <div className={`flex items-center space-x-2 transition-all ${
+                          isExpanded 
+                            ? 'translate-x-0 opacity-100 duration-300 delay-300' 
+                            : 'translate-x-4 opacity-0 duration-150 delay-0'
                         }`}>
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                           <span className="font-medium">Average Score:</span>
