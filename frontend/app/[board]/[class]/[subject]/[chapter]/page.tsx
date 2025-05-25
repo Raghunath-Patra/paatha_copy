@@ -690,7 +690,45 @@ export default function ThemedChapterPage() {
     : '';
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+    <>
+      {/* Enhanced timer animations */}
+      <style jsx>{`
+        @keyframes timer-pulse {
+          0%, 100% { 
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
+            transform: scale(1);
+          }
+          50% { 
+            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+            transform: scale(1.02);
+          }
+        }
+        
+        @keyframes shimmer-slide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+        
+        @keyframes clock-tick {
+          0%, 50%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-5deg); }
+          75% { transform: rotate(5deg); }
+        }
+        
+        .timer-active {
+          animation: timer-pulse 3s infinite;
+        }
+        
+        .shimmer-effect {
+          animation: shimmer-slide 3s infinite;
+        }
+        
+        .clock-icon {
+          animation: clock-tick 2s infinite;
+        }
+      `}</style>
+
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
       {/* Animated background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
@@ -723,17 +761,26 @@ export default function ThemedChapterPage() {
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
               
-              {/* Timer below class heading */}
+              {/* Timer below class heading with enhanced styling */}
               {questionLoading ? (
-                <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50 w-fit">
-                  <div className="h-6 w-16 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></div>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit">
+                  <div className="h-6 w-16 bg-gradient-to-r from-blue-200 to-indigo-200 rounded animate-pulse"></div>
                 </div>
               ) : question && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50 w-fit">
-                  <QuestionTimer 
-                    onTimeUpdate={setTimeTaken}
-                    shouldStop={shouldStopTimer}
-                  />
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit relative overflow-hidden timer-active">
+                  {/* Subtle animated background for active timer */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-100/30 to-blue-100/0 shimmer-effect"></div>
+                  
+                  {/* Timer with icon */}
+                  <div className="relative flex items-center gap-2 text-blue-700 font-medium">
+                    <svg className="w-4 h-4 clock-icon" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <QuestionTimer 
+                      onTimeUpdate={setTimeTaken}
+                      shouldStop={shouldStopTimer}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -871,5 +918,6 @@ export default function ThemedChapterPage() {
         onNextQuestion={handleNextQuestion}
       />
     </div>
+    </>
   );
 }
