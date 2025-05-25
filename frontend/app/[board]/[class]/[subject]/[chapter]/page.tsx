@@ -1,4 +1,4 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx - Enhanced with theme
+// frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx - Enhanced with granular skeleton loading
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -82,17 +82,40 @@ interface PerformancePageParams {
   chapter: string;
 }
 
-// Enhanced loading skeleton with theme
+// Header skeleton component
+const ThemedHeaderSkeleton = () => (
+  <div className="flex justify-between mb-6">
+    <div className="space-y-2">
+      <div className="h-6 sm:h-8 bg-gradient-to-r from-red-200 to-orange-200 rounded w-64 sm:w-80 animate-pulse"></div>
+      <div className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded w-32 sm:w-40 animate-pulse"></div>
+    </div>
+    <div className="flex gap-2">
+      <div className="h-10 w-20 bg-gradient-to-r from-red-200 to-orange-200 rounded-lg animate-pulse"></div>
+      <div className="h-10 w-16 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
+    </div>
+  </div>
+);
+
+// Timer skeleton component
+const ThemedTimerSkeleton = () => (
+  <div className="flex justify-end mb-6">
+    <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
+      <div className="h-6 w-16 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></div>
+    </div>
+  </div>
+);
+
+// Enhanced question skeleton with theme
 const ThemedQuestionSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
     {/* Subtle gradient overlay */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-50/30 to-transparent opacity-50"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 via-orange-50/30 to-yellow-50/30 opacity-50"></div>
     
     <div className="relative z-10 space-y-4">
       {/* Skeleton metadata tags */}
       <div className="flex flex-wrap gap-2 mb-4">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full w-16 animate-pulse" 
+          <div key={i} className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded-full w-16 animate-pulse" 
                style={{ animationDelay: `${i * 100}ms` }} />
         ))}
       </div>
@@ -100,7 +123,7 @@ const ThemedQuestionSkeleton = () => (
       {/* Skeleton question text */}
       <div className="space-y-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse" 
+          <div key={i} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
                style={{ 
                  width: i === 3 ? '70%' : '100%',
                  animationDelay: `${i * 150}ms` 
@@ -111,15 +134,64 @@ const ThemedQuestionSkeleton = () => (
   </div>
 );
 
+// Answer form skeleton during submission
 const ThemedAnswerSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
     {/* Subtle gradient overlay */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-50/30 to-transparent opacity-50"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/30 to-transparent opacity-50"></div>
     
     <div className="relative z-10 space-y-4">
-      <div className="h-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
-      <div className="h-12 bg-gradient-to-r from-blue-200 to-blue-300 rounded-lg animate-pulse"></div>
+      <div className="h-32 bg-gradient-to-r from-yellow-200 to-orange-200 rounded-lg animate-pulse"></div>
+      <div className="h-12 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg animate-pulse"></div>
     </div>
+  </div>
+);
+
+// Feedback skeleton during submission
+const ThemedFeedbackSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
+    {/* Decorative gradient */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 via-orange-50/30 to-yellow-50/30 opacity-50"></div>
+    
+    <div className="relative z-10 space-y-4">
+      {/* Score skeleton */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded w-20 animate-pulse"></div>
+        <div className="h-8 w-16 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full animate-pulse"></div>
+      </div>
+      
+      {/* Feedback text skeleton */}
+      <div className="space-y-2">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} 
+               className="h-4 bg-gradient-to-r from-yellow-200 to-red-200 rounded animate-pulse" 
+               style={{ 
+                 width: i === 4 ? '60%' : '100%',
+                 animationDelay: `${i * 100}ms` 
+               }} />
+        ))}
+      </div>
+      
+      {/* Model answer skeleton */}
+      <div className="mt-6 space-y-2">
+        <div className="h-5 bg-gradient-to-r from-red-200 to-orange-200 rounded w-32 animate-pulse"></div>
+        {[1, 2, 3].map(i => (
+          <div key={i} 
+               className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
+               style={{ 
+                 width: i === 3 ? '80%' : '100%',
+                 animationDelay: `${i * 150}ms` 
+               }} />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// Floating button skeleton
+const ThemedFloatingButtonSkeleton = () => (
+  <div className="fixed bottom-6 right-6 z-50">
+    <div className="h-14 w-14 bg-gradient-to-r from-red-200 to-orange-200 rounded-full animate-pulse shadow-lg"></div>
   </div>
 );
 
@@ -133,6 +205,8 @@ export default function ThemedChapterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [chapterName, setChapterName] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [questionLoading, setQuestionLoading] = useState(false);
+  const [chapterNameLoading, setChapterNameLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeTaken, setTimeTaken] = useState<number>(0);
   const [shouldStopTimer, setShouldStopTimer] = useState(false);
@@ -206,7 +280,7 @@ export default function ThemedChapterPage() {
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
       setError(null);
-      setLoading(true);
+      setQuestionLoading(true);
       setErrorDisplayMode('none');
 
       const { headers, isAuthorized } = await getAuthHeaders();
@@ -230,7 +304,7 @@ export default function ThemedChapterPage() {
           setShowUpgradeButton(true);
           setShowTokenWarning(true);
           setErrorDisplayMode('token-warning');
-          setLoading(false);
+          setQuestionLoading(false);
           return undefined;
         }
         
@@ -257,7 +331,7 @@ export default function ThemedChapterPage() {
           setShowUpgradeButton(true);
           setShowTokenWarning(true);
           setErrorDisplayMode('token-warning');
-          setLoading(false);
+          setQuestionLoading(false);
           return undefined;
         }
         
@@ -276,7 +350,7 @@ export default function ThemedChapterPage() {
       }
       return undefined;
     } finally {
-      setLoading(false);
+      setQuestionLoading(false);
     }
   };
 
@@ -443,6 +517,36 @@ export default function ThemedChapterPage() {
       }
     };
 
+    const fetchChapterName = async () => {
+      try {
+        setChapterNameLoading(true);
+        const { headers, isAuthorized } = await getAuthHeaders();
+        if (!isAuthorized) return;
+        
+        const response = await fetch(
+          `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
+          { headers }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          const chapterNum = typeof params.chapter === 'string'
+            ? parseInt(params.chapter.replace(/^chapter-/, '') || '0')
+            : 0;
+          const chapterInfo = data.chapters.find(
+            (ch: ChapterInfo) => ch.number === chapterNum
+          );
+          if (chapterInfo) {
+            setChapterName(chapterInfo.name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching chapter name:', error);
+      } finally {
+        setChapterNameLoading(false);
+      }
+    };
+
     const initializePage = async () => {
       if (authLoading) return;
       if (!profile) {
@@ -461,6 +565,7 @@ export default function ThemedChapterPage() {
           setShowUpgradeButton(true);
           setShowTokenWarning(true);
           setErrorDisplayMode('token-warning');
+          setLoading(false);
           return;
         }
         
@@ -469,6 +574,9 @@ export default function ThemedChapterPage() {
           setLoading(false);
           return;
         }
+        
+        // Fetch chapter name in parallel
+        fetchChapterName();
         
         const isNewQuestion = searchParams?.get('newq') === '1';
         if (isNewQuestion) {
@@ -486,32 +594,9 @@ export default function ThemedChapterPage() {
             window.history.replaceState({}, '', newUrl);
           }
         });
-        
-        try {
-          const { headers, isAuthorized } = await getAuthHeaders();
-          if (!isAuthorized) return;
-          
-          const response = await fetch(
-            `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
-            { headers }
-          );
-          
-          if (response.ok) {
-            const data = await response.json();
-            const chapterNum = typeof params.chapter === 'string'
-              ? parseInt(params.chapter.replace(/^chapter-/, '') || '0')
-              : 0;
-            const chapterInfo = data.chapters.find(
-              (ch: ChapterInfo) => ch.number === chapterNum
-            );
-            if (chapterInfo) {
-              setChapterName(chapterInfo.name);
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching chapter name:', error);
-        }
       }
+      
+      setLoading(false);
     };
 
     initializePage();
@@ -533,6 +618,7 @@ export default function ThemedChapterPage() {
     }).join(' ');
   };
 
+  // Full page loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
@@ -582,11 +668,16 @@ export default function ThemedChapterPage() {
 
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto w-full">
+          {/* Header - with skeleton for chapter name loading */}
           <div className="flex justify-between mb-6">
             <div>
               <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
                 {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {displayChapter}
-                {chapterName && (
+                {chapterNameLoading ? (
+                  <div className="inline-block ml-2">
+                    <div className="h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse inline-block"></div>
+                  </div>
+                ) : chapterName && (
                   <span className="ml-2 text-gray-600">
                     : {chapterName}
                   </span>
@@ -643,22 +734,28 @@ export default function ThemedChapterPage() {
 
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-full lg:w-1/2">
-              {loading ? (
+              {/* Timer section - show skeleton during question loading */}
+              {questionLoading ? (
+                <ThemedTimerSkeleton />
+              ) : question && (
+                <div className="flex justify-end mb-6">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
+                    <QuestionTimer 
+                      onTimeUpdate={setTimeTaken}
+                      shouldStop={shouldStopTimer}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Question section */}
+              {questionLoading ? (
                 <div className="space-y-6">
                   <ThemedQuestionSkeleton />
                   <ThemedAnswerSkeleton />
                 </div>
               ) : question && (
                 <div className="space-y-6">
-                  <div className="flex justify-end">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
-                      <QuestionTimer 
-                        onTimeUpdate={setTimeTaken}
-                        shouldStop={shouldStopTimer}
-                      />
-                    </div>
-                  </div>
-                  
                   <QuestionCard
                     question={question.question_text}
                     difficulty={question.difficulty}
@@ -669,21 +766,29 @@ export default function ThemedChapterPage() {
                     statistics={question.statistics}
                   />
 
-                  <AnswerForm
-                    onSubmit={handleSubmitAnswer}
-                    isSubmitting={isSubmitting}
-                    questionType={question.type}
-                    options={question.options}
-                    isDisabled={!!feedback}
-                    stopTimer={stopTimerImmediately}
-                    errorMessage={error || undefined}
-                  />
+                  {/* Answer form - show skeleton during submission */}
+                  {isSubmitting ? (
+                    <ThemedAnswerSkeleton />
+                  ) : (
+                    <AnswerForm
+                      onSubmit={handleSubmitAnswer}
+                      isSubmitting={isSubmitting}
+                      questionType={question.type}
+                      options={question.options}
+                      isDisabled={!!feedback}
+                      stopTimer={stopTimerImmediately}
+                      errorMessage={error || undefined}
+                    />
+                  )}
                 </div>
               )}
             </div>
 
             <div className="w-full lg:w-1/2 mt-6 lg:mt-0">
-              {feedback ? (
+              {/* Feedback section - show skeleton during submission */}
+              {isSubmitting ? (
+                <ThemedFeedbackSkeleton />
+              ) : feedback ? (
                 <FeedbackCard
                   score={feedback.score}
                   feedback={feedback.feedback}
@@ -716,10 +821,14 @@ export default function ThemedChapterPage() {
         </div>
       </div>
       
-      {/* Floating Next Question Button - desktop */}
-      <FloatingNextQuestionButton
-        onNextQuestion={handleNextQuestion}
-      />
+      {/* Floating Next Question Button - show skeleton during question loading */}
+      {questionLoading ? (
+        <ThemedFloatingButtonSkeleton />
+      ) : (
+        <FloatingNextQuestionButton
+          onNextQuestion={handleNextQuestion}
+        />
+      )}
       
       {/* Swipe to Next Question - mobile */}
       <SwipeToNextQuestion
