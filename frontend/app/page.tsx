@@ -48,8 +48,8 @@ const BoardCardSkeleton = () => (
   </div>
 );
 
-// Quick stats component - made responsive
-const QuickStats = () => {
+// Quick stats component - simplified for guaranteed visibility
+const QuickStats = ({ isVisible }: { isVisible: boolean }) => {
   const stats = [
     { label: "Students", value: "10K+", color: "text-blue-600" },
     { label: "Questions", value: "50K+", color: "text-green-600" },
@@ -58,7 +58,7 @@ const QuickStats = () => {
   ];
   
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-4 sm:p-6 border border-gray-100 mb-6 sm:mb-8 opacity-0 animate-fade-in stagger-3">
+    <div className={`bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl p-4 sm:p-6 border border-gray-200 mb-6 sm:mb-8 shadow-sm transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-center">
         {stats.map((stat, index) => (
           <div key={index} className="group hover:scale-105 transition-transform duration-200">
@@ -164,6 +164,7 @@ export default function HomePage() {
   const { profile } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [cardsLoading, setCardsLoading] = useState(true);
+  const [showStats, setShowStats] = useState(false);
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {
@@ -178,8 +179,13 @@ export default function HomePage() {
   
   // Fast loading simulation
   useEffect(() => {
-    const initialTimer = setTimeout(() => setIsLoading(false), 300);
-    const cardsTimer = setTimeout(() => setCardsLoading(false), 500); // Faster card loading
+    const initialTimer = setTimeout(() => {
+      setIsLoading(false);
+      // Show stats immediately after main loading
+      setTimeout(() => setShowStats(true), 100);
+    }, 300);
+    
+    const cardsTimer = setTimeout(() => setCardsLoading(false), 500);
     
     return () => {
       clearTimeout(initialTimer);
@@ -247,12 +253,12 @@ export default function HomePage() {
         
         <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
           <div className="max-w-[1600px] mx-auto w-full">
-            {/* Navigation */}
-            <div className="flex justify-end mb-4 sm:mb-6 opacity-0 animate-fade-in stagger-1">
+            {/* Navigation - Highest z-index to prevent blocking */}
+            <div className="flex justify-end mb-4 sm:mb-6 opacity-0 animate-fade-in stagger-1 relative z-[100]">
               <Navigation />
             </div>
             
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto relative z-0">
               {/* Enhanced Logo Section - responsive */}
               <div className="text-center mb-12 sm:mb-16 opacity-0 animate-fade-in-up stagger-2">
                 <EnhancedLogo 
@@ -265,7 +271,7 @@ export default function HomePage() {
               </div>
               
               {/* Quick Stats */}
-              <QuickStats />
+              <QuickStats isVisible={showStats} />
               
               {/* Board Selection */}
               <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800 mb-6 sm:mb-8 opacity-0 animate-fade-in stagger-4 px-4 sm:px-0">
