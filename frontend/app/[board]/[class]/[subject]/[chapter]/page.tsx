@@ -327,12 +327,9 @@ export default function ThemedChapterPage() {
 
       if (!response.ok) {
         if (response.status === 402) {
-          // Update token service cache and show limit page
-          userTokenService.updateTokenUsage({ 
-            input: 60, 
-            output: 140, 
-            questionSubmitted: true  // This increments questions_used_today
-          });
+          // DON'T update token service cache - just show limit page
+          // The server already knows the limit is reached
+          console.log('🚫 Server says limit reached, showing limit page');
           setShowLimitPage(true);
           setQuestionLoading(false);
           return undefined;
@@ -357,11 +354,7 @@ export default function ThemedChapterPage() {
         }
         
         if (isTokenLimitError) {
-          userTokenService.updateTokenUsage({ 
-            input: 60, 
-            output: 140, 
-            questionSubmitted: true  // This increments questions_used_today
-          });
+          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
           setShowLimitPage(true);
           setQuestionLoading(false);
           return undefined;
@@ -373,12 +366,8 @@ export default function ThemedChapterPage() {
       const data = await response.json();
       setQuestion(data);
       
-      // Update token usage after successful fetch
-      userTokenService.updateTokenUsage({ 
-        input: 60, 
-        output: 140, 
-        questionSubmitted: true  // This increments questions_used_today
-      });
+      // Update token usage after successful fetch (don't increment question count for fetching)
+      userTokenService.updateTokenUsage({ input: 50 });
       
       return data;
     } catch (err) {
@@ -438,12 +427,8 @@ export default function ThemedChapterPage() {
       
       if (!response.ok) {
         if (response.status === 402) {
-          // Update token cache and show limit page
-          userTokenService.updateTokenUsage({ 
-            input: 60, 
-            output: 140, 
-            questionSubmitted: true  // This increments questions_used_today
-          });
+          // DON'T update token cache - server already knows limit is reached
+          console.log('🚫 Server says limit reached, showing limit page');
           setShowLimitPage(true);
           return;
         } else if (response.status === 413) {
@@ -478,11 +463,13 @@ export default function ThemedChapterPage() {
         follow_up_questions: result.follow_up_questions || []
       });
       
-      // Update token usage after successful submission
+      // ONLY update token usage after successful submission with response data
+      // This ensures we only increment when the backend actually processed the submission
+      console.log('✅ Answer submitted and graded successfully, updating token usage');
       userTokenService.updateTokenUsage({ 
         input: 60, 
         output: 140, 
-        questionSubmitted: true  // This increments questions_used_today
+        questionSubmitted: true  // ✅ This will increment questions_used_today
       });
       
       // Auto-scroll to feedback for PWA users

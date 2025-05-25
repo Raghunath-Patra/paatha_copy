@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-
 // frontend/utils/userTokenService.ts - Simplified User-Scoped Token Service
+
+import { useState, useEffect } from 'react';
 
 interface UserTokenStatus {
   // Raw API data
@@ -253,6 +253,78 @@ class UserTokenService {
         questionsToday: this.cachedStatus.questions_used_today
       });
       this.notifyUpdateCallbacks();
+
+      // BACKGROUND SYNC: Sync with backend database after a short delay
+      this.scheduleBackgroundSync();
+    }
+  }
+
+  // Background sync to keep cache consistent with database
+  private syncScheduled = false;
+  private scheduleBackgroundSync(): void {
+    // Only schedule sync if a meaningful action occurred (not just page refresh)
+    if (this.syncScheduled) return;
+    
+    this.syncScheduled = true;
+    console.log('📅 Background sync scheduled for 2 seconds...');
+    
+    // Sync after 2 seconds to batch multiple updates
+    setTimeout(() => {
+      this.syncWithBackend();
+      this.syncScheduled = false;
+    }, 2000);
+  }
+
+  private async syncWithBackend(): Promise<void> {
+    try {
+      console.log('🔄 Background sync: Refreshing token status from backend...');
+      
+      const authHeaders = await this.getAuthHeaders();
+      if (!authHeaders.isAuthorized) return;
+
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/api/user/question-status`, { 
+        headers: authHeaders.headers 
+      });
+
+      if (response.ok) {
+        const serverTokenData = await response.json();
+        
+        // Check if server data differs significantly from cache
+        if (this.cachedStatus) {
+          const cacheDrift = Math.abs(
+            this.cachedStatus.questions_used_today - serverTokenData.questions_used_today
+          );
+          
+          if (cacheDrift > 0) {
+            console.log('🔄 Cache drift detected, syncing with backend:', {
+              cached: this.cachedStatus.questions_used_today,
+              server: serverTokenData.questions_used_today,
+              drift: cacheDrift
+            });
+          } else {
+            console.log('✅ Cache is in sync with backend, no updates needed');
+          }
+        }
+
+        // IMPORTANT: Only update cache with server data, don't trigger callbacks for background sync
+        // This prevents UI updates from background sync unless there's actual drift
+        const oldStatus = this.cachedStatus;
+        this.cachedStatus = this.computeSmartFields(serverTokenData);
+        this.saveCache();
+        
+        // Only notify listeners if there's meaningful change
+        if (!oldStatus || 
+            oldStatus.questions_used_today !== this.cachedStatus.questions_used_today ||
+            oldStatus.limit_reached !== this.cachedStatus.limit_reached) {
+          console.log('📢 Notifying UI of meaningful changes');
+          this.notifyUpdateCallbacks();
+        }
+        
+        console.log('✅ Background sync completed');
+      }
+    } catch (error) {
+      console.warn('❌ Background sync failed (non-critical):', error);
     }
   }
 
@@ -295,12 +367,25 @@ class UserTokenService {
     console.log('🗑️ User token cache cleared');
   }
 
+  // Force immediate sync with backend (useful for testing or critical moments)
+  async forceSyncWithBackend(): Promise<boolean> {
+    try {
+      await this.syncWithBackend();
+      return true;
+    } catch (error) {
+      console.error('❌ Force sync failed:', error);
+      return false;
+    }
+  }
+
   getCacheStats() {
     return {
       hasCachedData: !!this.cachedStatus,
       isValid: this.isCacheValid(),
       warningLevel: this.cachedStatus?.warning_level || 'unknown',
       questionsRemaining: this.cachedStatus?.questions_remaining_estimate || 0,
+      questionsUsedToday: this.cachedStatus?.questions_used_today || 0,
+      syncScheduled: this.syncScheduled,
       lastUpdated: this.cachedStatus?.timestamp ? new Date(this.cachedStatus.timestamp).toISOString() : 'never'
     };
   }
@@ -335,3 +420,14 @@ export const useUserTokenStatus = () => {
 
   return { status, isRefreshing };
 };
+
+// Debug utilities for development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).tokenService = {
+    getStats: () => userTokenService.getCacheStats(),
+    clearCache: () => userTokenService.clearCache(),
+    forceSync: () => userTokenService.forceSyncWithBackend(),
+    getStatus: () => userTokenService.getTokenStatus()
+  };
+  console.log('🛠️ Token service debug utilities available: window.tokenService');
+}
