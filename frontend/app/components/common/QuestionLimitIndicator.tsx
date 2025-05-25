@@ -26,30 +26,22 @@ const QuestionLimitIndicator: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [recentlyUpdated, setRecentlyUpdated] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const router = useRouter();
+
+  // NEW: State to control animated width of progress bar
+  const [animatedWidth, setAnimatedWidth] = useState<number>(0);
 
   useEffect(() => {
     const cachedStatus = userTokenService.getTokenStatus();
     if (cachedStatus) {
       setStatus(cachedStatus);
       setIsInitialLoad(false);
-      console.log('✅ Initial token status from cache:', {
-        warningLevel: cachedStatus.warning_level,
-        questionsUsed: cachedStatus.questions_used_today,
-        questionsRemaining: cachedStatus.questions_remaining_estimate
-      });
     } else {
       setIsRefreshing(true);
       userTokenService.fetchUserTokenStatus();
     }
 
     const unsubscribe = userTokenService.onTokenUpdate((newStatus: UserTokenStatus) => {
-      console.log('🔄 Token status updated:', {
-        warningLevel: newStatus.warning_level,
-        questionsUsed: newStatus.questions_used_today,
-        questionsRemaining: newStatus.questions_remaining_estimate
-      });
-
+      // Detect meaningful changes for animation
       if (status && (
         newStatus.questions_used_today !== status.questions_used_today ||
         newStatus.input_used !== status.input_used ||
@@ -79,6 +71,24 @@ const QuestionLimitIndicator: React.FC = () => {
     };
   }, [status]);
 
+  // Animate progress bar width on status or isInitialLoad change
+  useEffect(() => {
+    if (status) {
+      // Reset width to 0 immediately to trigger transition from 0 to usage_percentage
+      setAnimatedWidth(0);
+      
+      // Wait a tick, then set to target width to trigger CSS transition
+      const timeout = setTimeout(() => {
+        setAnimatedWidth(Math.min(100, status.usage_percentage));
+      }, 50); // 50ms delay
+
+      return () => clearTimeout(timeout);
+    } else {
+      setAnimatedWidth(0);
+    }
+  }, [status]);
+
+  // Skeleton loading UI on initial load or loading
   if (isInitialLoad || (!status && isRefreshing)) {
     return (
       <>
@@ -87,21 +97,17 @@ const QuestionLimitIndicator: React.FC = () => {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
           }
-          
           @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
           }
-          
           .animate-shimmer {
             animation: shimmer 2s infinite;
           }
-          
           .animate-pulse-custom {
             animation: pulse 1.5s ease-in-out infinite;
           }
         `}</style>
-
         <div className="bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-3 w-full relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
           <div className="space-y-2 relative">
@@ -260,12 +266,12 @@ const QuestionLimitIndicator: React.FC = () => {
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden relative">
             {status && (
               <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${styles.barColor}`}
-                style={{ width: `${Math.min(100, status.usage_percentage)}%` }}
+                className={`h-full rounded-full transition-width duration-1000 ease-out ${styles.barColor}`}
+                style={{ width: `${animatedWidth}%` }}
               />
             )}
 
-            {status && status.usage_percentage > 0 && recentlyUpdated && (
+            {status && animatedWidth > 0 && recentlyUpdated && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
             )}
           </div>
