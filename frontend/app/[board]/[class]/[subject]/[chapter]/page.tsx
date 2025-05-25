@@ -98,15 +98,6 @@ const ThemedHeaderSkeleton = () => (
   </div>
 );
 
-// Timer skeleton component - now left-aligned
-const ThemedTimerSkeleton = () => (
-  <div className="flex justify-start mb-6">
-    <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
-      <div className="h-6 w-16 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></div>
-    </div>
-  </div>
-);
-
 // Enhanced question skeleton with theme
 const ThemedQuestionSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
@@ -714,7 +705,7 @@ export default function ThemedChapterPage() {
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Header - with skeleton for chapter name loading */}
           <div className="flex justify-between mb-6">
-            <div>
+            <div className="flex flex-col">
               <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
                 {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {displayChapter}
                 {chapterNameLoading ? (
@@ -727,9 +718,26 @@ export default function ThemedChapterPage() {
                   </span>
                 )}
               </h1>
-              <p className="text-sm text-gray-600">
-                {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
-              </p>
+              
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-gray-600">
+                  {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
+                </p>
+                
+                {/* Timer integrated in header */}
+                {questionLoading ? (
+                  <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
+                    <div className="h-6 w-16 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></div>
+                  </div>
+                ) : question && (
+                  <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
+                    <QuestionTimer 
+                      onTimeUpdate={setTimeTaken}
+                      shouldStop={shouldStopTimer}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2 items-start relative z-[100]">
@@ -778,20 +786,6 @@ export default function ThemedChapterPage() {
 
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-full lg:w-1/2">
-              {/* Timer section - now left-aligned and show skeleton during question loading */}
-              {questionLoading ? (
-                <ThemedTimerSkeleton />
-              ) : question && (
-                <div className="flex justify-start mb-6">
-                  <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
-                    <QuestionTimer 
-                      onTimeUpdate={setTimeTaken}
-                      shouldStop={shouldStopTimer}
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* Question section */}
               {questionLoading ? (
                 <div className="space-y-6">
