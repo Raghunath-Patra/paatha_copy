@@ -190,7 +190,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
     }
   };
 
-  const toggleChapterExpansion = (subject: string, chapterNum: number) => {
+  const toggleChapterExpansion = (subject: string, chapterNum: number) =>  {
     const key = `${subject}-${chapterNum}`;
     setExpandedChapters(prev => {
       const newSet = new Set(prev);
@@ -209,20 +209,24 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
 
   return (
     <div className="space-y-6 pb-6">
-      {subjects.map((subject) => (
-        <div key={subject.name} className="bg-white rounded-lg p-6 shadow-sm">
+      {subjects.map((subject, subjectIndex) => (
+        <div key={subject.name} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300">
           <h2 className="text-xl font-medium mb-4 text-gray-800">
             {subject.name}:
           </h2>
           
           <div className="space-y-3">
-            {subject.chapters.map((chapter) => {
+            {subject.chapters.map((chapter, chapterIndex) => {
               const chapterProgress = getChapterProgress(subject.name, chapter.number);
               const isExpanded = isChapterExpanded(subject.name, chapter.number);
 
               return (
-                <div key={chapter.number} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
+                <div 
+                  key={chapter.number} 
+                  className="chapter-item border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-all duration-200"
+                  style={{ animationDelay: `${chapterIndex * 100}ms` }}
+                >
+                  <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-200">
                     <div 
                       className="flex-1 cursor-pointer"
                       onClick={() => handleChapterClick(subject.name, chapter.number)}
@@ -231,65 +235,126 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                         <span className="text-gray-600 text-sm font-medium mr-2">
                           {chapter.number}.
                         </span>
-                        <span className="text-gray-800 font-medium">
+                        <span className="text-gray-800 font-medium hover:text-blue-600 transition-colors duration-200">
                           {chapter.name}
                         </span>
                       </div>
                       
-                      {/* Horizontal Progress Bar */}
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      {/* Horizontal Progress Bar with Animation */}
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                         <div 
-                          className={`h-2 rounded-full transition-all duration-1000 ease-out${
-                            getProgressColor(chapterProgress.averageScore)}`}
+                          className={`progress-bar h-2 rounded-full ${getProgressColor(chapterProgress.averageScore)}`}
                           style={{ 
-                            width: getProgressWidth(chapterProgress.attempted, chapterProgress.total),
-                            opacity: 0.8
-                          }}
+                            '--target-width': getProgressWidth(chapterProgress.attempted, chapterProgress.total),
+                            animationDelay: `${(subjectIndex * subject.chapters.length + chapterIndex) * 150}ms`
+                          } as React.CSSProperties & { '--target-width': string }}
                         />
                       </div>
                     </div>
                     
-                    {/* Dropdown Arrow */}
+                    {/* Dropdown Arrow - Fixed Direction */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleChapterExpansion(subject.name, chapter.number);
                       }}
-                      className="ml-4 p-1 hover:bg-gray-200 rounded-full transition-colors"
+                      className="ml-4 p-2 hover:bg-gray-200 rounded-full transition-all duration-200 hover:scale-110"
                     >
-                      {isExpanded ? (
-                        <ChevronUp size={20} className="text-gray-600" />
-                      ) : (
-                        <ChevronDown size={20} className="text-gray-600" />
-                      )}
+                      <div className="transition-transform duration-300">
+                        {isExpanded ? (
+                          <ChevronUp size={20} className="text-gray-600" />
+                        ) : (
+                          <ChevronDown size={20} className="text-gray-600" />
+                        )}
+                      </div>
                     </button>
                   </div>
                   
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 text-sm text-gray-600">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
+                  {/* Expanded Details with Smooth Height Animation */}
+                  <div 
+                    className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                      isExpanded 
+                        ? 'max-h-40 opacity-100 py-3' 
+                        : 'max-h-0 opacity-0 py-0'
+                    }`}
+                    style={{
+                      transitionTimingFunction: isExpanded 
+                        ? 'cubic-bezier(0.4, 0, 0.2, 1)' // Ease out when expanding
+                        : 'cubic-bezier(0.4, 0, 1, 1)'   // Ease in when collapsing
+                    }}
+                  >
+                    <div className={`px-4 border-t border-gray-200 text-sm text-gray-600 transform transition-all duration-400 ${
+                      isExpanded 
+                        ? 'translate-y-0 opacity-100' 
+                        : '-translate-y-2 opacity-0'
+                    }`}>
+                      <div className="grid grid-cols-2 gap-4 pt-3">
+                        <div className={`flex items-center space-x-2 transition-all duration-300 delay-100 ${
+                          isExpanded ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'
+                        }`}>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                           <span className="font-medium">Progress:</span>
-                          <span className="ml-2">
+                          <span className="text-blue-600 font-semibold">
                             {chapterProgress.attempted}/{Math.max(chapterProgress.attempted, chapterProgress.total)} questions
                           </span>
                         </div>
-                        <div>
+                        <div className={`flex items-center space-x-2 transition-all duration-300 delay-200 ${
+                          isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                        }`}>
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                           <span className="font-medium">Average Score:</span>
-                          <span className="ml-2">
+                          <span className={`font-semibold transition-colors duration-200 ${
+                            chapterProgress.averageScore >= 8 ? 'text-green-600' :
+                            chapterProgress.averageScore >= 6 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
                             {chapterProgress.averageScore.toFixed(1)}/10
                           </span>
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
       ))}
+      
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes progressFill {
+          from {
+            width: 0%;
+            opacity: 0.5;
+          }
+          to {
+            width: var(--target-width);
+            opacity: 0.9;
+          }
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .progress-bar {
+          animation: progressFill 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          width: 0%; /* Start from 0% */
+        }
+        
+        .chapter-item {
+          animation: fadeInUp 0.4s ease-out forwards;
+          opacity: 0; /* Start hidden */
+        }
+      `}</style>
     </div>
   );
 }
