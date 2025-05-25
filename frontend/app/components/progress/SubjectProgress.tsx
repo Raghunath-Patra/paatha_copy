@@ -239,7 +239,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                       {/* Horizontal Progress Bar */}
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
+                          className={`h-2 rounded-full transition-all duration-1000 ease-out${
                             getProgressColor(chapterProgress.averageScore)}`}
                           style={{ 
                             width: getProgressWidth(chapterProgress.attempted, chapterProgress.total),
@@ -258,9 +258,9 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                       className="ml-4 p-1 hover:bg-gray-200 rounded-full transition-colors"
                     >
                       {isExpanded ? (
-                        <ChevronDown size={20} className="text-gray-600" />
-                      ) : (
                         <ChevronUp size={20} className="text-gray-600" />
+                      ) : (
+                        <ChevronDown size={20} className="text-gray-600" />
                       )}
                     </button>
                   </div>
