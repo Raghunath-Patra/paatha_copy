@@ -1,6 +1,6 @@
-// frontend/app/components/common/QuestionLimitIndicator.tsx - Fixed version with skeleton loading
+// frontend/app/components/common/QuestionLimitIndicator.tsx - Fixed version with working progress animation
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { userTokenService } from '../../utils/userTokenService';
 
@@ -28,6 +28,8 @@ const QuestionLimitIndicator: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [recentlyUpdated, setRecentlyUpdated] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [animateProgress, setAnimateProgress] = useState(false);
+  const progressRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   
   useEffect(() => {
@@ -62,8 +64,14 @@ const QuestionLimitIndicator: React.FC = () => {
         newStatus.output_used !== status.output_used ||
         newStatus.warning_level !== status.warning_level
       )) {
+        // Trigger progress animation
+        setAnimateProgress(true);
         setRecentlyUpdated(true);
-        setTimeout(() => setRecentlyUpdated(false), 2000);
+        
+        setTimeout(() => {
+          setAnimateProgress(false);
+          setRecentlyUpdated(false);
+        }, 2000);
       }
 
       setStatus(newStatus);
@@ -86,6 +94,26 @@ const QuestionLimitIndicator: React.FC = () => {
       clearInterval(refreshInterval);
     };
   }, [status]);
+
+  // Animate progress bar when status changes
+  useEffect(() => {
+    if (animateProgress && progressRef.current && status) {
+      const element = progressRef.current;
+      
+      // Start at 0 width
+      element.style.width = '0%';
+      element.style.transition = 'none';
+      
+      // Force reflow
+      element.offsetHeight;
+      
+      // Animate to target width
+      requestAnimationFrame(() => {
+        element.style.transition = 'width 1s ease-out';
+        element.style.width = `${Math.min(100, status.usage_percentage)}%`;
+      });
+    }
+  }, [animateProgress, status]);
 
   // Show skeleton loading during initial load or when no data and refreshing
   if (isInitialLoad || (!status && isRefreshing)) {
@@ -253,17 +281,17 @@ const QuestionLimitIndicator: React.FC = () => {
           }
         }
         
-        @keyframes progress-fill {
-          from { width: 0%; }
-          to { width: var(--target-width); }
+        @keyframes shimmer-flow {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
         
         .pulse-glow {
           animation: pulse-glow 1.5s infinite;
         }
         
-        .progress-animate {
-          animation: progress-fill 1s ease-out forwards;
+        .shimmer-overlay {
+          animation: shimmer-flow 1.5s infinite;
         }
       `}</style>
 
@@ -291,19 +319,19 @@ const QuestionLimitIndicator: React.FC = () => {
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden relative">
             {status && (
               <div 
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${styles.barColor} ${
-                  recentlyUpdated ? 'progress-animate' : ''
+                ref={progressRef}
+                className={`h-full rounded-full ${styles.barColor} ${
+                  !animateProgress ? 'transition-all duration-300 ease-out' : ''
                 }`}
                 style={{ 
-                  width: `${Math.min(100, status.usage_percentage)}%`,
-                  '--target-width': `${Math.min(100, status.usage_percentage)}%`
-                } as React.CSSProperties}
+                  width: animateProgress ? '0%' : `${Math.min(100, status.usage_percentage)}%`
+                }}
               />
             )}
             
             {/* Shimmer effect for active progress */}
             {status && status.usage_percentage > 0 && recentlyUpdated && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent shimmer-overlay"></div>
             )}
           </div>
           
