@@ -353,21 +353,30 @@ export default function ClassPage() {
   const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
   const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
   
+  const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
+  const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
+  
+  // Get friendly display names for board and class
+  const boardDisplayName = BOARD_DISPLAY_NAMES[board] || board?.toUpperCase() || '';
+  const classDisplayName = CLASS_DISPLAY_NAMES[classLevel] || classLevel?.toUpperCase() || '';
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-neutral-50">
         <div className="container-fluid px-8 py-6">
           <div className="max-w-[1600px] mx-auto w-full">
+            {/* Real Header - We know this already! */}
             <div className="flex items-center justify-between mb-4">
-              {/* Skeleton Header */}
-              <div className="h-9 bg-gray-200 rounded w-64 animate-pulse"></div>
+              <h1 className="text-3xl font-medium">
+                {boardDisplayName} {classDisplayName}
+              </h1>
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+                <Navigation />
               </div>
             </div>
             
             <div className="max-w-5xl mx-auto overflow-y-auto">
-              {/* Skeleton Subject Cards */}
+              {/* Skeleton Subject Cards - Only for unknown data */}
               <div className="space-y-6 pb-6">
                 {[1, 2].map((subjectIndex) => (
                   <div key={subjectIndex} className="bg-white rounded-lg p-6 shadow-sm">
@@ -447,10 +456,6 @@ export default function ClassPage() {
       </div>
     );
   }
-
-  // Get friendly display names for board and class
-  const boardDisplayName = BOARD_DISPLAY_NAMES[board] || board?.toUpperCase() || '';
-  const classDisplayName = CLASS_DISPLAY_NAMES[classLevel] || classLevel?.toUpperCase() || '';
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50">
