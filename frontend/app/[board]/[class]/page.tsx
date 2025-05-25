@@ -1,4 +1,4 @@
-// frontend/app/[board]/[class]/page.tsx - Enhanced with theme
+// frontend/app/[board]/[class]/page.tsx - Enhanced with user token service
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,11 +7,12 @@ import Navigation from '../../components/navigation/Navigation';
 import SubjectProgress from '../../components/progress/SubjectProgress';
 import { getAuthHeaders } from '../../utils/auth';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { userTokenService } from '../../utils/userTokenService';
 import { Home } from 'lucide-react';
 
 interface Subject {
   name: string;
-  code: string; // Make code required
+  code: string;
   chapters: Array<{
     number: number;
     name: string;
@@ -175,9 +176,8 @@ export default function ClassPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // Generate cache key based on board and class (use original params, not normalized)
+  // Generate cache key based on board and class
   const getCacheKey = (board: string, classLevel: string) => {
-    // 🔍 Use original params to avoid cache conflicts between different boards
     const originalBoard = typeof params.board === 'string' ? params.board : board;
     const originalClass = typeof params.class === 'string' ? params.class : classLevel;
     const cacheKey = `subjects_${originalBoard}_${originalClass}`;
@@ -277,6 +277,7 @@ export default function ClassPage() {
     // If no profile (user logged out), clear cache
     if (!authLoading && !profile) {
       clearAllCache();
+      userTokenService.clearCache(); // Also clear token cache
     }
   }, [profile, authLoading]);
   
@@ -309,6 +310,9 @@ export default function ClassPage() {
           setSubjects(cachedData.subjects);
           setProgress(cachedData.progress);
           setLoading(false);
+          
+          // INITIALIZE TOKEN SERVICE: Fetch user token status in background (no board/class needed)
+          userTokenService.fetchUserTokenStatus();
           return; // Use cached data, no need to fetch
         }
 
@@ -329,7 +333,7 @@ export default function ClassPage() {
         
         console.log('🔍 API URLs:', { subjectsUrl, progressUrl });
 
-        // Only fetch subjects list (without chapters)
+        // Only fetch subjects list
         const subjectsResponse = await fetch(subjectsUrl, { headers: authHeaders.headers });
 
         if (!subjectsResponse.ok) {
@@ -371,6 +375,9 @@ export default function ClassPage() {
         
         // Cache the fetched data (both subjects and progress)
         setCachedData(board, classLevel, subjectsData.subjects || [], progressData);
+        
+        // INITIALIZE TOKEN SERVICE: Fetch user token status in background after successful data fetch
+        userTokenService.fetchUserTokenStatus();
 
       } catch (error) {
         console.error('❌ Error fetching subjects:', error);

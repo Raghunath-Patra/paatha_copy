@@ -1,4 +1,4 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx - Enhanced with granular skeleton loading
+// frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx - Enhanced with user token service
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -13,8 +13,10 @@ import QuestionLimitIndicator from '../../../../components/common/QuestionLimitI
 import TokenLimitWarning from '../../../../components/common/TokenLimitWarning';
 import FloatingNextQuestionButton from '../../../../components/questions/FloatingNextQuestionButton';
 import SwipeToNextQuestion from '../../../../components/questions/SwipeToNextQuestion';
+import DailyLimitReached from '../../../../components/limits/DailyLimitReached';
 import { getAuthHeaders } from '../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../contexts/SupabaseAuthContext';
+import { userTokenService } from '../../../../utils/userTokenService';
  
 // Define a mapping for subject codes to user-friendly names
 const SUBJECT_CODE_TO_NAME: Record<string, string> = {
@@ -214,6 +216,10 @@ export default function ThemedChapterPage() {
   const [showTokenWarning, setShowTokenWarning] = useState(false);
   const [tokenWarningAllowClose, setTokenWarningAllowClose] = useState(true);
   const [errorDisplayMode, setErrorDisplayMode] = useState<'none' | 'token-warning' | 'error-message'>('none');
+  
+  // NEW: State for showing daily limit page
+  const [showLimitPage, setShowLimitPage] = useState(false);
+  const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -223,6 +229,40 @@ export default function ThemedChapterPage() {
     setShouldStopTimer(true);
   }, []);
   
+  // Check initial token status on page load
+  useEffect(() => {
+    const checkInitialTokenStatus = () => {
+      const status = userTokenService.getTokenStatus();
+      setUserTokenStatus(status);
+      
+      if (status) {
+        if (status.limit_reached || !status.can_fetch_question) {
+          console.log('🚫 Token limit reached, showing limit page');
+          setShowLimitPage(true);
+          setLoading(false);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // Subscribe to token updates
+    const unsubscribe = userTokenService.onTokenUpdate((newStatus: any) => {
+      setUserTokenStatus(newStatus);
+      if (newStatus && (newStatus.limit_reached || !newStatus.can_fetch_question)) {
+        console.log('🚫 Token limit reached via update, showing limit page');
+        setShowLimitPage(true);
+      }
+    });
+
+    const limitReached = checkInitialTokenStatus();
+    if (limitReached) {
+      return () => unsubscribe();
+    }
+
+    return () => unsubscribe();
+  }, []);
+  
   // Check token status regularly
   useEffect(() => {
     const checkTokenStatus = async () => {
@@ -230,7 +270,7 @@ export default function ThemedChapterPage() {
         const { headers, isAuthorized } = await getAuthHeaders();
         if (!isAuthorized) return;
         
-        const response = await fetch(`${API_URL}/api/user/token-status`, { headers });
+        const response = await fetch(`${API_URL}/api/user/question-status`, { headers });
         if (response.ok) {
           const data = await response.json();
           if (data.limit_reached) {
@@ -255,33 +295,20 @@ export default function ThemedChapterPage() {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
   
-  // Add event listener for token limit events
-  useEffect(() => {
-    const handleTokenLimitReached = (event: CustomEvent) => {
-      console.log('Token limit reached event received', event.detail);
-      
-      const isPremium = event.detail?.isPremium || false;
-      const allowClose = event.detail?.allowClose !== false;
-      
-      setShowTokenWarning(true);
-      setTokenWarningAllowClose(allowClose);
-      setErrorDisplayMode('token-warning');
-      setShowUpgradeButton(true);
-      setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
-    };
-
-    window.addEventListener('tokenLimitReached', handleTokenLimitReached as EventListener);
-    
-    return () => {
-      window.removeEventListener('tokenLimitReached', handleTokenLimitReached as EventListener);
-    };
-  }, []);
-  
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
       setError(null);
       setQuestionLoading(true);
       setErrorDisplayMode('none');
+
+      // SMART PRE-VALIDATION: Check user tokens before making API call
+      const actionCheck = userTokenService.canPerformAction('fetch_question');
+      if (!actionCheck.allowed) {
+        console.log('❌ Question fetch blocked:', actionCheck.reason);
+        setShowLimitPage(true);
+        setQuestionLoading(false);
+        return undefined;
+      }
 
       const { headers, isAuthorized } = await getAuthHeaders();
       if (!isAuthorized) {
@@ -300,10 +327,9 @@ export default function ThemedChapterPage() {
 
       if (!response.ok) {
         if (response.status === 402) {
-          setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
-          setShowUpgradeButton(true);
-          setShowTokenWarning(true);
-          setErrorDisplayMode('token-warning');
+          // Update token service cache and show limit page
+          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+          setShowLimitPage(true);
           setQuestionLoading(false);
           return undefined;
         }
@@ -327,10 +353,8 @@ export default function ThemedChapterPage() {
         }
         
         if (isTokenLimitError) {
-          setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
-          setShowUpgradeButton(true);
-          setShowTokenWarning(true);
-          setErrorDisplayMode('token-warning');
+          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+          setShowLimitPage(true);
           setQuestionLoading(false);
           return undefined;
         }
@@ -340,11 +364,15 @@ export default function ThemedChapterPage() {
 
       const data = await response.json();
       setQuestion(data);
+      
+      // Update token usage after successful fetch
+      userTokenService.updateTokenUsage({ input: 50 });
+      
       return data;
     } catch (err) {
       console.error('Error fetching question:', err);
       
-      if (!showUpgradeButton && !showTokenWarning) {
+      if (!showLimitPage) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setErrorDisplayMode('error-message');
       }
@@ -358,6 +386,14 @@ export default function ThemedChapterPage() {
     try {
       if (!profile) {
         router.push('/login');
+        return;
+      }
+
+      // SMART PRE-VALIDATION: Check user tokens before making API call
+      const actionCheck = userTokenService.canPerformAction('submit_answer');
+      if (!actionCheck.allowed) {
+        console.log('❌ Answer submission blocked:', actionCheck.reason);
+        setShowLimitPage(true);
         return;
       }
 
@@ -389,20 +425,11 @@ export default function ThemedChapterPage() {
       });
       
       if (!response.ok) {
-        let errorDetail = "Failed to submit answer";
-        
-        try {
-          const errorResponse = await response.json();
-          errorDetail = errorResponse.detail || errorDetail;
-        } catch (e) {
-          errorDetail = await response.text() || errorDetail;
-        }
-        
         if (response.status === 402) {
-          setError("You've reached your daily usage limit. Please upgrade to Premium or try again tomorrow.");
-          setShowTokenWarning(true);
-          setShowUpgradeButton(true);
-          setErrorDisplayMode('token-warning');
+          // Update token cache and show limit page
+          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+          setShowLimitPage(true);
+          return;
         } else if (response.status === 413) {
           setError("Your answer is too long or image is too large. Make it focused and concise.");
           setErrorDisplayMode('error-message');
@@ -410,6 +437,13 @@ export default function ThemedChapterPage() {
           setError("You've reached the token limit for this question. Please move to another question.");
           setErrorDisplayMode('error-message');
         } else {
+          let errorDetail = "Failed to submit answer";
+          try {
+            const errorResponse = await response.json();
+            errorDetail = errorResponse.detail || errorDetail;
+          } catch (e) {
+            errorDetail = await response.text() || errorDetail;
+          }
           setError(errorDetail);
           setErrorDisplayMode('error-message');
         }
@@ -428,6 +462,9 @@ export default function ThemedChapterPage() {
         follow_up_questions: result.follow_up_questions || []
       });
       
+      // Update token usage after successful submission
+      userTokenService.updateTokenUsage({ input: 60, output: 140 });
+      
       // Auto-scroll to feedback for PWA users
       setTimeout(() => {
         const isPWA = window.matchMedia('(display-mode: standalone)').matches;
@@ -444,7 +481,7 @@ export default function ThemedChapterPage() {
       }, 300);
     } catch (err) {
       console.error('Error submitting answer:', err);
-      if (!showUpgradeButton && !showTokenWarning) {
+      if (!showLimitPage) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setErrorDisplayMode('error-message');
       }
@@ -454,6 +491,14 @@ export default function ThemedChapterPage() {
   };
 
   const handleNextQuestion = useCallback(async () => {
+    // Check token status before fetching next question
+    const actionCheck = userTokenService.canPerformAction('fetch_question');
+    if (!actionCheck.allowed) {
+      console.log('❌ Next question blocked:', actionCheck.reason);
+      setShowLimitPage(true);
+      return;
+    }
+
     setFeedback(null);
     setShouldStopTimer(false);
     setErrorDisplayMode('none');
@@ -469,7 +514,7 @@ export default function ThemedChapterPage() {
     } catch (error) {
       console.error('Error fetching next question:', error);
     }
-  }, [params.board, params.class, params.subject, params.chapter, router, fetchQuestion]);
+  }, [params.board, params.class, params.subject, params.chapter, router]);
 
   useEffect(() => {
     const syncUserData = async () => {
@@ -490,29 +535,6 @@ export default function ThemedChapterPage() {
         return true;
       } catch (error) {
         console.error('Error syncing user data:', error);
-        return false;
-      }
-    };
-
-    const checkTokenStatus = async () => {
-      try {
-        const { headers, isAuthorized } = await getAuthHeaders();
-        if (!isAuthorized) return false;
-        
-        const response = await fetch(`${API_URL}/api/user/token-status`, { headers });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.limit_reached) {
-            setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
-            setShowUpgradeButton(true);
-            setShowTokenWarning(true);
-            setErrorDisplayMode('token-warning');
-            return true;
-          }
-        }
-        return false;
-      } catch (error) {
-        console.error('Error checking token status:', error);
         return false;
       }
     };
@@ -569,12 +591,6 @@ export default function ThemedChapterPage() {
           return;
         }
         
-        const limitReached = await checkTokenStatus();
-        if (limitReached) {
-          setLoading(false);
-          return;
-        }
-        
         // Fetch chapter name in parallel
         fetchChapterName();
         
@@ -599,8 +615,11 @@ export default function ThemedChapterPage() {
       setLoading(false);
     };
 
-    initializePage();
-  }, [params.board, params.class, params.subject, params.chapter, router, profile, authLoading, searchParams, API_URL]);
+    // Don't initialize if showing limit page
+    if (!showLimitPage) {
+      initializePage();
+    }
+  }, [params.board, params.class, params.subject, params.chapter, router, profile, authLoading, searchParams, API_URL, showLimitPage]);
 
   // Format subject name function
   const formatSubjectName = (subject: string) => {
@@ -619,7 +638,7 @@ export default function ThemedChapterPage() {
   };
 
   // Full page loading
-  if (loading) {
+  if (loading && !showLimitPage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
         {/* Animated background decorations */}
@@ -647,6 +666,24 @@ export default function ThemedChapterPage() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // Show daily limit page when token limits are reached
+  if (showLimitPage) {
+    return (
+      <DailyLimitReached
+        questionsUsedToday={userTokenStatus?.questions_used_today || 0}
+        planName={userTokenStatus?.plan_name || 'free'}
+        displayName={userTokenStatus?.display_name || 'Free Plan'}
+        onUpgrade={() => {
+          router.push('/upgrade');
+        }}
+        onGoBack={() => {
+          router.push(`/${params.board}/${params.class}`);
+        }}
+        showStats={true}
+      />
     );
   }
 

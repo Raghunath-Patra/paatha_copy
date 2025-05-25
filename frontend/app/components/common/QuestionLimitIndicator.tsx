@@ -1,10 +1,10 @@
-// frontend/app/components/common/QuestionLimitIndicator.tsx
+// frontend/app/components/common/QuestionLimitIndicator.tsx - Using userTokenService
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuthHeaders } from '../../utils/auth';
+import { userTokenService } from '../../utils/userTokenService';
 
-interface TokenStatus {
+interface UserTokenStatus {
   input_limit: number;
   output_limit: number;
   input_used: number;
@@ -15,145 +15,256 @@ interface TokenStatus {
   questions_used_today: number;
   plan_name: string;
   display_name: string;
+  usage_percentage: number;
+  questions_remaining_estimate: number;
+  can_fetch_question: boolean;
+  can_submit_answer: boolean;
+  warning_level: 'safe' | 'warning' | 'critical' | 'blocked';
+  timestamp: number;
 }
-
-// Define the keyframes animation
-const pulseAnimation = `
-@keyframes pulse-animation {
-  0% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.7;
-  }
-}
-`;
 
 const QuestionLimitIndicator: React.FC = () => {
-  // Initialize with default values instead of null
-  const [status, setStatus] = useState<TokenStatus>({
-    input_limit: 0,
-    output_limit: 0,
-    input_used: 0,
-    output_used: 0,
-    input_remaining: 0,
-    output_remaining: 0,
-    limit_reached: false,
-    questions_used_today: 0,
-    plan_name: '',
-    display_name: ''
-  });
-  
-  // Use isRefreshing instead of loading to indicate data refresh
-  const [isRefreshing, setIsRefreshing] = useState(true);
-  const router = useRouter();
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  
-  // Add a new state to track when data has been updated
+  const [status, setStatus] = useState<UserTokenStatus | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [recentlyUpdated, setRecentlyUpdated] = useState(false);
+  const router = useRouter();
   
   useEffect(() => {
-    const fetchStatus = async () => {
-      // Start refreshing but don't clear existing data
+    // Get initial cached status
+    const cachedStatus = userTokenService.getTokenStatus();
+    if (cachedStatus) {
+      setStatus(cachedStatus);
+      console.log('✅ Initial token status from cache:', {
+        warningLevel: cachedStatus.warning_level,
+        questionsUsed: cachedStatus.questions_used_today,
+        questionsRemaining: cachedStatus.questions_remaining_estimate
+      });
+    } else {
+      // No cached data, trigger background fetch
       setIsRefreshing(true);
-      
-      try {
-        const { headers, isAuthorized } = await getAuthHeaders();
-        
-        if (!isAuthorized) {
-          console.log('Not authorized to fetch token status');
-          return;
-        }
-        
-        const response = await fetch(`${API_URL}/api/user/question-status`, { headers });
-        
-        if (!response.ok) {
-          console.error('Failed to fetch token status', response.status, response.statusText);
-          return;
-        }
-        
-        const data = await response.json();
-        console.log('Token status data:', data);
-        
-        // Only trigger animation if data has changed
-        if (data.questions_used_today !== status.questions_used_today || 
-            data.input_used !== status.input_used ||
-            data.output_used !== status.output_used) {
-          setRecentlyUpdated(true);
-          setTimeout(() => setRecentlyUpdated(false), 2000); // Reset after animation duration
-        }
-        
-        setStatus(data);
-      } catch (error) {
-        console.error('Error fetching token status:', error);
-      } finally {
-        setIsRefreshing(false);
+      userTokenService.fetchUserTokenStatus();
+    }
+
+    // Subscribe to token updates
+    const unsubscribe = userTokenService.onTokenUpdate((newStatus: UserTokenStatus) => {
+      console.log('🔄 Token status updated:', {
+        warningLevel: newStatus.warning_level,
+        questionsUsed: newStatus.questions_used_today,
+        questionsRemaining: newStatus.questions_remaining_estimate
+      });
+
+      // Check if data has meaningfully changed to trigger animation
+      if (status && (
+        newStatus.questions_used_today !== status.questions_used_today ||
+        newStatus.input_used !== status.input_used ||
+        newStatus.output_used !== status.output_used ||
+        newStatus.warning_level !== status.warning_level
+      )) {
+        setRecentlyUpdated(true);
+        setTimeout(() => setRecentlyUpdated(false), 2000);
       }
+
+      setStatus(newStatus);
+      setIsRefreshing(false);
+    });
+
+    // Periodic refresh to ensure data freshness (every 2 minutes)
+    const refreshInterval = setInterval(() => {
+      const currentStatus = userTokenService.getTokenStatus();
+      if (!currentStatus) {
+        // No cached data, fetch in background
+        setIsRefreshing(true);
+        userTokenService.fetchUserTokenStatus();
+      }
+    }, 2 * 60 * 1000); // 2 minutes
+
+    return () => {
+      unsubscribe();
+      clearInterval(refreshInterval);
     };
-    
-    fetchStatus();
-    
-    // Refresh status every minute
-    const intervalId = setInterval(fetchStatus, 60000);
-    
-    return () => clearInterval(intervalId);
-  }, [API_URL]);
-  
-  // Never return null, always render the component
-  // The key change is removing this line: if (loading || !status) return null;
-  
-  // Calculate percentage of usage
-  const calculateUsagePercentage = () => {
-    // Calculate based on tokens (whichever is higher percentage)
-    const inputPercentage = (status.input_used / status.input_limit) * 100;
-    const outputPercentage = (status.output_used / status.output_limit) * 100;
-    
-    // Use the higher percentage
-    return Math.min(100, Math.max(inputPercentage, outputPercentage) || 0); // Add fallback for NaN
+  }, [status]);
+
+  // Determine color and styling based on warning level
+  const getIndicatorStyles = () => {
+    if (!status) {
+      return {
+        barColor: 'bg-gray-300',
+        textColor: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200'
+      };
+    }
+
+    switch (status.warning_level) {
+      case 'blocked':
+        return {
+          barColor: 'bg-red-500',
+          textColor: 'text-red-700',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200'
+        };
+      case 'critical':
+        return {
+          barColor: 'bg-red-400',
+          textColor: 'text-red-600',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200'
+        };
+      case 'warning':
+        return {
+          barColor: 'bg-yellow-500',
+          textColor: 'text-yellow-700',
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-200'
+        };
+      case 'safe':
+      default:
+        return {
+          barColor: 'bg-green-500',
+          textColor: 'text-green-700',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200'
+        };
+    }
   };
-  
-  // Determine color based on usage percentage
-  const getBarColor = () => {
-    const percentage = calculateUsagePercentage();
-    if (percentage >= 80) return 'bg-red-500';
-    if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-green-500';
+
+  const styles = getIndicatorStyles();
+
+  // Format the display message based on status
+  const getDisplayMessage = () => {
+    if (!status) {
+      return { primary: 'Loading...', secondary: 'Checking usage' };
+    }
+
+    if (status.limit_reached) {
+      return {
+        primary: 'Daily limit reached',
+        secondary: 'Upgrade to Premium for more'
+      };
+    }
+
+    if (status.warning_level === 'critical') {
+      return {
+        primary: `${status.questions_used_today} questions used`,
+        secondary: `~${status.questions_remaining_estimate} remaining today`
+      };
+    }
+
+    if (status.warning_level === 'warning') {
+      return {
+        primary: `${status.questions_used_today} questions used`,
+        secondary: `~${status.questions_remaining_estimate} remaining`
+      };
+    }
+
+    // Safe level
+    return {
+      primary: `${status.questions_used_today} questions today`,
+      secondary: status.display_name || status.plan_name
+    };
   };
-  
+
+  const displayMessage = getDisplayMessage();
+
+  if (!status && !isRefreshing) {
+    // No data and not loading - minimal display
+    return (
+      <div className="bg-white rounded-md shadow-sm p-3 w-full opacity-50">
+        <div className="text-xs text-gray-500 text-center">
+          Usage tracking unavailable
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <style jsx>{`
-        @keyframes pulse-animation {
-          0% { opacity: 0.7; }
-          50% { opacity: 1; }
-          100% { opacity: 0.7; }
+        @keyframes pulse-glow {
+          0%, 100% { 
+            box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+            transform: scale(1);
+          }
+          50% { 
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+            transform: scale(1.02);
+          }
         }
-        .pulse-bar {
-          animation: pulse-animation 1.5s infinite;
+        
+        @keyframes progress-fill {
+          from { width: 0%; }
+          to { width: var(--target-width); }
+        }
+        
+        .pulse-glow {
+          animation: pulse-glow 1.5s infinite;
+        }
+        
+        .progress-animate {
+          animation: progress-fill 1s ease-out forwards;
         }
       `}</style>
-      <div className={`bg-white rounded-md shadow-sm p-3 w-full transition-opacity duration-300 ${isRefreshing ? 'opacity-70' : 'opacity-100'}`}>
+
+      <div 
+        className={`${styles.bgColor} ${styles.borderColor} border rounded-lg shadow-sm p-3 w-full transition-all duration-300 ${
+          isRefreshing ? 'opacity-70' : 'opacity-100'
+        } ${recentlyUpdated ? 'pulse-glow' : ''}`}
+      >
         <div className="space-y-2">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs mb-1">
-            <span className="text-gray-600 whitespace-nowrap">Today's usage:</span>
-            <span className={`font-medium mt-0.5 sm:mt-0 transition-all duration-300 ${recentlyUpdated ? 'text-blue-600 scale-110' : ''}`}>
-              {status.questions_used_today} questions
+          {/* Status text */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs">
+            <span className={`${styles.textColor} font-medium transition-all duration-300 ${
+              recentlyUpdated ? 'scale-105' : 'scale-100'
+            }`}>
+              {displayMessage.primary}
+            </span>
+            <span className={`text-gray-500 mt-0.5 sm:mt-0 text-right ${
+              recentlyUpdated ? 'text-blue-600 font-medium' : ''
+            }`}>
+              {displayMessage.secondary}
             </span>
           </div>
           
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div 
-              className={`h-2 rounded-full ${getBarColor()} transition-all duration-1000 ease-out ${recentlyUpdated ? 'pulse-bar' : ''}`}
-              style={{ width: `${calculateUsagePercentage()}%` }} 
-            />
+          {/* Progress bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden relative">
+            {status && (
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${styles.barColor} ${
+                  recentlyUpdated ? 'progress-animate' : ''
+                }`}
+                style={{ 
+                  width: `${Math.min(100, status.usage_percentage)}%`,
+                  '--target-width': `${Math.min(100, status.usage_percentage)}%`
+                } as React.CSSProperties}
+              />
+            )}
+            
+            {/* Shimmer effect for active progress */}
+            {status && status.usage_percentage > 0 && recentlyUpdated && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+            )}
           </div>
           
-          {status.limit_reached && (
-            <div className="text-xs text-red-600 font-medium">
-              Daily limit reached. Upgrade to Premium for more usage.
+          {/* Warning messages */}
+          {status && status.warning_level === 'critical' && (
+            <div className="flex items-center gap-1 text-xs text-red-600 font-medium animate-pulse">
+              <span>⚠️</span>
+              <span>Nearly at daily limit!</span>
+            </div>
+          )}
+          
+          {status && status.limit_reached && (
+            <div className="flex items-center gap-1 text-xs text-red-600 font-medium">
+              <span>🚫</span>
+              <span>Daily limit reached</span>
+            </div>
+          )}
+          
+          {/* Refreshing indicator */}
+          {isRefreshing && (
+            <div className="flex items-center justify-center gap-1 text-xs text-blue-600">
+              <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>Updating...</span>
             </div>
           )}
         </div>
