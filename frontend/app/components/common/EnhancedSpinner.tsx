@@ -56,7 +56,7 @@ const EnhancedSpinner: React.FC<SpinnerProps> = ({
         .dot-3 { animation: dot-bounce 1.4s infinite ease-in-out both; }
       `}</style>
       
-      <div className="flex flex-col items-center justify-center space-y-4">
+      <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4 px-4">
         <div className="relative">
           <div className={`${sizeClasses[size]} border-4 border-red-200 rounded-full enhanced-spinner border-t-red-500 border-r-orange-500`}></div>
           <div className={`absolute inset-0 ${sizeClasses[size]} border-4 border-transparent rounded-full animate-ping border-t-red-300`}></div>
@@ -68,7 +68,7 @@ const EnhancedSpinner: React.FC<SpinnerProps> = ({
             <div className="w-2 h-2 bg-orange-500 rounded-full dot-2"></div>
             <div className="w-2 h-2 bg-yellow-500 rounded-full dot-3"></div>
           </div>
-          <span className="text-gray-600 text-sm font-medium">{message}</span>
+          <span className="text-gray-600 text-xs sm:text-sm font-medium text-center">{message}</span>
         </div>
       </div>
     </>

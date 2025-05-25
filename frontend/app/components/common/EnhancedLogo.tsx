@@ -153,11 +153,11 @@ const EnhancedLogo: React.FC<EnhancedLogoProps> = ({
         </div>
         
         {showText && (
-          <div className="flex flex-col">
-            <span className="font-bold text-5xl gradient-text">
+          <div className="flex flex-col items-center sm:items-start">
+            <span className="font-bold text-3xl sm:text-4xl lg:text-5xl gradient-text text-center sm:text-left">
               Paaṭha AI
             </span>
-            <div className="text-sm text-gray-500 -mt-1 opacity-75">
+            <div className="text-xs sm:text-sm text-gray-500 -mt-1 opacity-75 text-center sm:text-left">
               Smart Learning Platform
             </div>
           </div>

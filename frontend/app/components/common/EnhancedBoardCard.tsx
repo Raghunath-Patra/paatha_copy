@@ -30,16 +30,16 @@ const EnhancedBoardCard: React.FC<EnhancedBoardCardProps> = ({
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm animate-pulse border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-6 w-6 bg-gray-200 rounded"></div>
+      <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm animate-pulse border border-gray-100">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="h-5 sm:h-6 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-5 w-5 sm:h-6 sm:w-6 bg-gray-200 rounded"></div>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 rounded w-4"></div>
+            <div key={i} className="flex justify-between items-center p-2 sm:p-3 bg-gray-50 rounded-lg">
+              <div className="h-3 sm:h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-3 w-3 sm:h-4 sm:w-4 bg-gray-200 rounded"></div>
             </div>
           ))}
         </div>
@@ -87,7 +87,7 @@ const EnhancedBoardCard: React.FC<EnhancedBoardCardProps> = ({
       `}</style>
       
       <div 
-        className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-xl card-hover-effect border border-gray-100 hover:border-red-200 backdrop-blur-sm relative overflow-hidden"
+        className="group bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-xl card-hover-effect border border-gray-100 hover:border-red-200 backdrop-blur-sm relative overflow-hidden"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
@@ -98,13 +98,13 @@ const EnhancedBoardCard: React.FC<EnhancedBoardCardProps> = ({
       >
         {/* Animated background pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-red-400 to-orange-400 rounded-full blur-xl"></div>
-          <div className="absolute bottom-4 left-4 w-16 h-16 bg-gradient-to-tr from-yellow-400 to-red-400 rounded-full blur-lg"></div>
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-400 to-orange-400 rounded-full blur-xl"></div>
+          <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-tr from-yellow-400 to-red-400 rounded-full blur-lg"></div>
         </div>
         
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 group-hover:text-red-600 transition-colors duration-300">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 group-hover:text-red-600 transition-colors duration-300">
               {displayName}
             </h2>
             <div className="flex items-center space-x-2">
@@ -113,22 +113,22 @@ const EnhancedBoardCard: React.FC<EnhancedBoardCardProps> = ({
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-1 sm:space-y-2">
             {Object.entries(classes).map(([classKey, classInfo], index) => (
               <button
                 key={classKey}
                 onClick={() => onClick(board, classKey)}
-                className="w-full text-left px-4 py-3 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 transition-all duration-300 flex items-center justify-between group/item border border-transparent hover:border-red-100 shimmer-line"
+                className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 transition-all duration-300 flex items-center justify-between group/item border border-transparent hover:border-red-100 shimmer-line"
                 style={{
                   animationDelay: `${index * 100}ms`,
                   transform: isHovered ? `translateX(${index * 2}px)` : 'translateX(0px)'
                 }}
               >
-                <span className="text-gray-700 group-hover/item:text-gray-900 font-medium transition-colors">
+                <span className="text-sm sm:text-base text-gray-700 group-hover/item:text-gray-900 font-medium transition-colors">
                   {classInfo.display_name}
                 </span>
                 <svg 
-                  className="w-4 h-4 text-gray-400 group-hover/item:text-red-500 transition-all duration-300 transform group-hover/item:translate-x-1"
+                  className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 group-hover/item:text-red-500 transition-all duration-300 transform group-hover/item:translate-x-1"
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -141,9 +141,9 @@ const EnhancedBoardCard: React.FC<EnhancedBoardCardProps> = ({
         </div>
         
         {/* Corner decoration */}
-        <div className={`absolute top-0 right-0 w-16 h-16 opacity-10 transition-opacity duration-300 ${isHovered ? 'opacity-20' : ''}`}>
-          <div className="absolute top-2 right-2 w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
-          <div className="absolute top-2 right-2 w-3 h-3 bg-red-400 rounded-full"></div>
+        <div className={`absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 opacity-10 transition-opacity duration-300 ${isHovered ? 'opacity-20' : ''}`}>
+          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-2 h-2 sm:w-3 sm:h-3 bg-red-400 rounded-full animate-ping"></div>
+          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 w-2 h-2 sm:w-3 sm:h-3 bg-red-400 rounded-full"></div>
         </div>
       </div>
     </>
