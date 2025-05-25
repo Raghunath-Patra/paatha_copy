@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from './components/navigation/Navigation';
 import { useSupabaseAuth } from './contexts/SupabaseAuthContext';
-import Logo from './components/common/Logo';
+import EnhancedLogo from './components/common/EnhancedLogo';
 
 interface ClassInfo {
   display_name: string;
@@ -114,7 +114,7 @@ export default function HomePage() {
             <div className="text-center mb-16">
               {/* Updated title section with SVG logo */}
               <div className="flex items-center justify-center gap-3 mb-6">
-                <Logo className="h-12 w-12" showText={false} />
+                <EnhancedLogo className="h-12 w-12" showText={false} />
                 <h1 className="text-5xl font-bold bg-gradient-to-r from-teal-500 via-teal-400 to-cyan-400 bg-clip-text text-transparent inline-block">
                   Paaṭha AI
                 </h1>
