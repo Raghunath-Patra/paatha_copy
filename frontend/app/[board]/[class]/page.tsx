@@ -58,9 +58,14 @@ export default function ClassPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // Generate cache key based on board and class
+  // Generate cache key based on board and class (use original params, not normalized)
   const getCacheKey = (board: string, classLevel: string) => {
-    return `subjects_${board}_${classLevel}`;
+    // 🔍 Use original params to avoid cache conflicts between different boards
+    const originalBoard = typeof params.board === 'string' ? params.board : board;
+    const originalClass = typeof params.class === 'string' ? params.class : classLevel;
+    const cacheKey = `subjects_${originalBoard}_${originalClass}`;
+    console.log('🔍 Cache key generated:', { originalBoard, originalClass, cacheKey });
+    return cacheKey;
   };
   
   // Get cached data if available and not expired
@@ -69,13 +74,16 @@ export default function ClassPage() {
       const cacheKey = getCacheKey(board, classLevel);
       const cached = sessionStorage.getItem(cacheKey);
       
+      console.log('🔍 Checking cache for key:', cacheKey, 'Found:', !!cached);
+      
       if (cached) {
         const parsedCache: CachedData = JSON.parse(cached);
         const now = Date.now();
         
         // Check if cache is still valid (not expired)
         if (now - parsedCache.timestamp < CACHE_DURATION) {
-          console.log('Using cached subjects and progress data');
+          console.log('✅ Using cached subjects and progress data for:', { board, classLevel, cacheKey });
+          console.log('📚 Cached subjects:', parsedCache.subjects?.map(s => s.name));
           return { 
             subjects: parsedCache.subjects, 
             progress: parsedCache.progress || {} 
@@ -83,11 +91,11 @@ export default function ClassPage() {
         } else {
           // Cache expired, remove it
           sessionStorage.removeItem(cacheKey);
-          console.log('Cache expired, removing cached data');
+          console.log('⏰ Cache expired, removing cached data for:', cacheKey);
         }
       }
     } catch (error) {
-      console.warn('Error reading cache:', error);
+      console.warn('❌ Error reading cache:', error);
       // If there's an error reading cache, clear it
       try {
         const cacheKey = getCacheKey(board, classLevel);
@@ -111,9 +119,16 @@ export default function ClassPage() {
       };
       
       sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      console.log('Subjects and progress data cached successfully');
+      console.log('💾 Subjects and progress data cached successfully for:', { 
+        board, 
+        classLevel, 
+        cacheKey,
+        subjectCount: subjects.length,
+        subjectNames: subjects.map(s => s.name),
+        progressKeys: Object.keys(progress)
+      });
     } catch (error) {
-      console.warn('Error caching data:', error);
+      console.warn('❌ Error caching data:', error);
       // If storage is full or there's another error, continue without caching
     }
   };
@@ -161,9 +176,19 @@ export default function ClassPage() {
         const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
         const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
         
+        // 🔍 DEBUG: Log the exact parameters being used
+        console.log('🔍 DEBUG - Fetching data for:', {
+          originalBoard: params.board,
+          originalClass: params.class,
+          normalizedBoard: board,
+          normalizedClass: classLevel,
+          fullUrl: `${API_URL}/api/subjects/${params.board}/${params.class}`
+        });
+        
         // Check cache first
         const cachedData = getCachedData(board, classLevel);
         if (cachedData) {
+          console.log('✅ Using cached data for:', { board, classLevel });
           setSubjects(cachedData.subjects);
           setProgress(cachedData.progress);
           setLoading(false);
@@ -173,7 +198,7 @@ export default function ClassPage() {
         setLoading(true);
         setError(null);
 
-        console.log('Fetching subjects for:', params);
+        console.log('🌐 Making API calls for:', { board: params.board, class: params.class });
         const authHeaders = await getAuthHeaders();
         if (!authHeaders.isAuthorized) {
           console.log('No auth headers, redirecting to login');
@@ -181,18 +206,27 @@ export default function ClassPage() {
           return;
         }
 
+        // 🔍 DEBUG: Log exact API URLs being called
+        const subjectsUrl = `${API_URL}/api/subjects/${params.board}/${params.class}`;
+        const progressUrl = `${API_URL}/api/progress/user/${params.board}/${params.class}`;
+        
+        console.log('🔍 API URLs:', { subjectsUrl, progressUrl });
+
         // Only fetch subjects list (without chapters)
-        const subjectsResponse = await fetch(
-          `${API_URL}/api/subjects/${params.board}/${params.class}`,
-          { headers: authHeaders.headers }
-        );
+        const subjectsResponse = await fetch(subjectsUrl, { headers: authHeaders.headers });
 
         if (!subjectsResponse.ok) {
-          throw new Error('Failed to fetch subjects');
+          throw new Error(`Failed to fetch subjects. Status: ${subjectsResponse.status}, URL: ${subjectsUrl}`);
         }
 
         const subjectsData = await subjectsResponse.json();
-        console.log('Fetched subjects:', subjectsData);
+        console.log('📚 Fetched subjects data:', {
+          board: params.board,
+          class: params.class,
+          subjectCount: subjectsData.subjects?.length,
+          firstSubject: subjectsData.subjects?.[0],
+          allSubjectNames: subjectsData.subjects?.map((s: any) => s.name)
+        });
         
         // Keep the full subject data structure (with chapters)
         setSubjects(subjectsData.subjects || []);
@@ -200,14 +234,16 @@ export default function ClassPage() {
         // Fetch progress data
         let progressData = {};
         try {
-          const progressResponse = await fetch(
-            `${API_URL}/api/progress/user/${params.board}/${params.class}`,
-            { headers: authHeaders.headers }
-          );
+          const progressResponse = await fetch(progressUrl, { headers: authHeaders.headers });
 
           if (progressResponse.ok) {
             const progressResponse_data = await progressResponse.json();
-            console.log('Fetched progress:', progressResponse_data);
+            console.log('📊 Fetched progress data:', {
+              board: params.board,
+              class: params.class,
+              progressKeys: Object.keys(progressResponse_data.progress || {}),
+              progressData: progressResponse_data.progress
+            });
             progressData = progressResponse_data.progress || {};
             setProgress(progressData);
           }
@@ -220,7 +256,7 @@ export default function ClassPage() {
         setCachedData(board, classLevel, subjectsData.subjects || [], progressData);
 
       } catch (error) {
-        console.error('Error fetching subjects:', error);
+        console.error('❌ Error fetching subjects:', error);
         setError(error instanceof Error ? error.message : 'Failed to load subjects');
       } finally {
         setLoading(false);
@@ -350,6 +386,8 @@ export default function ClassPage() {
     }
   };
 
+  const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
+  const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
   
   const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
   const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
