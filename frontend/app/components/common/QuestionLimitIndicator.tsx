@@ -1,6 +1,4 @@
-// frontend/app/components/common/QuestionLimitIndicator.tsx - Fixed version with working progress animation
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { userTokenService } from '../../utils/userTokenService';
 
@@ -28,12 +26,9 @@ const QuestionLimitIndicator: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [recentlyUpdated, setRecentlyUpdated] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [animateProgress, setAnimateProgress] = useState(false);
-  const progressRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  
+
   useEffect(() => {
-    // Get initial cached status
     const cachedStatus = userTokenService.getTokenStatus();
     if (cachedStatus) {
       setStatus(cachedStatus);
@@ -44,12 +39,10 @@ const QuestionLimitIndicator: React.FC = () => {
         questionsRemaining: cachedStatus.questions_remaining_estimate
       });
     } else {
-      // No cached data, trigger background fetch
       setIsRefreshing(true);
       userTokenService.fetchUserTokenStatus();
     }
 
-    // Subscribe to token updates
     const unsubscribe = userTokenService.onTokenUpdate((newStatus: UserTokenStatus) => {
       console.log('🔄 Token status updated:', {
         warningLevel: newStatus.warning_level,
@@ -57,21 +50,14 @@ const QuestionLimitIndicator: React.FC = () => {
         questionsRemaining: newStatus.questions_remaining_estimate
       });
 
-      // Check if data has meaningfully changed to trigger animation
       if (status && (
         newStatus.questions_used_today !== status.questions_used_today ||
         newStatus.input_used !== status.input_used ||
         newStatus.output_used !== status.output_used ||
         newStatus.warning_level !== status.warning_level
       )) {
-        // Trigger progress animation
-        setAnimateProgress(true);
         setRecentlyUpdated(true);
-        
-        setTimeout(() => {
-          setAnimateProgress(false);
-          setRecentlyUpdated(false);
-        }, 2000);
+        setTimeout(() => setRecentlyUpdated(false), 2000);
       }
 
       setStatus(newStatus);
@@ -79,15 +65,13 @@ const QuestionLimitIndicator: React.FC = () => {
       setIsInitialLoad(false);
     });
 
-    // Periodic refresh to ensure data freshness (every 2 minutes)
     const refreshInterval = setInterval(() => {
       const currentStatus = userTokenService.getTokenStatus();
       if (!currentStatus) {
-        // No cached data, fetch in background
         setIsRefreshing(true);
         userTokenService.fetchUserTokenStatus();
       }
-    }, 2 * 60 * 1000); // 2 minutes
+    }, 2 * 60 * 1000);
 
     return () => {
       unsubscribe();
@@ -95,27 +79,6 @@ const QuestionLimitIndicator: React.FC = () => {
     };
   }, [status]);
 
-  // Animate progress bar when status changes
-  useEffect(() => {
-    if (animateProgress && progressRef.current && status) {
-      const element = progressRef.current;
-      
-      // Start at 0 width
-      element.style.width = '0%';
-      element.style.transition = 'none';
-      
-      // Force reflow
-      element.offsetHeight;
-      
-      // Animate to target width
-      requestAnimationFrame(() => {
-        element.style.transition = 'width 1s ease-out';
-        element.style.width = `${Math.min(100, status.usage_percentage)}%`;
-      });
-    }
-  }, [animateProgress, status]);
-
-  // Show skeleton loading during initial load or when no data and refreshing
   if (isInitialLoad || (!status && isRefreshing)) {
     return (
       <>
@@ -140,24 +103,17 @@ const QuestionLimitIndicator: React.FC = () => {
         `}</style>
 
         <div className="bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-3 w-full relative overflow-hidden">
-          {/* Shimmer overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
-          
           <div className="space-y-2 relative">
-            {/* Status text skeleton */}
             <div className="flex justify-between items-center text-xs">
               <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24 animate-pulse-custom"></div>
               <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-16 animate-pulse-custom" 
                    style={{ animationDelay: '0.2s' }}></div>
             </div>
-            
-            {/* Progress bar skeleton */}
             <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden relative">
               <div className="h-full bg-gradient-to-r from-gray-300 to-gray-400 rounded-full animate-pulse-custom w-1/3"
                    style={{ animationDelay: '0.4s' }}></div>
             </div>
-            
-            {/* Loading indicator */}
             <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
               <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
               <span className="animate-pulse-custom">Loading usage...</span>
@@ -168,7 +124,6 @@ const QuestionLimitIndicator: React.FC = () => {
     );
   }
 
-  // Show minimal skeleton if no data but not actively loading
   if (!status && !isRefreshing) {
     return (
       <div className="bg-gray-50 rounded-md shadow-sm p-3 w-full opacity-50 border border-gray-200">
@@ -185,7 +140,6 @@ const QuestionLimitIndicator: React.FC = () => {
     );
   }
 
-  // Determine color and styling based on warning level
   const getIndicatorStyles = () => {
     if (!status) {
       return {
@@ -231,7 +185,6 @@ const QuestionLimitIndicator: React.FC = () => {
 
   const styles = getIndicatorStyles();
 
-  // Format the display message based on status
   const getDisplayMessage = () => {
     if (!status) {
       return { primary: 'Loading...', secondary: 'Checking usage' };
@@ -258,7 +211,6 @@ const QuestionLimitIndicator: React.FC = () => {
       };
     }
 
-    // Safe level
     return {
       primary: `${status.questions_used_today} questions today`,
       secondary: status.display_name || status.plan_name
@@ -281,17 +233,8 @@ const QuestionLimitIndicator: React.FC = () => {
           }
         }
         
-        @keyframes shimmer-flow {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        
         .pulse-glow {
           animation: pulse-glow 1.5s infinite;
-        }
-        
-        .shimmer-overlay {
-          animation: shimmer-flow 1.5s infinite;
         }
       `}</style>
 
@@ -301,7 +244,6 @@ const QuestionLimitIndicator: React.FC = () => {
         } ${recentlyUpdated ? 'pulse-glow' : ''}`}
       >
         <div className="space-y-2">
-          {/* Status text */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs">
             <span className={`${styles.textColor} font-medium transition-all duration-300 ${
               recentlyUpdated ? 'scale-105' : 'scale-100'
@@ -314,43 +256,34 @@ const QuestionLimitIndicator: React.FC = () => {
               {displayMessage.secondary}
             </span>
           </div>
-          
-          {/* Progress bar */}
+
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden relative">
             {status && (
-              <div 
-                ref={progressRef}
-                className={`h-full rounded-full ${styles.barColor} ${
-                  !animateProgress ? 'transition-all duration-300 ease-out' : ''
-                }`}
-                style={{ 
-                  width: animateProgress ? '0%' : `${Math.min(100, status.usage_percentage)}%`
-                }}
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${styles.barColor}`}
+                style={{ width: `${Math.min(100, status.usage_percentage)}%` }}
               />
             )}
-            
-            {/* Shimmer effect for active progress */}
+
             {status && status.usage_percentage > 0 && recentlyUpdated && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent shimmer-overlay"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
             )}
           </div>
-          
-          {/* Warning messages */}
+
           {status && status.warning_level === 'critical' && (
             <div className="flex items-center gap-1 text-xs text-red-600 font-medium animate-pulse">
               <span>⚠️</span>
               <span>Nearly at daily limit!</span>
             </div>
           )}
-          
+
           {status && status.limit_reached && (
             <div className="flex items-center gap-1 text-xs text-red-600 font-medium">
               <span>🚫</span>
               <span>Daily limit reached</span>
             </div>
           )}
-          
-          {/* Refreshing indicator */}
+
           {isRefreshing && status && (
             <div className="flex items-center justify-center gap-1 text-xs text-blue-600">
               <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
