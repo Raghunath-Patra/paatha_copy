@@ -1,4 +1,4 @@
-// frontend/app/components/common/QuestionLimitIndicator.tsx - Using userTokenService
+// frontend/app/components/common/QuestionLimitIndicator.tsx - Fixed version with skeleton loading
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -27,6 +27,7 @@ const QuestionLimitIndicator: React.FC = () => {
   const [status, setStatus] = useState<UserTokenStatus | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [recentlyUpdated, setRecentlyUpdated] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const router = useRouter();
   
   useEffect(() => {
@@ -34,6 +35,7 @@ const QuestionLimitIndicator: React.FC = () => {
     const cachedStatus = userTokenService.getTokenStatus();
     if (cachedStatus) {
       setStatus(cachedStatus);
+      setIsInitialLoad(false);
       console.log('✅ Initial token status from cache:', {
         warningLevel: cachedStatus.warning_level,
         questionsUsed: cachedStatus.questions_used_today,
@@ -66,6 +68,7 @@ const QuestionLimitIndicator: React.FC = () => {
 
       setStatus(newStatus);
       setIsRefreshing(false);
+      setIsInitialLoad(false);
     });
 
     // Periodic refresh to ensure data freshness (every 2 minutes)
@@ -83,6 +86,76 @@ const QuestionLimitIndicator: React.FC = () => {
       clearInterval(refreshInterval);
     };
   }, [status]);
+
+  // Show skeleton loading during initial load or when no data and refreshing
+  if (isInitialLoad || (!status && isRefreshing)) {
+    return (
+      <>
+        <style jsx>{`
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+          }
+          
+          .animate-shimmer {
+            animation: shimmer 2s infinite;
+          }
+          
+          .animate-pulse-custom {
+            animation: pulse 1.5s ease-in-out infinite;
+          }
+        `}</style>
+
+        <div className="bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-3 w-full relative overflow-hidden">
+          {/* Shimmer overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
+          
+          <div className="space-y-2 relative">
+            {/* Status text skeleton */}
+            <div className="flex justify-between items-center text-xs">
+              <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24 animate-pulse-custom"></div>
+              <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-16 animate-pulse-custom" 
+                   style={{ animationDelay: '0.2s' }}></div>
+            </div>
+            
+            {/* Progress bar skeleton */}
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden relative">
+              <div className="h-full bg-gradient-to-r from-gray-300 to-gray-400 rounded-full animate-pulse-custom w-1/3"
+                   style={{ animationDelay: '0.4s' }}></div>
+            </div>
+            
+            {/* Loading indicator */}
+            <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+              <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+              <span className="animate-pulse-custom">Loading usage...</span>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show minimal skeleton if no data but not actively loading
+  if (!status && !isRefreshing) {
+    return (
+      <div className="bg-gray-50 rounded-md shadow-sm p-3 w-full opacity-50 border border-gray-200">
+        <div className="space-y-2">
+          <div className="h-3 bg-gray-300 rounded w-20 animate-pulse mx-auto"></div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="h-full bg-gray-300 rounded-full w-1/4 animate-pulse"></div>
+          </div>
+          <div className="text-xs text-gray-400 text-center animate-pulse">
+            Usage unavailable
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Determine color and styling based on warning level
   const getIndicatorStyles = () => {
@@ -165,17 +238,6 @@ const QuestionLimitIndicator: React.FC = () => {
   };
 
   const displayMessage = getDisplayMessage();
-
-  if (!status && !isRefreshing) {
-    // No data and not loading - minimal display
-    return (
-      <div className="bg-white rounded-md shadow-sm p-3 w-full opacity-50">
-        <div className="text-xs text-gray-500 text-center">
-          Usage tracking unavailable
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -261,7 +323,7 @@ const QuestionLimitIndicator: React.FC = () => {
           )}
           
           {/* Refreshing indicator */}
-          {isRefreshing && (
+          {isRefreshing && status && (
             <div className="flex items-center justify-center gap-1 text-xs text-blue-600">
               <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
               <span>Updating...</span>
