@@ -350,8 +350,6 @@ export default function ClassPage() {
     }
   };
 
-  const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
-  const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
   
   const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
   const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
