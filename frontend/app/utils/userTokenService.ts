@@ -1,6 +1,6 @@
-// frontend/utils/userTokenService.ts - Simplified User-Scoped Token Service
-
 import { useEffect, useState } from 'react';
+
+// frontend/utils/userTokenService.ts - Simplified User-Scoped Token Service
 
 interface UserTokenStatus {
   // Raw API data
@@ -226,7 +226,7 @@ class UserTokenService {
   }
 
   // Update token usage after action
-  updateTokenUsage(tokensUsed: { input?: number; output?: number }): void {
+  updateTokenUsage(tokensUsed: { input?: number; output?: number; questionSubmitted?: boolean }): void {
     if (this.cachedStatus && this.isCacheValid()) {
       // Update usage counters
       if (tokensUsed.input) {
@@ -238,11 +238,20 @@ class UserTokenService {
         this.cachedStatus.output_remaining = Math.max(0, this.cachedStatus.output_remaining - tokensUsed.output);
       }
 
+      // Update question count when a question is submitted
+      if (tokensUsed.questionSubmitted) {
+        this.cachedStatus.questions_used_today += 1;
+        console.log('📈 Question count incremented to:', this.cachedStatus.questions_used_today);
+      }
+
       // Recompute smart fields
       this.cachedStatus = this.computeSmartFields(this.cachedStatus);
       this.saveCache();
 
-      console.log('🔄 User token usage updated:', tokensUsed);
+      console.log('🔄 User token usage updated:', {
+        tokens: tokensUsed,
+        questionsToday: this.cachedStatus.questions_used_today
+      });
       this.notifyUpdateCallbacks();
     }
   }

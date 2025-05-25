@@ -328,7 +328,11 @@ export default function ThemedChapterPage() {
       if (!response.ok) {
         if (response.status === 402) {
           // Update token service cache and show limit page
-          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+          userTokenService.updateTokenUsage({ 
+            input: 60, 
+            output: 140, 
+            questionSubmitted: true  // This increments questions_used_today
+          });
           setShowLimitPage(true);
           setQuestionLoading(false);
           return undefined;
@@ -353,7 +357,11 @@ export default function ThemedChapterPage() {
         }
         
         if (isTokenLimitError) {
-          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+          userTokenService.updateTokenUsage({ 
+            input: 60, 
+            output: 140, 
+            questionSubmitted: true  // This increments questions_used_today
+          });
           setShowLimitPage(true);
           setQuestionLoading(false);
           return undefined;
@@ -366,7 +374,11 @@ export default function ThemedChapterPage() {
       setQuestion(data);
       
       // Update token usage after successful fetch
-      userTokenService.updateTokenUsage({ input: 50 });
+      userTokenService.updateTokenUsage({ 
+        input: 60, 
+        output: 140, 
+        questionSubmitted: true  // This increments questions_used_today
+      });
       
       return data;
     } catch (err) {
@@ -427,7 +439,11 @@ export default function ThemedChapterPage() {
       if (!response.ok) {
         if (response.status === 402) {
           // Update token cache and show limit page
-          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+          userTokenService.updateTokenUsage({ 
+            input: 60, 
+            output: 140, 
+            questionSubmitted: true  // This increments questions_used_today
+          });
           setShowLimitPage(true);
           return;
         } else if (response.status === 413) {
@@ -463,7 +479,11 @@ export default function ThemedChapterPage() {
       });
       
       // Update token usage after successful submission
-      userTokenService.updateTokenUsage({ input: 60, output: 140 });
+      userTokenService.updateTokenUsage({ 
+        input: 60, 
+        output: 140, 
+        questionSubmitted: true  // This increments questions_used_today
+      });
       
       // Auto-scroll to feedback for PWA users
       setTimeout(() => {
