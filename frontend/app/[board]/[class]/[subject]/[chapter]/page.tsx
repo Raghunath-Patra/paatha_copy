@@ -719,25 +719,23 @@ export default function ThemedChapterPage() {
                 )}
               </h1>
               
-              <div className="flex items-center gap-4">
-                <p className="text-sm text-gray-600">
-                  {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
-                </p>
-                
-                {/* Timer integrated in header */}
-                {questionLoading ? (
-                  <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
-                    <div className="h-6 w-16 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></div>
-                  </div>
-                ) : question && (
-                  <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50">
-                    <QuestionTimer 
-                      onTimeUpdate={setTimeTaken}
-                      shouldStop={shouldStopTimer}
-                    />
-                  </div>
-                )}
-              </div>
+              <p className="text-sm text-gray-600 mb-2">
+                {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
+              </p>
+              
+              {/* Timer below class heading */}
+              {questionLoading ? (
+                <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50 w-fit">
+                  <div className="h-6 w-16 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></div>
+                </div>
+              ) : question && (
+                <div className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-white/50 w-fit">
+                  <QuestionTimer 
+                    onTimeUpdate={setTimeTaken}
+                    shouldStop={shouldStopTimer}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2 items-start relative z-[100]">
