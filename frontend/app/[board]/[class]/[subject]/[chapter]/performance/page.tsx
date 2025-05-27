@@ -1,4 +1,4 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/performance/page.tsx
+// frontend/app/[board]/[class]/[subject]/[chapter]/performance/page.tsx - Themed version
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -47,6 +47,114 @@ interface PerformancePageParams {
   subject: string;
   chapter: string;
 }
+
+// Themed skeleton loader for performance page
+const ThemedPerformanceSkeletonLoader = ({ chapterName }: { chapterName: string }) => (
+  <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+    {/* Animated background decorations */}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
+           style={{animationDuration: '3s'}} />
+      <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+           style={{animationDuration: '4s'}} />
+      <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+           style={{animationDuration: '2s'}} />
+    </div>
+
+    <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
+      <div className="max-w-[1600px] mx-auto">
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <div className="h-8 bg-gradient-to-r from-red-200 to-orange-200 rounded w-80 animate-pulse mb-2"></div>
+            <div className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded w-48 animate-pulse"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-10 w-20 bg-gradient-to-r from-red-200 to-orange-200 rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Stats cards skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
+                <div className="relative z-10">
+                  <div className="h-4 bg-gradient-to-r from-blue-200 to-purple-200 rounded w-24 animate-pulse mb-2" 
+                       style={{ animationDelay: `${i * 100}ms` }}></div>
+                  <div className="h-8 bg-gradient-to-r from-red-200 to-orange-200 rounded w-16 animate-pulse" 
+                       style={{ animationDelay: `${i * 150}ms` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Performance analytics skeleton */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+            <div className="relative z-10 space-y-4">
+              <div className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded w-40 animate-pulse mb-4"></div>
+              <div className="h-64 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Attempts list skeleton */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 divide-y divide-orange-100 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/30 to-transparent opacity-50"></div>
+            <div className="relative z-10">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse" 
+                             style={{ animationDelay: `${i * 100}ms` }}></div>
+                        <div className="h-6 bg-gradient-to-r from-green-200 to-emerald-200 rounded-full w-12 animate-pulse" 
+                             style={{ animationDelay: `${i * 150}ms` }}></div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {[1, 2, 3, 4].map((j) => (
+                          <div key={j} className="h-5 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full w-16 animate-pulse" 
+                               style={{ animationDelay: `${(i * 4 + j) * 50}ms` }}></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded w-full animate-pulse" 
+                         style={{ animationDelay: `${i * 200}ms` }}></div>
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((k) => (
+                        <div key={k} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
+                             style={{ 
+                               width: k === 3 ? '70%' : '100%',
+                               animationDelay: `${(i * 3 + k) * 100}ms` 
+                             }}></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <style jsx>{`
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      
+      .animate-shimmer {
+        animation: shimmer 2s infinite;
+      }
+    `}</style>
+  </div>
+);
 
 export default function ChapterPerformanceReport() {
   const params = useParams() as unknown as PerformancePageParams;
@@ -162,42 +270,78 @@ export default function ChapterPerformanceReport() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'bg-green-50 text-green-800';
-    if (score >= 6) return 'bg-yellow-50 text-yellow-800';
-    return 'bg-red-50 text-red-800';
+    if (score >= 8) return 'bg-green-50 text-green-800 border-green-200';
+    if (score >= 6) return 'bg-yellow-50 text-yellow-800 border-yellow-200';
+    return 'bg-red-50 text-red-800 border-red-200';
   };
 
   if (loading) {
+    return <ThemedPerformanceSkeletonLoader chapterName={chapterName} />;
+  }
+
+  if (error) {
     return (
-      <div className="min-h-screen bg-neutral-50">
-        <div className="container-fluid px-8 py-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-4 -right-4 w-24 h-24 bg-red-200/30 rounded-full animate-pulse" 
+               style={{animationDuration: '3s'}} />
+          <div className="absolute bottom-1/4 right-1/4 w-16 h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+               style={{animationDuration: '4s'}} />
+        </div>
+        
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
           </div>
+          <h3 className="font-semibold text-red-800 mb-2">Error Loading Report</h3>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 transition-all duration-300 shadow-md"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
+  const displayChapter = typeof params.chapter === 'string'
+    ? params.chapter.replace(/^chapter-/, '')
+    : '';
+
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="container-fluid px-8 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+      {/* Animated background decorations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
+             style={{animationDuration: '3s'}} />
+        <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+             style={{animationDuration: '4s'}} />
+        <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+             style={{animationDuration: '2s'}} />
+      </div>
+
+      <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-2xl font-medium mb-2">
-                Chapter {params.chapter?.replace('chapter-', '')} Performance Report
+              <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
+                Chapter {displayChapter} Performance Report
                 {chapterName && (
-                  <span className="ml-2 text-neutral-600">
+                  <span className="ml-2 text-orange-600">
                     : {chapterName}
                   </span>
                 )}
               </h1>
-              <p className="text-neutral-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
             </div>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center relative z-[100]">
               <Navigation />
             </div>
           </div>
@@ -205,104 +349,133 @@ export default function ChapterPerformanceReport() {
           {report && (
             <div className="space-y-6">
               {/* Performance Analytics Component */}
-              <PerformanceAnalytics attempts={report.attempts} />
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/20 to-transparent opacity-50"></div>
+                <div className="relative z-10">
+                  <PerformanceAnalytics attempts={report.attempts} />
+                </div>
+              </div>
               
+              {/* Summary stats with theme */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-blue-50 rounded-lg p-6">
-                  <h3 className="text-sm font-medium text-blue-600 mb-1">Total Attempts</h3>
-                  <p className="text-3xl font-bold text-blue-900">{report.total_attempts}</p>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 opacity-50"></div>
+                  <div className="relative z-10">
+                    <h3 className="text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                      Total Attempts
+                    </h3>
+                    <p className="text-3xl font-bold text-blue-900">{report.total_attempts}</p>
+                  </div>
                 </div>
 
-                <div className="bg-green-50 rounded-lg p-6">
-                  <h3 className="text-sm font-medium text-green-600 mb-1">Average Score</h3>
-                  <p className="text-3xl font-bold text-green-900">{report.average_score.toFixed(1)}/10</p>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 to-emerald-50/30 opacity-50"></div>
+                  <div className="relative z-10">
+                    <h3 className="text-sm font-medium text-green-600 mb-1 flex items-center gap-2">
+                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                      Average Score
+                    </h3>
+                    <p className="text-3xl font-bold text-green-900">{report.average_score.toFixed(1)}/10</p>
+                  </div>
                 </div>
 
-                <div className="bg-purple-50 rounded-lg p-6">
-                  <h3 className="text-sm font-medium text-purple-600 mb-1">Total Time Spent</h3>
-                  <p className="text-3xl font-bold text-purple-900">{formatTime(report.total_time)}</p>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-50"></div>
+                  <div className="relative z-10">
+                    <h3 className="text-sm font-medium text-purple-600 mb-1 flex items-center gap-2">
+                      <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                      Total Time Spent
+                    </h3>
+                    <p className="text-3xl font-bold text-purple-900">{formatTime(report.total_time)}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm divide-y">
-                {report.attempts.map((attempt, index) => (
-                  <div key={`${attempt.question_id}-${attempt.timestamp}`} className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-gray-500">
-                            {formatDate(attempt.timestamp)}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-sm font-medium ${getScoreColor(attempt.score)}`}>
-                            {attempt.score}/10
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {formatTime(attempt.time_taken)}
-                          </span>
+              {/* Attempts list with theme */}
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg divide-y divide-orange-100 border border-white/50 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/20 to-transparent opacity-30"></div>
+                
+                <div className="relative z-10">
+                  {report.attempts.map((attempt, index) => (
+                    <div key={`${attempt.question_id}-${attempt.timestamp}`} className="p-6 hover:bg-gradient-to-r hover:from-orange-50/20 hover:to-yellow-50/20 transition-all duration-200">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-500">
+                              {formatDate(attempt.timestamp)}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(attempt.score)}`}>
+                              {attempt.score}/10
+                            </span>
+                            <span className="text-sm text-gray-500 bg-orange-50 px-2 py-1 rounded-full">
+                              {formatTime(attempt.time_taken)}
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            {attempt.metadata && (
+                              <>
+                                <span className="px-2 py-1 bg-gradient-to-r from-red-100 to-orange-100 text-red-800 rounded-full">
+                                  {attempt.metadata.questionNumber}
+                                </span>
+                                <span className="px-2 py-1 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 rounded-full">
+                                  Source: {attempt.metadata.source}
+                                </span>
+                                <span className="px-2 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 rounded-full">
+                                  Level: {attempt.metadata.level}
+                                </span>
+                                <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full">
+                                  Type: {attempt.metadata.type}
+                                </span>
+                                <span className="px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-full">
+                                  Bloom: {attempt.metadata.bloomLevel}
+                                </span>
+                                <span className="px-2 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 rounded-full">
+                                  {attempt.metadata.statistics.totalAttempts} attempts | 
+                                  Avg: {attempt.metadata.statistics.averageScore.toFixed(1)}/10
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          {attempt.metadata && (
-                            <>
-                              <span className="px-2 py-1 bg-gray-100 rounded-full">
-                                {attempt.metadata.questionNumber}
-                              </span>
-                              <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full">
-                                Source: {attempt.metadata.source}
-                              </span>
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                                Level: {attempt.metadata.level}
-                              </span>
-                              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
-                                Type: {attempt.metadata.type}
-                              </span>
-                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                                Bloom: {attempt.metadata.bloomLevel}
-                              </span>
-                              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
-                                {attempt.metadata.statistics.totalAttempts} attempts | 
-                                Avg: {attempt.metadata.statistics.averageScore.toFixed(1)}/10
-                              </span>
-                            </>
+                      </div>
+
+                      <div className="prose max-w-none">
+                        <h4 className="text-lg font-medium mb-2 text-gray-800">{attempt.question_text}</h4>
+                        <div className="space-y-4">
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                            <p className="font-medium text-blue-800 mb-2">Your Answer:</p>
+                            <div className="text-blue-700 whitespace-pre-wrap text-sm">
+                              {
+                                attempt.transcribed_text 
+                                  ? `Typed:\n${attempt.user_answer}\n\nHandwritten:\n${attempt.transcribed_text}`
+                                  : `Typed:\n${attempt.user_answer}`
+                              }
+                            </div>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                            <p className="font-medium text-green-800 mb-2">Model Answer:</p>
+                            <p className="text-green-700 text-sm">{attempt.correct_answer}</p>
+                          </div>
+                          
+                          {attempt.explanation && (
+                            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+                              <p className="font-medium text-purple-800 mb-2">Explanation:</p>
+                              <p className="text-purple-700 text-sm">{attempt.explanation}</p>
+                            </div>
                           )}
+
+                          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
+                            <p className="font-medium text-orange-800 mb-2">Feedback:</p>
+                            <p className="text-orange-700 text-sm">{attempt.feedback}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
-
-                    <div className="prose max-w-none">
-                      <h4 className="text-lg font-medium mb-2">{attempt.question_text}</h4>
-                      <div className="space-y-4">
-                        <div>
-                          <p className="font-medium text-gray-700">Your Answer:</p>
-                          <div className="text-gray-600 whitespace-pre-wrap">
-                            {
-                              attempt.transcribed_text 
-                                ? `Typed:\n${attempt.user_answer}\n\nHandwritten:\n${attempt.transcribed_text}`
-                                : `Typed:\n${attempt.user_answer}`
-                            }
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="font-medium text-gray-700">Model Answer:</p>
-                          <p className="text-gray-600">{attempt.correct_answer}</p>
-                        </div>
-                        
-                        {attempt.explanation && (
-                          <div>
-                            <p className="font-medium text-gray-700">Explanation:</p>
-                            <p className="text-gray-600">{attempt.explanation}</p>
-                          </div>
-                        )}
-
-                        <div>
-                          <p className="font-medium text-gray-700">Feedback:</p>
-                          <p className="text-gray-600">{attempt.feedback}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
