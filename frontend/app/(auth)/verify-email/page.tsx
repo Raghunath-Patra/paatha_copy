@@ -249,7 +249,7 @@ export default function VerifyEmailPage() {
           <div className="text-center mb-12 sm:mb-16 opacity-0 animate-fade-in-up stagger-2">
                 <EnhancedLogo 
                   className="h-12 w-12 sm:h-16 sm:w-16" 
-                  showText={true}
+                  showText={false}
                 />
             <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
               Email Verification
