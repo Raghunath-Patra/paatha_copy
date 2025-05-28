@@ -157,9 +157,6 @@ export default function LoginPage() {
                   className="h-12 w-12 sm:h-16 sm:w-16" 
                   showText={true}
                 />
-            <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
-              Paaṭha AI
-            </h1>
             <p className="text-sm sm:text-base text-gray-600 max-w-sm mx-auto">
               Welcome back! Continue your learning journey with AI-powered education.
             </p>
