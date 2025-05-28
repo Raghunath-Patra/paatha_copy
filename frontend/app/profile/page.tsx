@@ -1,4 +1,4 @@
-// frontend/app/profile/page.tsx - Themed to match your app design
+// frontend/app/profile/page.tsx - Themed to match your app design with centered delete account section
 'use client';
 
 import { useState } from 'react';
@@ -354,14 +354,16 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Delete Account Section */}
+            {/* Delete Account Section - Properly Centered */}
             <div className="mt-12">
               <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 relative overflow-hidden">
                 {/* Warning gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-red-50/20 to-pink-50/20 opacity-30"></div>
                 
-                <div className="relative z-10">
-                  <DeleteAccount />
+                <div className="relative z-10 flex flex-col items-center justify-center text-center p-6">
+                  <div className="w-full max-w-md mx-auto">
+                    <DeleteAccount />
+                  </div>
                 </div>
               </div>
             </div>
