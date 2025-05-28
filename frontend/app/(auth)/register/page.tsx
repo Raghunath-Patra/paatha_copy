@@ -84,13 +84,11 @@ export default function RegisterPage() {
 
         <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Enhanced Logo Section */}
-          <div className="text-center mb-8 opacity-0 animate-fade-in-up stagger-1">
-            <div className="animate-float">
-              <EnhancedLogo 
-                className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-4" 
-                showText={false}
-              />
-            </div>
+          <div className="text-center mb-12 sm:mb-16 opacity-0 animate-fade-in-up stagger-2">
+            <EnhancedLogo 
+              className="h-12 w-12 sm:h-16 sm:w-16" 
+              showText={true}
+            />
             <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
               Join Paaṭha AI
             </h1>
