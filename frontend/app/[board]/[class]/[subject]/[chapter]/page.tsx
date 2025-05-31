@@ -16,7 +16,6 @@ import TokenLimitWarning from '../../../../components/common/TokenLimitWarning';
 import FloatingNextQuestionButton from '../../../../components/questions/FloatingNextQuestionButton';
 import SwipeToNextQuestion from '../../../../components/questions/SwipeToNextQuestion';
 import DailyLimitReached from '../../../../components/limits/DailyLimitReached';
-import PrefetchIndicator from '../../../../components/questions/PrefetchIndicator'; // ✅ NEW
 import { getAuthHeaders } from '../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../utils/userTokenService';
@@ -929,13 +928,6 @@ const handleNextQuestion = useCallback(async () => {
                       />
                     </div>
                   </div>
-                  
-                  {/* ✅ NEW: Prefetch Status Indicator */}
-                  <PrefetchIndicator
-                    isPrefetching={isPrefetching}
-                    hasPrefetchedQuestion={!!prefetchedQuestion?.isValid}
-                    prefetchError={prefetchError}
-                  />
                 </div>
               )}
             </div>
@@ -1061,8 +1053,6 @@ const handleNextQuestion = useCallback(async () => {
       {/* ✅ ENHANCED: Floating Next Question Button with prefetch status */}
       <FloatingNextQuestionButton
         onNextQuestion={handleNextQuestion}
-        isInstant={!!prefetchedQuestion?.isValid}
-        isBlocked={!!prefetchError?.includes('limit')}
       />
       
       {/* Swipe to Next Question - mobile */}
