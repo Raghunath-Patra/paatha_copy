@@ -221,39 +221,90 @@ export default function ThemedChapterPage() {
   }, []);
   
   // Check initial token status on page load
-  useEffect(() => {
-    const checkInitialTokenStatus = () => {
-      const status = userTokenService.getTokenStatus();
-      setUserTokenStatus(status);
+  // useEffect(() => {
+  //   const checkInitialTokenStatus = () => {
+  //     const status = userTokenService.getTokenStatus();
+  //     setUserTokenStatus(status);
       
-      if (status) {
-        if (status.limit_reached || !status.can_fetch_question) {
-          console.log('🚫 Token limit reached, showing limit page');
-          setShowLimitPage(true);
-          setLoading(false);
-          return true;
-        }
-      }
-      return false;
-    };
+  //     if (status) {
+  //       if (status.limit_reached || !status.can_fetch_question) {
+  //         console.log('🚫 Token limit reached, showing limit page');
+  //         setShowLimitPage(true);
+  //         setLoading(false);
+  //         return true;
+  //       }
+  //     }
+  //     return false;
+  //   };
 
-    // Subscribe to token updates
-    const unsubscribe = userTokenService.onTokenUpdate((newStatus: any) => {
-      setUserTokenStatus(newStatus);
+  //   // Subscribe to token updates
+  //   const unsubscribe = userTokenService.onTokenUpdate((newStatus: any) => {
+  //     setUserTokenStatus(newStatus);
+  //     if (newStatus && (newStatus.limit_reached || !newStatus.can_fetch_question)) {
+  //       console.log('🚫 Token limit reached via update, showing limit page');
+  //       setShowLimitPage(true);
+  //     }
+  //   });
+
+  //   const limitReached = checkInitialTokenStatus();
+  //   if (limitReached) {
+  //     return () => unsubscribe();
+  //   }
+
+  //   return () => unsubscribe();
+  // }, []);
+  
+  useEffect(() => {
+  const checkInitialTokenStatus = () => {
+    const status = userTokenService.getTokenStatus();
+    setUserTokenStatus(status);
+    
+    if (status) {
+      if (status.limit_reached || !status.can_fetch_question) {
+        console.log('🚫 Token limit reached, showing limit page');
+        setShowLimitPage(true);
+        setLoading(false);
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Add debounce state for token updates
+  let tokenUpdateTimeout: NodeJS.Timeout | null = null;
+
+  // Subscribe to token updates with debouncing
+  const unsubscribe = userTokenService.onTokenUpdate((newStatus: any) => {
+    setUserTokenStatus(newStatus);
+    
+    // Clear any existing timeout
+    if (tokenUpdateTimeout) {
+      clearTimeout(tokenUpdateTimeout);
+    }
+    
+    // Debounce limit page showing by 800ms to prevent flickering
+    tokenUpdateTimeout = setTimeout(() => {
       if (newStatus && (newStatus.limit_reached || !newStatus.can_fetch_question)) {
-        console.log('🚫 Token limit reached via update, showing limit page');
+        console.log('🚫 Token limit reached via debounced update, showing limit page');
         setShowLimitPage(true);
       }
-    });
+    }, 800);
+  });
 
-    const limitReached = checkInitialTokenStatus();
-    if (limitReached) {
-      return () => unsubscribe();
-    }
+  const limitReached = checkInitialTokenStatus();
+  if (limitReached) {
+    return () => {
+      unsubscribe();
+      if (tokenUpdateTimeout) clearTimeout(tokenUpdateTimeout);
+    };
+  }
 
-    return () => unsubscribe();
-  }, []);
-  
+  return () => {
+    unsubscribe();
+    if (tokenUpdateTimeout) clearTimeout(tokenUpdateTimeout);
+  };
+}, []);
+
   // Check token status regularly
   useEffect(() => {
     const checkTokenStatus = async () => {
