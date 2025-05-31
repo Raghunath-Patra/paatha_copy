@@ -539,31 +539,65 @@ export default function ThemedChapterPage() {
     }
   };
 
-  const handleNextQuestion = useCallback(async () => {
-    // Check token status before fetching next question
-    const actionCheck = userTokenService.canPerformAction('fetch_question');
-    if (!actionCheck.allowed) {
-      console.log('❌ Next question blocked:', actionCheck.reason);
-      setShowLimitPage(true);
-      return;
-    }
+  // const handleNextQuestion = useCallback(async () => {
+  //   // Check token status before fetching next question
+  //   const actionCheck = userTokenService.canPerformAction('fetch_question');
+  //   if (!actionCheck.allowed) {
+  //     console.log('❌ Next question blocked:', actionCheck.reason);
+  //     setShowLimitPage(true);
+  //     return;
+  //   }
 
-    setFeedback(null);
-    setShouldStopTimer(false);
-    setErrorDisplayMode('none');
-    setShowTokenWarning(false);
+  //   setFeedback(null);
+  //   setShouldStopTimer(false);
+  //   setErrorDisplayMode('none');
+  //   setShowTokenWarning(false);
     
-    try {
-      const newQuestion = await fetchQuestion();
+  //   try {
+  //     const newQuestion = await fetchQuestion();
       
-      if (newQuestion?.id) {
-        const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
-        router.push(newUrl);
-      }
-    } catch (error) {
-      console.error('Error fetching next question:', error);
+  //     if (newQuestion?.id) {
+  //       const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
+  //       router.push(newUrl);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching next question:', error);
+  //   }
+  // }, [params.board, params.class, params.subject, params.chapter, router]);
+
+  const handleNextQuestion = useCallback(async () => {
+  console.log('🔄 Next question clicked');
+  
+  // Check token status before fetching next question
+  const actionCheck = userTokenService.canPerformAction('fetch_question');
+  if (!actionCheck.allowed) {
+    console.log('❌ Next question blocked:', actionCheck.reason);
+    setShowLimitPage(true);
+    return;
+  }
+
+  // ✅ CRITICAL: Don't clear feedback immediately!
+  // setFeedback(null); // ❌ REMOVE/COMMENT THIS LINE
+
+  setShouldStopTimer(false);
+  setErrorDisplayMode('none');
+  setShowTokenWarning(false);
+  
+  try {
+    const newQuestion = await fetchQuestion();
+    
+    if (newQuestion?.id) {
+      // ✅ Only clear feedback AFTER successful fetch
+      console.log('✅ New question loaded, clearing previous feedback');
+      setFeedback(null);
+      
+      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
+      router.push(newUrl);
     }
-  }, [params.board, params.class, params.subject, params.chapter, router]);
+  } catch (error) {
+    console.error('Error fetching next question:', error);
+  }
+}, [params.board, params.class, params.subject, params.chapter, router]);
 
   useEffect(() => {
     const syncUserData = async () => {
