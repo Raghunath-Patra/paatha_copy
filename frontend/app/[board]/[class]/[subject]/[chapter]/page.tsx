@@ -119,6 +119,7 @@ export default function ThemedChapterPage() {
   const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
   const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
+  const [timerKey, setTimerKey] = useState(0);
 
   // ✅ NEW: Prefetch system state
   const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
@@ -624,8 +625,8 @@ const handleNextQuestion = useCallback(async () => {
       
       console.log('✅ Answer submitted and graded successfully, updating token usage');
       userTokenService.updateTokenUsage({ 
-        input: 60, 
-        output: 140, 
+        input: 40, 
+        output: 100, 
         questionSubmitted: true
       });
       
@@ -753,6 +754,9 @@ const handleNextQuestion = useCallback(async () => {
           setLoading(false);
           return;
         }
+
+        setTimerKey((prev: number): number => prev + 1);
+        setShouldStopTimer(false);
 
         fetchQuestion(questionId || undefined).then(newQuestion => {
           if (!questionId && newQuestion?.id) {
