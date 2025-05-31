@@ -119,6 +119,8 @@ export default function ThemedChapterPage() {
   const [showLimitPage, setShowLimitPage] = useState(false);
   const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
+  const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
+
   // ✅ NEW: Prefetch system state
   const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
   const [isPrefetching, setIsPrefetching] = useState(false);
@@ -223,70 +225,142 @@ export default function ThemedChapterPage() {
     }
   }, [API_URL, params.board, params.class, params.subject, params.chapter, isPrefetching, prefetchedQuestion]);
 
-  // ✅ ENHANCED: Smart next question handler using prefetch
-  const handleNextQuestion = useCallback(async () => {
-    console.log('🔄 Next question requested');
+  // ✅ NEW: Handle next question with prefetch logic
+const handleNextQuestion = useCallback(async () => {
+  console.log('🔄 Next question requested');
+  
+  // Clear current feedback immediately (safe now because we have prefetched data)
+  setFeedback(null);
+  setShouldStopTimer(false);
+  setErrorDisplayMode('none');
+  setShowTokenWarning(false);
+  
+  // ✅ Check if we have a valid prefetched question
+  if (prefetchedQuestion?.isValid && 
+      Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME) {
     
-    // Clear current feedback immediately (safe now because we have prefetched data)
-    setFeedback(null);
-    setShouldStopTimer(false);
-    setErrorDisplayMode('none');
-    setShowTokenWarning(false);
+    console.log('✅ Using prefetched question:', prefetchedQuestion.question.id);
     
-    // ✅ Check if we have a valid prefetched question
-    if (prefetchedQuestion?.isValid && 
-        Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME) {
-      
-      console.log('✅ Using prefetched question:', prefetchedQuestion.question.id);
-      
-      // ✅ Immediate question switch - no loading, no flickering!
-      setQuestion(prefetchedQuestion.question);
-      
-      // ✅ Update URL
-      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${prefetchedQuestion.question.id}`;
-      router.push(newUrl);
-      
-      // ✅ Update token usage for viewing the prefetched question
-      userTokenService.updateTokenUsage({ input: 50 });
-      
-      // ✅ Invalidate the used prefetch and start new prefetch
-      setPrefetchedQuestion(null);
-      
-      // ✅ Start prefetching the next question immediately
-      setTimeout(() => prefetchNextQuestion(), 1000);
-      
+    // ✅ Set flag to prevent duplicate fetch
+    setIsUsingPrefetch(true);
+    
+    // ✅ Immediate question switch - no loading, no flickering!
+    setQuestion(prefetchedQuestion.question);
+    
+    // ✅ Update URL without triggering router navigation
+    const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${prefetchedQuestion.question.id}`;
+    window.history.replaceState({}, '', newUrl);
+    
+    // ✅ Update token usage for viewing the prefetched question
+    userTokenService.updateTokenUsage({ input: 50 });
+    
+    // ✅ Invalidate the used prefetch and start new prefetch
+    setPrefetchedQuestion(null);
+    
+    // ✅ Reset flag after a brief delay
+    setTimeout(() => {
+      setIsUsingPrefetch(false);
+    }, 100);
+    
+    // ✅ Start prefetching the next question immediately
+    setTimeout(() => prefetchNextQuestion(), 1000);
+    
+    return;
+  }
+  
+  // ✅ No valid prefetch available - check why
+  if (prefetchError) {
+    console.log('🚫 No prefetch available due to error:', prefetchError);
+    
+    if (prefetchError.includes('limit') || prefetchError.includes('token')) {
+      // ✅ Show limit page immediately - no waiting!
+      setShowLimitPage(true);
       return;
     }
-    
-    // ✅ No valid prefetch available - check why
-    if (prefetchError) {
-      console.log('🚫 No prefetch available due to error:', prefetchError);
-      
-      if (prefetchError.includes('limit') || prefetchError.includes('token')) {
-        // ✅ Show limit page immediately - no waiting!
+  }
+  
+  // ✅ Fallback: Fetch question normally (shouldn't happen often)
+  console.log('⚠️ Fallback: No prefetch available, fetching normally...');
+  setQuestionLoading(true);
+  
+  try {
+    const actionCheck = userTokenService.canPerformAction('fetch_question');
+    if (!actionCheck.allowed) {
+      console.log('❌ Question fetch blocked:', actionCheck.reason);
+      setShowLimitPage(true);
+      setQuestionLoading(false);
+      return;
+    }
+
+    const { headers, isAuthorized } = await getAuthHeaders();
+    if (!isAuthorized) {
+      router.push('/login');
+      return;
+    }
+
+    const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/random`;
+    const response = await fetch(url, { headers });
+
+    if (!response.ok) {
+      if (response.status === 402) {
+        console.log('🚫 Server says limit reached, showing limit page');
         setShowLimitPage(true);
+        setQuestionLoading(false);
         return;
       }
-    }
-    
-    // ✅ Fallback: Fetch question normally (shouldn't happen often)
-    console.log('⚠️ Fallback: No prefetch available, fetching normally...');
-    setQuestionLoading(true);
-    
-    try {
-      const newQuestion = await fetchQuestion();
       
-      if (newQuestion?.id) {
-        const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
-        router.push(newUrl);
-        
-        // Start prefetch for next question
-        setTimeout(() => prefetchNextQuestion(), 1000);
+      const responseText = await response.text();
+      let isTokenLimitError = false;
+      
+      try {
+        const errorData = JSON.parse(responseText);
+        isTokenLimitError = 
+          (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
+          (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
+          (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
+          (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
+      } catch (e) {
+        isTokenLimitError = 
+          responseText.toLowerCase().includes('token limit') ||
+          responseText.toLowerCase().includes('usage limit') ||
+          responseText.toLowerCase().includes('daily limit') ||
+          responseText.toLowerCase().includes('limit reached');
       }
-    } catch (error) {
-      console.error('Error in fallback fetch:', error);
+      
+      if (isTokenLimitError) {
+        userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+        setShowLimitPage(true);
+        setQuestionLoading(false);
+        return;
+      }
+      
+      throw new Error('Failed to fetch question');
     }
-  }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router]);
+
+    const data = await response.json();
+    setQuestion(data);
+    
+    // Update URL with the new question ID
+    const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${data.id}`;
+    window.history.replaceState({}, '', newUrl);
+    
+    // Update token usage
+    userTokenService.updateTokenUsage({ input: 50 });
+    
+    // Start prefetch for next question
+    setTimeout(() => prefetchNextQuestion(), 1000);
+    
+  } catch (error) {
+    console.error('Error in fallback fetch:', error);
+    if (!showLimitPage) {
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      setErrorDisplayMode('error-message');
+    }
+  } finally {
+    setQuestionLoading(false);
+  }
+}, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage]);
+
 
   // ✅ Auto-prefetch when current question loads
   useEffect(() => {
@@ -666,7 +740,19 @@ export default function ThemedChapterPage() {
         }
         
         const questionId = searchParams?.get('q');
-        
+        if (isUsingPrefetch) {
+          console.log('📌 Skipping fetch - using prefetched question');
+          setLoading(false);
+          return;
+        }
+
+        // Only fetch if we don't already have this question
+        if (question && question.id === questionId) {
+          console.log('📌 Question already loaded, skipping fetch');
+          setLoading(false);
+          return;
+        }
+
         fetchQuestion(questionId || undefined).then(newQuestion => {
           if (!questionId && newQuestion?.id) {
             const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
