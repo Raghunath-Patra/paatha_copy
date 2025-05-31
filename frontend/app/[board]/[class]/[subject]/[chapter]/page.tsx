@@ -228,7 +228,7 @@ export default function ThemedChapterPage() {
 const handleNextQuestion = useCallback(async () => {
   console.log('🔄 Next question requested');
   
-  // Clear current feedback immediately (safe now because we have prefetched data)
+  // Clear current feedback immediately
   setFeedback(null);
   setShouldStopTimer(false);
   setErrorDisplayMode('none');
@@ -278,8 +278,11 @@ const handleNextQuestion = useCallback(async () => {
     }
   }
   
-  // ✅ Fallback: Fetch question normally (shouldn't happen often)
+  // ✅ Fallback: Fetch question normally (show skeleton loading)
   console.log('⚠️ Fallback: No prefetch available, fetching normally...');
+  
+  // Clear current question to show skeleton
+  setQuestion(null);
   setQuestionLoading(true);
   
   try {
@@ -359,7 +362,6 @@ const handleNextQuestion = useCallback(async () => {
     setQuestionLoading(false);
   }
 }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage]);
-
 
   // ✅ Auto-prefetch when current question loads
   useEffect(() => {
