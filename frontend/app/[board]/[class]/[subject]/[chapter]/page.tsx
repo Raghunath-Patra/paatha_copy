@@ -837,47 +837,49 @@ const handleNextQuestion = useCallback(async () => {
     ? params.chapter.replace(/^chapter-/, '')
     : '';
 
-  return (
-    <>
-      {/* Enhanced timer animations */}
-      <style jsx>{`
-        @keyframes timer-pulse {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
-            transform: scale(1);
-          }
-          50% { 
-            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
-            transform: scale(1.02);
-          }
-        }
-        
-        @keyframes shimmer-slide {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-        
-        @keyframes clock-tick {
-          0%, 50%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-5deg); }
-          75% { transform: rotate(5deg); }
-        }
-        
-        .timer-active {
-          animation: timer-pulse 3s infinite;
-        }
-        
-        .shimmer-effect {
-          animation: shimmer-slide 3s infinite;
-        }
-        
-        .clock-icon {
-          animation: clock-tick 2s infinite;
-        }
-      `}</style>
+  // Replace your entire main return statement with this refined version:
 
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-      {/* Animated background decorations */}
+return (
+  <>
+    {/* Enhanced timer animations */}
+    <style jsx>{`
+      @keyframes timer-pulse {
+        0%, 100% { 
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
+          transform: scale(1);
+        }
+        50% { 
+          box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+          transform: scale(1.02);
+        }
+      }
+      
+      @keyframes shimmer-slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(200%); }
+      }
+      
+      @keyframes clock-tick {
+        0%, 50%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+      }
+      
+      .timer-active {
+        animation: timer-pulse 3s infinite;
+      }
+      
+      .shimmer-effect {
+        animation: shimmer-slide 3s infinite;
+      }
+      
+      .clock-icon {
+        animation: clock-tick 2s infinite;
+      }
+    `}</style>
+
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+      {/* Animated background decorations - ALWAYS VISIBLE */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
              style={{animationDuration: '3s'}} />
@@ -889,11 +891,12 @@ const handleNextQuestion = useCallback(async () => {
 
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto w-full">
-          {/* Header */}
+          {/* Header - ALWAYS VISIBLE */}
           <div className="flex justify-between mb-6">
             <div className="flex flex-col">
               <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
                 {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {displayChapter}
+                {/* Only chapter name has skeleton */}
                 {chapterNameLoading ? (
                   <div className="inline-block ml-2">
                     <div className="h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse inline-block"></div>
@@ -909,37 +912,35 @@ const handleNextQuestion = useCallback(async () => {
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
               
-              {/* ✅ ENHANCED: Timer with prefetch indicator */}
-              {questionLoading ? (
+              {/* Timer - skeleton only when loading */}
+              {questionLoading && !question ? (
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit">
                   <div className="h-6 w-16 bg-gradient-to-r from-blue-200 to-indigo-200 rounded animate-pulse"></div>
                 </div>
               ) : question && (
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit relative overflow-hidden timer-active">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-100/30 to-blue-100/0 shimmer-effect"></div>
-                    <div className="relative flex items-center gap-2 text-blue-700 font-medium">
-                      <svg className="w-4 h-4 clock-icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                      <QuestionTimer 
-                        onTimeUpdate={setTimeTaken}
-                        shouldStop={shouldStopTimer}
-                      />
-                    </div>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit relative overflow-hidden timer-active">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-100/30 to-blue-100/0 shimmer-effect"></div>
+                  <div className="relative flex items-center gap-2 text-blue-700 font-medium">
+                    <svg className="w-4 h-4 clock-icon" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <QuestionTimer 
+                      onTimeUpdate={setTimeTaken}
+                      shouldStop={shouldStopTimer}
+                    />
                   </div>
                 </div>
               )}
             </div>
 
+            {/* Navigation buttons - ALWAYS VISIBLE */}
             <div className="flex flex-wrap gap-2 items-start relative z-[100]">
               <Navigation />
               <QuestionLimitIndicator />
             </div>
           </div>
 
-          {/* ✅ Your existing Token Warning, Error Message, and content sections remain unchanged */}
-          {/* Token Warning */}
+          {/* Token Warning - ALWAYS VISIBLE when active */}
           {errorDisplayMode === 'token-warning' && (
             <TokenLimitWarning 
               isVisible={showTokenWarning}
@@ -952,7 +953,7 @@ const handleNextQuestion = useCallback(async () => {
             />
           )}
 
-          {/* Error Message */}
+          {/* Error Message - ALWAYS VISIBLE when active */}
           {errorDisplayMode === 'error-message' && error && (
             <div className="bg-red-50/90 backdrop-blur-sm text-red-600 p-4 rounded-xl mb-6 border border-red-200 shadow-sm">
               {error}
@@ -979,10 +980,55 @@ const handleNextQuestion = useCallback(async () => {
 
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-full lg:w-1/2">
-              {/* Question section */}
-              {questionLoading ? (
+              {/* Question section - skeleton only for question area */}
+              {questionLoading && !question ? (
                 <div className="space-y-6">
-                  {/* Your existing skeleton loaders */}
+                  {/* Question Card Skeleton */}
+                  <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 min-h-[200px] animate-pulse border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
+                    
+                    <div className="relative z-10">
+                      {/* Metadata tags skeleton */}
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-16 animate-pulse"></div>
+                        <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-20 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                        <div className="h-5 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                        <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full w-16 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                      </div>
+                      
+                      {/* Stats skeleton */}
+                      <div className="flex items-center gap-3 py-2 mb-4">
+                        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse"></div>
+                        <div className="h-5 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      
+                      {/* Question text skeleton */}
+                      <div className="space-y-3">
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse"></div>
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Answer Form Skeleton */}
+                  <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+                    
+                    <div className="relative z-10">
+                      {/* Textarea skeleton */}
+                      <div className="h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg w-full animate-pulse"></div>
+                      
+                      {/* Buttons skeleton */}
+                      <div className="flex gap-2 mt-3">
+                        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse"></div>
+                        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                      </div>
+                      
+                      {/* Submit button skeleton */}
+                      <div className="h-10 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-lg w-full mt-3 animate-pulse"></div>
+                    </div>
+                  </div>
                 </div>
               ) : question && (
                 <div className="space-y-6">
@@ -998,7 +1044,18 @@ const handleNextQuestion = useCallback(async () => {
 
                   {/* Answer form */}
                   {isSubmitting ? (
-                    <div>Loading skeleton...</div>
+                    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+                      
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-center py-8">
+                          <div className="flex flex-col items-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                            <p className="mt-4 text-gray-600">Submitting your answer...</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <AnswerForm
                       onSubmit={handleSubmitAnswer}
@@ -1015,9 +1072,20 @@ const handleNextQuestion = useCallback(async () => {
             </div>
 
             <div className="w-full lg:w-1/2 mt-6 lg:mt-0">
-              {/* Feedback section */}
+              {/* Feedback section - ALWAYS VISIBLE */}
               {isSubmitting ? (
-                <div>Feedback skeleton...</div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                        <p className="mt-4 text-gray-600">Analyzing your answer...</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : feedback ? (
                 <FeedbackCard
                   score={feedback.score}
@@ -1050,16 +1118,16 @@ const handleNextQuestion = useCallback(async () => {
         </div>
       </div>
       
-      {/* ✅ ENHANCED: Floating Next Question Button with prefetch status */}
+      {/* Floating Next Question Button - ALWAYS VISIBLE */}
       <FloatingNextQuestionButton
         onNextQuestion={handleNextQuestion}
       />
       
-      {/* Swipe to Next Question - mobile */}
+      {/* Swipe to Next Question - ALWAYS VISIBLE on mobile */}
       <SwipeToNextQuestion
         onNextQuestion={handleNextQuestion}
       />
     </div>
-    </>
-  );
+  </>
+);
 }
