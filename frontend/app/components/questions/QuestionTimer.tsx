@@ -62,6 +62,7 @@ const QuestionTimer = ({
 
   // Reset effect
   useEffect(() => {
+    console.log('Resetting timer from useEffect');
     if (onReset) {
       setSeconds(0);
       timerRunning.current = true;

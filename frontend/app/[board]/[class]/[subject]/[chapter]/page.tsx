@@ -137,6 +137,7 @@ export default function ThemedChapterPage() {
   }, []);
 
   const resetTimer = useCallback(() => {
+    console.log('Resetting timer');
     setShouldResetTimer(prev => !prev);
   }, []);
   
