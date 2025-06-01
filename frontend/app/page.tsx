@@ -78,7 +78,11 @@ const DailyChallengeButton = ({ isVisible }: { isVisible: boolean }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleChallengeClick = () => {
-    router.push('/try/challenge');
+    if (user) {
+      router.push('/try/challenge');
+    } else {
+      router.push('/login');
+    }
   };
 
   return (
@@ -194,6 +198,101 @@ const Features = () => {
           </div>
         ))}
       </div>
+    </div>
+  );
+};
+
+// Auth Button Component
+const AuthButton = () => {
+  const { user } = useSupabaseAuth();
+  const router = useRouter();
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 600);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Don't show auth buttons if user is already logged in
+  if (user) {
+    return (
+      <div className={`mt-6 sm:mt-8 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-full text-green-700 text-sm font-medium">
+          <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+          Welcome back! Ready to learn?
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`mt-6 sm:mt-8 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+        {/* Sign In Button */}
+        <button
+          onClick={() => router.push('/login')}
+          className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-red-600 transition-all duration-300 bg-white border-2 border-red-200 rounded-xl shadow-md hover:shadow-xl hover:scale-105 active:scale-95 hover:border-red-300 hover:bg-red-50 overflow-hidden min-w-[140px] sm:min-w-[160px]"
+        >
+          {/* Subtle background animation */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-orange-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            <span>Sign In</span>
+          </div>
+        </button>
+
+        {/* Sign Up Button */}
+        <button
+          onClick={() => router.push('/register')}
+          className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 overflow-hidden min-w-[140px] sm:min-w-[160px]"
+        >
+          {/* Animated background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          {/* Shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+          
+          {/* Pulsing border */}
+          <div className="absolute inset-0 rounded-xl border-2 border-white/20 group-hover:border-white/40 transition-colors duration-300"></div>
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            <span>Get Started</span>
+          </div>
+          
+          {/* Floating particles effect */}
+          <div className="absolute inset-0 overflow-hidden rounded-xl">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-white/40 rounded-full animate-ping"
+                style={{
+                  left: `${25 + i * 20}%`,
+                  top: `${40 + (i % 2) * 20}%`,
+                  animationDelay: `${i * 0.7}s`,
+                  animationDuration: '2s'
+                }}
+              />
+            ))}
+          </div>
+        </button>
+      </div>
+      
+      {/* Supporting text */}
+      <p className="mt-4 text-xs sm:text-sm text-gray-500">
+        Join thousands of students learning smarter with AI
+      </p>
     </div>
   );
 };
