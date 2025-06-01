@@ -36,7 +36,6 @@ export default function ResultsPage() {
   const [shareText, setShareText] = useState('');
   const [copied, setCopied] = useState(false);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Get results from localStorage
@@ -87,14 +86,10 @@ https://www.paatha.ai/try`;
       
       setShareText(shareText);
       
-      // Simulate loading completion
+      // Show signup prompt after 3 seconds
       setTimeout(() => {
-        setIsLoading(false);
-        // Show signup prompt after 3 seconds
-        setTimeout(() => {
-          setShowSignupPrompt(true);
-        }, 3000);
-      }, 1000);
+        setShowSignupPrompt(true);
+      }, 3000);
       
     } catch (error) {
       console.error('Error parsing results:', error);
@@ -162,7 +157,7 @@ https://www.paatha.ai/try`;
     router.push('/try');
   };
   
-  if (isLoading || !results) {
+  if (!results) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
         {/* Enhanced animated background decorations */}
