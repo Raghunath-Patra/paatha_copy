@@ -141,8 +141,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   if (renderState === 'loading') {
     console.log('Rendering loading spinner');
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 px-4">
+        <EnhancedSpinner size="lg" message="Preparing your learning journey..." />
       </div>
     );
   }

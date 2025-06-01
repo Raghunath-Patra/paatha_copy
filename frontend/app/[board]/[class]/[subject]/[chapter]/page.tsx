@@ -128,28 +128,51 @@ const AnalyzingFeedbackSkeleton = () => (
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
     
     <div className="relative z-10 space-y-6">
-      {/* Score section skeleton */}
-      <div className="text-center space-y-4">
-        <div className="w-20 h-20 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full mx-auto animate-pulse"></div>
-        <div className="h-6 bg-gradient-to-r from-purple-200 to-pink-200 rounded w-32 mx-auto animate-pulse"></div>
+      {/* Your Answer section */}
+      <div className="space-y-3">
+        <div className="h-5 bg-gradient-to-r from-blue-200 to-indigo-200 rounded w-24 animate-pulse"></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse"></div>
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-4/5 animate-pulse" style={{animationDelay: '0.05s'}}></div>
+        </div>
       </div>
       
-      {/* Feedback sections skeleton */}
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-3">
-            <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded w-24 animate-pulse" 
-                 style={{animationDelay: `${i * 0.1}s`}}></div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" 
-                   style={{animationDelay: `${i * 0.1 + 0.05}s`}}></div>
-              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-4/5 animate-pulse" 
-                   style={{animationDelay: `${i * 0.1 + 0.1}s`}}></div>
-              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/5 animate-pulse" 
-                   style={{animationDelay: `${i * 0.1 + 0.15}s`}}></div>
-            </div>
-          </div>
-        ))}
+      {/* Feedback section */}
+      <div className="space-y-3">
+        <div className="h-5 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-20 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" style={{animationDelay: '0.15s'}}></div>
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-4/5 animate-pulse" style={{animationDelay: '0.25s'}}></div>
+        </div>
+      </div>
+      
+      {/* Model Answer section */}
+      <div className="space-y-3">
+        <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded w-28 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" style={{animationDelay: '0.3s'}}></div>
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-5/6 animate-pulse" style={{animationDelay: '0.35s'}}></div>
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/5 animate-pulse" style={{animationDelay: '0.4s'}}></div>
+        </div>
+      </div>
+      
+      {/* Explanation section */}
+      <div className="space-y-3">
+        <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded w-24 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" style={{animationDelay: '0.45s'}}></div>
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-4/5 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        </div>
+      </div>
+      
+      {/* Follow-up Questions section */}
+      <div className="space-y-3">
+        <div className="h-5 bg-gradient-to-r from-cyan-200 to-blue-200 rounded w-36 animate-pulse" style={{animationDelay: '0.4s'}}></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-5/6 animate-pulse" style={{animationDelay: '0.55s'}}></div>
+          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 animate-pulse" style={{animationDelay: '0.6s'}}></div>
+        </div>
       </div>
       
       {/* Action buttons skeleton */}

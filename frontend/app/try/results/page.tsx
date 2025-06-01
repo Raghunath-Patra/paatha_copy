@@ -98,7 +98,25 @@ https://www.paatha.ai/try`;
   }, [router]);
   
   const handleShare = async (method: string) => {
-    if (!results) return;
+    if (!results) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
+        {/* Animated background decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
+               style={{animationDuration: '3s'}} />
+          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+               style={{animationDuration: '4s'}} />
+          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+               style={{animationDuration: '2s'}} />
+        </div>
+        
+        <div className="relative z-10">
+          <div className="w-10 h-10 border-4 border-red-200 rounded-full animate-spin border-t-red-500"></div>
+        </div>
+      </div>
+    );
+  }
     
     try {
       // Record share attempt if not already done
