@@ -48,6 +48,141 @@ interface PerformancePageParams {
   chapter: string;
 }
 
+// ✅ NEW: Skeleton for performance analytics with actual structure
+const PerformanceAnalyticsSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+    <div className="relative z-10 space-y-6">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Analytics</h3>
+      
+      {/* Performance Overview Section */}
+      <div className="space-y-4">
+        <h4 className="font-medium text-gray-700">Performance Overview</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Progress by Question Type */}
+          <div className="space-y-3">
+            <h5 className="text-sm font-medium text-gray-600">Progress by Question Type</h5>
+            {[
+              { label: 'Multiple Choice', color: 'from-blue-300 to-blue-400' },
+              { label: 'Short Answer', color: 'from-green-300 to-green-400' },
+              { label: 'Essay Questions', color: 'from-purple-300 to-purple-400' },
+              { label: 'Numerical', color: 'from-orange-300 to-orange-400' }
+            ].map((type, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{type.label}</span>
+                  <div className="h-4 w-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse" 
+                       style={{ animationDelay: `${i * 200}ms` }}></div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 relative overflow-hidden">
+                  <div className={`h-2 bg-gradient-to-r ${type.color} rounded-full animate-pulse relative`} 
+                       style={{ 
+                         width: `${60 + i * 10}%`,
+                         animationDelay: `${i * 300}ms`,
+                         animationDuration: '2s'
+                       }}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Bloom's Taxonomy Breakdown */}
+          <div className="space-y-3">
+            <h5 className="text-sm font-medium text-gray-600">Bloom's Taxonomy Breakdown</h5>
+            {[
+              { label: 'Remember', color: 'from-red-300 to-red-400' },
+              { label: 'Understand', color: 'from-orange-300 to-orange-400' },
+              { label: 'Apply', color: 'from-yellow-300 to-yellow-400' },
+              { label: 'Analyze', color: 'from-green-300 to-green-400' },
+              { label: 'Evaluate', color: 'from-blue-300 to-blue-400' },
+              { label: 'Create', color: 'from-purple-300 to-purple-400' }
+            ].map((level, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{level.label}</span>
+                  <div className="h-4 w-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse" 
+                       style={{ animationDelay: `${i * 150}ms` }}></div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 relative overflow-hidden">
+                  <div className={`h-2 bg-gradient-to-r ${level.color} rounded-full animate-pulse relative`} 
+                       style={{ 
+                         width: `${40 + i * 8}%`,
+                         animationDelay: `${i * 200}ms`,
+                         animationDuration: '2.5s'
+                       }}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Score Distribution Chart */}
+      <div className="space-y-4">
+        <h4 className="font-medium text-gray-700">Score Distribution</h4>
+        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+          <div className="relative h-full flex items-end justify-between px-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score, i) => (
+              <div key={i} className="flex flex-col items-center space-y-2">
+                <div 
+                  className="bg-gradient-to-t from-blue-300 to-blue-400 rounded-t w-6 animate-pulse relative overflow-hidden"
+                  style={{ 
+                    height: `${20 + Math.random() * 80}%`,
+                    animationDelay: `${i * 100}ms`,
+                    animationDuration: '3s'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/30 to-transparent animate-shimmer" 
+                       style={{ animationDelay: `${i * 150}ms` }}></div>
+                </div>
+                <span className="text-xs text-gray-500">{score}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Time Analysis */}
+      <div className="space-y-4">
+        <h4 className="font-medium text-gray-700">Time Analysis</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { label: 'Average Time per Question', unit: 'min' },
+            { label: 'Fastest Response', unit: 'sec' },
+            { label: 'Most Time Spent', unit: 'min' }
+          ].map((metric, i) => (
+            <div key={i} className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg space-y-2 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" 
+                   style={{ animationDelay: `${i * 300}ms` }}></div>
+              <div className="relative">
+                <p className="text-sm text-gray-600">{metric.label}</p>
+                <div className="h-8 w-20 bg-gradient-to-r from-blue-200 to-blue-300 rounded animate-pulse mt-2" 
+                     style={{ animationDelay: `${i * 200}ms` }}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    
+    <style jsx>{`
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(200%); }
+      }
+      
+      .animate-shimmer {
+        animation: shimmer 2s infinite;
+      }
+    `}</style>
+  </div>
+);
+
 // ✅ NEW: Skeleton for performance data only
 const PerformanceDataSkeleton = () => (
   <div className="space-y-6">
@@ -66,14 +201,8 @@ const PerformanceDataSkeleton = () => (
       ))}
     </div>
 
-    {/* Performance analytics skeleton */}
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
-      <div className="relative z-10 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Analytics</h3>
-        <div className="h-64 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
-      </div>
-    </div>
+    {/* Performance analytics with structure */}
+    <PerformanceAnalyticsSkeleton />
 
     {/* Attempts list skeleton */}
     <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 divide-y divide-orange-100 relative overflow-hidden">
