@@ -4,6 +4,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import EnhancedSpinner from './EnhancedSpinner';
 
 const PUBLIC_PATHS = [
   '/login',
