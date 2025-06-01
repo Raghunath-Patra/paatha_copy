@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx
-// Replace the ENTIRE component with this prefetch-enabled version
+// Enhanced version with proper timer reset and skeleton loading
 
 'use client';
 
@@ -16,6 +16,7 @@ import TokenLimitWarning from '../../../../components/common/TokenLimitWarning';
 import FloatingNextQuestionButton from '../../../../components/questions/FloatingNextQuestionButton';
 import SwipeToNextQuestion from '../../../../components/questions/SwipeToNextQuestion';
 import DailyLimitReached from '../../../../components/limits/DailyLimitReached';
+import PrefetchIndicator from '../../../../components/questions/PrefetchIndicator';
 import { getAuthHeaders } from '../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../utils/userTokenService';
@@ -64,14 +65,13 @@ interface PerformancePageParams {
   chapter: string;
 }
 
-// ✅ NEW: Prefetch interface
 interface PrefetchedQuestion {
   question: Question;
   timestamp: number;
   isValid: boolean;
 }
 
-// Define subject code mapping (keep your existing one)
+// Define subject code mapping
 const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'iesc1dd': 'Science',
   'hesc1dd': 'Science',
@@ -94,13 +94,95 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
+// ✅ NEW: Comprehensive skeleton components
+const QuestionSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/20 to-transparent opacity-50"></div>
+    
+    <div className="relative z-10 space-y-4">
+      {/* Metadata tags skeleton */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-6 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full animate-pulse" 
+               style={{ 
+                 width: i === 1 ? '60px' : i === 2 ? '80px' : i === 3 ? '70px' : '90px',
+                 animationDelay: `${i * 100}ms` 
+               }}></div>
+        ))}
+      </div>
+      
+      {/* Question text skeleton */}
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
+               style={{ 
+                 width: i === 4 ? '75%' : '100%',
+                 animationDelay: `${i * 150}ms` 
+               }}></div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const AnswerFormSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 border border-white/50 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-50/20 to-transparent opacity-50"></div>
+    
+    <div className="relative z-10 space-y-4">
+      {/* Textarea skeleton */}
+      <div className="h-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+      
+      {/* Buttons skeleton */}
+      <div className="flex gap-2">
+        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg animate-pulse flex-1"></div>
+        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg animate-pulse flex-1"></div>
+      </div>
+      
+      {/* Submit button skeleton */}
+      <div className="h-12 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg animate-pulse"></div>
+    </div>
+  </div>
+);
+
+const FeedbackSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/20 to-transparent opacity-50"></div>
+    
+    <div className="relative z-10 space-y-6">
+      {/* Score skeleton */}
+      <div className="flex items-center gap-3">
+        <div className="h-6 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-24 animate-pulse"></div>
+        <div className="h-3 bg-gradient-to-r from-green-200 to-emerald-200 rounded-full flex-1 animate-pulse"></div>
+      </div>
+      
+      {/* Content sections skeleton */}
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="space-y-3">
+          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse" 
+               style={{ animationDelay: `${i * 100}ms` }}></div>
+          <div className="space-y-2">
+            {[1, 2, 3].map((j) => (
+              <div key={j} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
+                   style={{ 
+                     width: j === 3 ? '80%' : '100%',
+                     animationDelay: `${(i * 3 + j) * 50}ms` 
+                   }}></div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 export default function ThemedChapterPage() {
   const params = useParams() as unknown as PerformancePageParams;
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, loading: authLoading } = useSupabaseAuth();
   
-  // ✅ Existing state variables
+  // Existing state variables
   const [question, setQuestion] = useState<Question | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,10 +200,10 @@ export default function ThemedChapterPage() {
   const [showLimitPage, setShowLimitPage] = useState(false);
   const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
-  const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
-  const [timerKey, setTimerKey] = useState(0);
+  // ✅ NEW: Timer reset state
+  const [timerResetTrigger, setTimerResetTrigger] = useState(0);
 
-  // ✅ NEW: Prefetch system state
+  // Prefetch system state
   const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
   const [isPrefetching, setIsPrefetching] = useState(false);
   const [prefetchError, setPrefetchError] = useState<string | null>(null);
@@ -129,15 +211,22 @@ export default function ThemedChapterPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const PREFETCH_VALIDITY_TIME = 5 * 60 * 1000; // 5 minutes
   
+  // ✅ ENHANCED: Timer reset function
+  const resetTimer = useCallback(() => {
+    console.log('🔄 Resetting timer to 0');
+    setShouldStopTimer(false);
+    setTimeTaken(0);
+    setTimerResetTrigger(prev => prev + 1); // Trigger timer reset
+  }, []);
+  
   // Direct function to stop the timer immediately when button is clicked
   const stopTimerImmediately = useCallback(() => {
     console.log('Stopping timer immediately from button click');
     setShouldStopTimer(true);
   }, []);
   
-  // ✅ NEW: Prefetch next question in background
+  // Prefetch next question in background
   const prefetchNextQuestion = useCallback(async () => {
-    // Don't prefetch if already prefetching or if we have a valid prefetched question
     if (isPrefetching || (prefetchedQuestion?.isValid && 
         Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME)) {
       return;
@@ -148,7 +237,6 @@ export default function ThemedChapterPage() {
     setPrefetchError(null);
     
     try {
-      // Check if user has tokens for next question
       const actionCheck = userTokenService.canPerformAction('fetch_question');
       if (!actionCheck.allowed) {
         console.log('❌ Prefetch blocked - insufficient tokens:', actionCheck.reason);
@@ -204,7 +292,6 @@ export default function ThemedChapterPage() {
 
       const data = await response.json();
       
-      // ✅ Store prefetched question with timestamp
       setPrefetchedQuestion({
         question: data,
         timestamp: Date.now(),
@@ -212,9 +299,6 @@ export default function ThemedChapterPage() {
       });
       
       console.log('✅ Question prefetched successfully:', data.id);
-      
-      // ✅ IMPORTANT: Don't update token usage for prefetch
-      // We'll update tokens only when user actually views the question
       
     } catch (error) {
       console.error('❌ Prefetch error:', error);
@@ -225,151 +309,77 @@ export default function ThemedChapterPage() {
     }
   }, [API_URL, params.board, params.class, params.subject, params.chapter, isPrefetching, prefetchedQuestion]);
 
-  // ✅ NEW: Handle next question with prefetch logic
-const handleNextQuestion = useCallback(async () => {
-  console.log('🔄 Next question requested');
-  
-  // Clear current feedback immediately
-  setFeedback(null);
-  setShouldStopTimer(false);
-  setErrorDisplayMode('none');
-  setShowTokenWarning(false);
-  
-  // ✅ Check if we have a valid prefetched question
-  if (prefetchedQuestion?.isValid && 
-      Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME) {
+  // ✅ ENHANCED: Smart next question handler with proper timer reset
+  const handleNextQuestion = useCallback(async () => {
+    console.log('🔄 Next question requested');
     
-    console.log('✅ Using prefetched question:', prefetchedQuestion.question.id);
+    // ✅ IMMEDIATELY reset timer for any next question action
+    resetTimer();
     
-    // ✅ Set flag to prevent duplicate fetch
-    setIsUsingPrefetch(true);
+    // Clear current feedback and UI state
+    setFeedback(null);
+    setErrorDisplayMode('none');
+    setShowTokenWarning(false);
     
-    // ✅ Immediate question switch - no loading, no flickering!
-    setQuestion(prefetchedQuestion.question);
-    
-    // ✅ Update URL without triggering router navigation
-    const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${prefetchedQuestion.question.id}`;
-    window.history.replaceState({}, '', newUrl);
-    
-    // ✅ Update token usage for viewing the prefetched question
-    userTokenService.updateTokenUsage({ input: 50 });
-    
-    // ✅ Invalidate the used prefetch and start new prefetch
-    setPrefetchedQuestion(null);
-    
-    // ✅ Reset flag after a brief delay
-    setTimeout(() => {
-      setIsUsingPrefetch(false);
-    }, 100);
-    
-    // ✅ Start prefetching the next question immediately
-    setTimeout(() => prefetchNextQuestion(), 1000);
-    
-    return;
-  }
-  
-  // ✅ No valid prefetch available - check why
-  if (prefetchError) {
-    console.log('🚫 No prefetch available due to error:', prefetchError);
-    
-    if (prefetchError.includes('limit') || prefetchError.includes('token')) {
-      // ✅ Show limit page immediately - no waiting!
-      setShowLimitPage(true);
+    // Check if we have a valid prefetched question
+    if (prefetchedQuestion?.isValid && 
+        Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME) {
+      
+      console.log('✅ Using prefetched question:', prefetchedQuestion.question.id);
+      
+      // ✅ Immediate question switch - no loading, no flickering!
+      setQuestion(prefetchedQuestion.question);
+      
+      // ✅ Update URL using replace to avoid history issues
+      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${prefetchedQuestion.question.id}`;
+      window.history.replaceState({}, '', newUrl);
+      
+      // ✅ Update token usage for viewing the prefetched question
+      userTokenService.updateTokenUsage({ input: 50 });
+      
+      // ✅ Invalidate the used prefetch and start new prefetch
+      setPrefetchedQuestion(null);
+      
+      // ✅ Start prefetching the next question immediately
+      setTimeout(() => prefetchNextQuestion(), 1000);
+      
       return;
     }
-  }
-  
-  // ✅ Fallback: Fetch question normally (show skeleton loading)
-  console.log('⚠️ Fallback: No prefetch available, fetching normally...');
-  
-  // Clear current question to show skeleton
-  setQuestion(null);
-  setQuestionLoading(true);
-  
-  try {
-    const actionCheck = userTokenService.canPerformAction('fetch_question');
-    if (!actionCheck.allowed) {
-      console.log('❌ Question fetch blocked:', actionCheck.reason);
-      setShowLimitPage(true);
-      setQuestionLoading(false);
-      return;
-    }
-
-    const { headers, isAuthorized } = await getAuthHeaders();
-    if (!isAuthorized) {
-      router.push('/login');
-      return;
-    }
-
-    const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/random`;
-    const response = await fetch(url, { headers });
-
-    if (!response.ok) {
-      if (response.status === 402) {
-        console.log('🚫 Server says limit reached, showing limit page');
+    
+    // No valid prefetch available - check why
+    if (prefetchError) {
+      console.log('🚫 No prefetch available due to error:', prefetchError);
+      
+      if (prefetchError.includes('limit') || prefetchError.includes('token')) {
         setShowLimitPage(true);
-        setQuestionLoading(false);
         return;
       }
-      
-      const responseText = await response.text();
-      let isTokenLimitError = false;
-      
-      try {
-        const errorData = JSON.parse(responseText);
-        isTokenLimitError = 
-          (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
-          (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
-          (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
-          (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
-      } catch (e) {
-        isTokenLimitError = 
-          responseText.toLowerCase().includes('token limit') ||
-          responseText.toLowerCase().includes('usage limit') ||
-          responseText.toLowerCase().includes('daily limit') ||
-          responseText.toLowerCase().includes('limit reached');
-      }
-      
-      if (isTokenLimitError) {
-        userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
-        setShowLimitPage(true);
-        setQuestionLoading(false);
-        return;
-      }
-      
-      throw new Error('Failed to fetch question');
     }
-
-    const data = await response.json();
-    setQuestion(data);
     
-    // Update URL with the new question ID
-    const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${data.id}`;
-    window.history.replaceState({}, '', newUrl);
+    // Fallback: Fetch question normally
+    console.log('⚠️ Fallback: No prefetch available, fetching normally...');
+    setQuestionLoading(true);
     
-    // Update token usage
-    userTokenService.updateTokenUsage({ input: 50 });
-    
-    // Start prefetch for next question
-    setTimeout(() => prefetchNextQuestion(), 1000);
-    
-  } catch (error) {
-    console.error('Error in fallback fetch:', error);
-    if (!showLimitPage) {
-      setError(error instanceof Error ? error.message : 'An unknown error occurred');
-      setErrorDisplayMode('error-message');
+    try {
+      const newQuestion = await fetchQuestion();
+      
+      if (newQuestion?.id) {
+        const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        // Start prefetch for next question
+        setTimeout(() => prefetchNextQuestion(), 1000);
+      }
+    } catch (error) {
+      console.error('Error in fallback fetch:', error);
     }
-  } finally {
-    setQuestionLoading(false);
-  }
-}, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage]);
+  }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, resetTimer]);
 
-  // ✅ Auto-prefetch when current question loads
+  // Auto-prefetch when current question loads
   useEffect(() => {
     if (question && !questionLoading && !showLimitPage) {
       console.log('🎯 Current question loaded, starting prefetch timer...');
       
-      // ✅ Start prefetch after 2 seconds (gives user time to read current question)
       const prefetchTimer = setTimeout(() => {
         prefetchNextQuestion();
       }, 2000);
@@ -378,7 +388,7 @@ const handleNextQuestion = useCallback(async () => {
     }
   }, [question, questionLoading, showLimitPage, prefetchNextQuestion]);
   
-  // ✅ Cleanup prefetch on unmount
+  // Cleanup prefetch on unmount
   useEffect(() => {
     return () => {
       setPrefetchedQuestion(null);
@@ -386,7 +396,7 @@ const handleNextQuestion = useCallback(async () => {
     };
   }, []);
 
-  // Check initial token status on page load
+  // Your existing token status and other useEffects remain the same...
   useEffect(() => {
     const checkInitialTokenStatus = () => {
       const status = userTokenService.getTokenStatus();
@@ -403,15 +413,12 @@ const handleNextQuestion = useCallback(async () => {
       return false;
     };
 
-    // ✅ Simplified token callback (prefetch system handles most cases)
     const unsubscribe = userTokenService.onTokenUpdate((newStatus: any) => {
       setUserTokenStatus(newStatus);
       
-      // ✅ Only handle extreme cases where limit is definitely reached
       if (newStatus && newStatus.limit_reached && newStatus.questions_used_today > 0) {
         console.log('🚫 Confirmed token limit reached via update');
         setShowLimitPage(true);
-        // ✅ Clear prefetch when limit reached
         setPrefetchedQuestion(null);
         setPrefetchError('Daily limit reached');
       }
@@ -425,7 +432,6 @@ const handleNextQuestion = useCallback(async () => {
     return unsubscribe;
   }, []);
   
-  // Check token status regularly (simplified)
   useEffect(() => {
     const checkTokenStatus = async () => {
       try {
@@ -457,14 +463,13 @@ const handleNextQuestion = useCallback(async () => {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
   
-  // ✅ Your existing fetchQuestion function (mostly unchanged)
+  // Your existing fetchQuestion function remains the same...
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
       setError(null);
       setQuestionLoading(true);
       setErrorDisplayMode('none');
 
-      // Pre-validation check
       const actionCheck = userTokenService.canPerformAction('fetch_question');
       if (!actionCheck.allowed) {
         console.log('❌ Question fetch blocked:', actionCheck.reason);
@@ -527,7 +532,9 @@ const handleNextQuestion = useCallback(async () => {
       const data = await response.json();
       setQuestion(data);
       
-      // ✅ Update token usage for fetched question
+      // ✅ Reset timer when new question is fetched normally
+      resetTimer();
+      
       userTokenService.updateTokenUsage({ input: 50 });
       
       return data;
@@ -544,7 +551,7 @@ const handleNextQuestion = useCallback(async () => {
     }
   };
 
-  // ✅ Your existing handleSubmitAnswer function (unchanged)
+  // Your existing handleSubmitAnswer function remains the same...
   const handleSubmitAnswer = async (answer: string, imageData?: string) => {
     try {
       if (!profile) {
@@ -625,12 +632,11 @@ const handleNextQuestion = useCallback(async () => {
       
       console.log('✅ Answer submitted and graded successfully, updating token usage');
       userTokenService.updateTokenUsage({ 
-        input: 40, 
-        output: 100, 
+        input: 60, 
+        output: 140, 
         questionSubmitted: true
       });
       
-      // Auto-scroll to feedback for PWA users
       setTimeout(() => {
         const isPWA = window.matchMedia('(display-mode: standalone)').matches;
         
@@ -655,7 +661,7 @@ const handleNextQuestion = useCallback(async () => {
     }
   };
 
-  // ✅ All your existing useEffects for initialization, chapter name fetching etc. remain the same...
+  // Your existing initialization useEffect remains the same...
   useEffect(() => {
     const syncUserData = async () => {
       try {
@@ -742,22 +748,7 @@ const handleNextQuestion = useCallback(async () => {
         }
         
         const questionId = searchParams?.get('q');
-        if (isUsingPrefetch) {
-          console.log('📌 Skipping fetch - using prefetched question');
-          setLoading(false);
-          return;
-        }
-
-        // Only fetch if we don't already have this question
-        if (question && question.id === questionId) {
-          console.log('📌 Question already loaded, skipping fetch');
-          setLoading(false);
-          return;
-        }
-
-        setTimerKey((prev: number): number => prev + 1);
-        setShouldStopTimer(false);
-
+        
         fetchQuestion(questionId || undefined).then(newQuestion => {
           if (!questionId && newQuestion?.id) {
             const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
@@ -774,7 +765,7 @@ const handleNextQuestion = useCallback(async () => {
     }
   }, [params.board, params.class, params.subject, params.chapter, router, profile, authLoading, searchParams, API_URL, showLimitPage]);
 
-  // Format subject name function (keep your existing one)
+  // Format subject name function
   const formatSubjectName = (subject: string) => {
     if (!subject) return '';
     
@@ -790,7 +781,7 @@ const handleNextQuestion = useCallback(async () => {
     }).join(' ');
   };
 
-  // ✅ Your existing loading screen
+  // Your existing loading screen
   if (loading && !showLimitPage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
@@ -843,49 +834,47 @@ const handleNextQuestion = useCallback(async () => {
     ? params.chapter.replace(/^chapter-/, '')
     : '';
 
-  // Replace your entire main return statement with this refined version:
-
-return (
-  <>
-    {/* Enhanced timer animations */}
-    <style jsx>{`
-      @keyframes timer-pulse {
-        0%, 100% { 
-          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
-          transform: scale(1);
+  return (
+    <>
+      {/* Enhanced timer animations */}
+      <style jsx>{`
+        @keyframes timer-pulse {
+          0%, 100% { 
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
+            transform: scale(1);
+          }
+          50% { 
+            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+            transform: scale(1.02);
+          }
         }
-        50% { 
-          box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
-          transform: scale(1.02);
+        
+        @keyframes shimmer-slide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
         }
-      }
-      
-      @keyframes shimmer-slide {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(200%); }
-      }
-      
-      @keyframes clock-tick {
-        0%, 50%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(-5deg); }
-        75% { transform: rotate(5deg); }
-      }
-      
-      .timer-active {
-        animation: timer-pulse 3s infinite;
-      }
-      
-      .shimmer-effect {
-        animation: shimmer-slide 3s infinite;
-      }
-      
-      .clock-icon {
-        animation: clock-tick 2s infinite;
-      }
-    `}</style>
+        
+        @keyframes clock-tick {
+          0%, 50%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-5deg); }
+          75% { transform: rotate(5deg); }
+        }
+        
+        .timer-active {
+          animation: timer-pulse 3s infinite;
+        }
+        
+        .shimmer-effect {
+          animation: shimmer-slide 3s infinite;
+        }
+        
+        .clock-icon {
+          animation: clock-tick 2s infinite;
+        }
+      `}</style>
 
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-      {/* Animated background decorations - ALWAYS VISIBLE */}
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+      {/* Animated background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
              style={{animationDuration: '3s'}} />
@@ -897,12 +886,11 @@ return (
 
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto w-full">
-          {/* Header - ALWAYS VISIBLE */}
+          {/* Header */}
           <div className="flex justify-between mb-6">
             <div className="flex flex-col">
               <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
                 {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {displayChapter}
-                {/* Only chapter name has skeleton */}
                 {chapterNameLoading ? (
                   <div className="inline-block ml-2">
                     <div className="h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse inline-block"></div>
@@ -918,35 +906,45 @@ return (
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
               
-              {/* Timer - skeleton only when loading */}
-              {questionLoading && !question ? (
+              {/* ✅ ENHANCED: Timer with reset trigger and prefetch indicator */}
+              {questionLoading ? (
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit">
                   <div className="h-6 w-16 bg-gradient-to-r from-blue-200 to-indigo-200 rounded animate-pulse"></div>
                 </div>
               ) : question && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit relative overflow-hidden timer-active">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-100/30 to-blue-100/0 shimmer-effect"></div>
-                  <div className="relative flex items-center gap-2 text-blue-700 font-medium">
-                    <svg className="w-4 h-4 clock-icon" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
-                    <QuestionTimer 
-                      onTimeUpdate={setTimeTaken}
-                      shouldStop={shouldStopTimer}
-                    />
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit relative overflow-hidden timer-active">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-100/30 to-blue-100/0 shimmer-effect"></div>
+                    <div className="relative flex items-center gap-2 text-blue-700 font-medium">
+                      <svg className="w-4 h-4 clock-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                      <QuestionTimer 
+                        onTimeUpdate={setTimeTaken}
+                        shouldStop={shouldStopTimer}
+                        onReset={timerResetTrigger > 0 ? () => {} : undefined}
+                        key={timerResetTrigger} // ✅ Force re-render on reset
+                      />
+                    </div>
                   </div>
+                  
+                  {/* Prefetch Status Indicator */}
+                  <PrefetchIndicator
+                    isPrefetching={isPrefetching}
+                    hasPrefetchedQuestion={!!prefetchedQuestion?.isValid}
+                    prefetchError={prefetchError}
+                  />
                 </div>
               )}
             </div>
 
-            {/* Navigation buttons - ALWAYS VISIBLE */}
             <div className="flex flex-wrap gap-2 items-start relative z-[100]">
               <Navigation />
               <QuestionLimitIndicator />
             </div>
           </div>
 
-          {/* Token Warning - ALWAYS VISIBLE when active */}
+          {/* Token Warning */}
           {errorDisplayMode === 'token-warning' && (
             <TokenLimitWarning 
               isVisible={showTokenWarning}
@@ -959,7 +957,7 @@ return (
             />
           )}
 
-          {/* Error Message - ALWAYS VISIBLE when active */}
+          {/* Error Message */}
           {errorDisplayMode === 'error-message' && error && (
             <div className="bg-red-50/90 backdrop-blur-sm text-red-600 p-4 rounded-xl mb-6 border border-red-200 shadow-sm">
               {error}
@@ -986,55 +984,11 @@ return (
 
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-full lg:w-1/2">
-              {/* Question section - skeleton only for question area */}
-              {questionLoading && !question ? (
+              {/* ✅ ENHANCED: Question section with proper skeleton loading */}
+              {questionLoading ? (
                 <div className="space-y-6">
-                  {/* Question Card Skeleton */}
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 min-h-[200px] animate-pulse border border-white/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
-                    
-                    <div className="relative z-10">
-                      {/* Metadata tags skeleton */}
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-16 animate-pulse"></div>
-                        <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-20 animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                        <div className="h-5 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                        <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full w-16 animate-pulse" style={{animationDelay: '0.3s'}}></div>
-                      </div>
-                      
-                      {/* Stats skeleton */}
-                      <div className="flex items-center gap-3 py-2 mb-4">
-                        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse"></div>
-                        <div className="h-5 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                      </div>
-                      
-                      {/* Question text skeleton */}
-                      <div className="space-y-3">
-                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse"></div>
-                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Answer Form Skeleton */}
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
-                    
-                    <div className="relative z-10">
-                      {/* Textarea skeleton */}
-                      <div className="h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg w-full animate-pulse"></div>
-                      
-                      {/* Buttons skeleton */}
-                      <div className="flex gap-2 mt-3">
-                        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse"></div>
-                        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                      </div>
-                      
-                      {/* Submit button skeleton */}
-                      <div className="h-10 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-lg w-full mt-3 animate-pulse"></div>
-                    </div>
-                  </div>
+                  <QuestionSkeleton />
+                  <AnswerFormSkeleton />
                 </div>
               ) : question && (
                 <div className="space-y-6">
@@ -1049,49 +1003,23 @@ return (
                   />
 
                   {/* Answer form */}
-                  {isSubmitting ? (
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
-                      
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-center py-8">
-                          <div className="flex flex-col items-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                            <p className="mt-4 text-gray-600">Submitting your answer...</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <AnswerForm
-                      onSubmit={handleSubmitAnswer}
-                      isSubmitting={isSubmitting}
-                      questionType={question.type}
-                      options={question.options}
-                      isDisabled={!!feedback}
-                      stopTimer={stopTimerImmediately}
-                      errorMessage={error || undefined}
-                    />
-                  )}
+                  <AnswerForm
+                    onSubmit={handleSubmitAnswer}
+                    isSubmitting={isSubmitting}
+                    questionType={question.type}
+                    options={question.options}
+                    isDisabled={!!feedback}
+                    stopTimer={stopTimerImmediately}
+                    errorMessage={error || undefined}
+                  />
                 </div>
               )}
             </div>
 
             <div className="w-full lg:w-1/2 mt-6 lg:mt-0">
-              {/* Feedback section - ALWAYS VISIBLE */}
+              {/* ✅ ENHANCED: Feedback section with proper skeleton loading */}
               {isSubmitting ? (
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-center py-12">
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
-                        <p className="mt-4 text-gray-600">Analyzing your answer...</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <FeedbackSkeleton />
               ) : feedback ? (
                 <FeedbackCard
                   score={feedback.score}
@@ -1124,16 +1052,18 @@ return (
         </div>
       </div>
       
-      {/* Floating Next Question Button - ALWAYS VISIBLE */}
+      {/* ✅ ENHANCED: Floating Next Question Button with prefetch status */}
       <FloatingNextQuestionButton
         onNextQuestion={handleNextQuestion}
+        isInstant={!!prefetchedQuestion?.isValid}
+        isBlocked={!!prefetchError?.includes('limit')}
       />
       
-      {/* Swipe to Next Question - ALWAYS VISIBLE on mobile */}
+      {/* Swipe to Next Question - mobile */}
       <SwipeToNextQuestion
         onNextQuestion={handleNextQuestion}
       />
     </div>
-  </>
-);
+    </>
+  );
 }
