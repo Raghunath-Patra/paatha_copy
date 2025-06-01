@@ -1,4 +1,6 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx - Enhanced with user token service
+// frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx
+// Replace the ENTIRE component with this prefetch-enabled version
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -17,30 +19,8 @@ import DailyLimitReached from '../../../../components/limits/DailyLimitReached';
 import { getAuthHeaders } from '../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../utils/userTokenService';
- 
-// Define a mapping for subject codes to user-friendly names
-const SUBJECT_CODE_TO_NAME: Record<string, string> = {
-  'iesc1dd': 'Science',
-  'hesc1dd': 'Science',
-  'jesc1dd': 'Science',
-  'iemh1dd': 'Mathematics',
-  'jemh1dd': 'Mathematics',
-  'kemh1dd': 'Mathematics',
-  'lemh1dd': 'Mathematics (Part I)',
-  'lemh2dd': 'Mathematics (Part II)',
-  'hemh1dd': 'Mathematics',
-  'keph1dd': 'Physics (Part I)',
-  'keph2dd': 'Physics (Part II)',
-  'leph1dd': 'Physics (Part I)',
-  'leph2dd': 'Physics (Part II)',
-  'kech1dd': 'Chemistry (Part I)',
-  'kech2dd': 'Chemistry (Part II)',
-  'lech1dd': 'Chemistry (Part I)',
-  'lech2dd': 'Chemistry (Part II)',
-  'kebo1dd': 'Biology',
-  'lebo1dd': 'Biology'
-};
 
+// Your existing interfaces remain the same...
 interface Question {
   id: string;
   question_text: string;
@@ -84,115 +64,43 @@ interface PerformancePageParams {
   chapter: string;
 }
 
-// Header skeleton component
-const ThemedHeaderSkeleton = () => (
-  <div className="flex justify-between mb-6">
-    <div className="space-y-2">
-      <div className="h-6 sm:h-8 bg-gradient-to-r from-red-200 to-orange-200 rounded w-64 sm:w-80 animate-pulse"></div>
-      <div className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded w-32 sm:w-40 animate-pulse"></div>
-    </div>
-    <div className="flex gap-2">
-      <div className="h-10 w-20 bg-gradient-to-r from-red-200 to-orange-200 rounded-lg animate-pulse"></div>
-      <div className="h-10 w-16 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
-    </div>
-  </div>
-);
+// ✅ NEW: Prefetch interface
+interface PrefetchedQuestion {
+  question: Question;
+  timestamp: number;
+  isValid: boolean;
+}
 
-// Enhanced question skeleton with theme
-const ThemedQuestionSkeleton = () => (
-  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
-    {/* Subtle gradient overlay */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 via-orange-50/30 to-yellow-50/30 opacity-50"></div>
-    
-    <div className="relative z-10 space-y-4">
-      {/* Skeleton metadata tags */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded-full w-16 animate-pulse" 
-               style={{ animationDelay: `${i * 100}ms` }} />
-        ))}
-      </div>
-      
-      {/* Skeleton question text */}
-      <div className="space-y-3">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
-               style={{ 
-                 width: i === 3 ? '70%' : '100%',
-                 animationDelay: `${i * 150}ms` 
-               }} />
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-// Answer form skeleton during submission
-const ThemedAnswerSkeleton = () => (
-  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-white/50 relative overflow-hidden">
-    {/* Subtle gradient overlay */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/30 to-transparent opacity-50"></div>
-    
-    <div className="relative z-10 space-y-4">
-      <div className="h-32 bg-gradient-to-r from-yellow-200 to-orange-200 rounded-lg animate-pulse"></div>
-      <div className="h-12 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg animate-pulse"></div>
-    </div>
-  </div>
-);
-
-// Feedback skeleton during submission
-const ThemedFeedbackSkeleton = () => (
-  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
-    {/* Decorative gradient */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 via-orange-50/30 to-yellow-50/30 opacity-50"></div>
-    
-    <div className="relative z-10 space-y-4">
-      {/* Score skeleton */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded w-20 animate-pulse"></div>
-        <div className="h-8 w-16 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full animate-pulse"></div>
-      </div>
-      
-      {/* Feedback text skeleton */}
-      <div className="space-y-2">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} 
-               className="h-4 bg-gradient-to-r from-yellow-200 to-red-200 rounded animate-pulse" 
-               style={{ 
-                 width: i === 4 ? '60%' : '100%',
-                 animationDelay: `${i * 100}ms` 
-               }} />
-        ))}
-      </div>
-      
-      {/* Model answer skeleton */}
-      <div className="mt-6 space-y-2">
-        <div className="h-5 bg-gradient-to-r from-red-200 to-orange-200 rounded w-32 animate-pulse"></div>
-        {[1, 2, 3].map(i => (
-          <div key={i} 
-               className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
-               style={{ 
-                 width: i === 3 ? '80%' : '100%',
-                 animationDelay: `${i * 150}ms` 
-               }} />
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-// Floating button skeleton
-const ThemedFloatingButtonSkeleton = () => (
-  <div className="fixed bottom-6 right-6 z-50">
-    <div className="h-14 w-14 bg-gradient-to-r from-red-200 to-orange-200 rounded-full animate-pulse shadow-lg"></div>
-  </div>
-);
+// Define subject code mapping (keep your existing one)
+const SUBJECT_CODE_TO_NAME: Record<string, string> = {
+  'iesc1dd': 'Science',
+  'hesc1dd': 'Science',
+  'jesc1dd': 'Science',
+  'iemh1dd': 'Mathematics',
+  'jemh1dd': 'Mathematics',
+  'kemh1dd': 'Mathematics',
+  'lemh1dd': 'Mathematics (Part I)',
+  'lemh2dd': 'Mathematics (Part II)',
+  'hemh1dd': 'Mathematics',
+  'keph1dd': 'Physics (Part I)',
+  'keph2dd': 'Physics (Part II)',
+  'leph1dd': 'Physics (Part I)',
+  'leph2dd': 'Physics (Part II)',
+  'kech1dd': 'Chemistry (Part I)',
+  'kech2dd': 'Chemistry (Part II)',
+  'lech1dd': 'Chemistry (Part I)',
+  'lech2dd': 'Chemistry (Part II)',
+  'kebo1dd': 'Biology',
+  'lebo1dd': 'Biology'
+};
 
 export default function ThemedChapterPage() {
   const params = useParams() as unknown as PerformancePageParams;
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, loading: authLoading } = useSupabaseAuth();
+  
+  // ✅ Existing state variables
   const [question, setQuestion] = useState<Question | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -207,12 +115,19 @@ export default function ThemedChapterPage() {
   const [showTokenWarning, setShowTokenWarning] = useState(false);
   const [tokenWarningAllowClose, setTokenWarningAllowClose] = useState(true);
   const [errorDisplayMode, setErrorDisplayMode] = useState<'none' | 'token-warning' | 'error-message'>('none');
-  
-  // NEW: State for showing daily limit page
   const [showLimitPage, setShowLimitPage] = useState(false);
   const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
+  const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
+  const [timerKey, setTimerKey] = useState(0);
+
+  // ✅ NEW: Prefetch system state
+  const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
+  const [isPrefetching, setIsPrefetching] = useState(false);
+  const [prefetchError, setPrefetchError] = useState<string | null>(null);
+  
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const PREFETCH_VALIDITY_TIME = 5 * 60 * 1000; // 5 minutes
   
   // Direct function to stop the timer immediately when button is clicked
   const stopTimerImmediately = useCallback(() => {
@@ -220,6 +135,257 @@ export default function ThemedChapterPage() {
     setShouldStopTimer(true);
   }, []);
   
+  // ✅ NEW: Prefetch next question in background
+  const prefetchNextQuestion = useCallback(async () => {
+    // Don't prefetch if already prefetching or if we have a valid prefetched question
+    if (isPrefetching || (prefetchedQuestion?.isValid && 
+        Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME)) {
+      return;
+    }
+    
+    console.log('🔄 Starting background prefetch of next question...');
+    setIsPrefetching(true);
+    setPrefetchError(null);
+    
+    try {
+      // Check if user has tokens for next question
+      const actionCheck = userTokenService.canPerformAction('fetch_question');
+      if (!actionCheck.allowed) {
+        console.log('❌ Prefetch blocked - insufficient tokens:', actionCheck.reason);
+        setPrefetchError(actionCheck.reason || 'Token limit reached');
+        setPrefetchedQuestion(null);
+        return;
+      }
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) {
+        console.log('❌ Prefetch blocked - not authorized');
+        return;
+      }
+
+      const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/random`;
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        if (response.status === 402) {
+          console.log('🚫 Prefetch: Server says limit reached');
+          setPrefetchError('Daily limit reached');
+          setPrefetchedQuestion(null);
+          return;
+        }
+        
+        const responseText = await response.text();
+        let isTokenLimitError = false;
+        
+        try {
+          const errorData = JSON.parse(responseText);
+          isTokenLimitError = 
+            (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
+            (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
+            (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
+            (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
+        } catch (e) {
+          isTokenLimitError = 
+            responseText.toLowerCase().includes('token limit') ||
+            responseText.toLowerCase().includes('usage limit') ||
+            responseText.toLowerCase().includes('daily limit') ||
+            responseText.toLowerCase().includes('limit reached');
+        }
+        
+        if (isTokenLimitError) {
+          console.log('🚫 Prefetch: Token limit error detected');
+          setPrefetchError('Token limit reached');
+          setPrefetchedQuestion(null);
+          return;
+        }
+        
+        throw new Error('Failed to prefetch question');
+      }
+
+      const data = await response.json();
+      
+      // ✅ Store prefetched question with timestamp
+      setPrefetchedQuestion({
+        question: data,
+        timestamp: Date.now(),
+        isValid: true
+      });
+      
+      console.log('✅ Question prefetched successfully:', data.id);
+      
+      // ✅ IMPORTANT: Don't update token usage for prefetch
+      // We'll update tokens only when user actually views the question
+      
+    } catch (error) {
+      console.error('❌ Prefetch error:', error);
+      setPrefetchError(error instanceof Error ? error.message : 'Prefetch failed');
+      setPrefetchedQuestion(null);
+    } finally {
+      setIsPrefetching(false);
+    }
+  }, [API_URL, params.board, params.class, params.subject, params.chapter, isPrefetching, prefetchedQuestion]);
+
+  // ✅ NEW: Handle next question with prefetch logic
+const handleNextQuestion = useCallback(async () => {
+  console.log('🔄 Next question requested');
+  
+  // Clear current feedback immediately
+  setFeedback(null);
+  setShouldStopTimer(false);
+  setErrorDisplayMode('none');
+  setShowTokenWarning(false);
+  
+  // ✅ Check if we have a valid prefetched question
+  if (prefetchedQuestion?.isValid && 
+      Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME) {
+    
+    console.log('✅ Using prefetched question:', prefetchedQuestion.question.id);
+    
+    // ✅ Set flag to prevent duplicate fetch
+    setIsUsingPrefetch(true);
+    
+    // ✅ Immediate question switch - no loading, no flickering!
+    setQuestion(prefetchedQuestion.question);
+    
+    // ✅ Update URL without triggering router navigation
+    const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${prefetchedQuestion.question.id}`;
+    window.history.replaceState({}, '', newUrl);
+    
+    // ✅ Update token usage for viewing the prefetched question
+    userTokenService.updateTokenUsage({ input: 50 });
+    
+    // ✅ Invalidate the used prefetch and start new prefetch
+    setPrefetchedQuestion(null);
+    
+    // ✅ Reset flag after a brief delay
+    setTimeout(() => {
+      setIsUsingPrefetch(false);
+    }, 100);
+    
+    // ✅ Start prefetching the next question immediately
+    setTimeout(() => prefetchNextQuestion(), 1000);
+    
+    return;
+  }
+  
+  // ✅ No valid prefetch available - check why
+  if (prefetchError) {
+    console.log('🚫 No prefetch available due to error:', prefetchError);
+    
+    if (prefetchError.includes('limit') || prefetchError.includes('token')) {
+      // ✅ Show limit page immediately - no waiting!
+      setShowLimitPage(true);
+      return;
+    }
+  }
+  
+  // ✅ Fallback: Fetch question normally (show skeleton loading)
+  console.log('⚠️ Fallback: No prefetch available, fetching normally...');
+  
+  // Clear current question to show skeleton
+  setQuestion(null);
+  setQuestionLoading(true);
+  
+  try {
+    const actionCheck = userTokenService.canPerformAction('fetch_question');
+    if (!actionCheck.allowed) {
+      console.log('❌ Question fetch blocked:', actionCheck.reason);
+      setShowLimitPage(true);
+      setQuestionLoading(false);
+      return;
+    }
+
+    const { headers, isAuthorized } = await getAuthHeaders();
+    if (!isAuthorized) {
+      router.push('/login');
+      return;
+    }
+
+    const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/random`;
+    const response = await fetch(url, { headers });
+
+    if (!response.ok) {
+      if (response.status === 402) {
+        console.log('🚫 Server says limit reached, showing limit page');
+        setShowLimitPage(true);
+        setQuestionLoading(false);
+        return;
+      }
+      
+      const responseText = await response.text();
+      let isTokenLimitError = false;
+      
+      try {
+        const errorData = JSON.parse(responseText);
+        isTokenLimitError = 
+          (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
+          (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
+          (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
+          (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
+      } catch (e) {
+        isTokenLimitError = 
+          responseText.toLowerCase().includes('token limit') ||
+          responseText.toLowerCase().includes('usage limit') ||
+          responseText.toLowerCase().includes('daily limit') ||
+          responseText.toLowerCase().includes('limit reached');
+      }
+      
+      if (isTokenLimitError) {
+        userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+        setShowLimitPage(true);
+        setQuestionLoading(false);
+        return;
+      }
+      
+      throw new Error('Failed to fetch question');
+    }
+
+    const data = await response.json();
+    setQuestion(data);
+    
+    // Update URL with the new question ID
+    const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${data.id}`;
+    window.history.replaceState({}, '', newUrl);
+    
+    // Update token usage
+    userTokenService.updateTokenUsage({ input: 50 });
+    
+    // Start prefetch for next question
+    setTimeout(() => prefetchNextQuestion(), 1000);
+    
+  } catch (error) {
+    console.error('Error in fallback fetch:', error);
+    if (!showLimitPage) {
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      setErrorDisplayMode('error-message');
+    }
+  } finally {
+    setQuestionLoading(false);
+  }
+}, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage]);
+
+  // ✅ Auto-prefetch when current question loads
+  useEffect(() => {
+    if (question && !questionLoading && !showLimitPage) {
+      console.log('🎯 Current question loaded, starting prefetch timer...');
+      
+      // ✅ Start prefetch after 2 seconds (gives user time to read current question)
+      const prefetchTimer = setTimeout(() => {
+        prefetchNextQuestion();
+      }, 2000);
+      
+      return () => clearTimeout(prefetchTimer);
+    }
+  }, [question, questionLoading, showLimitPage, prefetchNextQuestion]);
+  
+  // ✅ Cleanup prefetch on unmount
+  useEffect(() => {
+    return () => {
+      setPrefetchedQuestion(null);
+      setPrefetchError(null);
+    };
+  }, []);
+
   // Check initial token status on page load
   useEffect(() => {
     const checkInitialTokenStatus = () => {
@@ -237,24 +403,29 @@ export default function ThemedChapterPage() {
       return false;
     };
 
-    // Subscribe to token updates
+    // ✅ Simplified token callback (prefetch system handles most cases)
     const unsubscribe = userTokenService.onTokenUpdate((newStatus: any) => {
       setUserTokenStatus(newStatus);
-      if (newStatus && (newStatus.limit_reached || !newStatus.can_fetch_question)) {
-        console.log('🚫 Token limit reached via update, showing limit page');
+      
+      // ✅ Only handle extreme cases where limit is definitely reached
+      if (newStatus && newStatus.limit_reached && newStatus.questions_used_today > 0) {
+        console.log('🚫 Confirmed token limit reached via update');
         setShowLimitPage(true);
+        // ✅ Clear prefetch when limit reached
+        setPrefetchedQuestion(null);
+        setPrefetchError('Daily limit reached');
       }
     });
 
     const limitReached = checkInitialTokenStatus();
     if (limitReached) {
-      return () => unsubscribe();
+      return unsubscribe;
     }
 
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
   
-  // Check token status regularly
+  // Check token status regularly (simplified)
   useEffect(() => {
     const checkTokenStatus = async () => {
       try {
@@ -286,13 +457,14 @@ export default function ThemedChapterPage() {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
   
+  // ✅ Your existing fetchQuestion function (mostly unchanged)
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
       setError(null);
       setQuestionLoading(true);
       setErrorDisplayMode('none');
 
-      // SMART PRE-VALIDATION: Check user tokens before making API call
+      // Pre-validation check
       const actionCheck = userTokenService.canPerformAction('fetch_question');
       if (!actionCheck.allowed) {
         console.log('❌ Question fetch blocked:', actionCheck.reason);
@@ -318,8 +490,6 @@ export default function ThemedChapterPage() {
 
       if (!response.ok) {
         if (response.status === 402) {
-          // DON'T update token service cache - just show limit page
-          // The server already knows the limit is reached
           console.log('🚫 Server says limit reached, showing limit page');
           setShowLimitPage(true);
           setQuestionLoading(false);
@@ -357,7 +527,7 @@ export default function ThemedChapterPage() {
       const data = await response.json();
       setQuestion(data);
       
-      // Update token usage after successful fetch (don't increment question count for fetching)
+      // ✅ Update token usage for fetched question
       userTokenService.updateTokenUsage({ input: 50 });
       
       return data;
@@ -374,6 +544,7 @@ export default function ThemedChapterPage() {
     }
   };
 
+  // ✅ Your existing handleSubmitAnswer function (unchanged)
   const handleSubmitAnswer = async (answer: string, imageData?: string) => {
     try {
       if (!profile) {
@@ -381,7 +552,6 @@ export default function ThemedChapterPage() {
         return;
       }
 
-      // SMART PRE-VALIDATION: Check user tokens before making API call
       const actionCheck = userTokenService.canPerformAction('submit_answer');
       if (!actionCheck.allowed) {
         console.log('❌ Answer submission blocked:', actionCheck.reason);
@@ -418,7 +588,6 @@ export default function ThemedChapterPage() {
       
       if (!response.ok) {
         if (response.status === 402) {
-          // DON'T update token cache - server already knows limit is reached
           console.log('🚫 Server says limit reached, showing limit page');
           setShowLimitPage(true);
           return;
@@ -454,13 +623,11 @@ export default function ThemedChapterPage() {
         follow_up_questions: result.follow_up_questions || []
       });
       
-      // ONLY update token usage after successful submission with response data
-      // This ensures we only increment when the backend actually processed the submission
       console.log('✅ Answer submitted and graded successfully, updating token usage');
       userTokenService.updateTokenUsage({ 
-        input: 60, 
-        output: 140, 
-        questionSubmitted: true  // ✅ This will increment questions_used_today
+        input: 40, 
+        output: 100, 
+        questionSubmitted: true
       });
       
       // Auto-scroll to feedback for PWA users
@@ -488,33 +655,7 @@ export default function ThemedChapterPage() {
     }
   };
 
-  const handleNextQuestion = useCallback(async () => {
-    // Check token status before fetching next question
-    const actionCheck = userTokenService.canPerformAction('fetch_question');
-    if (!actionCheck.allowed) {
-      console.log('❌ Next question blocked:', actionCheck.reason);
-      setShowLimitPage(true);
-      return;
-    }
-
-    setFeedback(null);
-    setShouldStopTimer(false);
-    setErrorDisplayMode('none');
-    setShowTokenWarning(false);
-    
-    try {
-      const newQuestion = await fetchQuestion();
-      
-      if (newQuestion?.id) {
-        const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
-        //router.push(newUrl);
-        window.history.replaceState({}, '', newUrl);
-      }
-    } catch (error) {
-      console.error('Error fetching next question:', error);
-    }
-  }, [params.board, params.class, params.subject, params.chapter, router]);
-
+  // ✅ All your existing useEffects for initialization, chapter name fetching etc. remain the same...
   useEffect(() => {
     const syncUserData = async () => {
       try {
@@ -590,7 +731,6 @@ export default function ThemedChapterPage() {
           return;
         }
         
-        // Fetch chapter name in parallel
         fetchChapterName();
         
         const isNewQuestion = searchParams?.get('newq') === '1';
@@ -602,7 +742,22 @@ export default function ThemedChapterPage() {
         }
         
         const questionId = searchParams?.get('q');
-        
+        if (isUsingPrefetch) {
+          console.log('📌 Skipping fetch - using prefetched question');
+          setLoading(false);
+          return;
+        }
+
+        // Only fetch if we don't already have this question
+        if (question && question.id === questionId) {
+          console.log('📌 Question already loaded, skipping fetch');
+          setLoading(false);
+          return;
+        }
+
+        setTimerKey((prev: number): number => prev + 1);
+        setShouldStopTimer(false);
+
         fetchQuestion(questionId || undefined).then(newQuestion => {
           if (!questionId && newQuestion?.id) {
             const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${newQuestion.id}`;
@@ -614,13 +769,12 @@ export default function ThemedChapterPage() {
       setLoading(false);
     };
 
-    // Don't initialize if showing limit page
     if (!showLimitPage) {
       initializePage();
     }
   }, [params.board, params.class, params.subject, params.chapter, router, profile, authLoading, searchParams, API_URL, showLimitPage]);
 
-  // Format subject name function
+  // Format subject name function (keep your existing one)
   const formatSubjectName = (subject: string) => {
     if (!subject) return '';
     
@@ -636,11 +790,10 @@ export default function ThemedChapterPage() {
     }).join(' ');
   };
 
-  // Full page loading
+  // ✅ Your existing loading screen
   if (loading && !showLimitPage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
-        {/* Animated background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
                style={{animationDuration: '3s'}} />
@@ -690,47 +843,49 @@ export default function ThemedChapterPage() {
     ? params.chapter.replace(/^chapter-/, '')
     : '';
 
-  return (
-    <>
-      {/* Enhanced timer animations */}
-      <style jsx>{`
-        @keyframes timer-pulse {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
-            transform: scale(1);
-          }
-          50% { 
-            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
-            transform: scale(1.02);
-          }
-        }
-        
-        @keyframes shimmer-slide {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-        
-        @keyframes clock-tick {
-          0%, 50%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-5deg); }
-          75% { transform: rotate(5deg); }
-        }
-        
-        .timer-active {
-          animation: timer-pulse 3s infinite;
-        }
-        
-        .shimmer-effect {
-          animation: shimmer-slide 3s infinite;
-        }
-        
-        .clock-icon {
-          animation: clock-tick 2s infinite;
-        }
-      `}</style>
+  // Replace your entire main return statement with this refined version:
 
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-      {/* Animated background decorations */}
+return (
+  <>
+    {/* Enhanced timer animations */}
+    <style jsx>{`
+      @keyframes timer-pulse {
+        0%, 100% { 
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
+          transform: scale(1);
+        }
+        50% { 
+          box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+          transform: scale(1.02);
+        }
+      }
+      
+      @keyframes shimmer-slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(200%); }
+      }
+      
+      @keyframes clock-tick {
+        0%, 50%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+      }
+      
+      .timer-active {
+        animation: timer-pulse 3s infinite;
+      }
+      
+      .shimmer-effect {
+        animation: shimmer-slide 3s infinite;
+      }
+      
+      .clock-icon {
+        animation: clock-tick 2s infinite;
+      }
+    `}</style>
+
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+      {/* Animated background decorations - ALWAYS VISIBLE */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
              style={{animationDuration: '3s'}} />
@@ -742,11 +897,12 @@ export default function ThemedChapterPage() {
 
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto w-full">
-          {/* Header - with skeleton for chapter name loading */}
+          {/* Header - ALWAYS VISIBLE */}
           <div className="flex justify-between mb-6">
             <div className="flex flex-col">
               <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
                 {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {displayChapter}
+                {/* Only chapter name has skeleton */}
                 {chapterNameLoading ? (
                   <div className="inline-block ml-2">
                     <div className="h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse inline-block"></div>
@@ -762,17 +918,14 @@ export default function ThemedChapterPage() {
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
               
-              {/* Timer below class heading with enhanced styling */}
-              {questionLoading ? (
+              {/* Timer - skeleton only when loading */}
+              {questionLoading && !question ? (
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit">
                   <div className="h-6 w-16 bg-gradient-to-r from-blue-200 to-indigo-200 rounded animate-pulse"></div>
                 </div>
               ) : question && (
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit relative overflow-hidden timer-active">
-                  {/* Subtle animated background for active timer */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-100/30 to-blue-100/0 shimmer-effect"></div>
-                  
-                  {/* Timer with icon */}
                   <div className="relative flex items-center gap-2 text-blue-700 font-medium">
                     <svg className="w-4 h-4 clock-icon" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
@@ -786,13 +939,14 @@ export default function ThemedChapterPage() {
               )}
             </div>
 
+            {/* Navigation buttons - ALWAYS VISIBLE */}
             <div className="flex flex-wrap gap-2 items-start relative z-[100]">
               <Navigation />
               <QuestionLimitIndicator />
             </div>
           </div>
 
-          {/* Token Warning */}
+          {/* Token Warning - ALWAYS VISIBLE when active */}
           {errorDisplayMode === 'token-warning' && (
             <TokenLimitWarning 
               isVisible={showTokenWarning}
@@ -805,7 +959,7 @@ export default function ThemedChapterPage() {
             />
           )}
 
-          {/* Error Message */}
+          {/* Error Message - ALWAYS VISIBLE when active */}
           {errorDisplayMode === 'error-message' && error && (
             <div className="bg-red-50/90 backdrop-blur-sm text-red-600 p-4 rounded-xl mb-6 border border-red-200 shadow-sm">
               {error}
@@ -832,11 +986,55 @@ export default function ThemedChapterPage() {
 
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-full lg:w-1/2">
-              {/* Question section */}
-              {questionLoading ? (
+              {/* Question section - skeleton only for question area */}
+              {questionLoading && !question ? (
                 <div className="space-y-6">
-                  <ThemedQuestionSkeleton />
-                  <ThemedAnswerSkeleton />
+                  {/* Question Card Skeleton */}
+                  <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 min-h-[200px] animate-pulse border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
+                    
+                    <div className="relative z-10">
+                      {/* Metadata tags skeleton */}
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-16 animate-pulse"></div>
+                        <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-20 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                        <div className="h-5 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                        <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full w-16 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                      </div>
+                      
+                      {/* Stats skeleton */}
+                      <div className="flex items-center gap-3 py-2 mb-4">
+                        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse"></div>
+                        <div className="h-5 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      
+                      {/* Question text skeleton */}
+                      <div className="space-y-3">
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse"></div>
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Answer Form Skeleton */}
+                  <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+                    
+                    <div className="relative z-10">
+                      {/* Textarea skeleton */}
+                      <div className="h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg w-full animate-pulse"></div>
+                      
+                      {/* Buttons skeleton */}
+                      <div className="flex gap-2 mt-3">
+                        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse"></div>
+                        <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                      </div>
+                      
+                      {/* Submit button skeleton */}
+                      <div className="h-10 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-lg w-full mt-3 animate-pulse"></div>
+                    </div>
+                  </div>
                 </div>
               ) : question && (
                 <div className="space-y-6">
@@ -850,9 +1048,20 @@ export default function ThemedChapterPage() {
                     statistics={question.statistics}
                   />
 
-                  {/* Answer form - show skeleton during submission */}
+                  {/* Answer form */}
                   {isSubmitting ? (
-                    <ThemedAnswerSkeleton />
+                    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+                      
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-center py-8">
+                          <div className="flex flex-col items-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                            <p className="mt-4 text-gray-600">Submitting your answer...</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <AnswerForm
                       onSubmit={handleSubmitAnswer}
@@ -869,9 +1078,20 @@ export default function ThemedChapterPage() {
             </div>
 
             <div className="w-full lg:w-1/2 mt-6 lg:mt-0">
-              {/* Feedback section - show skeleton during submission */}
+              {/* Feedback section - ALWAYS VISIBLE */}
               {isSubmitting ? (
-                <ThemedFeedbackSkeleton />
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                        <p className="mt-4 text-gray-600">Analyzing your answer...</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : feedback ? (
                 <FeedbackCard
                   score={feedback.score}
@@ -886,7 +1106,6 @@ export default function ThemedChapterPage() {
                 />
               ) : (
                 <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center border border-white/50 relative overflow-hidden">
-                  {/* Decorative gradient */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
                   
                   <div className="relative z-10 py-8">
@@ -905,20 +1124,16 @@ export default function ThemedChapterPage() {
         </div>
       </div>
       
-      {/* Floating Next Question Button - show skeleton during question loading */}
-      {questionLoading ? (
-        <ThemedFloatingButtonSkeleton />
-      ) : (
-        <FloatingNextQuestionButton
-          onNextQuestion={handleNextQuestion}
-        />
-      )}
+      {/* Floating Next Question Button - ALWAYS VISIBLE */}
+      <FloatingNextQuestionButton
+        onNextQuestion={handleNextQuestion}
+      />
       
-      {/* Swipe to Next Question - mobile */}
+      {/* Swipe to Next Question - ALWAYS VISIBLE on mobile */}
       <SwipeToNextQuestion
         onNextQuestion={handleNextQuestion}
       />
     </div>
-    </>
-  );
+  </>
+);
 }
