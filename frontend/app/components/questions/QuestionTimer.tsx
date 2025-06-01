@@ -7,18 +7,19 @@ interface TimerProps {
   isVisible?: boolean;
   onTimeUpdate: (seconds: number) => void;
   shouldStop?: boolean;
-  onReset?: () => void;
+  resetTrigger?: number; // Changed: Use a number that increments to trigger reset
 }
 
 const QuestionTimer = ({ 
   isVisible = true, 
   onTimeUpdate, 
   shouldStop = false,
-  onReset 
+  resetTrigger = 0 // Changed: Default to 0
 }: TimerProps) => {
   const [seconds, setSeconds] = useState(0);
   const timerRunning = useRef(true);
   const lastReportedTime = useRef(0);
+  const lastResetTrigger = useRef(0); // Track the last reset trigger value
 
   // Immediate effect when shouldStop changes
   useEffect(() => {
@@ -40,6 +41,20 @@ const QuestionTimer = ({
     onTimeUpdate(seconds);
   }, [seconds, onTimeUpdate]);
 
+  // Reset effect - Fixed logic
+  useEffect(() => {
+    if (resetTrigger !== lastResetTrigger.current && resetTrigger > 0) {
+      console.log('Resetting timer from useEffect, trigger:', resetTrigger);
+      setSeconds(0);
+      timerRunning.current = true;
+      lastResetTrigger.current = resetTrigger;
+      lastReportedTime.current = 0;
+      
+      // Report the reset time immediately
+      onTimeUpdate(0);
+    }
+  }, [resetTrigger, onTimeUpdate]);
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -59,15 +74,6 @@ const QuestionTimer = ({
       }
     };
   }, [shouldStop]);
-
-  // Reset effect
-  useEffect(() => {
-    console.log('Resetting timer from useEffect');
-    if (onReset) {
-      setSeconds(0);
-      timerRunning.current = true;
-    }
-  }, [onReset]);
 
   const formatTime = (totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);

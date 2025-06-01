@@ -119,8 +119,10 @@ export default function ThemedChapterPage() {
   const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
   const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
-  const [timerKey, setTimerKey] = useState(0);
-  const [shouldResetTimer, setShouldResetTimer] = useState(false);
+  // const [timerKey, setTimerKey] = useState(0);
+  // const [shouldResetTimer, setShouldResetTimer] = useState(false);
+
+  const [timerResetTrigger, setTimerResetTrigger] = useState(0);
 
   // ✅ NEW: Prefetch system state
   const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
@@ -137,9 +139,10 @@ export default function ThemedChapterPage() {
   }, []);
 
   const resetTimer = useCallback(() => {
-    console.log('Resetting timer');
-    setShouldResetTimer(true);
-  }, []);
+  console.log('Resetting timer');
+  setTimerResetTrigger(prev => prev + 1); // Simply increment the counter
+  setShouldStopTimer(false); // Also ensure timer is not stopped
+}, []);
   
   // ✅ NEW: Prefetch next question in background
   const prefetchNextQuestion = useCallback(async () => {
@@ -764,7 +767,6 @@ const handleNextQuestion = useCallback(async () => {
           return;
         }
 
-        setTimerKey((prev: number): number => prev + 1);
         setShouldStopTimer(false);
 
         fetchQuestion(questionId || undefined).then(newQuestion => {
@@ -942,7 +944,7 @@ return (
                     <QuestionTimer 
                       onTimeUpdate={setTimeTaken}
                       shouldStop={shouldStopTimer}
-                      onReset={shouldResetTimer ? resetTimer : undefined}
+                      resetTrigger={timerResetTrigger}
                     />
                   </div>
                 </div>
