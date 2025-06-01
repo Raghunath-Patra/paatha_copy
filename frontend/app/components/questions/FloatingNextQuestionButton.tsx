@@ -1,67 +1,59 @@
 // frontend/app/components/questions/FloatingNextQuestionButton.tsx
-// Updated with new props for prefetch status
 
-import React from 'react';
-import { ArrowRight, X, Zap } from 'lucide-react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { ArrowRight } from 'lucide-react';
 
 interface FloatingNextQuestionButtonProps {
   onNextQuestion: () => void;
-  isInstant?: boolean;  // ✅ NEW: Question ready for instant switch
-  isBlocked?: boolean;  // ✅ NEW: No more questions available
+  visible?: boolean; // Make it optional with no default value
 }
 
-const FloatingNextQuestionButton: React.FC<FloatingNextQuestionButtonProps> = ({
+const FloatingNextQuestionButton: React.FC<FloatingNextQuestionButtonProps> = ({ 
   onNextQuestion,
-  isInstant = false,
-  isBlocked = false
+  visible // No default value - will be managed based on device type
 }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if device is mobile (don't show this component on mobile)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // 768px is the md breakpoint in Tailwind
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Listen for resize events
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Update visibility based on props and device type
+  useEffect(() => {
+    // On desktop, show button always (when not explicitly hidden via visible=false)
+    // On mobile, hide the button since we'll use swipe instead
+    setIsVisible(visible !== false && !isMobile);
+  }, [visible, isMobile]);
+  
+  // Don't render when not visible
+  if (!isVisible) return null;
+  
   return (
     <button
       onClick={onNextQuestion}
-      disabled={isBlocked}
-      className={`fixed bottom-6 right-6 z-40 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 group ${
-        isBlocked 
-          ? 'bg-gray-400 cursor-not-allowed opacity-50' 
-          : isInstant 
-            ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 pulse-glow-green' 
-            : 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600'
-      }`}
-      title={
-        isBlocked 
-          ? 'No more questions available' 
-          : isInstant 
-            ? 'Next question ready - instant switch!' 
-            : 'Load next question'
-      }
+      className="fixed right-6 bottom-24 z-50 bg-blue-600 hover:bg-blue-700 
+                text-white rounded-full p-4 shadow-lg flex items-center justify-center"
+      aria-label="Next Question"
     >
-      {isBlocked ? (
-        <X className="w-6 h-6 text-white" />
-      ) : isInstant ? (
-        <div className="flex items-center gap-1">
-          <ArrowRight className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform" />
-          <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
-        </div>
-      ) : (
-        <ArrowRight className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform" />
-      )}
-      
-      {/* ✅ Enhanced styling for instant state */}
-      <style jsx>{`
-        .pulse-glow-green {
-          animation: pulse-glow-green 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse-glow-green {
-          0%, 100% { 
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
-            transform: scale(1);
-          }
-          50% { 
-            box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
-            transform: scale(1.02);
-          }
-        }
-      `}</style>
+      <div className="flex items-center">
+        <span className="mr-2 font-medium">Next Question</span>
+        <ArrowRight size={20} />
+      </div>
     </button>
   );
 };
