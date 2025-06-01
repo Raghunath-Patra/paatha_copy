@@ -452,7 +452,7 @@ export default function HomePage() {
           <div className="max-w-[1600px] mx-auto w-full">
             {/* Navigation - Highest z-index to prevent blocking */}
             <div className="flex justify-end mb-4 sm:mb-6 opacity-0 animate-fade-in stagger-1 relative z-[100]">
-              <Navigation />
+              <AuthButton />
             </div>
             
             <div className="max-w-4xl mx-auto relative z-0">
