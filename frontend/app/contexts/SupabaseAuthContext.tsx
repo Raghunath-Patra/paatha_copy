@@ -254,26 +254,26 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         }
 
         // Set up Supabase auth listener
-        authListenerRef.current = supabase.auth.onAuthStateChange(async (event, newSession) => {
-          if (!mounted) return;
-
-          console.log('Auth state change:', event);
-
-          if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-            if (newSession?.user) {
-              setUser(newSession.user);
-              setSession(newSession);
-              const userProfile = await fetchProfile(newSession.user.id);
-              if (mounted && userProfile) {
-                setProfile(userProfile);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+              setUser(session.user);
+              
+              // Handle redirect after successful sign in
+              const originalPath = sessionStorage.getItem('originalPath');
+              if (originalPath) {
+                console.log('Redirecting to stored original path:', originalPath);
+                sessionStorage.removeItem('originalPath');
+                window.location.href = originalPath; // Reliable redirect
+              }else{
+                console.log('No stored path found, redirecting to home');
+                window.location.href = '/'; // Default redirect
               }
+            } else if (event === 'SIGNED_OUT') {
+              setUser(null);
             }
-          } else if (event === 'SIGNED_OUT') {
-            setUser(null);
-            setProfile(null);
-            setSession(null);
-          }
-        });
+          });
+
       } catch (err) {
         console.error('Auth initialization error:', err);
         if (mounted) {
