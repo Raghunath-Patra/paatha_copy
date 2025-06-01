@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx
-// Replace the ENTIRE component with this prefetch-enabled version
+// Updated with proper skeleton loading instead of spinners
 
 'use client';
 
@@ -94,6 +94,73 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
+// ✅ NEW: Skeleton for submitting answer
+const SubmittingAnswerSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-4 border border-white/50 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+    
+    <div className="relative z-10 space-y-4">
+      {/* Header skeleton */}
+      <div className="flex items-center gap-3">
+        <div className="w-6 h-6 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full animate-pulse"></div>
+        <div className="h-5 bg-gradient-to-r from-blue-200 to-indigo-200 rounded w-40 animate-pulse"></div>
+      </div>
+      
+      {/* Progress bar skeleton */}
+      <div className="space-y-2">
+        <div className="h-2 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-full animate-pulse"></div>
+        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse"></div>
+      </div>
+      
+      {/* Content skeleton */}
+      <div className="space-y-3 pt-4">
+        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse"></div>
+        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-4/5 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/5 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+      </div>
+    </div>
+  </div>
+);
+
+// ✅ NEW: Skeleton for analyzing feedback
+const AnalyzingFeedbackSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
+    
+    <div className="relative z-10 space-y-6">
+      {/* Score section skeleton */}
+      <div className="text-center space-y-4">
+        <div className="w-20 h-20 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full mx-auto animate-pulse"></div>
+        <div className="h-6 bg-gradient-to-r from-purple-200 to-pink-200 rounded w-32 mx-auto animate-pulse"></div>
+      </div>
+      
+      {/* Feedback sections skeleton */}
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="space-y-3">
+            <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded w-24 animate-pulse" 
+                 style={{animationDelay: `${i * 0.1}s`}}></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" 
+                   style={{animationDelay: `${i * 0.1 + 0.05}s`}}></div>
+              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-4/5 animate-pulse" 
+                   style={{animationDelay: `${i * 0.1 + 0.1}s`}}></div>
+              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/5 animate-pulse" 
+                   style={{animationDelay: `${i * 0.1 + 0.15}s`}}></div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Action buttons skeleton */}
+      <div className="flex gap-3 pt-4">
+        <div className="h-10 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg w-32 animate-pulse"></div>
+        <div className="h-10 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg w-28 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function ThemedChapterPage() {
   const params = useParams() as unknown as PerformancePageParams;
   const router = useRouter();
@@ -119,9 +186,6 @@ export default function ThemedChapterPage() {
   const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
   const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
-  // const [timerKey, setTimerKey] = useState(0);
-  // const [shouldResetTimer, setShouldResetTimer] = useState(false);
-
   const [timerResetTrigger, setTimerResetTrigger] = useState(0);
 
   // ✅ NEW: Prefetch system state
@@ -139,10 +203,10 @@ export default function ThemedChapterPage() {
   }, []);
 
   const resetTimer = useCallback(() => {
-  console.log('Resetting timer');
-  setTimerResetTrigger(prev => prev + 1); // Simply increment the counter
-  setShouldStopTimer(false); // Also ensure timer is not stopped
-}, []);
+    console.log('Resetting timer');
+    setTimerResetTrigger(prev => prev + 1); // Simply increment the counter
+    setShouldStopTimer(false); // Also ensure timer is not stopped
+  }, []);
   
   // ✅ NEW: Prefetch next question in background
   const prefetchNextQuestion = useCallback(async () => {
@@ -359,7 +423,7 @@ const handleNextQuestion = useCallback(async () => {
     const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${data.id}`;
     window.history.replaceState({}, '', newUrl);
     
-    // Update token usage-----------------------------------------------------------------------------------------------
+    // Update token usage
     userTokenService.updateTokenUsage({ input: 50 });
     
     // Start prefetch for next question
@@ -801,7 +865,7 @@ const handleNextQuestion = useCallback(async () => {
     }).join(' ');
   };
 
-  // ✅ Your existing loading screen
+  // ✅ Your existing loading screen (only for initial page load)
   if (loading && !showLimitPage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
@@ -1060,20 +1124,9 @@ return (
                     statistics={question.statistics}
                   />
 
-                  {/* Answer form */}
+                  {/* ✅ UPDATED: Answer form with skeleton instead of spinner */}
                   {isSubmitting ? (
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
-                      
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-center py-8">
-                          <div className="flex flex-col items-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                            <p className="mt-4 text-gray-600">Submitting your answer...</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <SubmittingAnswerSkeleton />
                   ) : (
                     <AnswerForm
                       onSubmit={handleSubmitAnswer}
@@ -1090,20 +1143,9 @@ return (
             </div>
 
             <div className="w-full lg:w-1/2 mt-6 lg:mt-0">
-              {/* Feedback section - ALWAYS VISIBLE */}
+              {/* ✅ UPDATED: Feedback section with skeleton instead of spinner */}
               {isSubmitting ? (
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-center py-12">
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
-                        <p className="mt-4 text-gray-600">Analyzing your answer...</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <AnalyzingFeedbackSkeleton />
               ) : feedback ? (
                 <FeedbackCard
                   score={feedback.score}
