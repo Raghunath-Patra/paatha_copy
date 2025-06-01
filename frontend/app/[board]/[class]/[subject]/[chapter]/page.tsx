@@ -138,7 +138,7 @@ export default function ThemedChapterPage() {
 
   const resetTimer = useCallback(() => {
     console.log('Resetting timer');
-    setShouldResetTimer(prev => !prev);
+    setShouldResetTimer(true);
   }, []);
   
   // ✅ NEW: Prefetch next question in background
@@ -252,6 +252,9 @@ const handleNextQuestion = useCallback(async () => {
     
     // ✅ Immediate question switch - no loading, no flickering!
     setQuestion(prefetchedQuestion.question);
+
+    // ✅ Reset timer immediately
+    resetTimer();
     
     // ✅ Update URL without triggering router navigation
     const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${prefetchedQuestion.question.id}`;
@@ -348,7 +351,6 @@ const handleNextQuestion = useCallback(async () => {
 
     const data = await response.json();
     setQuestion(data);
-    resetTimer(); // Reset timer for new question
     
     // Update URL with the new question ID
     const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${data.id}`;
