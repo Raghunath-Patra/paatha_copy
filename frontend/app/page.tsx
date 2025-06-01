@@ -1,4 +1,4 @@
-// app/page.tsx - Fixed responsive version
+// app/page.tsx - Fixed responsive version with Daily Challenge Button
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -66,6 +66,85 @@ const QuickStats = ({ isVisible }: { isVisible: boolean }) => {
             <div className="text-xs sm:text-sm text-gray-600">{stat.label}</div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+};
+
+// Daily Challenge Button Component
+const DailyChallengeButton = ({ isVisible }: { isVisible: boolean }) => {
+  const router = useRouter();
+  const { user } = useSupabaseAuth();
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleChallengeClick = () => {
+    router.push('/try/challenge');
+  };
+
+  return (
+    <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} mb-8 sm:mb-12`}>
+      <div className="text-center">
+        <button
+          onClick={handleChallengeClick}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="group relative inline-flex items-center justify-center px-8 sm:px-12 py-4 sm:py-6 text-lg sm:text-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 overflow-hidden"
+        >
+          {/* Animated background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          {/* Shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+          
+          {/* Pulsing border */}
+          <div className="absolute inset-0 rounded-2xl border-2 border-white/20 group-hover:border-white/40 transition-colors duration-300"></div>
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center space-x-3">
+            <div className="text-2xl sm:text-3xl animate-bounce">
+              🎯
+            </div>
+            <div>
+              <div className="text-base sm:text-lg font-bold">
+                Daily Challenge
+              </div>
+              <div className="text-xs sm:text-sm opacity-90 font-normal">
+                Test your knowledge today!
+              </div>
+            </div>
+            <div className={`transform transition-transform duration-300 ${isHovered ? 'translate-x-2' : ''}`}>
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </div>
+          
+          {/* Floating particles effect */}
+          <div className="absolute inset-0 overflow-hidden rounded-2xl">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-white/40 rounded-full animate-ping"
+                style={{
+                  left: `${20 + i * 15}%`,
+                  top: `${30 + (i % 2) * 40}%`,
+                  animationDelay: `${i * 0.5}s`,
+                  animationDuration: '2s'
+                }}
+              />
+            ))}
+          </div>
+        </button>
+        
+        {/* Supporting text */}
+        <p className="mt-4 text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+          Challenge yourself with daily questions and earn points! 
+          {!user && (
+            <span className="block mt-1 text-orange-600 font-medium">
+              Sign in to track your progress
+            </span>
+          )}
+        </p>
       </div>
     </div>
   );
@@ -165,6 +244,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [showStats, setShowStats] = useState(false);
+  const [showChallenge, setShowChallenge] = useState(false);
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {
@@ -183,6 +263,8 @@ export default function HomePage() {
       setIsLoading(false);
       // Show stats immediately after main loading
       setTimeout(() => setShowStats(true), 100);
+      // Show challenge button after stats
+      setTimeout(() => setShowChallenge(true), 400);
     }, 300);
     
     const cardsTimer = setTimeout(() => setCardsLoading(false), 500);
@@ -220,12 +302,26 @@ export default function HomePage() {
           to { opacity: 1; }
         }
         
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        
         .animate-fade-in-up {
           animation: fadeInUp 0.6s ease-out forwards;
         }
         
         .animate-fade-in {
           animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
         }
         
         .stagger-1 { animation-delay: 0.1s; }
@@ -249,6 +345,8 @@ export default function HomePage() {
                style={{animationDuration: '3s'}} />
           <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
                style={{animationDuration: '4s'}} />
+          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+               style={{animationDuration: '2s'}} />
         </div>
         
         <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
@@ -272,6 +370,9 @@ export default function HomePage() {
               
               {/* Quick Stats */}
               <QuickStats isVisible={showStats} />
+              
+              {/* Daily Challenge Button */}
+              <DailyChallengeButton isVisible={showChallenge} />
               
               {/* Board Selection */}
               <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800 mb-6 sm:mb-8 opacity-0 animate-fade-in stagger-4 px-4 sm:px-0">
