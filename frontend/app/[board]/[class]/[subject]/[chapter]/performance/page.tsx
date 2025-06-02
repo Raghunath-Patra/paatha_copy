@@ -150,12 +150,14 @@ const QuestionsSkeleton = () => (
       {[1, 2, 3].map((i) => (
         <div key={i} className="p-6 space-y-4">
           <div className="flex justify-between items-start">
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1">
               <div className="flex items-center gap-3">
                 <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse" 
                      style={{ animationDelay: `${i * 100}ms` }}></div>
                 <div className="h-6 bg-gradient-to-r from-green-200 to-emerald-200 rounded-full w-12 animate-pulse" 
                      style={{ animationDelay: `${i * 150}ms` }}></div>
+                <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-16 animate-pulse" 
+                     style={{ animationDelay: `${i * 200}ms` }}></div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {[1, 2, 3, 4].map((j) => (
@@ -164,20 +166,17 @@ const QuestionsSkeleton = () => (
                 ))}
               </div>
             </div>
+            {/* Expand button skeleton */}
+            <div className="h-8 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg w-24 animate-pulse ml-4" 
+                 style={{ animationDelay: `${i * 250}ms` }}></div>
           </div>
           
-          <div className="space-y-3">
+          {/* Question text skeleton */}
+          <div className="space-y-2">
             <div className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded w-full animate-pulse" 
-                 style={{ animationDelay: `${i * 200}ms` }}></div>
-            <div className="space-y-2">
-              {[1, 2, 3].map((k) => (
-                <div key={k} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
-                     style={{ 
-                       width: k === 3 ? '70%' : '100%',
-                       animationDelay: `${(i * 3 + k) * 100}ms` 
-                     }}></div>
-              ))}
-            </div>
+                 style={{ animationDelay: `${i * 300}ms` }}></div>
+            <div className="h-4 bg-gradient-to-r from-red-200 to-orange-200 rounded w-3/4 animate-pulse" 
+                 style={{ animationDelay: `${i * 350}ms` }}></div>
           </div>
         </div>
       ))}
@@ -210,6 +209,9 @@ export default function ChapterPerformanceReport() {
   // ✅ UI state
   const [chapterName, setChapterName] = useState('');
   const [chapterNameLoading, setChapterNameLoading] = useState(true);
+  
+  // ✅ NEW: Expandable questions state
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -450,6 +452,31 @@ export default function ChapterPerformanceReport() {
     return 'bg-red-50 text-red-800 border-red-200';
   };
 
+  // ✅ NEW: Toggle question expansion
+  const toggleQuestionExpansion = (questionKey: string) => {
+    setExpandedQuestions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionKey)) {
+        newSet.delete(questionKey);
+      } else {
+        newSet.add(questionKey);
+      }
+      return newSet;
+    });
+  };
+
+  // ✅ NEW: Expand/Collapse all questions
+  const toggleAllQuestions = () => {
+    if (expandedQuestions.size === solvedQuestions.length) {
+      // All expanded, collapse all
+      setExpandedQuestions(new Set());
+    } else {
+      // Some or none expanded, expand all
+      const allKeys = solvedQuestions.map(attempt => `${attempt.question_id}-${attempt.timestamp}`);
+      setExpandedQuestions(new Set(allKeys));
+    }
+  };
+
   // ✅ Error handling - only show error if ALL critical data fails
   const hasAnyData = performanceSummary || analyticsData || solvedQuestions.length > 0;
   const hasAllErrors = summaryError && analyticsError && questionsError;
@@ -638,93 +665,142 @@ export default function ChapterPerformanceReport() {
                   {/* Section header */}
                   <div className="p-6 pb-0 flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-gray-800">Question Attempts</h3>
-                    {pagination && (
-                      <span className="text-sm text-gray-500">
-                        Showing {solvedQuestions.length} of {pagination.total} attempts
-                      </span>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {/* ✅ NEW: Expand/Collapse All Button */}
+                      {solvedQuestions.length > 0 && (
+                        <button
+                          onClick={toggleAllQuestions}
+                          className="px-3 py-1 text-sm bg-gradient-to-r from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 text-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                        >
+                          {expandedQuestions.size === solvedQuestions.length ? 'Collapse All' : 'Expand All'}
+                        </button>
+                      )}
+                      {pagination && (
+                        <span className="text-sm text-gray-500">
+                          Showing {solvedQuestions.length} of {pagination.total} attempts
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
-                  {/* Questions list */}
-                  {solvedQuestions.map((attempt, index) => (
-                    <div key={`${attempt.question_id}-${attempt.timestamp}`} 
-                         className="p-6 hover:bg-gradient-to-r hover:from-orange-50/20 hover:to-yellow-50/20 transition-all duration-200">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-gray-500">
-                              {formatDate(attempt.timestamp)}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(attempt.score)}`}>
-                              {attempt.score}/10
-                            </span>
-                            <span className="text-sm text-gray-500 bg-orange-50 px-2 py-1 rounded-full">
-                              {formatTime(attempt.time_taken)}
-                            </span>
+                  {/* ✅ Questions list with collapsible details */}
+                  {solvedQuestions.map((attempt, index) => {
+                    const questionKey = `${attempt.question_id}-${attempt.timestamp}`;
+                    const isExpanded = expandedQuestions.has(questionKey);
+                    
+                    return (
+                      <div key={questionKey} 
+                           className="border-b border-orange-100 hover:bg-gradient-to-r hover:from-orange-50/20 hover:to-yellow-50/20 transition-all duration-200">
+                        
+                        {/* ✅ Question Header - Always Visible */}
+                        <div className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-500">
+                                  {formatDate(attempt.timestamp)}
+                                </span>
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(attempt.score)}`}>
+                                  {attempt.score}/10
+                                </span>
+                                <span className="text-sm text-gray-500 bg-orange-50 px-2 py-1 rounded-full">
+                                  {formatTime(attempt.time_taken)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                {attempt.metadata && (
+                                  <>
+                                    <span className="px-2 py-1 bg-gradient-to-r from-red-100 to-orange-100 text-red-800 rounded-full">
+                                      {attempt.metadata.questionNumber}
+                                    </span>
+                                    <span className="px-2 py-1 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 rounded-full">
+                                      Source: {attempt.metadata.source}
+                                    </span>
+                                    <span className="px-2 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 rounded-full">
+                                      Level: {attempt.metadata.level}
+                                    </span>
+                                    <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full">
+                                      Type: {attempt.metadata.type}
+                                    </span>
+                                    <span className="px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-full">
+                                      Bloom: {attempt.metadata.bloomLevel}
+                                    </span>
+                                    <span className="px-2 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 rounded-full">
+                                      {attempt.metadata.statistics.totalAttempts} attempts | 
+                                      Avg: {attempt.metadata.statistics.averageScore}/10
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* ✅ Expand/Collapse Button */}
+                            <button
+                              onClick={() => toggleQuestionExpansion(questionKey)}
+                              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-100 to-yellow-100 hover:from-orange-200 hover:to-yellow-200 text-orange-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                            >
+                              <span className="text-sm font-medium">
+                                {isExpanded ? 'Hide Details' : 'Show Details'}
+                              </span>
+                              <svg 
+                                className={`w-4 h-4 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
                           </div>
-                          
-                          <div className="flex flex-wrap gap-2 text-xs">
-                            {attempt.metadata && (
-                              <>
-                                <span className="px-2 py-1 bg-gradient-to-r from-red-100 to-orange-100 text-red-800 rounded-full">
-                                  {attempt.metadata.questionNumber}
-                                </span>
-                                <span className="px-2 py-1 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 rounded-full">
-                                  Source: {attempt.metadata.source}
-                                </span>
-                                <span className="px-2 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 rounded-full">
-                                  Level: {attempt.metadata.level}
-                                </span>
-                                <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full">
-                                  Type: {attempt.metadata.type}
-                                </span>
-                                <span className="px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-full">
-                                  Bloom: {attempt.metadata.bloomLevel}
-                                </span>
-                                <span className="px-2 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 rounded-full">
-                                  {attempt.metadata.statistics.totalAttempts} attempts | 
-                                  Avg: {attempt.metadata.statistics.averageScore}/10
-                                </span>
-                              </>
+
+                          {/* ✅ Question Text - Always Visible */}
+                          <div className="mb-4">
+                            <h4 className="text-lg font-medium text-gray-800 leading-relaxed">
+                              {attempt.question_text}
+                            </h4>
+                          </div>
+
+                          {/* ✅ Expandable Details Section */}
+                          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                            isExpanded ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'
+                          }`}>
+                            {isExpanded && (
+                              <div className="space-y-4 pt-4 border-t border-orange-100">
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                                  <p className="font-medium text-blue-800 mb-2">Your Answer:</p>
+                                  <div className="text-blue-700 whitespace-pre-wrap text-sm">
+                                    {
+                                      attempt.transcribed_text 
+                                        ? `Typed:\n${attempt.user_answer}\n\nHandwritten:\n${attempt.transcribed_text}`
+                                        : attempt.user_answer
+                                    }
+                                  </div>
+                                </div>
+
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                                  <p className="font-medium text-green-800 mb-2">Model Answer:</p>
+                                  <p className="text-green-700 text-sm">{attempt.correct_answer}</p>
+                                </div>
+                                
+                                {attempt.explanation && (
+                                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+                                    <p className="font-medium text-purple-800 mb-2">Explanation:</p>
+                                    <p className="text-purple-700 text-sm">{attempt.explanation}</p>
+                                  </div>
+                                )}
+
+                                <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
+                                  <p className="font-medium text-orange-800 mb-2">Feedback:</p>
+                                  <p className="text-orange-700 text-sm">{attempt.feedback}</p>
+                                </div>
+                              </div>
                             )}
                           </div>
                         </div>
                       </div>
-
-                      <div className="prose max-w-none">
-                        <h4 className="text-lg font-medium mb-2 text-gray-800">{attempt.question_text}</h4>
-                        <div className="space-y-4">
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                            <p className="font-medium text-blue-800 mb-2">Your Answer:</p>
-                            <div className="text-blue-700 whitespace-pre-wrap text-sm">
-                              {
-                                attempt.transcribed_text 
-                                  ? `Typed:\n${attempt.user_answer}\n\nHandwritten:\n${attempt.transcribed_text}`
-                                  : attempt.user_answer
-                              }
-                            </div>
-                          </div>
-
-                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                            <p className="font-medium text-green-800 mb-2">Model Answer:</p>
-                            <p className="text-green-700 text-sm">{attempt.correct_answer}</p>
-                          </div>
-                          
-                          {attempt.explanation && (
-                            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
-                              <p className="font-medium text-purple-800 mb-2">Explanation:</p>
-                              <p className="text-purple-700 text-sm">{attempt.explanation}</p>
-                            </div>
-                          )}
-
-                          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
-                            <p className="font-medium text-orange-800 mb-2">Feedback:</p>
-                            <p className="text-orange-700 text-sm">{attempt.feedback}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {/* ✅ Load more button */}
                   {pagination?.has_more && (
