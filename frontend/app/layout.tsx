@@ -18,79 +18,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
 
-  // DEBUG SCRIPT - REMOVE AFTER DEBUGGING
-  useEffect(() => {
-    // Only run once
-    if (typeof window === 'undefined' || (window as any).debugEnabled) return;
-    (window as any).debugEnabled = true;
-
-    console.log('🔍 DEBUGGING: Setting up refresh detection...');
-
-    // Override window.location methods to log when they're called
-    const originalReload = window.location.reload;
-    const originalHref = Object.getOwnPropertyDescriptor(window.location, 'href') || 
-                        Object.getOwnPropertyDescriptor(Location.prototype, 'href');
-
-    // Track reload calls
-    window.location.reload = function(...args) {
-      console.error('🔴 RELOAD CALLED!');
-      console.trace('Reload stack trace:');
-      return originalReload.apply(this, args);
-    };
-
-    // Track href changes
-    if (originalHref) {
-      Object.defineProperty(window.location, 'href', {
-        set: function(value) {
-          console.error('🔴 LOCATION.HREF SET TO:', value);
-          console.trace('Location.href stack trace:');
-          if (originalHref.set) {
-            return originalHref.set.call(this, value);
-          }
-        },
-        get: function() {
-          if (originalHref.get) {
-            return originalHref.get.call(this);
-          }
-          return window.location.toString();
-        }
-      });
-    }
-
-    // Monitor visibility changes
-    const handleVisibilityChange = () => {
-      console.log('👁️ Visibility changed:', document.visibilityState);
-      if (document.visibilityState === 'visible') {
-        console.log('🟢 Tab became visible - watching for refreshes...');
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Monitor beforeunload (page refresh/leave)
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      console.error('🔴 PAGE UNLOADING!');
-      console.trace('Unload stack trace:');
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    // Monitor popstate (navigation)
-    const handlePopState = (e: PopStateEvent) => {
-      console.log('📍 Pop state event:', e);
-    };
-    window.addEventListener('popstate', handlePopState);
-
-    console.log('🔍 Debug monitoring active. Switch tabs and check console for reload sources.');
-
-    // Cleanup function
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
-  // END DEBUG SCRIPT
-
-  // Route change handler
+  // Route change handler to reset navigation state
   useEffect(() => {
     const clearNavigationFlags = () => {
       console.log(`Route changed to: ${pathname}`);
@@ -98,6 +26,9 @@ export default function RootLayout({
     
     clearNavigationFlags();
   }, [pathname]);
+
+  // REMOVED: All visibility change session refresh logic
+  // This was causing the refresh when switching tabs!
 
   return (
     <html lang="en">
@@ -111,16 +42,20 @@ export default function RootLayout({
         <meta name="theme-color" content="#ff3131" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         
+        {/* SVG favicon with version parameter to prevent caching */}
         <link rel="icon" type="image/svg+xml" href={`/favicon.svg?v=${faviconVersion}`} />
         <link rel="alternate icon" href={`/favicon.ico?v=${faviconVersion}`} type="image/x-icon" />
         
+        {/* PWA icons */}
         <link rel="apple-touch-icon" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
         <link rel="apple-touch-icon" sizes="152x152" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
         <link rel="apple-touch-icon" sizes="180x180" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
         <link rel="apple-touch-icon" sizes="167x167" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
         
+        {/* Manifest */}
         <link rel="manifest" href={`/manifest.json?v=${faviconVersion}`} />
                 
+        {/* Open Graph meta tags for social sharing */}
         <meta property="og:title" content="Paaṭha AI" />
         <meta property="og:description" content="The AI Study Buddy for Bright Minds" />
         <meta property="og:image" content="https://www.paatha.ai/icons/icon-512x512.png" />
@@ -129,6 +64,7 @@ export default function RootLayout({
         <meta property="og:url" content="https://www.paatha.ai/" />
         <meta property="og:type" content="website" />
                 
+        {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Paaṭha AI" />
         <meta name="twitter:description" content="The AI Study Buddy for Bright Minds" />
