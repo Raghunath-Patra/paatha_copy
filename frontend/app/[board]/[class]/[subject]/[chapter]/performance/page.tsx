@@ -1,7 +1,7 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/performance/page.tsx - Updated version
+// frontend/app/[board]/[class]/[subject]/[chapter]/performance/page.tsx - Updated with split API calls
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navigation from '../../../../../components/navigation/Navigation';
 import { getAuthHeaders } from '../../../../../utils/auth';
@@ -34,11 +34,43 @@ interface DetailedAttempt {
   metadata: QuestionMetadata;
 }
 
-interface DetailedReport {
+interface PerformanceSummary {
   total_attempts: number;
   average_score: number;
   total_time: number;
+  unique_questions: number;
+  performance_breakdown: {
+    excellent: number;
+    good: number;
+    needs_improvement: number;
+  };
+  date_range: {
+    first_attempt: string | null;
+    last_attempt: string | null;
+  };
+  chapter_info: {
+    board: string;
+    class_level: string;
+    subject: string;
+    chapter: string;
+  };
+}
+
+interface SolvedQuestionsResponse {
   attempts: DetailedAttempt[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    has_more: boolean;
+    next_offset: number | null;
+  };
+  chapter_info: {
+    board: string;
+    class_level: string;
+    subject: string;
+    chapter: string;
+  };
 }
 
 interface PerformancePageParams {
@@ -48,22 +80,12 @@ interface PerformancePageParams {
   chapter: string;
 }
 
-// ✅ NEW: Skeleton for performance data only
-const PerformanceDataSkeleton = () => (
+// ✅ Skeleton for performance summary only
+const PerformanceSummarySkeleton = () => (
   <div className="space-y-6">
-
-    {/* Performance analytics skeleton */}
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
-      <div className="relative z-10 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Analytics</h3>
-        <div className="h-64 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
-      </div>
-    </div>
-    
     {/* Stats cards skeleton */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {[1, 2, 3].map((i) => (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {[1, 2, 3, 4].map((i) => (
         <div key={i} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
           <div className="relative z-10">
@@ -76,48 +98,59 @@ const PerformanceDataSkeleton = () => (
       ))}
     </div>
 
-    {/* Attempts list skeleton */}
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 divide-y divide-orange-100 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/30 to-transparent opacity-50"></div>
-      <div className="relative z-10">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Question Attempts</h3>
-        </div>
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="p-6 space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse" 
-                       style={{ animationDelay: `${i * 100}ms` }}></div>
-                  <div className="h-6 bg-gradient-to-r from-green-200 to-emerald-200 rounded-full w-12 animate-pulse" 
-                       style={{ animationDelay: `${i * 150}ms` }}></div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3, 4].map((j) => (
-                    <div key={j} className="h-5 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full w-16 animate-pulse" 
-                         style={{ animationDelay: `${(i * 4 + j) * 50}ms` }}></div>
-                  ))}
-                </div>
+    {/* Performance analytics skeleton */}
+    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+      <div className="relative z-10 space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Analytics</h3>
+        <div className="h-64 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
+      </div>
+    </div>
+  </div>
+);
+
+// ✅ Skeleton for questions only
+const QuestionsSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 divide-y divide-orange-100 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/30 to-transparent opacity-50"></div>
+    <div className="relative z-10">
+      <div className="p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Question Attempts</h3>
+      </div>
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="p-6 space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse" 
+                     style={{ animationDelay: `${i * 100}ms` }}></div>
+                <div className="h-6 bg-gradient-to-r from-green-200 to-emerald-200 rounded-full w-12 animate-pulse" 
+                     style={{ animationDelay: `${i * 150}ms` }}></div>
               </div>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded w-full animate-pulse" 
-                   style={{ animationDelay: `${i * 200}ms` }}></div>
-              <div className="space-y-2">
-                {[1, 2, 3].map((k) => (
-                  <div key={k} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
-                       style={{ 
-                         width: k === 3 ? '70%' : '100%',
-                         animationDelay: `${(i * 3 + k) * 100}ms` 
-                       }}></div>
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4].map((j) => (
+                  <div key={j} className="h-5 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full w-16 animate-pulse" 
+                       style={{ animationDelay: `${(i * 4 + j) * 50}ms` }}></div>
                 ))}
               </div>
             </div>
           </div>
-        ))}
-      </div>
+          
+          <div className="space-y-3">
+            <div className="h-6 bg-gradient-to-r from-red-200 to-orange-200 rounded w-full animate-pulse" 
+                 style={{ animationDelay: `${i * 200}ms` }}></div>
+            <div className="space-y-2">
+              {[1, 2, 3].map((k) => (
+                <div key={k} className="h-4 bg-gradient-to-r from-orange-200 to-yellow-200 rounded animate-pulse" 
+                     style={{ 
+                       width: k === 3 ? '70%' : '100%',
+                       animationDelay: `${(i * 3 + k) * 100}ms` 
+                     }}></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   </div>
 );
@@ -126,8 +159,17 @@ export default function ChapterPerformanceReport() {
   const params = useParams() as unknown as PerformancePageParams;
   const router = useRouter();
   const { profile, loading: authLoading } = useSupabaseAuth();
-  const [report, setReport] = useState<DetailedReport | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // ✅ Split state for performance and questions
+  const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
+  const [solvedQuestions, setSolvedQuestions] = useState<DetailedAttempt[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
+  
+  // ✅ Separate loading states
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  
   const [error, setError] = useState<string | null>(null);
   const [chapterName, setChapterName] = useState('');
   const [chapterNameLoading, setChapterNameLoading] = useState(true);
@@ -156,72 +198,157 @@ export default function ChapterPerformanceReport() {
     }
   };
 
-  useEffect(() => {
-    const fetchDetailedReport = async () => {
-      try {
-        if (authLoading) return;
-        if (!profile) {
-          console.log('No profile, redirecting to login');
-          router.push('/login');
-          return;
-        }
+  // ✅ Fetch performance summary (fast call)
+  const fetchPerformanceSummary = useCallback(async () => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) return false;
 
-        const synced = await syncUserData();
-        if (!synced) {
-          console.error('Failed to sync user data');
-          return;
-        }
+      const chapterNum = typeof params.chapter === 'string' 
+        ? params.chapter.replace(/^chapter-/, '')
+        : '';
+      
+      setSummaryLoading(true);
+      const response = await fetch(
+        `${API_URL}/api/progress/user/performance-summary/${params.board}/${params.class}/${params.subject}/${chapterNum}`,
+        { headers }
+      );
 
-        const { headers, isAuthorized } = await getAuthHeaders();
-        if (!isAuthorized) {
-          router.push('/login');
-          return;
-        }
+      if (!response.ok) {
+        throw new Error('Failed to fetch performance summary');
+      }
 
+      const data = await response.json();
+      setPerformanceSummary(data);
+      return true;
+    } catch (err) {
+      console.error('Error fetching performance summary:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch performance summary');
+      return false;
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [params, API_URL]);
+
+  // ✅ Fetch solved questions (potentially slower call)
+  const fetchSolvedQuestions = useCallback(async (offset = 0, append = false) => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) return false;
+
+      const chapterNum = typeof params.chapter === 'string' 
+        ? params.chapter.replace(/^chapter-/, '')
+        : '';
+      
+      if (!append) {
+        setQuestionsLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/progress/user/solved-questions/${params.board}/${params.class}/${params.subject}/${chapterNum}?limit=20&offset=${offset}`,
+        { headers }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch solved questions');
+      }
+
+      const data: SolvedQuestionsResponse = await response.json();
+      
+      if (append) {
+        setSolvedQuestions(prev => [...prev, ...data.attempts]);
+      } else {
+        setSolvedQuestions(data.attempts);
+      }
+      
+      setPagination(data.pagination);
+      return true;
+    } catch (err) {
+      console.error('Error fetching solved questions:', err);
+      if (!append) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch solved questions');
+      }
+      return false;
+    } finally {
+      if (!append) {
+        setQuestionsLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
+    }
+  }, [params, API_URL]);
+
+  // ✅ Fetch chapter name
+  const fetchChapterName = useCallback(async () => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) return;
+
+      const chaptersResponse = await fetch(
+        `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
+        { headers }
+      );
+      
+      if (chaptersResponse.ok) {
+        const chaptersData = await chaptersResponse.json();
         const chapterNum = typeof params.chapter === 'string' 
           ? params.chapter.replace(/^chapter-/, '')
           : '';
-        
-        // Fetch performance report
-        const response = await fetch(
-          `${API_URL}/api/progress/user/detailed-report/${params.board}/${params.class}/${params.subject}/${chapterNum}`,
-          { headers }
+        const chapterInfo = chaptersData.chapters.find(
+          (ch: any) => ch.number === parseInt(chapterNum || '0')
         );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch performance report');
+        if (chapterInfo) {
+          setChapterName(chapterInfo.name);
         }
+      }
+    } catch (err) {
+      console.error('Error fetching chapter name:', err);
+    } finally {
+      setChapterNameLoading(false);
+    }
+  }, [params, API_URL]);
 
-        const data = await response.json();
-        setReport(data);
+  // ✅ Main effect - Sequential data loading
+  useEffect(() => {
+    const loadData = async () => {
+      if (authLoading) return;
+      if (!profile) {
+        console.log('No profile, redirecting to login');
+        router.push('/login');
+        return;
+      }
 
-        // Fetch chapter name separately
-        const chaptersResponse = await fetch(
-          `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
-          { headers }
-        );
-        
-        if (chaptersResponse.ok) {
-          const chaptersData = await chaptersResponse.json();
-          const chapterInfo = chaptersData.chapters.find(
-            (ch: any) => ch.number === parseInt(chapterNum || '0')
-          );
-          if (chapterInfo) {
-            setChapterName(chapterInfo.name);
-          }
-        }
-        setChapterNameLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred while fetching the report');
-      } finally {
-        setLoading(false);
+      const synced = await syncUserData();
+      if (!synced) {
+        console.error('Failed to sync user data');
+        return;
+      }
+
+      // ✅ Load data in parallel for better UX
+      const [summarySuccess, questionsSuccess] = await Promise.all([
+        fetchPerformanceSummary(),
+        fetchSolvedQuestions(),
+        fetchChapterName() // This doesn't return a promise but runs async
+      ]);
+
+      if (!summarySuccess && !questionsSuccess) {
+        setError('Failed to load performance data');
       }
     };
 
     if (params.board && params.class && params.subject && params.chapter) {
-      fetchDetailedReport();
+      loadData();
     }
-  }, [params, router, profile, authLoading]);
+  }, [params, router, profile, authLoading, fetchPerformanceSummary, fetchSolvedQuestions, fetchChapterName]);
+
+  // ✅ Load more questions handler
+  const loadMoreQuestions = () => {
+    if (pagination?.has_more && !loadingMore) {
+      fetchSolvedQuestions(pagination.next_offset, true);
+    }
+  };
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -245,7 +372,7 @@ export default function ChapterPerformanceReport() {
     return 'bg-red-50 text-red-800 border-red-200';
   };
 
-  if (error) {
+  if (error && !performanceSummary && solvedQuestions.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
         {/* Background decorations */}
@@ -293,12 +420,11 @@ export default function ChapterPerformanceReport() {
 
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto">
-          {/* ✅ Header - ALWAYS VISIBLE (no loading states for known content) */}
+          {/* ✅ Header - ALWAYS VISIBLE */}
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
                 Chapter {displayChapter} Performance Report
-                {/* ✅ Only chapter name has skeleton when loading */}
                 {chapterNameLoading ? (
                   <span className="ml-2">
                     <span className="inline-block h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></span>
@@ -313,73 +439,97 @@ export default function ChapterPerformanceReport() {
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
             </div>
-            {/* ✅ Navigation - ALWAYS VISIBLE */}
             <div className="flex gap-4 items-center relative z-[100]">
               <Navigation />
             </div>
           </div>
 
-          {/* ✅ Content - Show skeleton only when data is loading */}
-          {loading ? (
-            <PerformanceDataSkeleton />
-          ) : report && (
-            <div className="space-y-6">
-              {/* ✅ Performance Analytics Component - Show with labels but skeleton for progress */}
-              <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/20 to-transparent opacity-50"></div>
-                <div className="relative z-10">
-                  <PerformanceAnalytics attempts={report.attempts} />
-                </div>
-              </div>
-              
-              {/* ✅ Summary stats - Real data */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 opacity-50"></div>
-                  <div className="relative z-10">
-                    <h3 className="text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                      Total Attempts
-                    </h3>
-                    <p className="text-3xl font-bold text-blue-900">{report.total_attempts}</p>
+          {/* ✅ Content - Show different loading states */}
+          <div className="space-y-6">
+            {/* ✅ Performance Summary Section */}
+            {summaryLoading ? (
+              <PerformanceSummarySkeleton />
+            ) : performanceSummary && (
+              <>
+                {/* Summary stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 opacity-50"></div>
+                    <div className="relative z-10">
+                      <h3 className="text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                        <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                        Total Attempts
+                      </h3>
+                      <p className="text-3xl font-bold text-blue-900">{performanceSummary.total_attempts}</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 to-emerald-50/30 opacity-50"></div>
+                    <div className="relative z-10">
+                      <h3 className="text-sm font-medium text-green-600 mb-1 flex items-center gap-2">
+                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                        Average Score
+                      </h3>
+                      <p className="text-3xl font-bold text-green-900">{performanceSummary.average_score}/10</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-50"></div>
+                    <div className="relative z-10">
+                      <h3 className="text-sm font-medium text-purple-600 mb-1 flex items-center gap-2">
+                        <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                        Total Time Spent
+                      </h3>
+                      <p className="text-3xl font-bold text-purple-900">{formatTime(performanceSummary.total_time)}</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-50/30 to-yellow-50/30 opacity-50"></div>
+                    <div className="relative z-10">
+                      <h3 className="text-sm font-medium text-orange-600 mb-1 flex items-center gap-2">
+                        <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                        Unique Questions
+                      </h3>
+                      <p className="text-3xl font-bold text-orange-900">{performanceSummary.unique_questions}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 to-emerald-50/30 opacity-50"></div>
+                {/* Performance Analytics */}
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/20 to-transparent opacity-50"></div>
                   <div className="relative z-10">
-                    <h3 className="text-sm font-medium text-green-600 mb-1 flex items-center gap-2">
-                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                      Average Score
-                    </h3>
-                    <p className="text-3xl font-bold text-green-900">{report.average_score.toFixed(1)}/10</p>
+                    <PerformanceAnalytics attempts={solvedQuestions} />
                   </div>
                 </div>
+              </>
+            )}
 
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-50"></div>
-                  <div className="relative z-10">
-                    <h3 className="text-sm font-medium text-purple-600 mb-1 flex items-center gap-2">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                      Total Time Spent
-                    </h3>
-                    <p className="text-3xl font-bold text-purple-900">{formatTime(report.total_time)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* ✅ Attempts list - Real data */}
+            {/* ✅ Questions Section */}
+            {questionsLoading ? (
+              <QuestionsSkeleton />
+            ) : (
               <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg divide-y divide-orange-100 border border-white/50 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/20 to-transparent opacity-30"></div>
                 
                 <div className="relative z-10">
-                  {/* ✅ Section header - always visible */}
-                  <div className="p-6 pb-0">
+                  {/* Section header */}
+                  <div className="p-6 pb-0 flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-gray-800">Question Attempts</h3>
+                    {pagination && (
+                      <span className="text-sm text-gray-500">
+                        Showing {solvedQuestions.length} of {pagination.total} attempts
+                      </span>
+                    )}
                   </div>
                   
-                  {report.attempts.map((attempt, index) => (
-                    <div key={`${attempt.question_id}-${attempt.timestamp}`} className="p-6 hover:bg-gradient-to-r hover:from-orange-50/20 hover:to-yellow-50/20 transition-all duration-200">
+                  {/* Questions list */}
+                  {solvedQuestions.map((attempt, index) => (
+                    <div key={`${attempt.question_id}-${attempt.timestamp}`} 
+                         className="p-6 hover:bg-gradient-to-r hover:from-orange-50/20 hover:to-yellow-50/20 transition-all duration-200">
                       <div className="flex justify-between items-start mb-4">
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
@@ -414,7 +564,7 @@ export default function ChapterPerformanceReport() {
                                 </span>
                                 <span className="px-2 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 rounded-full">
                                   {attempt.metadata.statistics.totalAttempts} attempts | 
-                                  Avg: {attempt.metadata.statistics.averageScore.toFixed(1)}/10
+                                  Avg: {attempt.metadata.statistics.averageScore}/10
                                 </span>
                               </>
                             )}
@@ -456,10 +606,43 @@ export default function ChapterPerformanceReport() {
                       </div>
                     </div>
                   ))}
+
+                  {/* ✅ Load more button */}
+                  {pagination?.has_more && (
+                    <div className="p-6 text-center border-t border-orange-100">
+                      <button
+                        onClick={loadMoreQuestions}
+                        disabled={loadingMore}
+                        className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loadingMore ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Loading more...
+                          </div>
+                        ) : (
+                          `Load More (${pagination.total - solvedQuestions.length} remaining)`
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ✅ No questions message */}
+                  {!questionsLoading && solvedQuestions.length === 0 && (
+                    <div className="p-12 text-center">
+                      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="font-semibold text-gray-800 mb-2">No attempts yet</h3>
+                      <p className="text-gray-600">You haven't attempted any questions in this chapter yet.</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
