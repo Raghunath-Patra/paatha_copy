@@ -1,4 +1,4 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/performance/page.tsx - Updated with split API calls
+// frontend/app/[board]/[class]/[subject]/[chapter]/performance/page.tsx - COMPLETE FILE
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -8,6 +8,35 @@ import { getAuthHeaders } from '../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../contexts/SupabaseAuthContext';
 import PerformanceAnalytics from '../../../../../components/performance/PerformanceAnalytics';
 
+// ✅ NEW: Lightweight analytics data types
+interface AnalyticsDataPoint {
+  attempt_number: number;
+  score: number;
+  time_taken: number;
+  timestamp: string;
+  difficulty: string;
+  type: string;
+  bloom_level: string;
+  category: string;
+}
+
+interface CategoryPerformance {
+  [category: string]: {
+    total_attempts: number;
+    average_score: number;
+    best_score: number;
+  };
+}
+
+interface PerformanceAnalyticsData {
+  analytics_data: AnalyticsDataPoint[];
+  score_trends: Array<{attempt: number; score: number; date: string}>;
+  category_performance: CategoryPerformance;
+  difficulty_breakdown: any;
+  time_performance: Array<{time_taken: number; score: number; category: string}>;
+}
+
+// ✅ EXISTING: Types for detailed questions data
 interface QuestionMetadata {
   questionNumber: string;
   source: string;
@@ -80,36 +109,37 @@ interface PerformancePageParams {
   chapter: string;
 }
 
-// ✅ Skeleton for performance summary only
+// ✅ Skeleton Components for Independent Loading
 const PerformanceSummarySkeleton = () => (
-  <div className="space-y-6">
-    {/* Stats cards skeleton */}
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
-          <div className="relative z-10">
-            <div className="h-4 bg-gradient-to-r from-blue-200 to-purple-200 rounded w-24 animate-pulse mb-2" 
-                 style={{ animationDelay: `${i * 100}ms` }}></div>
-            <div className="h-8 bg-gradient-to-r from-red-200 to-orange-200 rounded w-16 animate-pulse" 
-                 style={{ animationDelay: `${i * 150}ms` }}></div>
-          </div>
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    {[1, 2, 3, 4].map((i) => (
+      <div key={i} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
+        <div className="relative z-10">
+          <div className="h-4 bg-gradient-to-r from-blue-200 to-purple-200 rounded w-24 animate-pulse mb-2" 
+               style={{ animationDelay: `${i * 100}ms` }}></div>
+          <div className="h-8 bg-gradient-to-r from-red-200 to-orange-200 rounded w-16 animate-pulse" 
+               style={{ animationDelay: `${i * 150}ms` }}></div>
         </div>
-      ))}
-    </div>
+      </div>
+    ))}
+  </div>
+);
 
-    {/* Performance analytics skeleton */}
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
-      <div className="relative z-10 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Analytics</h3>
-        <div className="h-64 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
+const AnalyticsSkeleton = () => (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
+    <div className="relative z-10 space-y-4">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Analytics</h3>
+      <div className="h-64 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg animate-pulse"></div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="h-48 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg animate-pulse"></div>
+        <div className="h-48 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg animate-pulse"></div>
       </div>
     </div>
   </div>
 );
 
-// ✅ Skeleton for questions only
 const QuestionsSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 divide-y divide-orange-100 relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/30 to-transparent opacity-50"></div>
@@ -160,17 +190,24 @@ export default function ChapterPerformanceReport() {
   const router = useRouter();
   const { profile, loading: authLoading } = useSupabaseAuth();
   
-  // ✅ Split state for performance and questions
+  // ✅ Split state for all three data sources
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<PerformanceAnalyticsData | null>(null);
   const [solvedQuestions, setSolvedQuestions] = useState<DetailedAttempt[]>([]);
   const [pagination, setPagination] = useState<any>(null);
   
-  // ✅ Separate loading states
+  // ✅ Independent loading states
   const [summaryLoading, setSummaryLoading] = useState(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   
-  const [error, setError] = useState<string | null>(null);
+  // ✅ Error handling
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [questionsError, setQuestionsError] = useState<string | null>(null);
+  
+  // ✅ UI state
   const [chapterName, setChapterName] = useState('');
   const [chapterNameLoading, setChapterNameLoading] = useState(true);
 
@@ -198,7 +235,7 @@ export default function ChapterPerformanceReport() {
     }
   };
 
-  // ✅ Fetch performance summary (fast call)
+  // ✅ Fetch performance summary (fastest call - ~200ms)
   const fetchPerformanceSummary = useCallback(async () => {
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
@@ -209,13 +246,15 @@ export default function ChapterPerformanceReport() {
         : '';
       
       setSummaryLoading(true);
+      setSummaryError(null);
+      
       const response = await fetch(
         `${API_URL}/api/progress/user/performance-summary/${params.board}/${params.class}/${params.subject}/${chapterNum}`,
         { headers }
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch performance summary');
+        throw new Error(`Failed to fetch performance summary: ${response.status}`);
       }
 
       const data = await response.json();
@@ -223,14 +262,48 @@ export default function ChapterPerformanceReport() {
       return true;
     } catch (err) {
       console.error('Error fetching performance summary:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch performance summary');
+      setSummaryError(err instanceof Error ? err.message : 'Failed to fetch performance summary');
       return false;
     } finally {
       setSummaryLoading(false);
     }
   }, [params, API_URL]);
 
-  // ✅ Fetch solved questions (potentially slower call)
+  // ✅ Fetch analytics data (medium speed - ~400ms) 
+  const fetchAnalyticsData = useCallback(async () => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) return false;
+
+      const chapterNum = typeof params.chapter === 'string' 
+        ? params.chapter.replace(/^chapter-/, '')
+        : '';
+      
+      setAnalyticsLoading(true);
+      setAnalyticsError(null);
+      
+      const response = await fetch(
+        `${API_URL}/api/progress/user/performance-analytics/${params.board}/${params.class}/${params.subject}/${chapterNum}`,
+        { headers }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch analytics data: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setAnalyticsData(data);
+      return true;
+    } catch (err) {
+      console.error('Error fetching analytics data:', err);
+      setAnalyticsError(err instanceof Error ? err.message : 'Failed to fetch analytics data');
+      return false;
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, [params, API_URL]);
+
+  // ✅ Fetch solved questions (slowest call - 1-3s)
   const fetchSolvedQuestions = useCallback(async (offset = 0, append = false) => {
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
@@ -242,6 +315,7 @@ export default function ChapterPerformanceReport() {
       
       if (!append) {
         setQuestionsLoading(true);
+        setQuestionsError(null);
       } else {
         setLoadingMore(true);
       }
@@ -252,7 +326,7 @@ export default function ChapterPerformanceReport() {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch solved questions');
+        throw new Error(`Failed to fetch solved questions: ${response.status}`);
       }
 
       const data: SolvedQuestionsResponse = await response.json();
@@ -268,7 +342,7 @@ export default function ChapterPerformanceReport() {
     } catch (err) {
       console.error('Error fetching solved questions:', err);
       if (!append) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch solved questions');
+        setQuestionsError(err instanceof Error ? err.message : 'Failed to fetch solved questions');
       }
       return false;
     } finally {
@@ -310,7 +384,7 @@ export default function ChapterPerformanceReport() {
     }
   }, [params, API_URL]);
 
-  // ✅ Main effect - Sequential data loading
+  // ✅ Main effect - Optimized parallel loading
   useEffect(() => {
     const loadData = async () => {
       if (authLoading) return;
@@ -326,22 +400,25 @@ export default function ChapterPerformanceReport() {
         return;
       }
 
-      // ✅ Load data in parallel for better UX
-      const [summarySuccess, questionsSuccess] = await Promise.all([
-        fetchPerformanceSummary(),
-        fetchSolvedQuestions(),
-        fetchChapterName() // This doesn't return a promise but runs async
+      // ✅ Load critical data first (summary + analytics), questions last
+      console.log('Starting parallel data loading...');
+      
+      const [summarySuccess, analyticsSuccess] = await Promise.all([
+        fetchPerformanceSummary(),    // Fast - shows stats immediately
+        fetchAnalyticsData(),         // Medium - for charts
+        fetchChapterName()            // Fast - for title
       ]);
 
-      if (!summarySuccess && !questionsSuccess) {
-        setError('Failed to load performance data');
-      }
+      console.log(`Summary: ${summarySuccess}, Analytics: ${analyticsSuccess}`);
+
+      // ✅ Load questions after critical data (can be slow)
+      fetchSolvedQuestions();
     };
 
     if (params.board && params.class && params.subject && params.chapter) {
       loadData();
     }
-  }, [params, router, profile, authLoading, fetchPerformanceSummary, fetchSolvedQuestions, fetchChapterName]);
+  }, [params, router, profile, authLoading, fetchPerformanceSummary, fetchAnalyticsData, fetchSolvedQuestions, fetchChapterName]);
 
   // ✅ Load more questions handler
   const loadMoreQuestions = () => {
@@ -350,6 +427,7 @@ export default function ChapterPerformanceReport() {
     }
   };
 
+  // ✅ Utility functions
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -372,7 +450,11 @@ export default function ChapterPerformanceReport() {
     return 'bg-red-50 text-red-800 border-red-200';
   };
 
-  if (error && !performanceSummary && solvedQuestions.length === 0) {
+  // ✅ Error handling - only show error if ALL critical data fails
+  const hasAnyData = performanceSummary || analyticsData || solvedQuestions.length > 0;
+  const hasAllErrors = summaryError && analyticsError && questionsError;
+  
+  if (hasAllErrors && !hasAnyData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
         {/* Background decorations */}
@@ -390,7 +472,9 @@ export default function ChapterPerformanceReport() {
             </svg>
           </div>
           <h3 className="font-semibold text-red-800 mb-2">Error Loading Report</h3>
-          <p className="text-red-700 mb-4">{error}</p>
+          <p className="text-red-700 mb-4">
+            {summaryError || analyticsError || questionsError}
+          </p>
           <button 
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 transition-all duration-300 shadow-md"
@@ -408,7 +492,7 @@ export default function ChapterPerformanceReport() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-      {/* Animated background decorations - ALWAYS VISIBLE */}
+      {/* ✅ Animated background decorations - ALWAYS VISIBLE */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
              style={{animationDuration: '3s'}} />
@@ -444,73 +528,108 @@ export default function ChapterPerformanceReport() {
             </div>
           </div>
 
-          {/* ✅ Content - Show different loading states */}
+          {/* ✅ Content with independent loading states */}
           <div className="space-y-6">
             {/* ✅ Performance Summary Section */}
             {summaryLoading ? (
               <PerformanceSummarySkeleton />
+            ) : summaryError ? (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                <p className="text-red-700">Failed to load performance summary</p>
+                <button 
+                  onClick={fetchPerformanceSummary}
+                  className="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
             ) : performanceSummary && (
-              <>
-                {/* Summary stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 opacity-50"></div>
-                    <div className="relative z-10">
-                      <h3 className="text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
-                        <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                        Total Attempts
-                      </h3>
-                      <p className="text-3xl font-bold text-blue-900">{performanceSummary.total_attempts}</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 to-emerald-50/30 opacity-50"></div>
-                    <div className="relative z-10">
-                      <h3 className="text-sm font-medium text-green-600 mb-1 flex items-center gap-2">
-                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                        Average Score
-                      </h3>
-                      <p className="text-3xl font-bold text-green-900">{performanceSummary.average_score}/10</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-50"></div>
-                    <div className="relative z-10">
-                      <h3 className="text-sm font-medium text-purple-600 mb-1 flex items-center gap-2">
-                        <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                        Total Time Spent
-                      </h3>
-                      <p className="text-3xl font-bold text-purple-900">{formatTime(performanceSummary.total_time)}</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-50/30 to-yellow-50/30 opacity-50"></div>
-                    <div className="relative z-10">
-                      <h3 className="text-sm font-medium text-orange-600 mb-1 flex items-center gap-2">
-                        <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                        Unique Questions
-                      </h3>
-                      <p className="text-3xl font-bold text-orange-900">{performanceSummary.unique_questions}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Performance Analytics */}
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/20 to-transparent opacity-50"></div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 opacity-50"></div>
                   <div className="relative z-10">
-                    <PerformanceAnalytics attempts={solvedQuestions} />
+                    <h3 className="text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                      Total Attempts
+                    </h3>
+                    <p className="text-3xl font-bold text-blue-900">{performanceSummary.total_attempts}</p>
                   </div>
                 </div>
-              </>
+
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 to-emerald-50/30 opacity-50"></div>
+                  <div className="relative z-10">
+                    <h3 className="text-sm font-medium text-green-600 mb-1 flex items-center gap-2">
+                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                      Average Score
+                    </h3>
+                    <p className="text-3xl font-bold text-green-900">{performanceSummary.average_score}/10</p>
+                  </div>
+                </div>
+
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-50"></div>
+                  <div className="relative z-10">
+                    <h3 className="text-sm font-medium text-purple-600 mb-1 flex items-center gap-2">
+                      <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                      Total Time Spent
+                    </h3>
+                    <p className="text-3xl font-bold text-purple-900">{formatTime(performanceSummary.total_time)}</p>
+                  </div>
+                </div>
+
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-50/30 to-yellow-50/30 opacity-50"></div>
+                  <div className="relative z-10">
+                    <h3 className="text-sm font-medium text-orange-600 mb-1 flex items-center gap-2">
+                      <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                      Unique Questions
+                    </h3>
+                    <p className="text-3xl font-bold text-orange-900">{performanceSummary.unique_questions}</p>
+                  </div>
+                </div>
+              </div>
             )}
 
-            {/* ✅ Questions Section */}
+            {/* ✅ Analytics Section - Independent loading */}
+            {analyticsLoading ? (
+              <AnalyticsSkeleton />
+            ) : analyticsError ? (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+                <p className="text-orange-700">Failed to load analytics data</p>
+                <button 
+                  onClick={fetchAnalyticsData}
+                  className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : analyticsData && analyticsData.analytics_data.length > 0 ? (
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/20 to-transparent opacity-50"></div>
+                <div className="relative z-10">
+                  <PerformanceAnalytics analyticsData={analyticsData} />
+                </div>
+              </div>
+            ) : !analyticsLoading && (
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 text-center">
+                <p className="text-gray-600">Not enough data for analytics visualization</p>
+              </div>
+            )}
+
+            {/* ✅ Questions Section - Loads last */}
             {questionsLoading ? (
               <QuestionsSkeleton />
+            ) : questionsError ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+                <p className="text-yellow-700">Failed to load question details</p>
+                <button 
+                  onClick={() => fetchSolvedQuestions()}
+                  className="mt-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
             ) : (
               <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg divide-y divide-orange-100 border border-white/50 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/20 to-transparent opacity-30"></div>
@@ -581,7 +700,7 @@ export default function ChapterPerformanceReport() {
                               {
                                 attempt.transcribed_text 
                                   ? `Typed:\n${attempt.user_answer}\n\nHandwritten:\n${attempt.transcribed_text}`
-                                  : `Typed:\n${attempt.user_answer}`
+                                  : attempt.user_answer
                               }
                             </div>
                           </div>
@@ -628,7 +747,7 @@ export default function ChapterPerformanceReport() {
                   )}
 
                   {/* ✅ No questions message */}
-                  {!questionsLoading && solvedQuestions.length === 0 && (
+                  {!questionsLoading && solvedQuestions.length === 0 && !questionsError && (
                     <div className="p-12 text-center">
                       <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
