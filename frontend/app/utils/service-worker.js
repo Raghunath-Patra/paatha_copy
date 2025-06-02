@@ -11,12 +11,12 @@ export function registerServiceWorker() {
             // Check for updates every 15 minutes
             setInterval(() => checkForUpdates(registration), 15 * 60 * 1000);
             
-            // Also check for updates when the app comes back to focus
-            document.addEventListener('visibilitychange', () => {
-              if (document.visibilityState === 'visible') {
-                checkForUpdates(registration);
-              }
-            });
+            // REMOVED: Auto-check on visibility change to prevent auto-refresh
+            // document.addEventListener('visibilitychange', () => {
+            //   if (document.visibilityState === 'visible') {
+            //     checkForUpdates(registration);
+            //   }
+            // });
             
             // Initial update check
             checkForUpdates(registration);
@@ -25,33 +25,48 @@ export function registerServiceWorker() {
             console.error('ServiceWorker registration failed:', error);
           });
           
-        // Handle controlled changes (when a new service worker takes over)
+        // MODIFIED: Show notification instead of auto-refresh
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
             refreshing = true;
-            console.log('New service worker controller, refreshing page');
-            window.location.reload();
+            console.log('New service worker available');
+            // Instead of auto-refresh, show a notification or prompt user
+            showUpdateNotification();
           }
         });
       });
     }
   }
   
-  // Function to check for service worker updates
+  // Function to check for service worker updates (modified to be less aggressive)
   function checkForUpdates(registration) {
-    // Force the update check
+    // Check for updates but don't activate immediately
     registration.update()
       .then(() => {
         if (registration.waiting) {
-          // If there's a waiting worker, activate it immediately
-          console.log('New service worker waiting, activating now');
-          postMessage(registration.waiting, { type: 'SKIP_WAITING' });
+          console.log('New service worker waiting, but not activating automatically');
+          // Optionally show user notification about available update
+          showUpdateNotification();
         }
       })
       .catch(err => {
         console.error('Error checking for updates:', err);
       });
+  }
+  
+  // Show update notification instead of auto-refresh
+  function showUpdateNotification() {
+    // You can implement a toast notification or banner here
+    console.log('App update available. Refresh to get the latest version.');
+    
+    // Optional: Show a simple browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('App Update Available', {
+        body: 'Refresh the page to get the latest version',
+        icon: '/icons/icon-192x192.png'
+      });
+    }
   }
   
   // Helper function to send a message to the service worker
@@ -69,6 +84,11 @@ export function registerServiceWorker() {
       
       worker.postMessage(message, [messageChannel.port2]);
     });
+  }
+  
+  // Function to manually refresh app (call this from user action)
+  export function manualRefresh() {
+    window.location.reload();
   }
   
   // Function to check current version against server version
