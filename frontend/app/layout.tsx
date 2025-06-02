@@ -2,14 +2,19 @@
 
 import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+// import NetworkStatus from './components/common/oldNetworkStatus';
 import BottomNavigation from './components/common/BottomNavigation';
 import Footer from './components/common/Footer';
 import AppUpdater from './components/common/AppUpdater';
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { supabase } from './utils/supabase';
 import './globals.css';
+import Head from 'next/head';
 
-const faviconVersion = '3';
+// Generate a cache-busting version identifier
+// Use a timestamp or version number that changes when you update the favicon
+const faviconVersion = '3'; // Updated this value to force cache refresh on all assets
 
 export default function RootLayout({
   children,
@@ -20,6 +25,7 @@ export default function RootLayout({
 
   // Route change handler to reset navigation state
   useEffect(() => {
+    // Clear any navigation flags when route changes
     const clearNavigationFlags = () => {
       console.log(`Route changed to: ${pathname}`);
     };
@@ -27,8 +33,32 @@ export default function RootLayout({
     clearNavigationFlags();
   }, [pathname]);
 
-  // REMOVED: All visibility change session refresh logic
-  // This was causing the refresh when switching tabs!
+  // Add automatic token refresh on visibility change
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        try {
+          // Refresh the auth session when app comes back to foreground
+          const { data, error } = await supabase.auth.refreshSession();
+          if (error) {
+            console.error('Error refreshing session on visibility change:', error);
+          } else {
+            console.log('Session refreshed on app focus');
+          }
+        } catch (error) {
+          console.error('Unexpected error refreshing session:', error);
+        }
+      }
+    };
+    
+    // Register visibility change event
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+    // Clean up event listener
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <html lang="en">
