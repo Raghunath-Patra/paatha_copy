@@ -11,7 +11,7 @@ const SESSION_CHECK_INTERVAL = 60000; // 1 minute
 const SESSION_EXPIRY_WARNING = 5 * 60 * 1000; // 5 minutes before expiry
 const SESSION_REFRESH_THRESHOLD = 10 * 60 * 1000; // Refresh when 10 min remaining
 const AUTH_TIMEOUT = 15000; // 15 seconds timeout for auth operations
-
+const VISIBILITY_REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutes cooldown for visibility refreshes
 
 interface UserProfile {
   id: string;
@@ -27,10 +27,10 @@ interface UserProfile {
   join_purpose?: string;
   is_active: boolean;
   is_verified: boolean;
-  is_premium?: boolean;  // Add this line
-  daily_question_limit?: number;  // Also add this while we're at it
-  questions_used_today?: number;  // And this
-  questions_reset_date?: string;  // And this
+  is_premium?: boolean;
+  daily_question_limit?: number;
+  questions_used_today?: number;
+  questions_reset_date?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -49,7 +49,7 @@ interface AuthContextType {
   requestPasswordReset: (email: string) => Promise<boolean>;
   resetPassword: (newPassword: string) => Promise<void>;
   signInWithGoogle: (credential?: string) => Promise<void>;
-  setError: (error: string | null) => void; // Add this line
+  setError: (error: string | null) => void;
 }
 
 interface RegisterData {
@@ -73,6 +73,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const sessionCheckInterval = useRef<NodeJS.Timeout | null>(null);
   const authOperationInProgress = useRef<boolean>(false);
   const lastRefreshAttempt = useRef<number>(0);
+  const lastVisibilityRefresh = useRef<number>(0); // Add this to track visibility refreshes
 
   // Fetch user profile from Supabase
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
@@ -197,7 +198,28 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkSessionExpiration();
+        const now = Date.now();
+        
+        // Only refresh on visibility change if enough time has passed (5 minutes)
+        // and there's an actual session that might be expiring
+        if (session && now - lastVisibilityRefresh.current > VISIBILITY_REFRESH_COOLDOWN) {
+          const expiresAt = session.expires_at;
+          if (expiresAt) {
+            const expiresAtMs = expiresAt * 1000;
+            const timeRemaining = expiresAtMs - now;
+            
+            // Only refresh if session is actually close to expiring
+            if (timeRemaining < SESSION_REFRESH_THRESHOLD) {
+              console.log('App came to foreground and session is expiring soon, checking session');
+              lastVisibilityRefresh.current = now;
+              checkSessionExpiration();
+            } else {
+              console.log('App came to foreground but session is still valid');
+            }
+          }
+        } else {
+          console.log('App came to foreground but skipping refresh due to cooldown or no session');
+        }
       }
     };
 
@@ -215,7 +237,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         clearInterval(sessionCheckInterval.current);
       }
     };
-  }, [checkSessionExpiration]);
+  }, [checkSessionExpiration, session]);
 
   // Initialize authentication
   useEffect(() => {
@@ -301,6 +323,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
   }, [fetchProfile, loading]);
 
+  // ... rest of the methods remain the same (signInWithGoogle, login, register, etc.)
+  // I'll include them for completeness but they don't need changes
+
   // Sign in with Google
   const signInWithGoogle = async (credential?: string) => {
     if (authOperationInProgress.current) {
@@ -358,7 +383,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       authOperationInProgress.current = false;
     }
   };
-
 
   const login = async (email: string, password: string) => {
     if (authOperationInProgress.current) {

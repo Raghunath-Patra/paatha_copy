@@ -8,7 +8,6 @@ import Footer from './components/common/Footer';
 import AppUpdater from './components/common/AppUpdater';
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { supabase } from './utils/supabase';
 import './globals.css';
 import Head from 'next/head';
 
@@ -33,32 +32,9 @@ export default function RootLayout({
     clearNavigationFlags();
   }, [pathname]);
 
-  // Add automatic token refresh on visibility change
-  useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
-        try {
-          // Refresh the auth session when app comes back to foreground
-          const { data, error } = await supabase.auth.refreshSession();
-          if (error) {
-            console.error('Error refreshing session on visibility change:', error);
-          } else {
-            console.log('Session refreshed on app focus');
-          }
-        } catch (error) {
-          console.error('Unexpected error refreshing session:', error);
-        }
-      }
-    };
-    
-    // Register visibility change event
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-        
-    // Clean up event listener
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+  // REMOVED: The automatic token refresh on visibility change
+  // This was causing unnecessary session refreshes and potential page reloads
+  // The SupabaseAuthContext already handles session management properly
 
   return (
     <html lang="en">

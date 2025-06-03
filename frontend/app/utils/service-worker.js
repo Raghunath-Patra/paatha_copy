@@ -1,5 +1,8 @@
 // app/utils/service-worker.js
 
+let lastUpdateCheck = 0;
+const UPDATE_CHECK_COOLDOWN = 5 * 60 * 1000; // 5 minutes cooldown between checks
+
 // Function to register the service worker
 export function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
@@ -8,18 +11,24 @@ export function registerServiceWorker() {
           .then((registration) => {
             console.log('ServiceWorker registration successful:', registration.scope);
             
-            // Check for updates every 15 minutes
+            // Check for updates every 15 minutes (but with rate limiting)
             setInterval(() => checkForUpdates(registration), 15 * 60 * 1000);
             
-            // Also check for updates when the app comes back to focus
+            // Also check for updates when the app comes back to focus (with rate limiting)
             document.addEventListener('visibilitychange', () => {
               if (document.visibilityState === 'visible') {
-                checkForUpdates(registration);
+                const now = Date.now();
+                if (now - lastUpdateCheck > UPDATE_CHECK_COOLDOWN) {
+                  console.log('App visible, checking for service worker updates');
+                  checkForUpdates(registration);
+                } else {
+                  console.log('Skipping service worker update check due to cooldown');
+                }
               }
             });
             
-            // Initial update check
-            checkForUpdates(registration);
+            // Initial update check (with delay to let app settle)
+            setTimeout(() => checkForUpdates(registration), 5000);
           })
           .catch((error) => {
             console.error('ServiceWorker registration failed:', error);
@@ -40,6 +49,16 @@ export function registerServiceWorker() {
   
   // Function to check for service worker updates
   function checkForUpdates(registration) {
+    const now = Date.now();
+    
+    // Rate limiting to prevent excessive checks
+    if (now - lastUpdateCheck < UPDATE_CHECK_COOLDOWN) {
+      console.log('Service worker update check rate limited');
+      return;
+    }
+    
+    lastUpdateCheck = now;
+    
     // Force the update check
     registration.update()
       .then(() => {
@@ -47,10 +66,12 @@ export function registerServiceWorker() {
           // If there's a waiting worker, activate it immediately
           console.log('New service worker waiting, activating now');
           postMessage(registration.waiting, { type: 'SKIP_WAITING' });
+        } else {
+          console.log('No service worker update available');
         }
       })
       .catch(err => {
-        console.error('Error checking for updates:', err);
+        console.error('Error checking for service worker updates:', err);
       });
   }
   
@@ -59,7 +80,13 @@ export function registerServiceWorker() {
     return new Promise((resolve, reject) => {
       const messageChannel = new MessageChannel();
       
+      // Set timeout to prevent hanging
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Service worker message timeout'));
+      }, 5000);
+      
       messageChannel.port1.onmessage = (event) => {
+        clearTimeout(timeoutId);
         if (event.data.error) {
           reject(event.data.error);
         } else {
@@ -67,7 +94,12 @@ export function registerServiceWorker() {
         }
       };
       
-      worker.postMessage(message, [messageChannel.port2]);
+      try {
+        worker.postMessage(message, [messageChannel.port2]);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
     });
   }
   
@@ -84,8 +116,16 @@ export function registerServiceWorker() {
       // For development environments, add a random query param to bypass caching
       const cacheBuster = process.env.NODE_ENV === 'development' ? `?_=${Date.now()}` : '';
       
-      // Fetch the latest version info from the server
-      const response = await fetch(`/version.json${cacheBuster}`);
+      // Fetch the latest version info from the server with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(`/version.json${cacheBuster}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (!response.ok) throw new Error('Failed to fetch version info');
       
       const latest = await response.json();
