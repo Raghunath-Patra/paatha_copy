@@ -4,7 +4,7 @@ import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import BottomNavigation from './components/common/BottomNavigation';
 import Footer from './components/common/Footer';
-// COMPLETELY REMOVED: AppUpdater component
+import SmartAppUpdater from './components/common/SmartAppUpdater'; // 👈 NEW: Smart updater
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import './globals.css';
@@ -22,12 +22,6 @@ export default function RootLayout({
   useEffect(() => {
     console.log(`Route changed to: ${pathname}`);
   }, [pathname]);
-
-  // COMPLETELY REMOVED:
-  // - AppUpdater component
-  // - All visibility change handlers
-  // - All session refresh logic
-  // - All update checking logic
 
   return (
     <html lang="en">
@@ -72,7 +66,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen">
         <SupabaseAuthProvider>
           <ProtectedRoute>
-            {/* NO AppUpdater component */}
+            <SmartAppUpdater /> {/* 👈 NEW: Smart app updater component */}
             <div className="flex-grow flex flex-col">
               {children}
             </div>

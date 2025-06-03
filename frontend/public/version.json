@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "logoVersion": "1.0.0",
+  "timestamp": "2024-12-20T00:00:00Z",
+  "description": "Initial version with Smart AppUpdater",
+  "features": [
+    "Smart app update notifications",
+    "No forced refreshes",
+    "User-controlled updates"
+  ]
+}
