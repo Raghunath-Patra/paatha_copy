@@ -2,18 +2,14 @@
 
 import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
-// import NetworkStatus from './components/common/oldNetworkStatus';
 import BottomNavigation from './components/common/BottomNavigation';
 import Footer from './components/common/Footer';
-import AppUpdater from './components/common/AppUpdater';
+// COMPLETELY REMOVED: AppUpdater component
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import './globals.css';
-import Head from 'next/head';
 
-// Generate a cache-busting version identifier
-// Use a timestamp or version number that changes when you update the favicon
-const faviconVersion = '3'; // Updated this value to force cache refresh on all assets
+const faviconVersion = '3';
 
 export default function RootLayout({
   children,
@@ -22,19 +18,16 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
 
-  // Route change handler to reset navigation state
+  // Simple route change handler - no extra functionality
   useEffect(() => {
-    // Clear any navigation flags when route changes
-    const clearNavigationFlags = () => {
-      console.log(`Route changed to: ${pathname}`);
-    };
-    
-    clearNavigationFlags();
+    console.log(`Route changed to: ${pathname}`);
   }, [pathname]);
 
-  // REMOVED: The automatic token refresh on visibility change
-  // This was causing unnecessary session refreshes and potential page reloads
-  // The SupabaseAuthContext already handles session management properly
+  // COMPLETELY REMOVED:
+  // - AppUpdater component
+  // - All visibility change handlers
+  // - All session refresh logic
+  // - All update checking logic
 
   return (
     <html lang="en">
@@ -48,20 +41,20 @@ export default function RootLayout({
         <meta name="theme-color" content="#ff3131" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         
-        {/* SVG favicon with version parameter to prevent caching */}
-        <link rel="icon" type="image/svg+xml" href={`/favicon.svg?v=${faviconVersion}`} />
-        <link rel="alternate icon" href={`/favicon.ico?v=${faviconVersion}`} type="image/x-icon" />
+        {/* Static favicon without cache-busting to prevent refresh triggers */}
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="alternate icon" href="/favicon.ico" type="image/x-icon" />
         
-        {/* PWA icons */}
-        <link rel="apple-touch-icon" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
-        <link rel="apple-touch-icon" sizes="152x152" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
-        <link rel="apple-touch-icon" sizes="180x180" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
-        <link rel="apple-touch-icon" sizes="167x167" href={`/icons/icon-192x192.png?v=${faviconVersion}`} />
+        {/* Static PWA icons without cache-busting */}
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
         
-        {/* Manifest */}
-        <link rel="manifest" href={`/manifest.json?v=${faviconVersion}`} />
+        {/* Static manifest without cache-busting */}
+        <link rel="manifest" href="/manifest.json" />
                 
-        {/* Open Graph meta tags for social sharing */}
+        {/* Open Graph meta tags */}
         <meta property="og:title" content="Paaṭha AI" />
         <meta property="og:description" content="The AI Study Buddy for Bright Minds" />
         <meta property="og:image" content="https://www.paatha.ai/icons/icon-512x512.png" />
@@ -79,7 +72,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen">
         <SupabaseAuthProvider>
           <ProtectedRoute>
-            <AppUpdater />
+            {/* NO AppUpdater component */}
             <div className="flex-grow flex flex-col">
               {children}
             </div>
