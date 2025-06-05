@@ -78,11 +78,7 @@ const DailyChallengeButton = ({ isVisible }: { isVisible: boolean }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleChallengeClick = () => {
-    if (user) {
-      router.push('/try/challenge');
-    } else {
-      router.push('/login');
-    }
+      router.push('/try');
   };
 
   return (
