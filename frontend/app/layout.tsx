@@ -4,7 +4,6 @@ import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import BottomNavigation from './components/common/BottomNavigation';
 import Footer from './components/common/Footer';
-import SmartAppUpdater from './components/common/SmartAppUpdater'; // 👈 NEW: Smart updater
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import './globals.css';
