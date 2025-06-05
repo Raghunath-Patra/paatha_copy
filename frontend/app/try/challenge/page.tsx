@@ -38,6 +38,7 @@ export default function ChallengePage() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNavigatingToResults, setIsNavigatingToResults] = useState(false);
+  const [selectedMCQOption, setSelectedMCQOption] = useState<string>(''); // New state to track current MCQ selection
   
   // Fetch questions
   useEffect(() => {
@@ -130,6 +131,11 @@ export default function ChallengePage() {
     
     fetchQuestions();
   }, [referralShareId]);
+  
+  // Reset selectedMCQOption when question changes
+  useEffect(() => {
+    setSelectedMCQOption('');
+  }, [currentQuestionIndex]);
   
   // Handle timer
   useEffect(() => {
@@ -247,7 +253,9 @@ export default function ChallengePage() {
       
       // Move to next question after a delay or finish
       setTimeout(() => {
+        // Reset all relevant state for the next question
         setShowFeedback(false);
+        setSelectedMCQOption(''); // Clear MCQ selection
         
         if (currentQuestionIndex < questions.length - 1) {
           setCurrentQuestionIndex(prev => prev + 1);
@@ -277,6 +285,8 @@ export default function ChallengePage() {
   };
   
   const handleMCQSelection = (option: string) => {
+    if (showFeedback || isSubmitting) return;
+    setSelectedMCQOption(option); // Track the selection
     submitAnswer(option);
   };
   
@@ -513,13 +523,13 @@ export default function ChallengePage() {
                     )}
                     {currentQuestion.options?.map((option, index) => (
                       <button
-                        key={index}
+                        key={`${currentQuestionIndex}-${index}`} // More specific key to prevent React reuse issues
                         onClick={() => handleMCQSelection(option)}
                         disabled={showFeedback || isSubmitting}
                         className={`w-full text-left p-4 rounded-lg border transition-all duration-200 hover:scale-[1.02] hover:shadow-md
                           ${showFeedback && option === currentResult?.correct_answer
                             ? 'bg-green-50/90 backdrop-blur-sm border-green-400 shadow-lg shadow-green-200/50'
-                            : showFeedback && option === answers[currentQuestionIndex]
+                            : showFeedback && option === selectedMCQOption
                             ? 'bg-red-50/90 backdrop-blur-sm border-red-400 shadow-lg shadow-red-200/50'
                             : 'border-gray-200 bg-white/60 backdrop-blur-sm hover:border-blue-400 hover:bg-blue-50/80'}
                           ${isSubmitting ? 'opacity-50 cursor-not-allowed transform-none' : ''}
