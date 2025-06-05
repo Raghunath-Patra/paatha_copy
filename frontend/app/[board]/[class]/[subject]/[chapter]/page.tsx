@@ -217,7 +217,7 @@ export default function ThemedChapterPage() {
   const [prefetchError, setPrefetchError] = useState<string | null>(null);
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const PREFETCH_VALIDITY_TIME = 5 * 60 * 1000; // 5 minutes
+  const PREFETCH_VALIDITY_TIME = 15 * 60 * 1000; // 15 minutes
   
   // Direct function to stop the timer immediately when button is clicked
   const stopTimerImmediately = useCallback(() => {
