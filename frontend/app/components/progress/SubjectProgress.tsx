@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthHeaders } from '../../utils/auth';
-import { ChevronDown, ChevronRight, BookOpen, Target, TrendingUp } from 'lucide-react';
+import { ChevronDown, ChevronUP, BookOpen, Target, TrendingUp } from 'lucide-react';
 
 interface ChapterProgress {
   attempted: number;
@@ -344,9 +344,9 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                           className="ml-4 p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors group/arrow"
                         >
                           {isExpanded ? (
-                            <ChevronDown size={18} className="text-gray-600 group-hover/arrow:text-gray-800 transition-colors" />
+                            <ChevronUP size={18} className="text-gray-600 group-hover/arrow:text-gray-800 transition-colors" />
                           ) : (
-                            <ChevronRight size={18} className="text-gray-600 group-hover/arrow:text-gray-800 transition-colors" />
+                            <ChevronDown size={18} className="text-gray-600 group-hover/arrow:text-gray-800 transition-colors" />
                           )}
                         </button>
                       </div>
@@ -356,7 +356,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-fadeIn">
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                             <div className="bg-blue-50/80 rounded-lg p-3 text-center">
-                              <div className="font-semibold text-blue-700">Progress</div>
+                              <div className="font-semibold text-blue-700">Progress</div>{/* a link to performance page with the corresponding chapter clicked on */}
                               <div className="text-blue-600 mt-1">
                                 {chapterProgress.attempted}/{Math.max(chapterProgress.attempted, chapterProgress.total)}
                               </div>
