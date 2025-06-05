@@ -8,6 +8,7 @@ import SmartAppUpdater from './components/common/SmartAppUpdater'; // 👈 NEW: 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import './globals.css';
+import AppUpdater from './components/common/AppUpdater';
 
 const faviconVersion = '3';
 
@@ -66,7 +67,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen">
         <SupabaseAuthProvider>
           <ProtectedRoute>
-            <SmartAppUpdater /> {/* 👈 NEW: Smart app updater component */}
+            <AppUpdater /> {/* 👈 NEW: Smart app updater component */}
             <div className="flex-grow flex flex-col">
               {children}
             </div>
