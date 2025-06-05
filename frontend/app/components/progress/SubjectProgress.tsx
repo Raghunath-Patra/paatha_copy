@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthHeaders } from '../../utils/auth';
-import { ChevronDown, ChevronUP, BookOpen, Target, TrendingUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, Target, TrendingUp } from 'lucide-react';
 
 interface ChapterProgress {
   attempted: number;
@@ -344,7 +344,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                           className="ml-4 p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors group/arrow"
                         >
                           {isExpanded ? (
-                            <ChevronUP size={18} className="text-gray-600 group-hover/arrow:text-gray-800 transition-colors" />
+                            <ChevronUp size={18} className="text-gray-600 group-hover/arrow:text-gray-800 transition-colors" />
                           ) : (
                             <ChevronDown size={18} className="text-gray-600 group-hover/arrow:text-gray-800 transition-colors" />
                           )}
