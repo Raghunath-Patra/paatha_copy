@@ -148,26 +148,26 @@ const QuestionsSkeleton = () => (
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Question Attempts</h3>
       </div>
       {[1, 2, 3].map((i) => (
-        <div key={i} className="p-6 space-y-4">
-          <div className="flex justify-between items-start">
+        <div key={i} className="p-4 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="space-y-2 flex-1">
-              <div className="flex items-center gap-3">
-                <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse" 
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24 sm:w-32 animate-pulse" 
                      style={{ animationDelay: `${i * 100}ms` }}></div>
                 <div className="h-6 bg-gradient-to-r from-green-200 to-emerald-200 rounded-full w-12 animate-pulse" 
                      style={{ animationDelay: `${i * 150}ms` }}></div>
                 <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-16 animate-pulse" 
                      style={{ animationDelay: `${i * 200}ms` }}></div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1 sm:gap-2">
                 {[1, 2, 3, 4].map((j) => (
-                  <div key={j} className="h-5 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full w-16 animate-pulse" 
+                  <div key={j} className="h-5 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full w-12 sm:w-16 animate-pulse" 
                        style={{ animationDelay: `${(i * 4 + j) * 50}ms` }}></div>
                 ))}
               </div>
             </div>
             {/* Expand button skeleton */}
-            <div className="h-8 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg w-24 animate-pulse ml-4" 
+            <div className="h-8 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-lg w-full sm:w-24 animate-pulse" 
                  style={{ animationDelay: `${i * 250}ms` }}></div>
           </div>
           
@@ -483,7 +483,7 @@ export default function ChapterPerformanceReport() {
   
   if (hasAllErrors && !hasAnyData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative p-4">
         {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-4 -right-4 w-24 h-24 bg-red-200/30 rounded-full animate-pulse" 
@@ -492,7 +492,7 @@ export default function ChapterPerformanceReport() {
                style={{animationDuration: '4s'}} />
         </div>
         
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10">
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10 w-full">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -532,16 +532,16 @@ export default function ChapterPerformanceReport() {
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto">
           {/* ✅ Header - ALWAYS VISIBLE */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium mb-2 text-gray-800">
                 Chapter {displayChapter} Performance Report
                 {chapterNameLoading ? (
-                  <span className="ml-2">
-                    <span className="inline-block h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></span>
+                  <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0">
+                    <span className="inline-block h-5 sm:h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></span>
                   </span>
                 ) : chapterName && (
-                  <span className="ml-2 text-orange-600">
+                  <span className="block sm:inline sm:ml-2 text-orange-600 text-lg sm:text-xl lg:text-2xl mt-1 sm:mt-0">
                     : {chapterName}
                   </span>
                 )}
@@ -550,7 +550,7 @@ export default function ChapterPerformanceReport() {
                 {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
               </p>
             </div>
-            <div className="flex gap-4 items-center relative z-[100]">
+            <div className="flex gap-4 items-center relative z-[100] justify-end">
               <Navigation />
             </div>
           </div>
@@ -571,48 +571,48 @@ export default function ChapterPerformanceReport() {
                 </button>
               </div>
             ) : performanceSummary && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-white/50 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 opacity-50"></div>
                   <div className="relative z-10">
-                    <h3 className="text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                    <h3 className="text-xs sm:text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full"></div>
                       Total Attempts
                     </h3>
-                    <p className="text-3xl font-bold text-blue-900">{performanceSummary.total_attempts}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-blue-900">{performanceSummary.total_attempts}</p>
                   </div>
                 </div>
 
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-white/50 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 to-emerald-50/30 opacity-50"></div>
                   <div className="relative z-10">
-                    <h3 className="text-sm font-medium text-green-600 mb-1 flex items-center gap-2">
-                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                    <h3 className="text-xs sm:text-sm font-medium text-green-600 mb-1 flex items-center gap-2">
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full"></div>
                       Average Score
                     </h3>
-                    <p className="text-3xl font-bold text-green-900">{performanceSummary.average_score}/10</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-900">{performanceSummary.average_score}/10</p>
                   </div>
                 </div>
 
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-white/50 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-50/30 to-pink-50/30 opacity-50"></div>
                   <div className="relative z-10">
-                    <h3 className="text-sm font-medium text-purple-600 mb-1 flex items-center gap-2">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                    <h3 className="text-xs sm:text-sm font-medium text-purple-600 mb-1 flex items-center gap-2">
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-purple-500 rounded-full"></div>
                       Total Time Spent
                     </h3>
-                    <p className="text-3xl font-bold text-purple-900">{formatTime(performanceSummary.total_time)}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-purple-900">{formatTime(performanceSummary.total_time)}</p>
                   </div>
                 </div>
 
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-white/50 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-50/30 to-yellow-50/30 opacity-50"></div>
                   <div className="relative z-10">
-                    <h3 className="text-sm font-medium text-orange-600 mb-1 flex items-center gap-2">
-                      <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                    <h3 className="text-xs sm:text-sm font-medium text-orange-600 mb-1 flex items-center gap-2">
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-orange-500 rounded-full"></div>
                       Unique Questions
                     </h3>
-                    <p className="text-3xl font-bold text-orange-900">{performanceSummary.unique_questions}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-orange-900">{performanceSummary.unique_questions}</p>
                   </div>
                 </div>
               </div>
@@ -644,7 +644,7 @@ export default function ChapterPerformanceReport() {
               </div>
             )}
 
-            {/* ✅ Questions Section - Loads last */}
+            {/* ✅ Questions Section - Loads last with mobile optimization */}
             {questionsLoading ? (
               <QuestionsSkeleton />
             ) : questionsError ? (
@@ -662,28 +662,28 @@ export default function ChapterPerformanceReport() {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-50/20 to-transparent opacity-30"></div>
                 
                 <div className="relative z-10">
-                  {/* Section header */}
-                  <div className="p-6 pb-0 flex justify-between items-center">
+                  {/* Section header - Mobile optimized */}
+                  <div className="p-4 sm:p-6 pb-0 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                     <h3 className="text-lg font-semibold text-gray-800">Question Attempts</h3>
-                    <div className="flex items-center gap-3">
-                      {/* ✅ NEW: Expand/Collapse All Button */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      {/* ✅ NEW: Expand/Collapse All Button - Mobile friendly */}
                       {solvedQuestions.length > 0 && (
                         <button
                           onClick={toggleAllQuestions}
-                          className="px-3 py-1 text-sm bg-gradient-to-r from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 text-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                          className="px-3 py-2 text-sm bg-gradient-to-r from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 text-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto"
                         >
                           {expandedQuestions.size === solvedQuestions.length ? 'Collapse All' : 'Expand All'}
                         </button>
                       )}
                       {pagination && (
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
                           Showing {solvedQuestions.length} of {pagination.total} attempts
                         </span>
                       )}
                     </div>
                   </div>
                   
-                  {/* ✅ Questions list with collapsible details */}
+                  {/* ✅ Questions list with mobile-optimized layout */}
                   {solvedQuestions.map((attempt, index) => {
                     const questionKey = `${attempt.question_id}-${attempt.timestamp}`;
                     const isExpanded = expandedQuestions.has(questionKey);
@@ -692,42 +692,50 @@ export default function ChapterPerformanceReport() {
                       <div key={questionKey} 
                            className="border-b border-orange-100 hover:bg-gradient-to-r hover:from-orange-50/20 hover:to-yellow-50/20 transition-all duration-200">
                         
-                        {/* ✅ Question Header - Always Visible */}
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-gray-500">
+                        {/* ✅ Question Header - Mobile optimized layout */}
+                        <div className="p-4 sm:p-6">
+                          {/* Mobile: Stack elements vertically, Desktop: Side by side */}
+                          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-4">
+                            <div className="space-y-3 flex-1">
+                              {/* Date, Score, Time - Mobile: Stack vertically for smaller screens */}
+                              <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-3">
+                                <span className="text-xs sm:text-sm font-medium text-gray-500 order-1">
                                   {formatDate(attempt.timestamp)}
                                 </span>
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(attempt.score)}`}>
-                                  {attempt.score}/10
-                                </span>
-                                <span className="text-sm text-gray-500 bg-orange-50 px-2 py-1 rounded-full">
-                                  {formatTime(attempt.time_taken)}
-                                </span>
+                                <div className="flex items-center gap-2 xs:gap-3 order-2">
+                                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getScoreColor(attempt.score)}`}>
+                                    {attempt.score}/10
+                                  </span>
+                                  <span className="text-xs sm:text-sm text-gray-500 bg-orange-50 px-2 py-1 rounded-full">
+                                    {formatTime(attempt.time_taken)}
+                                  </span>
+                                </div>
                               </div>
                               
-                              <div className="flex flex-wrap gap-2 text-xs">
+                              {/* Metadata tags - Mobile optimized */}
+                              <div className="flex flex-wrap gap-1 sm:gap-2 text-xs">
                                 {attempt.metadata && (
                                   <>
                                     <span className="px-2 py-1 bg-gradient-to-r from-red-100 to-orange-100 text-red-800 rounded-full">
                                       {attempt.metadata.questionNumber}
                                     </span>
                                     <span className="px-2 py-1 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 rounded-full">
-                                      Source: {attempt.metadata.source}
+                                      {attempt.metadata.source}
                                     </span>
                                     <span className="px-2 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 rounded-full">
-                                      Level: {attempt.metadata.level}
+                                      {attempt.metadata.level}
                                     </span>
                                     <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full">
-                                      Type: {attempt.metadata.type}
+                                      {attempt.metadata.type}
                                     </span>
                                     <span className="px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-full">
-                                      Bloom: {attempt.metadata.bloomLevel}
+                                      {attempt.metadata.bloomLevel}
+                                    </span>
+                                    {/* Mobile: Move stats to new line */}
+                                    <span className="px-2 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 rounded-full">
+                                      {attempt.metadata.statistics.totalAttempts} attempts
                                     </span>
                                     <span className="px-2 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 rounded-full">
-                                      {attempt.metadata.statistics.totalAttempts} attempts | 
                                       Avg: {attempt.metadata.statistics.averageScore}/10
                                     </span>
                                   </>
@@ -735,12 +743,12 @@ export default function ChapterPerformanceReport() {
                               </div>
                             </div>
 
-                            {/* ✅ Expand/Collapse Button */}
+                            {/* ✅ Expand/Collapse Button - Mobile optimized */}
                             <button
                               onClick={() => toggleQuestionExpansion(questionKey)}
-                              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-100 to-yellow-100 hover:from-orange-200 hover:to-yellow-200 text-orange-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                              className="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-gradient-to-r from-orange-100 to-yellow-100 hover:from-orange-200 hover:to-yellow-200 text-orange-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto"
                             >
-                              <span className="text-sm font-medium">
+                              <span className="text-xs sm:text-sm font-medium">
                                 {isExpanded ? 'Hide Details' : 'Show Details'}
                               </span>
                               <svg 
@@ -756,20 +764,20 @@ export default function ChapterPerformanceReport() {
 
                           {/* ✅ Question Text - Always Visible */}
                           <div className="mb-4">
-                            <h4 className="text-lg font-medium text-gray-800 leading-relaxed">
+                            <h4 className="text-base sm:text-lg font-medium text-gray-800 leading-relaxed">
                               {attempt.question_text}
                             </h4>
                           </div>
 
-                          {/* ✅ Expandable Details Section */}
+                          {/* ✅ Expandable Details Section - Mobile optimized */}
                           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                             isExpanded ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'
                           }`}>
                             {isExpanded && (
-                              <div className="space-y-4 pt-4 border-t border-orange-100">
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                                  <p className="font-medium text-blue-800 mb-2">Your Answer:</p>
-                                  <div className="text-blue-700 whitespace-pre-wrap text-sm">
+                              <div className="space-y-3 sm:space-y-4 pt-4 border-t border-orange-100">
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+                                  <p className="font-medium text-blue-800 mb-2 text-sm sm:text-base">Your Answer:</p>
+                                  <div className="text-blue-700 whitespace-pre-wrap text-xs sm:text-sm break-words">
                                     {
                                       attempt.transcribed_text 
                                         ? `Typed:\n${attempt.user_answer}\n\nHandwritten:\n${attempt.transcribed_text}`
@@ -778,21 +786,21 @@ export default function ChapterPerformanceReport() {
                                   </div>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                                  <p className="font-medium text-green-800 mb-2">Model Answer:</p>
-                                  <p className="text-green-700 text-sm">{attempt.correct_answer}</p>
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 sm:p-4 rounded-lg border border-green-200">
+                                  <p className="font-medium text-green-800 mb-2 text-sm sm:text-base">Model Answer:</p>
+                                  <p className="text-green-700 text-xs sm:text-sm break-words">{attempt.correct_answer}</p>
                                 </div>
                                 
                                 {attempt.explanation && (
-                                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
-                                    <p className="font-medium text-purple-800 mb-2">Explanation:</p>
-                                    <p className="text-purple-700 text-sm">{attempt.explanation}</p>
+                                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg border border-purple-200">
+                                    <p className="font-medium text-purple-800 mb-2 text-sm sm:text-base">Explanation:</p>
+                                    <p className="text-purple-700 text-xs sm:text-sm break-words">{attempt.explanation}</p>
                                   </div>
                                 )}
 
-                                <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
-                                  <p className="font-medium text-orange-800 mb-2">Feedback:</p>
-                                  <p className="text-orange-700 text-sm">{attempt.feedback}</p>
+                                <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-3 sm:p-4 rounded-lg border border-orange-200">
+                                  <p className="font-medium text-orange-800 mb-2 text-sm sm:text-base">Feedback:</p>
+                                  <p className="text-orange-700 text-xs sm:text-sm break-words">{attempt.feedback}</p>
                                 </div>
                               </div>
                             )}
@@ -802,21 +810,23 @@ export default function ChapterPerformanceReport() {
                     );
                   })}
 
-                  {/* ✅ Load more button */}
+                  {/* ✅ Load more button - Mobile optimized */}
                   {pagination?.has_more && (
-                    <div className="p-6 text-center border-t border-orange-100">
+                    <div className="p-4 sm:p-6 text-center border-t border-orange-100">
                       <button
                         onClick={loadMoreQuestions}
                         disabled={loadingMore}
-                        className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 sm:px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                       >
                         {loadingMore ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Loading more...
+                            <span className="text-sm sm:text-base">Loading more...</span>
                           </div>
                         ) : (
-                          `Load More (${pagination.total - solvedQuestions.length} remaining)`
+                          <span className="text-sm sm:text-base">
+                            Load More ({pagination.total - solvedQuestions.length} remaining)
+                          </span>
                         )}
                       </button>
                     </div>
@@ -824,14 +834,14 @@ export default function ChapterPerformanceReport() {
 
                   {/* ✅ No questions message */}
                   {!questionsLoading && solvedQuestions.length === 0 && !questionsError && (
-                    <div className="p-12 text-center">
-                      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-8 sm:p-12 text-center">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <h3 className="font-semibold text-gray-800 mb-2">No attempts yet</h3>
-                      <p className="text-gray-600">You haven't attempted any questions in this chapter yet.</p>
+                      <h3 className="font-semibold text-gray-800 mb-2 text-base sm:text-lg">No attempts yet</h3>
+                      <p className="text-gray-600 text-sm sm:text-base">You haven't attempted any questions in this chapter yet.</p>
                     </div>
                   )}
                 </div>
