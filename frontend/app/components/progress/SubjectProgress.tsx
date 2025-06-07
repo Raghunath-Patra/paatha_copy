@@ -1,5 +1,5 @@
 // frontend/components/progress/SubjectProgress.tsx
-// Updated to navigate to chapter sections page instead of directly to questions
+// ✅ KEEPING all existing functionality, just changing navigation target
 
 'use client';
 
@@ -189,7 +189,7 @@ const SubjectProgress: React.FC<SubjectProgressProps> = ({
                           
                           {/* Action buttons */}
                           <div className="ml-4 flex items-center gap-2">
-                            {/* ✅ UPDATED: Navigate to chapter sections page instead of directly to questions */}
+                            {/* ✅ ONLY CHANGE: Navigate to chapter sections page instead of directly to questions */}
                             <button
                               onClick={() => {
                                 router.push(`/${board}/${classLevel}/${subject.code}/chapter-${chapter.number}`);
@@ -199,7 +199,7 @@ const SubjectProgress: React.FC<SubjectProgressProps> = ({
                               {chapterProgress.attempted_questions > 0 ? 'Continue' : 'Start'}
                             </button>
                             
-                            {/* Performance button - only show if user has attempted questions */}
+                            {/* Performance button - KEEP EXACTLY AS IS */}
                             {chapterProgress.attempted_questions > 0 && (
                               <button
                                 onClick={() => {
