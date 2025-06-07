@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback } f
 import { useRouter } from 'next/navigation';
 import { supabase } from '../utils/supabase';
 import { User, Session } from '@supabase/supabase-js';
+import { handlePostAuthRedirectNavigation } from '../utils/authRedirect';
 
 // Constants for session management
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -229,13 +230,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             if (event === 'SIGNED_IN' && session?.user) {
               setUser(session.user);
               
-              const originalPath = sessionStorage.getItem('originalPath');
-              if (originalPath) {
-                sessionStorage.removeItem('originalPath');
-                window.location.href = originalPath;
-              } else {
-                window.location.href = '/';
-              }
+              // Use the authRedirect utility for consistent redirect handling
+              handlePostAuthRedirectNavigation(router);
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
             }
@@ -268,9 +264,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         authListenerRef.current.data.subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, loading]);
+  }, [fetchProfile, loading, router]);
 
-  // COMPLETE LOGIN FUNCTION
+  // FIXED LOGIN FUNCTION - Remove the direct redirect
   const login = async (email: string, password: string) => {
     if (authOperationInProgress.current) {
       setError('Another operation is in progress. Please try again.');
@@ -302,7 +298,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         sessionStorage.setItem('isInitialLogin', 'true');
       }
       
-      window.location.href = '/';
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during login');
@@ -311,6 +306,28 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       authOperationInProgress.current = false;
     }
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // COMPLETE REGISTER FUNCTION
   const register = async (userData: RegisterData) => {
