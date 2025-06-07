@@ -362,7 +362,7 @@ export default function HomePage() {
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {
-    sessionStorage.setItem('originalPath', `/${board}/${classLevel}`);
+    //sessionStorage.setItem('originalPath', `/${board}/${classLevel}`);
     router.push(`/${board}/${classLevel}`);
   }, [router]);
   
