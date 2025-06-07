@@ -243,7 +243,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
               }
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
-              setProfile(null);
+              //setProfile(null);
               setSession(null);
             }
           }
