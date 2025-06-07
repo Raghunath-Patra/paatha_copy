@@ -301,8 +301,14 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('isInitialLogin', 'true');
       }
+      const originalPath = sessionStorage.getItem('originalPath');
+      if (originalPath) {
+        sessionStorage.removeItem('originalPath');
+        window.location.href = originalPath;
+      } else {
+        window.location.href = '/';
+      }
       
-      window.location.href = '/';
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during login');
