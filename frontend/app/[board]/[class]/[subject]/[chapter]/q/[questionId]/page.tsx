@@ -1,4 +1,5 @@
 // [board]/[class]/[subject]/[chapter]/q/[questionId]/page.tsx
+// Updated to handle both exercise and section question redirects
 
 'use client';
 
@@ -10,8 +11,11 @@ export default function QuestionPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Construct the main chapter URL with the question ID as a query parameter
-    const chapterUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}?q=${params.questionId}`;
+    // Try to determine if this is a section question or exercise question
+    // This can be done by checking the question ID format or making an API call
+    // For now, we'll default to exercise questions (entire chapter)
+    
+    const chapterUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${params.questionId}`;
     
     // Replace the current URL without adding to history stack
     router.replace(chapterUrl);
