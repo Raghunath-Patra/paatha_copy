@@ -226,28 +226,22 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         // Set up Supabase auth listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log('Auth state change:', event, session?.user?.id);
-            
             if (event === 'SIGNED_IN' && session?.user) {
               setUser(session.user);
               
-              // Check for stored original path and redirect accordingly
               const originalPath = sessionStorage.getItem('originalPath');
               if (originalPath) {
-                console.log('Redirecting to stored original path:', originalPath);
                 sessionStorage.removeItem('originalPath');
                 window.location.href = originalPath;
               } else {
-                console.log('No stored path found, redirecting to home');
                 window.location.href = '/';
               }
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
-              //setProfile(null);
-              //setSession(null);
             }
-          }
-        );
+          });
+
+        authListenerRef.current = { data: { subscription } };
 
       } catch (err) {
         console.error('Auth initialization error:', err);
@@ -264,6 +258,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         }
       }
     };
+
     initializeAuth();
 
     return () => {
@@ -307,9 +302,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         sessionStorage.setItem('isInitialLogin', 'true');
       }
       
-      // REMOVED: window.location.href = '/';
-      // Let the auth state change listener handle the redirect based on originalPath
-      
+      zwindow.location.href = '/';
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during login');
