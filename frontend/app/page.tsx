@@ -354,7 +354,7 @@ const CallToAction = () => {
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, profile, loading: authLoading } = useSupabaseAuth();
+  const { profile } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [showStats, setShowStats] = useState(false);
@@ -362,19 +362,8 @@ export default function HomePage() {
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {
-  const targetPath = `/${board}/${classLevel}`;
-  
-  // Check if user is authenticated
-  if (!user && !authLoading) {
-    // Store intended path and redirect to login
-    sessionStorage.setItem('originalPath', targetPath);
-    router.push('/login');
-    return;
-  }
-  
-  // User is authenticated - proceed normally
-  router.push(targetPath);
-}, [router, user, authLoading]);
+    router.push(`/${board}/${classLevel}`);
+  }, [router]);
   
   // Memoized board entries
   const boardEntries = useMemo(() => 
