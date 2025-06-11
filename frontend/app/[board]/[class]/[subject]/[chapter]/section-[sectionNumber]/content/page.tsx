@@ -75,11 +75,11 @@ const ContentNavigation = ({ params }: { params: PerformancePageParams }) => {
   const router = useRouter();
   
   const handleQuestionsClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${params.sectionNumber}/questions`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${finalSectionNumber}/questions`);
   };
 
   const handlePerformanceClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${params.sectionNumber}/performance`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${finalSectionNumber}/performance`);
   };
 
   const handleBackToChapter = () => {
@@ -170,22 +170,78 @@ export default function SectionContentPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // Extract numbers from params with better error handling
-  const sectionNumber = params.sectionNumber?.replace('section-', '') || '';
-  const chapterNumber = params.chapter?.replace('chapter-', '') || '';
+  // Debug ALL route parameters first
+  console.log('🔍 Complete route analysis:', {
+    'window.location.pathname': typeof window !== 'undefined' ? window.location.pathname : 'SSR',
+    'useParams() full result': params,
+    'Object.keys(params)': Object.keys(params),
+    'Expected route pattern': '[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/content',
+    'Actual URL': typeof window !== 'undefined' ? window.location.pathname : 'N/A'
+  });
+
+  // Extract numbers from params with extensive debugging
+  const rawSectionNumber = params.sectionNumber;
+  const rawChapter = params.chapter;
+  
+  console.log('🔍 Raw parameter extraction:', {
+    'params.sectionNumber': rawSectionNumber,
+    'typeof params.sectionNumber': typeof rawSectionNumber,
+    'params.chapter': rawChapter,
+    'typeof params.chapter': typeof rawChapter,
+    'params as JSON': JSON.stringify(params, null, 2)
+  });
+
+  const sectionNumber = rawSectionNumber?.toString().replace('section-', '') || '';
+  const chapterNumber = rawChapter?.toString().replace('chapter-', '') || '';
   
   // Debug logging to track the issue
   console.log('🔍 Route params debug:', {
-    raw_sectionNumber: params.sectionNumber,
+    raw_sectionNumber: rawSectionNumber,
     extracted_sectionNumber: sectionNumber,
-    raw_chapter: params.chapter,
+    raw_chapter: rawChapter,
     extracted_chapterNumber: chapterNumber,
     all_params: params
   });
   
-  // Early return if section number is missing
-  if (!sectionNumber || sectionNumber === 'undefined') {
-    console.error('❌ Section number is missing or undefined:', params);
+  // Check if we're in the right route structure
+  if (typeof window !== 'undefined') {
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    console.log('🔍 URL path analysis:', {
+      fullPath: window.location.pathname,
+      pathParts: pathParts,
+      expectedStructure: ['board', 'class', 'subject', 'chapter', 'section-X', 'content'],
+      actualStructure: pathParts,
+      sectionPartIndex: pathParts.findIndex(part => part.startsWith('section-')),
+      sectionPart: pathParts.find(part => part.startsWith('section-')),
+      extractedFromURL: pathParts.find(part => part.startsWith('section-'))?.replace('section-', '')
+    });
+  }
+  
+  // Try multiple approaches to get section number
+  const fallbackSectionNumber = (() => {
+    if (typeof window !== 'undefined') {
+      const pathParts = window.location.pathname.split('/');
+      const sectionPart = pathParts.find(part => part.startsWith('section-'));
+      return sectionPart?.replace('section-', '') || '';
+    }
+    return '';
+  })();
+  
+  const finalSectionNumber = sectionNumber || fallbackSectionNumber;
+  
+  console.log('🔍 Section number resolution:', {
+    fromParams: sectionNumber,
+    fromURL: fallbackSectionNumber,
+    final: finalSectionNumber
+  });
+  
+  // Early return if section number is missing - use final resolved number
+  if (!finalSectionNumber || finalSectionNumber === 'undefined') {
+    console.error('❌ Section number is missing or undefined after all resolution attempts:', {
+      params,
+      finalSectionNumber,
+      urlPath: typeof window !== 'undefined' ? window.location.pathname : 'N/A'
+    });
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
@@ -298,7 +354,7 @@ export default function SectionContentPage() {
         if (sectionsResponse.ok) {
           const sectionsData = await sectionsResponse.json();
           const section = sectionsData.sections?.find(
-            (s: any) => s.number === parseInt(sectionNumber)
+            (s: any) => s.number === parseInt(finalSectionNumber)
           );
           if (section) {
             setSectionInfo(section);
@@ -325,11 +381,11 @@ export default function SectionContentPage() {
         ];
         
         // Function to try a specific pattern
-        const tryPattern = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
+        const tryPattern = async (folderSuffix: string, filePrefix: string, sectionNum: string): Promise<string | null> => {
           const subjectFolder = `${subjectBase}${folderSuffix}`;
           const filename = filePrefix 
-            ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
-            : `section_${chapterNumber}_${sectionNumber}.html`;
+            ? `${filePrefix}_section_${chapterNumber}_${sectionNum}.html`
+            : `section_${chapterNumber}_${sectionNum}.html`;
           
           const htmlPath = `/interactive/${params.board}/${params.class}/${params.subject}/${subjectFolder}/${filename}`;
           
@@ -351,7 +407,7 @@ export default function SectionContentPage() {
         let fileFound = false;
         
         try {
-          console.log(`🔍 Smart search for: Chapter ${chapterNumber}, Section ${sectionNumber}`);
+          console.log(`🔍 Smart search for: Chapter ${chapterNumber}, Section ${finalSectionNumber}`);
           console.log(`📁 Subject base: ${subjectBase}`);
           
           // Try common patterns first (most likely to exist)
@@ -360,7 +416,7 @@ export default function SectionContentPage() {
             
             // Try most common file prefixes for this folder
             for (const filePrefix of pattern.filePrefixes) {
-              const content = await tryPattern(pattern.folderSuffix, filePrefix);
+              const content = await tryPattern(pattern.folderSuffix, filePrefix, finalSectionNumber);
               if (content) {
                 htmlContent = content;
                 fileFound = true;
@@ -370,7 +426,7 @@ export default function SectionContentPage() {
             
             // Also try without prefix
             if (!fileFound) {
-              const content = await tryPattern(pattern.folderSuffix, '');
+              const content = await tryPattern(pattern.folderSuffix, '', finalSectionNumber);
               if (content) {
                 htmlContent = content;
                 fileFound = true;
@@ -407,7 +463,7 @@ export default function SectionContentPage() {
                   for (const prefix of additionalPrefixes) {
                     if (completed) break;
                     
-                    const content = await tryPattern(suffix, prefix);
+                    const content = await tryPattern(suffix, prefix, finalSectionNumber);
                     if (content && !completed) {
                       completed = true;
                       clearTimeout(timeout);
@@ -436,7 +492,7 @@ export default function SectionContentPage() {
           }
           
           if (!fileFound) {
-            console.warn(`❌ No content found for: ${subjectBase}XX/XX_section_${chapterNumber}_${sectionNumber}.html`);
+            console.warn(`❌ No content found for: ${subjectBase}XX/XX_section_${chapterNumber}_${finalSectionNumber}.html`);
             // Enhanced fallback content with search information
             htmlContent = `
               <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
@@ -447,7 +503,7 @@ export default function SectionContentPage() {
                 <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
                   <h3 style="color: #374151; margin-top: 0;">Expected file pattern:</h3>
                   <code style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; display: block; margin: 10px 0;">
-                    /interactive/${params.board}/${params.class}/${params.subject}/${subjectBase}XX/YY_section_${chapterNumber}_${sectionNumber}.html
+                    /interactive/${params.board}/${params.class}/${params.subject}/${subjectBase}XX/YY_section_${chapterNumber}_${finalSectionNumber}.html
                   </code>
                   <p style="color: #6b7280; font-size: 14px; margin: 10px 0;">
                     <strong>Searched patterns:</strong>
@@ -455,7 +511,7 @@ export default function SectionContentPage() {
                   <ul style="color: #6b7280; font-size: 14px; margin: 0; padding-left: 20px;">
                     <li>Folder suffixes: 01, 02, 12, 10, 11, 03, 04, 05, 13, 14, 15, 20, 21, 22</li>
                     <li>File prefixes: 06, 01, 02, 03, 04, 05, 07, 08, 09, 10, 11, 12</li>
-                    <li>No prefix variant: section_${chapterNumber}_${sectionNumber}.html</li>
+                    <li>No prefix variant: section_${chapterNumber}_${finalSectionNumber}.html</li>
                   </ul>
                 </div>
                 <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
@@ -512,7 +568,7 @@ export default function SectionContentPage() {
     if (params.board && params.class && params.subject && params.chapter && params.sectionNumber) {
       fetchData();
     }
-  }, [params, router, profile, authLoading, API_URL, chapterNumber, sectionNumber]);
+  }, [params, router, profile, authLoading, API_URL, chapterNumber, finalSectionNumber]);
 
   if (loading) {
     return (
@@ -596,7 +652,7 @@ export default function SectionContentPage() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
             <div>
               <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
-                {formatSubjectName(params.subject)} - Chapter {chapterNumber}, Section {sectionNumber}
+                {formatSubjectName(params.subject)} - Chapter {chapterNumber}, Section {finalSectionNumber}
                 {sectionInfo?.name && (
                   <span className="block sm:inline sm:ml-2 text-orange-600 text-lg sm:text-xl lg:text-2xl mt-1 sm:mt-0">
                     : {sectionInfo.name}
@@ -634,7 +690,7 @@ export default function SectionContentPage() {
             {/* Quick Action Buttons */}
             <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`)}
+                onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${finalSectionNumber}/questions`)}
                 className="flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
