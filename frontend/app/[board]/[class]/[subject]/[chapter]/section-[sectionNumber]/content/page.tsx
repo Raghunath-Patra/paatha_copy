@@ -376,6 +376,7 @@ export default function SectionContentPage() {
           setHtmlContent(htmlContent);
         } catch (htmlError) {
           console.error('❌ Error during content search:', htmlError);
+          const errorMessage = htmlError instanceof Error ? htmlError.message : 'Unknown error occurred';
           setHtmlContent(`
             <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
               <h2 style="color: #dc2626;">⚠️ Loading Error</h2>
@@ -383,7 +384,7 @@ export default function SectionContentPage() {
                 An error occurred while searching for content files.
               </p>
               <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <code style="color: #991b1b; font-size: 14px;">${htmlError.message}</code>
+                <code style="color: #991b1b; font-size: 14px;">${errorMessage}</code>
               </div>
             </div>
           `);
