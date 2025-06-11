@@ -170,9 +170,58 @@ export default function SectionContentPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // Extract numbers from params
+  // Extract numbers from params with better error handling
   const sectionNumber = params.sectionNumber?.replace('section-', '') || '';
   const chapterNumber = params.chapter?.replace('chapter-', '') || '';
+  
+  // Debug logging to track the issue
+  console.log('🔍 Route params debug:', {
+    raw_sectionNumber: params.sectionNumber,
+    extracted_sectionNumber: sectionNumber,
+    raw_chapter: params.chapter,
+    extracted_chapterNumber: chapterNumber,
+    all_params: params
+  });
+  
+  // Early return if section number is missing
+  if (!sectionNumber || sectionNumber === 'undefined') {
+    console.error('❌ Section number is missing or undefined:', params);
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-4 -right-4 w-24 h-24 bg-red-200/30 rounded-full animate-pulse" 
+               style={{animationDuration: '3s'}} />
+          <div className="absolute bottom-1/4 right-1/4 w-16 h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+               style={{animationDuration: '4s'}} />
+        </div>
+        
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="font-semibold text-red-800 mb-2">Invalid Section</h3>
+          <p className="text-red-700 mb-4">
+            Section number is missing or invalid in the URL.
+          </p>
+          <div className="bg-gray-100 p-3 rounded mb-4 text-left">
+            <p className="text-sm text-gray-600 mb-2"><strong>Current URL:</strong></p>
+            <code className="text-xs break-all">{window.location.pathname}</code>
+            <p className="text-sm text-gray-600 mt-2 mb-1"><strong>Expected format:</strong></p>
+            <code className="text-xs">/board/class/subject/chapter/section-NUMBER/content</code>
+          </div>
+          <button 
+            onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+          >
+            Back to Chapter
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   // Format subject name
   const formatSubjectName = (subject: string) => {
@@ -259,44 +308,24 @@ export default function SectionContentPage() {
         // ✅ Fetch HTML content from actual folder structure
         // Pattern: /interactive/[board]/[class]/[subject]/[subject_folder]/XX_section_[chapter]_[section].html
         // Example: /interactive/cbse/xii/lech1dd/lech101/06_section_1_2.html
-        console.log(`🔍 Fetching content for: ${params.board}/${params.class}/${params.subject}/${chapterNumber}/section-${sectionNumber}`);
-        // Extract first 5 letters of subject code for folder name base
+        
+        // ✅ Efficient file discovery using regex pattern matching
+        // Pattern: /interactive/[board]/[class]/[subject]/[subject_folder]/XX_section_[chapter]_[section].html
+        
         const subjectBase = params.subject.substring(0, 5); // e.g., "lech1" from "lech1dd"
         
-        // Generate possible folder suffixes (01, 02, 12, etc.)
-        const generateFolderSuffixes = () => {
-          const suffixes = [];
-          // Single digits with leading zero: 01, 02, 03, ... 09
-          for (let i = 1; i <= 9; i++) {
-            suffixes.push(i.toString().padStart(2, '0'));
-          }
-          // Double digits: 10, 11, 12, ... 99
-          for (let i = 10; i <= 99; i++) {
-            suffixes.push(i.toString());
-          }
-          return suffixes;
-        };
+        // Common folder and file patterns based on your structure
+        const commonPatterns = [
+          // Most common patterns first for faster discovery
+          { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+          { folderSuffix: '02', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+          { folderSuffix: '12', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+          { folderSuffix: '10', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+          { folderSuffix: '11', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        ];
         
-        const folderSuffixes = generateFolderSuffixes();
-        
-        // Generate possible file prefixes (01, 02, 03, ... 99)
-        const generateFilePrefixes = () => {
-          const prefixes = [''];  // Try without prefix first
-          // Single digits with leading zero: 01, 02, 03, ... 09
-          for (let i = 1; i <= 9; i++) {
-            prefixes.push(i.toString().padStart(2, '0'));
-          }
-          // Double digits: 10, 11, 12, ... 99  
-          for (let i = 10; i <= 99; i++) {
-            prefixes.push(i.toString());
-          }
-          return prefixes;
-        };
-        
-        const filePrefixes = generateFilePrefixes();
-        
-        // Function to try loading a file
-        const tryLoadFile = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
+        // Function to try a specific pattern
+        const tryPattern = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
           const subjectFolder = `${subjectBase}${folderSuffix}`;
           const filename = filePrefix 
             ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
@@ -305,7 +334,6 @@ export default function SectionContentPage() {
           const htmlPath = `/interactive/${params.board}/${params.class}/${params.subject}/${subjectFolder}/${filename}`;
           
           try {
-            console.log(`Trying: ${htmlPath}`);
             const response = await fetch(htmlPath);
             if (response.ok) {
               const content = await response.text();
@@ -318,22 +346,31 @@ export default function SectionContentPage() {
           return null;
         };
         
-        // Try to find the correct file
+        // Efficient search with early termination
         let htmlContent = '';
         let fileFound = false;
         
-        // Try different combinations of folder suffixes and file prefixes
         try {
-          console.log(`🔍 Searching for content: Chapter ${chapterNumber}, Section ${sectionNumber}`);
+          console.log(`🔍 Smart search for: Chapter ${chapterNumber}, Section ${sectionNumber}`);
           console.log(`📁 Subject base: ${subjectBase}`);
           
-          // Try folders in priority order (01, 02, 12, etc.)
-          for (const folderSuffix of folderSuffixes) {
+          // Try common patterns first (most likely to exist)
+          for (const pattern of commonPatterns) {
             if (fileFound) break;
             
-            // Try file prefixes for this folder
-            for (const filePrefix of filePrefixes) {
-              const content = await tryLoadFile(folderSuffix, filePrefix);
+            // Try most common file prefixes for this folder
+            for (const filePrefix of pattern.filePrefixes) {
+              const content = await tryPattern(pattern.folderSuffix, filePrefix);
+              if (content) {
+                htmlContent = content;
+                fileFound = true;
+                break;
+              }
+            }
+            
+            // Also try without prefix
+            if (!fileFound) {
+              const content = await tryPattern(pattern.folderSuffix, '');
               if (content) {
                 htmlContent = content;
                 fileFound = true;
@@ -342,14 +379,70 @@ export default function SectionContentPage() {
             }
           }
           
+          // If not found in common patterns, try a broader search with timeout
+          if (!fileFound) {
+            console.log('🔄 Trying broader search...');
+            
+            // Create a promise that resolves when file is found or timeout occurs
+            const searchWithTimeout = new Promise<string>((resolve, reject) => {
+              let completed = false;
+              
+              // Set timeout for broader search
+              const timeout = setTimeout(() => {
+                if (!completed) {
+                  completed = true;
+                  reject(new Error('Search timeout - file not found within reasonable time'));
+                }
+              }, 3000); // 3 second timeout
+              
+              // Broader search function
+              const broaderSearch = async () => {
+                // Try additional patterns
+                const additionalSuffixes = ['03', '04', '05', '13', '14', '15', '20', '21', '22'];
+                const additionalPrefixes = ['07', '08', '09', '10', '11', '12'];
+                
+                for (const suffix of additionalSuffixes) {
+                  if (completed) break;
+                  
+                  for (const prefix of additionalPrefixes) {
+                    if (completed) break;
+                    
+                    const content = await tryPattern(suffix, prefix);
+                    if (content && !completed) {
+                      completed = true;
+                      clearTimeout(timeout);
+                      resolve(content);
+                      return;
+                    }
+                  }
+                }
+                
+                if (!completed) {
+                  completed = true;
+                  clearTimeout(timeout);
+                  reject(new Error('File not found after broader search'));
+                }
+              };
+              
+              broaderSearch();
+            });
+            
+            try {
+              htmlContent = await searchWithTimeout;
+              fileFound = true;
+            } catch (error) {
+              console.warn(`❌ Broader search failed: ${error}`);
+            }
+          }
+          
           if (!fileFound) {
             console.warn(`❌ No content found for: ${subjectBase}XX/XX_section_${chapterNumber}_${sectionNumber}.html`);
-            // Fallback content with detailed path information
+            // Enhanced fallback content with search information
             htmlContent = `
               <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
                 <h2 style="color: #dc2626;">📁 Content Not Found</h2>
                 <p style="color: #6b7280; margin: 20px 0;">
-                  Unable to locate learning content for this section.
+                  Unable to locate learning content for this section after smart search.
                 </p>
                 <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
                   <h3 style="color: #374151; margin-top: 0;">Expected file pattern:</h3>
@@ -357,35 +450,50 @@ export default function SectionContentPage() {
                     /interactive/${params.board}/${params.class}/${params.subject}/${subjectBase}XX/YY_section_${chapterNumber}_${sectionNumber}.html
                   </code>
                   <p style="color: #6b7280; font-size: 14px; margin: 10px 0;">
-                    Where:
+                    <strong>Searched patterns:</strong>
                   </p>
                   <ul style="color: #6b7280; font-size: 14px; margin: 0; padding-left: 20px;">
-                    <li><strong>XX</strong> = folder suffix (01, 02, 12, etc.)</li>
-                    <li><strong>YY</strong> = file prefix (01, 02, 06, etc.)</li>
+                    <li>Folder suffixes: 01, 02, 12, 10, 11, 03, 04, 05, 13, 14, 15, 20, 21, 22</li>
+                    <li>File prefixes: 06, 01, 02, 03, 04, 05, 07, 08, 09, 10, 11, 12</li>
+                    <li>No prefix variant: section_${chapterNumber}_${sectionNumber}.html</li>
                   </ul>
                 </div>
                 <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
                   <p style="color: #991b1b; font-size: 14px; margin: 0;">
-                    <strong>For developers:</strong> Check the console for attempted file paths.
+                    <strong>File not found:</strong> Please check if the file exists and matches the expected pattern.
                   </p>
+                </div>
+                <div style="margin-top: 20px;">
+                  <button 
+                    onclick="window.location.reload()" 
+                    style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;"
+                  >
+                    🔄 Retry Search
+                  </button>
                 </div>
               </div>
             `;
           }
           
           setHtmlContent(htmlContent);
-        } catch (htmlError) {
-          console.error('❌ Error during content search:', htmlError);
-          const errorMessage = htmlError instanceof Error ? htmlError.message : 'Unknown error occurred';
+        } catch (searchError) {
+          console.error('❌ Error during smart search:', searchError);
+          const errorMessage = searchError instanceof Error ? searchError.message : 'Unknown search error';
           setHtmlContent(`
             <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-              <h2 style="color: #dc2626;">⚠️ Loading Error</h2>
+              <h2 style="color: #dc2626;">⚠️ Search Error</h2>
               <p style="color: #6b7280;">
-                An error occurred while searching for content files.
+                An error occurred during the smart file search.
               </p>
               <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <code style="color: #991b1b; font-size: 14px;">${errorMessage}</code>
               </div>
+              <button 
+                onclick="window.location.reload()" 
+                style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;"
+              >
+                🔄 Retry
+              </button>
             </div>
           `);
         }
