@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Equations - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #0891b2;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .interactive-area {
+            background: #f0fdfa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #a7f3d0;
+        }
+
+        .equation-builder {
+            background: white;
+            border: 2px solid #0891b2;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .equation-display {
+            font-size: 24px;
+            font-family: 'Courier New', monospace;
+            background: #1f2937;
+            color: #22d3ee;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #374151;
+        }
+
+        .balancing-workspace {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .atom-counter {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .atom-count-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .atom-count-table th,
+        .atom-count-table td {
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            text-align: center;
+        }
+
+        .atom-count-table th {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+
+        .balanced {
+            background: #dcfce7 !important;
+            color: #166534;
+        }
+
+        .unbalanced {
+            background: #fef2f2 !important;
+            color: #dc2626;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #0891b2, #06b6d4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #6b7280, #9ca3af);
+        }
+
+        .coefficient-input {
+            width: 50px;
+            padding: 5px;
+            border: 2px solid #d1d5db;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+            margin: 0 5px;
+        }
+
+        .coefficient-input:focus {
+            border-color: #0891b2;
+            outline: none;
+        }
+
+        .equation-step {
+            background: #f0fdfa;
+            border-left: 4px solid #0891b2;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .equation-step h4 {
+            color: #0891b2;
+            margin-bottom: 10px;
+        }
+
+        .word-equation {
+            background: #fff5f5;
+            border: 2px dashed #fc8181;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .chemical-equation {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .practice-area {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .practice-equation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .molecule.clickable {
+            background: #e0f2fe;
+            border: 2px solid #0891b2;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: inline-block;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .molecule.clickable:hover {
+            background: #b3e5fc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(8, 145, 178, 0.3);
+        }
+
+        .molecule.clickable:active {
+            transform: scale(0.95);
+        }
+
+        .molecule.clickable::before {
+            content: "Click to change state";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .molecule.clickable:hover::before {
+            opacity: 1;
+        }
+
+        .plus-sign {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0891b2;
+        }
+
+        .arrow {
+            font-size: 24px;
+            color: #10b981;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .feedback.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .paatha-tip {
+            background: linear-gradient(135deg, #ecfeff, #f0fdfa);
+            border: 2px solid #22d3ee;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .paatha-tip::before {
+            content: "🤖 Paaṭha AI Smart Tip";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(45deg, #0891b2, #22d3ee);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .state-symbols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .state-symbol {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .state-symbol:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #0891b2;
+        }
+
+        .state-symbol code {
+            background: #1f2937;
+            color: #22d3ee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .practice-equation {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .state-symbols {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="height: 48px; width: 48px;"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8">
+                        </circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Chemistry Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">⚖️ Chemical Equations</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Class X Chemistry - Chapter 1, Section 1.1</p>
+        </div>
+
+        <div class="section">
+            <h2>From Words to Symbols</h2>
+            
+            <div class="interactive-area">
+                <h3>🔤 Word Equations vs Chemical Equations</h3>
+                <p>See how chemical reactions can be represented in different ways!</p>
+                
+                <div class="equation-step">
+                    <h4>Step 1: Describing in Words</h4>
+                    <div class="word-equation">
+                        Magnesium + Oxygen → Magnesium oxide
+                    </div>
+                    <p><strong>Reactants:</strong> Magnesium and Oxygen (left side)</p>
+                    <p><strong>Product:</strong> Magnesium oxide (right side)</p>
+                </div>
+                
+                <div class="equation-step">
+                    <h4>Step 2: Using Chemical Formulas</h4>
+                    <div class="chemical-equation">
+                        Mg + O₂ → MgO
+                    </div>
+                    <p><strong>Problem:</strong> This equation is not balanced! Let's count atoms...</p>
+                </div>
+                
+                <div class="equation-step">
+                    <h4>Step 3: Balanced Chemical Equation</h4>
+                    <div class="chemical-equation">
+                        2Mg + O₂ → 2MgO
+                    </div>
+                    <p><strong>Solution:</strong> Now we have equal numbers of each type of atom on both sides!</p>
+                </div>
+                
+                <button class="btn" onclick="showAtomCounting()">🔢 Show Atom Counting</button>
+                
+                <div id="atomCountDisplay" style="display: none;" class="atom-counter">
+                    <h4>Atom Count Analysis</h4>
+                    <table class="atom-count-table">
+                        <thead>
+                            <tr>
+                                <th>Element</th>
+                                <th>Reactants (LHS)</th>
+                                <th>Products (RHS)</th>
+                                <th>Balanced?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="balanced">
+                                <td>Mg</td>
+                                <td>2</td>
+                                <td>2</td>
+                                <td>✅ Yes</td>
+                            </tr>
+                            <tr class="balanced">
+                                <td>O</td>
+                                <td>2</td>
+                                <td>2</td>
+                                <td>✅ Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="paatha-tip">
+                <strong>🎯 Key Point:</strong> Chemical equations must be balanced because the law of conservation of mass states that matter cannot be created or destroyed in a chemical reaction!
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Interactive Equation Balancer</h2>
+            
+            <div class="equation-builder">
+                <h3>⚖️ Balance Chemical Equations Step-by-Step</h3>
+                <p>Select an equation to practice balancing:</p>
+                
+                <div style="margin: 20px 0;">
+                    <button class="btn secondary" onclick="loadEquation('Fe_H2O')">Fe + H₂O → Fe₃O₄ + H₂</button>
+                    <button class="btn secondary" onclick="loadEquation('Al_O2')">Al + O₂ → Al₂O₃</button>
+                    <button class="btn secondary" onclick="loadEquation('CH4_O2')">CH₄ + O₂ → CO₂ + H₂O</button>
+                    <button class="btn secondary" onclick="loadEquation('Ca_OH_2')">CaO + H₂O → Ca(OH)₂</button>
+                </div>
+                
+                <div class="balancing-workspace">
+                    <h4>Current Equation:</h4>
+                    <div class="equation-display" id="currentEquation">
+                        Select an equation above to start balancing!
+                    </div>
+                    
+                    <div id="coefficientInputs" style="display: none;">
+                        <h4>Add Coefficients:</h4>
+                        <div id="coefficientControls"></div>
+                        <button class="btn" onclick="checkBalance()">⚖️ Check Balance</button>
+                        <button class="btn secondary" onclick="showHint()">💡 Get Hint</button>
+                        <button class="btn secondary" onclick="showSolution()">📖 Show Solution</button>
+                    </div>
+                    
+                    <div id="balanceResult"></div>
+                    <div id="hintDisplay"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Physical State Symbols</h2>
+            
+            <div class="interactive-area">
+                <h3>📍 Adding Physical States to Equations</h3>
+                <p>Chemical equations become more informative when we include the physical states of reactants and products!</p>
+                
+                <div class="state-symbols">
+                    <div class="state-symbol">
+                        <h4><code>(s)</code></h4>
+                        <p><strong>Solid</strong></p>
+                        <p>Ice, salt crystals</p>
+                    </div>
+                    
+                    <div class="state-symbol">
+                        <h4><code>(l)</code></h4>
+                        <p><strong>Liquid</strong></p>
+                        <p>Water, oil</p>
+                    </div>
+                    
+                    <div class="state-symbol">
+                        <h4><code>(g)</code></h4>
+                        <p><strong>Gas</strong></p>
+                        <p>Steam, oxygen</p>
+                    </div>
+                    
+                    <div class="state-symbol">
+                        <h4><code>(aq)</code></h4>
+                        <p><strong>Aqueous</strong></p>
+                        <p>Dissolved in water</p>
+                    </div>
+                </div>
+                
+                <div class="equation-step">
+                    <h4>Complete Equation with Physical States:</h4>
+                    <div class="chemical-equation">
+                        3Fe(s) + 4H₂O(g) → Fe₃O₄(s) + 4H₂(g)
+                    </div>
+                    <p>This tells us that solid iron reacts with water vapor to produce solid iron oxide and hydrogen gas!</p>
+                </div>
+                
+                <div class="practice-area">
+                    <h4>🎯 Practice: Add Physical States</h4>
+                    <p>Click on each compound to cycle through its possible physical states:</p>
+                    
+                    <div id="statesPractice" class="practice-equation">
+                        <span class="molecule clickable" data-states="['(s)']" onclick="cycleState(this)">Zn<span class="state">(s)</span></span>
+                        <span class="plus-sign">+</span>
+                        <span class="molecule clickable" data-states="['(aq)', '(l)']" onclick="cycleState(this)">2HCl<span class="state">(aq)</span></span>
+                        <span class="arrow">→</span>
+                        <span class="molecule clickable" data-states="['(aq)', '(s)']" onclick="cycleState(this)">ZnCl₂<span class="state">(aq)</span></span>
+                        <span class="plus-sign">+</span>
+                        <span class="molecule clickable" data-states="['(g)']" onclick="cycleState(this)">H₂<span class="state">(g)</span></span>
+                    </div>
+                    
+                    <button class="btn" onclick="checkStates()">✅ Check My States</button>
+                    <div id="statesResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Balancing Method Practice</h2>
+            
+            <div class="practice-area">
+                <h3>📚 Step-by-Step Balancing Method</h3>
+                <p>Let's learn the systematic approach to balance any chemical equation!</p>
+                
+                <div class="equation-step">
+                    <h4>Example: Balancing Fe + H₂O → Fe₃O₄ + H₂</h4>
+                    
+                    <div id="balancingSteps">
+                        <div class="equation-step" style="display: none;" data-step="1">
+                            <h4>Step 1: Draw boxes around each formula</h4>
+                            <div class="chemical-equation">[Fe] + [H₂O] → [Fe₃O₄] + [H₂]</div>
+                            <p>Never change what's inside the boxes!</p>
+                        </div>
+                        
+                        <div class="equation-step" style="display: none;" data-step="2">
+                            <h4>Step 2: Count atoms</h4>
+                            <table class="atom-count-table">
+                                <tr><th>Element</th><th>LHS</th><th>RHS</th></tr>
+                                <tr class="unbalanced"><td>Fe</td><td>1</td><td>3</td></tr>
+                                <tr class="unbalanced"><td>H</td><td>2</td><td>2</td></tr>
+                                <tr class="unbalanced"><td>O</td><td>1</td><td>4</td></tr>
+                            </table>
+                        </div>
+                        
+                        <div class="equation-step" style="display: none;" data-step="3">
+                            <h4>Step 3: Start with the most complex compound (Fe₃O₄)</h4>
+                            <p>Balance oxygen first: Need 4 O on left side</p>
+                            <div class="chemical-equation">Fe + 4H₂O → Fe₃O₄ + H₂</div>
+                        </div>
+                        
+                        <div class="equation-step" style="display: none;" data-step="4">
+                            <h4>Step 4: Balance hydrogen</h4>
+                            <p>Now we have 8 H on left, need 8 H on right</p>
+                            <div class="chemical-equation">Fe + 4H₂O → Fe₃O₄ + 4H₂</div>
+                        </div>
+                        
+                        <div class="equation-step" style="display: none;" data-step="5">
+                            <h4>Step 5: Balance iron</h4>
+                            <p>Need 3 Fe on left side to match right side</p>
+                            <div class="chemical-equation">3Fe + 4H₂O → Fe₃O₄ + 4H₂</div>
+                        </div>
+                        
+                        <div class="equation-step" style="display: none;" data-step="6">
+                            <h4>Step 6: Final check</h4>
+                            <table class="atom-count-table">
+                                <tr><th>Element</th><th>LHS</th><th>RHS</th></tr>
+                                <tr class="balanced"><td>Fe</td><td>3</td><td>3</td></tr>
+                                <tr class="balanced"><td>H</td><td>8</td><td>8</td></tr>
+                                <tr class="balanced"><td>O</td><td>4</td><td>4</td></tr>
+                            </table>
+                            <div class="feedback success">🎉 Equation is now balanced!</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="showNextStep()">▶️ Next Step</button>
+                    <button class="btn secondary" onclick="resetSteps()">🔄 Start Over</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.2);">
+            <div style="color: white; opacity: 0.9;">
+                <p style="margin: 5px 0; font-size: 16px; font-weight: 600;">Powered by Paaṭha AI</p>
+                <p style="margin: 5px 0; font-size: 14px;">Interactive Chemistry Learning Platform</p>
+                <p style="margin: 5px 0; font-size: 12px; opacity: 0.7;">© 2024 Paaṭha AI. Transforming Education with AI.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Equation data
+        const equations = {
+            'Fe_H2O': {
+                reactants: ['Fe', 'H₂O'],
+                products: ['Fe₃O₄', 'H₂'],
+                coefficients: [3, 4, 1, 4],
+                hint: "Start by balancing oxygen atoms first. Fe₃O₄ has 4 oxygen atoms.",
+                atoms: ['Fe', 'H', 'O']
+            },
+            'Al_O2': {
+                reactants: ['Al', 'O₂'],
+                products: ['Al₂O₃'],
+                coefficients: [4, 3, 2],
+                hint: "Al₂O₃ has 2 Al and 3 O atoms. You'll need even numbers for O₂.",
+                atoms: ['Al', 'O']
+            },
+            'CH4_O2': {
+                reactants: ['CH₄', 'O₂'],
+                products: ['CO₂', 'H₂O'],
+                coefficients: [1, 2, 1, 2],
+                hint: "Start with carbon (1:1), then hydrogen, then oxygen last.",
+                atoms: ['C', 'H', 'O']
+            },
+            'Ca_OH_2': {
+                reactants: ['CaO', 'H₂O'],
+                products: ['Ca(OH)₂'],
+                coefficients: [1, 1, 1],
+                hint: "This is already balanced! Count the atoms to verify.",
+                atoms: ['Ca', 'H', 'O']
+            }
+        };
+
+        let currentEquationKey = '';
+        let currentStep = 0;
+
+        function showAtomCounting() {
+            const display = document.getElementById('atomCountDisplay');
+            display.style.display = display.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function loadEquation(equationKey) {
+            currentEquationKey = equationKey;
+            const eq = equations[equationKey];
+            
+            // Build equation display
+            let equationText = eq.reactants.join(' + ') + ' → ' + eq.products.join(' + ');
+            document.getElementById('currentEquation').textContent = equationText;
+            
+            // Create coefficient inputs
+            const controlsDiv = document.getElementById('coefficientControls');
+            controlsDiv.innerHTML = '';
+            
+            let inputHTML = '<div class="practice-equation">';
+            let inputIndex = 0;
+            
+            // Add reactants
+            eq.reactants.forEach((reactant, i) => {
+                if (i > 0) inputHTML += '<span class="plus-sign"> + </span>';
+                inputHTML += `<input type="number" class="coefficient-input" id="coeff${inputIndex}" min="1" max="10" value="1"> ${reactant}`;
+                inputIndex++;
+            });
+            
+            inputHTML += '<span class="arrow"> → </span>';
+            
+            // Add products
+            eq.products.forEach((product, i) => {
+                if (i > 0) inputHTML += '<span class="plus-sign"> + </span>';
+                inputHTML += `<input type="number" class="coefficient-input" id="coeff${inputIndex}" min="1" max="10" value="1"> ${product}`;
+                inputIndex++;
+            });
+            
+            inputHTML += '</div>';
+            controlsDiv.innerHTML = inputHTML;
+            
+            document.getElementById('coefficientInputs').style.display = 'block';
+            document.getElementById('balanceResult').innerHTML = '';
+            document.getElementById('hintDisplay').innerHTML = '';
+        }
+
+        function checkBalance() {
+            const eq = equations[currentEquationKey];
+            const inputs = document.querySelectorAll('.coefficient-input');
+            const userCoeffs = Array.from(inputs).map(input => parseInt(input.value) || 1);
+            
+            // Calculate atom counts
+            const atomCounts = calculateAtomCounts(eq, userCoeffs);
+            
+            // Check if balanced
+            let isBalanced = true;
+            let resultHTML = '<h4>Atom Count Analysis:</h4><table class="atom-count-table"><tr><th>Element</th><th>Reactants</th><th>Products</th><th>Balanced?</th></tr>';
+            
+            eq.atoms.forEach(atom => {
+                const balanced = atomCounts.reactants[atom] === atomCounts.products[atom];
+                if (!balanced) isBalanced = false;
+                
+                const rowClass = balanced ? 'balanced' : 'unbalanced';
+                const checkMark = balanced ? '✅' : '❌';
+                
+                resultHTML += `<tr class="${rowClass}">
+                    <td>${atom}</td>
+                    <td>${atomCounts.reactants[atom]}</td>
+                    <td>${atomCounts.products[atom]}</td>
+                    <td>${checkMark}</td>
+                </tr>`;
+            });
+            
+            resultHTML += '</table>';
+            
+            if (isBalanced) {
+                resultHTML += '<div class="feedback success">🎉 Congratulations! The equation is balanced!</div>';
+            } else {
+                resultHTML += '<div class="feedback error">❌ Not balanced yet. Keep trying!</div>';
+            }
+            
+            document.getElementById('balanceResult').innerHTML = resultHTML;
+        }
+
+        function calculateAtomCounts(eq, coeffs) {
+            // This is a simplified calculation for demo purposes
+            // In reality, you'd need a proper chemical formula parser
+            const counts = {
+                reactants: {},
+                products: {}
+            };
+            
+            // Initialize counts
+            eq.atoms.forEach(atom => {
+                counts.reactants[atom] = 0;
+                counts.products[atom] = 0;
+            });
+            
+            // Simplified atom counting for specific equations
+            if (currentEquationKey === 'Fe_H2O') {
+                counts.reactants.Fe = coeffs[0];
+                counts.reactants.H = coeffs[1] * 2;
+                counts.reactants.O = coeffs[1];
+                counts.products.Fe = coeffs[2] * 3;
+                counts.products.H = coeffs[3] * 2;
+                counts.products.O = coeffs[2] * 4;
+            } else if (currentEquationKey === 'Al_O2') {
+                counts.reactants.Al = coeffs[0];
+                counts.reactants.O = coeffs[1] * 2;
+                counts.products.Al = coeffs[2] * 2;
+                counts.products.O = coeffs[2] * 3;
+            } else if (currentEquationKey === 'CH4_O2') {
+                counts.reactants.C = coeffs[0];
+                counts.reactants.H = coeffs[0] * 4;
+                counts.reactants.O = coeffs[1] * 2;
+                counts.products.C = coeffs[2];
+                counts.products.H = coeffs[3] * 2;
+                counts.products.O = coeffs[2] * 2 + coeffs[3];
+            } else if (currentEquationKey === 'Ca_OH_2') {
+                counts.reactants.Ca = coeffs[0];
+                counts.reactants.O = coeffs[0] + coeffs[1];
+                counts.reactants.H = coeffs[1] * 2;
+                counts.products.Ca = coeffs[2];
+                counts.products.O = coeffs[2] * 2;
+                counts.products.H = coeffs[2] * 2;
+            }
+            
+            return counts;
+        }
+
+        function showHint() {
+            const eq = equations[currentEquationKey];
+            document.getElementById('hintDisplay').innerHTML = 
+                `<div class="feedback info">💡 Hint: ${eq.hint}</div>`;
+        }
+
+        function showSolution() {
+            const eq = equations[currentEquationKey];
+            const inputs = document.querySelectorAll('.coefficient-input');
+            
+            inputs.forEach((input, i) => {
+                input.value = eq.coefficients[i];
+            });
+            
+            document.getElementById('hintDisplay').innerHTML = 
+                `<div class="feedback success">📖 Solution loaded! Click "Check Balance" to verify.</div>`;
+        }
+
+        // Physical states practice
+        let currentStateIndex = {};
+
+        function cycleState(element) {
+            try {
+                const states = JSON.parse(element.dataset.states);
+                const fullText = element.textContent.trim();
+                const molecule = fullText.split('(')[0].trim();
+                
+                // Initialize index if not exists
+                if (!currentStateIndex[molecule]) {
+                    currentStateIndex[molecule] = 0;
+                }
+                
+                // Cycle to next state
+                currentStateIndex[molecule] = (currentStateIndex[molecule] + 1) % states.length;
+                const newState = states[currentStateIndex[molecule]];
+                
+                // Update the state span
+                const stateSpan = element.querySelector('.state');
+                if (stateSpan) {
+                    stateSpan.textContent = newState;
+                    
+                    // Add visual feedback
+                    element.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        element.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            } catch (error) {
+                console.error('Error cycling state:', error);
+            }
+        }
+
+        function checkStates() {
+            // Correct states: Zn(s) + 2HCl(aq) → ZnCl₂(aq) + H₂(g)
+            const correctStates = {
+                'Zn': '(s)',
+                '2HCl': '(aq)',
+                'ZnCl₂': '(aq)',
+                'H₂': '(g)'
+            };
+            
+            let correct = 0;
+            let total = 0;
+            let results = [];
+            
+            document.querySelectorAll('.clickable').forEach(element => {
+                const fullText = element.textContent.trim();
+                const molecule = fullText.split('(')[0].trim();
+                const stateSpan = element.querySelector('.state');
+                const currentState = stateSpan ? stateSpan.textContent : '';
+                total++;
+                
+                if (correctStates[molecule] === currentState) {
+                    correct++;
+                    element.style.background = '#dcfce7';
+                    element.style.borderColor = '#10b981';
+                    results.push(`✅ ${molecule}${currentState} - Correct!`);
+                } else {
+                    element.style.background = '#fef2f2';
+                    element.style.borderColor = '#dc2626';
+                    results.push(`❌ ${molecule}${currentState} - Should be ${correctStates[molecule]}`);
+                }
+            });
+            
+            const percentage = Math.round((correct / total) * 100);
+            let feedback = `<div style="margin-bottom: 15px;">`;
+            
+            if (percentage === 100) {
+                feedback += '<div class="feedback success">🎉 Perfect! All physical states are correct!</div>';
+            } else if (percentage >= 75) {
+                feedback += '<div class="feedback success">👍 Almost there! Check the highlighted compounds.</div>';
+            } else {
+                feedback += '<div class="feedback error">📚 Keep trying! Remember: solids are (s), solutions are (aq), gases are (g).</div>';
+            }
+            
+            feedback += `<div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                <strong>Results (${correct}/${total} correct):</strong><br>
+                ${results.join('<br>')}
+            </div></div>`;
+            
+            document.getElementById('statesResult').innerHTML = feedback;
+        }
+
+        // Step-by-step balancing tutorial
+        function showNextStep() {
+            currentStep++;
+            const steps = document.querySelectorAll('[data-step]');
+            
+            if (currentStep <= steps.length) {
+                const stepElement = document.querySelector(`[data-step="${currentStep}"]`);
+                if (stepElement) {
+                    stepElement.style.display = 'block';
+                    stepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                if (currentStep >= steps.length) {
+                    document.querySelector('button[onclick="showNextStep()"]').textContent = '✅ Complete!';
+                    document.querySelector('button[onclick="showNextStep()"]').disabled = true;
+                }
+            }
+        }
+
+        function resetSteps() {
+            currentStep = 0;
+            document.querySelectorAll('[data-step]').forEach(step => {
+                step.style.display = 'none';
+            });
+            
+            const nextButton = document.querySelector('button[onclick="showNextStep()"]');
+            nextButton.textContent = '▶️ Next Step';
+            nextButton.disabled = false;
+        }
+
+        // Add click listeners for molecules with states
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize clickable molecules
+            document.querySelectorAll('.clickable').forEach(molecule => {
+                molecule.style.cursor = 'pointer';
+                molecule.style.transition = 'all 0.3s ease';
+                
+                // Ensure state span exists
+                if (!molecule.querySelector('.state')) {
+                    const stateSpan = document.createElement('span');
+                    stateSpan.className = 'state';
+                    stateSpan.textContent = molecule.getAttribute('data-initial-state') || '(s)';
+                    molecule.appendChild(stateSpan);
+                }
+            });
+            
+            // Initialize state indices
+            currentStateIndex = {};
+            
+            console.log('Chemical Equations Tool Loaded');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subsets, Universal Sets & Intervals - Interactive Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #4facfe;
+            border-bottom: 3px solid #4facfe;
+        }
+        
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .content {
+            padding: 30px;
+            min-height: 600px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .concept-box {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .concept-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .interactive-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #e9ecef;
+        }
+        
+        .input-section {
+            margin: 20px 0;
+        }
+        
+        .input-section input, .input-section select {
+            padding: 12px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1em;
+            margin: 5px;
+            transition: border-color 0.3s ease;
+            min-width: 200px;
+        }
+        
+        .input-section input:focus, .input-section select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 5px rgba(79,172,254,0.5);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.4);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d1edff;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .example-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .example-card h4 {
+            color: #4facfe;
+            margin-bottom: 10px;
+        }
+        
+        .subset-symbol {
+            font-size: 2em;
+            color: #28a745;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .not-subset-symbol {
+            font-size: 2em;
+            color: #dc3545;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .venn-container {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .universal-set {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border: 4px solid #6c5ce7;
+            border-radius: 15px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(108, 92, 231, 0.1);
+        }
+        
+        .subset-circle {
+            position: absolute;
+            border: 3px solid;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .subset-circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        
+        .subset-a {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 107, 107, 0.8);
+            border-color: #ff6b6b;
+            top: 30%;
+            left: 30%;
+        }
+        
+        .subset-b {
+            width: 100px;
+            height: 100px;
+            background: rgba(74, 144, 226, 0.8);
+            border-color: #4a90e2;
+            top: 60%;
+            right: 25%;
+        }
+        
+        .universal-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-weight: bold;
+            color: #6c5ce7;
+            font-size: 1.2em;
+        }
+        
+        .number-line {
+            width: 100%;
+            height: 80px;
+            background: white;
+            border: 2px solid #4facfe;
+            border-radius: 10px;
+            position: relative;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .number-line-track {
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: #e9ecef;
+            transform: translateY(-50%);
+        }
+        
+        .interval-segment {
+            position: absolute;
+            height: 6px;
+            background: linear-gradient(90deg, #ff6b6b, #4facfe);
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 3px;
+        }
+        
+        .interval-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 2px solid #333;
+        }
+        
+        .closed-point {
+            background: #333;
+        }
+        
+        .open-point {
+            background: white;
+        }
+        
+        .interval-label {
+            position: absolute;
+            bottom: 5px;
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        .hierarchy-diagram {
+            width: 100%;
+            height: 400px;
+            background: white;
+            border: 3px solid #4facfe;
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .number-set-circle {
+            position: absolute;
+            border: 3px solid;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .reals-set {
+            width: 350px;
+            height: 350px;
+            background: rgba(155, 89, 182, 0.3);
+            border-color: #9b59b6;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .rationals-set {
+            width: 250px;
+            height: 250px;
+            background: rgba(46, 204, 113, 0.5);
+            border-color: #2ecc71;
+            top: 50%;
+            left: 45%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .integers-set {
+            width: 150px;
+            height: 150px;
+            background: rgba(74, 144, 226, 0.7);
+            border-color: #4a90e2;
+            top: 50%;
+            left: 45%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .naturals-set {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 107, 107, 0.9);
+            border-color: #ff6b6b;
+            top: 50%;
+            left: 45%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .set-labels {
+            position: absolute;
+            font-weight: bold;
+            color: #333;
+            z-index: 10;
+        }
+        
+        .quiz-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .quiz-question {
+            background: white;
+            border: 2px solid #4facfe;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .quiz-option {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .quiz-option:hover {
+            border-color: #4facfe;
+            background: #e3f2fd;
+        }
+        
+        .quiz-option.selected {
+            background: #4facfe;
+            color: white;
+            border-color: #00f2fe;
+        }
+        
+        .score-display {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tab {
+                font-size: 0.8em;
+                padding: 10px 5px;
+            }
+            
+            .input-section input {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Subsets, Universal Sets & Intervals</h1>
+            <p>Interactive Learning Tool for Advanced Set Theory</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab(event, 'subsets')">Subsets (⊂)</button>
+            <button class="nav-tab" onclick="showTab(event, 'hierarchy')">Number Sets</button>
+            <button class="nav-tab" onclick="showTab(event, 'intervals')">Intervals</button>
+            <button class="nav-tab" onclick="showTab(event, 'universal')">Universal Sets</button>
+            <button class="nav-tab" onclick="showTab(event, 'quiz')">Practice Quiz</button>
+        </div>
+        
+        <div class="content">
+            <!-- Subsets Tab -->
+            <div id="subsets" class="tab-content active">
+                <div class="concept-box">
+                    <h3>Subsets (⊂)</h3>
+                    <p><strong>Definition:</strong> A set A is a subset of set B if every element of A is also an element of B</p>
+                    <p><strong>Notation:</strong> A ⊂ B (read as "A is a subset of B")</p>
+                    <p><strong>Key Facts:</strong> φ ⊂ every set, Every set ⊂ itself</p>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Interactive Subset Visualization</h4>
+                    <div class="venn-container">
+                        <div class="universal-set">
+                            <div class="universal-label">Universal Set U</div>
+                            <div class="subset-circle subset-a" onclick="showSetInfo('A')">A</div>
+                            <div class="subset-circle subset-b" onclick="showSetInfo('B')">B</div>
+                        </div>
+                    </div>
+                    <div id="setInfo">
+                        <p><em>Click on sets A or B to see their relationships!</em></p>
+                    </div>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>Example 1: Basic Subset</h4>
+                        <p><strong>A = {1, 3}</strong></p>
+                        <p><strong>B = {1, 3, 5, 7, 9}</strong></p>
+                        <div class="subset-symbol">A ⊂ B ✓</div>
+                        <p><em>Every element of A is in B</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 2: Not a Subset</h4>
+                        <p><strong>A = {1, 3}</strong></p>
+                        <p><strong>B = {1, 5, 9}</strong></p>
+                        <div class="not-subset-symbol">A ⊄ B ✗</div>
+                        <p><em>3 ∈ A but 3 ∉ B</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 3: Equal Sets</h4>
+                        <p><strong>A = {a, e, i, o, u}</strong></p>
+                        <p><strong>B = {vowels in English}</strong></p>
+                        <div class="subset-symbol">A = B</div>
+                        <p><em>A ⊂ B and B ⊂ A</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 4: Empty Set</h4>
+                        <p><strong>φ = { }</strong></p>
+                        <p><strong>Any set B</strong></p>
+                        <div class="subset-symbol">φ ⊂ B ✓</div>
+                        <p><em>Empty set is subset of every set</em></p>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Subset Relationship Checker</h4>
+                    <div class="input-section">
+                        <input type="text" id="setAInput" placeholder="Enter Set A elements (comma separated)">
+                        <input type="text" id="setBInput" placeholder="Enter Set B elements (comma separated)">
+                        <br>
+                        <button class="btn btn-primary" onclick="checkSubsetRelation()">Check A ⊂ B</button>
+                    </div>
+                    <div id="subsetResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Context-Based Examples</h4>
+                    <div class="input-section">
+                        <select id="contextType">
+                            <option value="animals">Animal Kingdom</option>
+                            <option value="vehicles">Transportation</option>
+                            <option value="food">Food Items</option>
+                            <option value="sports">Sports</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="generateContextSet()">Generate Example</button>
+                    </div>
+                    <div id="contextExample"></div>
+                </div>
+            </div>
+            
+            <!-- Number Sets Hierarchy Tab -->
+            <div id="hierarchy" class="tab-content">
+                <div class="concept-box">
+                    <h3>Number Sets Hierarchy</h3>
+                    <p>Visual representation of how different number sets relate to each other</p>
+                    <p><strong>ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ</strong></p>
+                </div>
+                
+                <div class="hierarchy-diagram">
+                    <div class="number-set-circle reals-set"></div>
+                    <div class="number-set-circle rationals-set"></div>
+                    <div class="number-set-circle integers-set"></div>
+                    <div class="number-set-circle naturals-set">ℕ</div>
+                    
+                    <div class="set-labels" style="bottom: 10px; right: 20px; color: #9b59b6;">ℝ (Real Numbers)</div>
+                    <div class="set-labels" style="bottom: 50px; left: 50px; color: #2ecc71;">ℚ (Rational Numbers)</div>
+                    <div class="set-labels" style="bottom: 90px; left: 90px; color: #4a90e2;">ℤ (Integers)</div>
+                    <div class="set-labels" style="bottom: 130px; left: 130px; color: #ff6b6b;">ℕ (Natural Numbers)</div>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>ℕ (Natural Numbers)</h4>
+                        <p><strong>ℕ = {1, 2, 3, 4, 5, ...}</strong></p>
+                        <p>Counting numbers starting from 1</p>
+                        <p><strong>Examples:</strong> 7, 15, 100</p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>ℤ (Integers)</h4>
+                        <p><strong>ℤ = {..., -2, -1, 0, 1, 2, ...}</strong></p>
+                        <p>Natural numbers + 0 + negative numbers</p>
+                        <p><strong>Examples:</strong> -5, 0, 8</p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>ℚ (Rational Numbers)</h4>
+                        <p><strong>ℚ = {p/q : p,q ∈ ℤ, q ≠ 0}</strong></p>
+                        <p>Numbers expressible as fractions</p>
+                        <p><strong>Examples:</strong> 1/2, -3/4, 0.75</p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>ℝ (Real Numbers)</h4>
+                        <p><strong>All rational + irrational numbers</strong></p>
+                        <p>All numbers on the number line</p>
+                        <p><strong>Examples:</strong> π, √2, e, -√5</p>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Number Classification Tool</h4>
+                    <div class="input-section">
+                        <input type="text" id="numberInput" placeholder="Enter a number (e.g., 5, -3, 1/2, π)">
+                        <button class="btn btn-primary" onclick="classifyNumber()">Classify Number</button>
+                    </div>
+                    <div id="numberClassification"></div>
+                </div>
+            </div>
+            
+            <!-- Intervals Tab -->
+            <div id="intervals" class="tab-content">
+                <div class="concept-box">
+                    <h3>Intervals as Subsets of ℝ</h3>
+                    <p>Different types of intervals and their representations on the number line</p>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>Open Interval (a, b)</h4>
+                        <div class="number-line">
+                            <div class="number-line-track"></div>
+                            <div class="interval-segment" style="left: 25%; width: 50%;"></div>
+                            <div class="interval-point open-point" style="left: 25%;"></div>
+                            <div class="interval-point open-point" style="left: 75%;"></div>
+                            <div class="interval-label" style="left: 22%;">a</div>
+                            <div class="interval-label" style="left: 72%;">b</div>
+                        </div>
+                        <p><strong>(a, b) = {x : a < x < b}</strong></p>
+                        <p><em>Excludes both endpoints</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Closed Interval [a, b]</h4>
+                        <div class="number-line">
+                            <div class="number-line-track"></div>
+                            <div class="interval-segment" style="left: 25%; width: 50%;"></div>
+                            <div class="interval-point closed-point" style="left: 25%;"></div>
+                            <div class="interval-point closed-point" style="left: 75%;"></div>
+                            <div class="interval-label" style="left: 22%;">a</div>
+                            <div class="interval-label" style="left: 72%;">b</div>
+                        </div>
+                        <p><strong>[a, b] = {x : a ≤ x ≤ b}</strong></p>
+                        <p><em>Includes both endpoints</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Half-Open [a, b)</h4>
+                        <div class="number-line">
+                            <div class="number-line-track"></div>
+                            <div class="interval-segment" style="left: 25%; width: 50%;"></div>
+                            <div class="interval-point closed-point" style="left: 25%;"></div>
+                            <div class="interval-point open-point" style="left: 75%;"></div>
+                            <div class="interval-label" style="left: 22%;">a</div>
+                            <div class="interval-label" style="left: 72%;">b</div>
+                        </div>
+                        <p><strong>[a, b) = {x : a ≤ x < b}</strong></p>
+                        <p><em>Includes a, excludes b</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Half-Open (a, b]</h4>
+                        <div class="number-line">
+                            <div class="number-line-track"></div>
+                            <div class="interval-segment" style="left: 25%; width: 50%;"></div>
+                            <div class="interval-point open-point" style="left: 25%;"></div>
+                            <div class="interval-point closed-point" style="left: 75%;"></div>
+                            <div class="interval-label" style="left: 22%;">a</div>
+                            <div class="interval-label" style="left: 72%;">b</div>
+                        </div>
+                        <p><strong>(a, b] = {x : a < x ≤ b}</strong></p>
+                        <p><em>Excludes a, includes b</em></p>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Interactive Interval Builder</h4>
+                    <div class="input-section">
+                        <input type="number" id="intervalA" placeholder="Enter value a" step="0.1">
+                        <input type="number" id="intervalB" placeholder="Enter value b" step="0.1">
+                        <select id="intervalType">
+                            <option value="open">Open (a, b)</option>
+                            <option value="closed">Closed [a, b]</option>
+                            <option value="left-closed">Half-open [a, b)</option>
+                            <option value="right-closed">Half-open (a, b]</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="buildInterval()">Build Interval</button>
+                    </div>
+                    <div id="intervalResult"></div>
+                </div>
+            </div>
+            
+            <!-- Universal Sets Tab -->
+            <div id="universal" class="tab-content">
+                <div class="concept-box">
+                    <h3>Universal Sets</h3>
+                    <p><strong>Definition:</strong> A universal set U is the set that contains all elements under consideration in a particular context</p>
+                    <p><strong>Notation:</strong> Usually denoted by U, and all other sets are subsets of U</p>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>Example 1: Number Theory</h4>
+                        <p><strong>Universal Set:</strong> ℝ (Real Numbers)</p>
+                        <p><strong>Subsets:</strong> ℕ, ℤ, ℚ, etc.</p>
+                        <p><em>When studying number properties</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 2: School Context</h4>
+                        <p><strong>Universal Set:</strong> All students in school</p>
+                        <p><strong>Subsets:</strong> Students in each class</p>
+                        <p><em>When analyzing student data</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 3: Playing Cards</h4>
+                        <p><strong>Universal Set:</strong> Standard deck (52 cards)</p>
+                        <p><strong>Subsets:</strong> Hearts, spades, face cards</p>
+                        <p><em>When studying card games</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 4: Geometry</h4>
+                        <p><strong>Universal Set:</strong> All points in a plane</p>
+                        <p><strong>Subsets:</strong> Triangles, circles, polygons</p>
+                        <p><em>When studying geometric shapes</em></p>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Universal Set Designer</h4>
+                    <div class="input-section">
+                        <input type="text" id="universalSetName" placeholder="Name your universal set">
+                        <input type="text" id="universalSetElements" placeholder="List elements (comma separated)">
+                        <button class="btn btn-primary" onclick="createCustomUniversalSet()">Create Custom Set</button>
+                    </div>
+                    <div id="customUniversalResult"></div>
+                </div>
+            </div>
+            
+            <!-- Quiz Tab -->
+            <div id="quiz" class="tab-content">
+                <div class="concept-box">
+                    <h3>Practice Quiz</h3>
+                    <p>Test your understanding of subsets, universal sets, and intervals</p>
+                </div>
+                
+                <div class="score-display">
+                    Score: <span id="quizScore">0</span> / <span id="totalQuizQuestions">0</span>
+                </div>
+                
+                <div class="quiz-container">
+                    <div class="quiz-question">
+                        <h4 id="quizQuestionText">Click "New Question" to start!</h4>
+                        <div class="quiz-options" id="quizOptions"></div>
+                        <div class="input-section">
+                            <button class="btn" onclick="generateQuizQuestion()">New Question</button>
+                            <button class="btn btn-secondary" onclick="submitQuizAnswer()" id="quizSubmitBtn" style="display: none;">Submit Answer</button>
+                        </div>
+                        <div id="quizResult"></div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Textbook Problem Solver</h4>
+                    <div class="example-card">
+                        <h4>Problem: Insert ⊂ or ⊄</h4>
+                        <p>φ = { }, A = {1, 3}, B = {1, 5, 9}, C = {1, 3, 5, 7, 9}</p>
+                        <p>Determine the relationships between these sets</p>
+                        <button class="btn btn-primary" onclick="solveTextbookProblem()">Solve Step by Step</button>
+                        <div id="textbookSolution"></div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Quick Practice Exercises</h4>
+                    
+                    <div class="example-card">
+                        <h4>Exercise 1: Subset Recognition</h4>
+                        <p id="exerciseQ1"></p>
+                        <div class="input-section">
+                            <button class="btn" onclick="generateExercise1()">New Exercise</button>
+                            <select id="exerciseA1">
+                                <option value="">Select relationship</option>
+                                <option value="subset">A ⊂ B</option>
+                                <option value="not-subset">A ⊄ B</option>
+                                <option value="equal">A = B</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="checkExercise1()">Check Answer</button>
+                        </div>
+                        <div id="exerciseR1"></div>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Exercise 2: Interval Notation</h4>
+                        <p id="exerciseQ2"></p>
+                        <div class="input-section">
+                            <button class="btn" onclick="generateExercise2()">New Exercise</button>
+                            <input type="text" id="exerciseA2" placeholder="Enter your answer">
+                            <button class="btn btn-secondary" onclick="checkExercise2()">Check Answer</button>
+                        </div>
+                        <div id="exerciseR2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let quizScore = 0;
+        let totalQuizQuestions = 0;
+        let currentQuizAnswer = '';
+        let selectedQuizOption = '';
+        let exerciseData = {};
+
+        // Tab functionality - Fixed to prevent event issues
+        function showTab(event, tabName) {
+            // Prevent default if it's an event
+            if (event && event.preventDefault) {
+                event.preventDefault();
+            }
+            
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            const selectedContent = document.getElementById(tabName);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+            
+            // Add active class to clicked tab
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        // Subset visualization functions
+        function showSetInfo(setName) {
+            const infoDiv = document.getElementById('setInfo');
+            
+            if (setName === 'A') {
+                infoDiv.innerHTML = `
+                    <div class="result success">
+                        <h4>Set A Information</h4>
+                        <p><strong>A ⊂ U:</strong> Set A is a subset of the Universal Set</p>
+                        <p><strong>Example:</strong> If U = {1,2,3,4,5} and A = {1,3}, then A ⊂ U</p>
+                        <p><strong>Note:</strong> A and B are disjoint in this visualization</p>
+                    </div>
+                `;
+            } else if (setName === 'B') {
+                infoDiv.innerHTML = `
+                    <div class="result success">
+                        <h4>Set B Information</h4>
+                        <p><strong>B ⊂ U:</strong> Set B is a subset of the Universal Set</p>
+                        <p><strong>Example:</strong> If U = {1,2,3,4,5} and B = {2,4}, then B ⊂ U</p>
+                        <p><strong>Note:</strong> A and B are disjoint in this visualization</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Check subset relationship
+        function checkSubsetRelation() {
+            const setAInput = document.getElementById('setAInput');
+            const setBInput = document.getElementById('setBInput');
+            const result = document.getElementById('subsetResult');
+            
+            if (!setAInput || !setBInput) {
+                result.innerHTML = '<div class="result error">Input fields not found.</div>';
+                return;
+            }
+            
+            const setAValue = setAInput.value.trim();
+            const setBValue = setBInput.value.trim();
+            
+            if (!setAValue || !setBValue) {
+                result.innerHTML = '<div class="result error">Please enter both sets.</div>';
+                return;
+            }
+            
+            const setA = setAValue.split(',').map(e => e.trim()).filter(e => e);
+            const setB = setBValue.split(',').map(e => e.trim()).filter(e => e);
+            
+            const isSubset = setA.every(element => setB.includes(element));
+            const areEqual = isSubset && setA.length === setB.length && setB.every(element => setA.includes(element));
+            
+            let resultText = '';
+            let resultClass = '';
+            
+            if (areEqual) {
+                resultText = 'A = B (Equal sets: A ⊂ B and B ⊂ A)';
+                resultClass = 'success';
+            } else if (isSubset) {
+                resultText = 'A ⊂ B (A is a subset of B)';
+                resultClass = 'success';
+            } else {
+                const missingElements = setA.filter(element => !setB.includes(element));
+                resultText = `A ⊄ B (A is not a subset of B). Missing elements in B: ${missingElements.join(', ')}`;
+                resultClass = 'error';
+            }
+            
+            result.innerHTML = `
+                <div class="result ${resultClass}">
+                    <div style="text-align: center; font-size: 1.5em; margin: 10px 0;">
+                        ${isSubset ? (areEqual ? 'A = B' : 'A ⊂ B') : 'A ⊄ B'}
+                    </div>
+                    <p><strong>Set A:</strong> {${setA.join(', ')}}</p>
+                    <p><strong>Set B:</strong> {${setB.join(', ')}}</p>
+                    <p><strong>Result:</strong> ${resultText}</p>
+                </div>
+            `;
+        }
+
+        // Number classification
+        function classifyNumber() {
+            const input = document.getElementById('numberInput');
+            const result = document.getElementById('numberClassification');
+            
+            if (!input || !result) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            const inputValue = input.value.trim();
+            
+            if (!inputValue) {
+                result.innerHTML = '<div class="result error">Please enter a number.</div>';
+                return;
+            }
+            
+            let belongsTo = [];
+            let examples = '';
+            
+            // Handle special cases
+            if (inputValue.toLowerCase().includes('π') || inputValue.toLowerCase().includes('pi')) {
+                belongsTo = ['ℝ (Real Numbers)', 'Irrational Numbers'];
+                examples = 'π ≈ 3.14159...';
+            } else if (inputValue.includes('√')) {
+                belongsTo = ['ℝ (Real Numbers)', 'Irrational Numbers (usually)'];
+                examples = inputValue;
+            } else {
+                const num = parseFloat(inputValue);
+                
+                if (isNaN(num)) {
+                    result.innerHTML = '<div class="result error">Please enter a valid number.</div>';
+                    return;
+                }
+                
+                if (num > 0 && Number.isInteger(num)) {
+                    belongsTo = ['ℕ (Natural Numbers)', 'ℤ (Integers)', 'ℚ (Rational Numbers)', 'ℝ (Real Numbers)'];
+                } else if (Number.isInteger(num)) {
+                    belongsTo = ['ℤ (Integers)', 'ℚ (Rational Numbers)', 'ℝ (Real Numbers)'];
+                } else if (isFinite(num)) {
+                    belongsTo = ['ℚ (Rational Numbers)', 'ℝ (Real Numbers)'];
+                }
+                examples = inputValue;
+            }
+            
+            result.innerHTML = `
+                <div class="result success">
+                    <h4>Number: ${examples}</h4>
+                    <p><strong>Belongs to these sets:</strong></p>
+                    <ul>
+                        ${belongsTo.map(set => `<li>${set}</li>`).join('')}
+                    </ul>
+                    <p><strong>Subset relationships:</strong></p>
+                    <p>${belongsTo.map(set => `${inputValue} ∈ ${set.split(' ')[0]}`).join(' and ')}</p>
+                </div>
+            `;
+        }
+
+        // Build interval
+        function buildInterval() {
+            const aInput = document.getElementById('intervalA');
+            const bInput = document.getElementById('intervalB');
+            const typeInput = document.getElementById('intervalType');
+            const result = document.getElementById('intervalResult');
+            
+            if (!aInput || !bInput || !typeInput || !result) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            const a = parseFloat(aInput.value);
+            const b = parseFloat(bInput.value);
+            const type = typeInput.value;
+            
+            if (isNaN(a) || isNaN(b)) {
+                result.innerHTML = '<div class="result error">Please enter valid numbers for both endpoints.</div>';
+                return;
+            }
+            
+            if (a >= b) {
+                result.innerHTML = '<div class="result error">Value a must be less than value b.</div>';
+                return;
+            }
+            
+            let intervalNotation = '';
+            let setBuilder = '';
+            let description = '';
+            
+            switch(type) {
+                case 'open':
+                    intervalNotation = `(${a}, ${b})`;
+                    setBuilder = `{x : ${a} < x < ${b}}`;
+                    description = 'Open interval - excludes both endpoints';
+                    break;
+                case 'closed':
+                    intervalNotation = `[${a}, ${b}]`;
+                    setBuilder = `{x : ${a} ≤ x ≤ ${b}}`;
+                    description = 'Closed interval - includes both endpoints';
+                    break;
+                case 'left-closed':
+                    intervalNotation = `[${a}, ${b})`;
+                    setBuilder = `{x : ${a} ≤ x < ${b}}`;
+                    description = 'Half-open interval - includes a, excludes b';
+                    break;
+                case 'right-closed':
+                    intervalNotation = `(${a}, ${b}]`;
+                    setBuilder = `{x : ${a} < x ≤ ${b}}`;
+                    description = 'Half-open interval - excludes a, includes b';
+                    break;
+            }
+            
+            const length = b - a;
+            
+            result.innerHTML = `
+                <div class="result success">
+                    <h4>Built Interval</h4>
+                    <p><strong>Interval Notation:</strong> ${intervalNotation}</p>
+                    <p><strong>Set-Builder Form:</strong> ${setBuilder}</p>
+                    <p><strong>Description:</strong> ${description}</p>
+                    <p><strong>Length:</strong> ${length}</p>
+                    <div class="number-line" style="margin-top: 15px;">
+                        <div class="number-line-track"></div>
+                        <div class="interval-segment" style="left: 20%; width: 60%;"></div>
+                        <div class="interval-point ${type === 'open' || type === 'right-closed' ? 'open-point' : 'closed-point'}" style="left: 20%;"></div>
+                        <div class="interval-point ${type === 'open' || type === 'left-closed' ? 'open-point' : 'closed-point'}" style="left: 80%;"></div>
+                        <div class="interval-label" style="left: 17%;">${a}</div>
+                        <div class="interval-label" style="left: 77%;">${b}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create custom universal set
+        function createCustomUniversalSet() {
+            const nameInput = document.getElementById('universalSetName');
+            const elementsInput = document.getElementById('universalSetElements');
+            const result = document.getElementById('customUniversalResult');
+            
+            if (!nameInput || !elementsInput || !result) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            const name = nameInput.value.trim();
+            const elements = elementsInput.value.trim();
+            
+            if (!name || !elements) {
+                result.innerHTML = '<div class="result error">Please enter both name and elements.</div>';
+                return;
+            }
+            
+            const elementList = elements.split(',').map(e => e.trim()).filter(e => e);
+            
+            result.innerHTML = `
+                <div class="result success">
+                    <h4>Custom Universal Set: ${name}</h4>
+                    <p><strong>Universal Set U:</strong> {${elementList.join(', ')}}</p>
+                    <p><strong>Number of elements:</strong> n(U) = ${elementList.length}</p>
+                    <p><strong>Possible subsets:</strong> 2^${elementList.length} = ${Math.pow(2, elementList.length)} subsets</p>
+                    <p><em>In the context of "${name}", all sets must be subsets of U</em></p>
+                </div>
+            `;
+        }
+
+        // Generate context set
+        function generateContextSet() {
+            const contextInput = document.getElementById('contextType');
+            const result = document.getElementById('contextExample');
+            
+            if (!contextInput || !result) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            const context = contextInput.value;
+            
+            const contexts = {
+                animals: {
+                    universal: 'All Animals',
+                    elements: ['Mammals', 'Birds', 'Fish', 'Reptiles', 'Amphibians'],
+                    subsets: ['Domestic Animals: {Dog, Cat, Cow}', 'Flying Animals: {Eagle, Sparrow, Bat}', 'Aquatic Animals: {Fish, Whale, Dolphin}']
+                },
+                vehicles: {
+                    universal: 'All Vehicles',
+                    elements: ['Cars', 'Trucks', 'Motorcycles', 'Bicycles', 'Boats', 'Planes'],
+                    subsets: ['Land Vehicles: {Cars, Trucks, Motorcycles, Bicycles}', 'Motor Vehicles: {Cars, Trucks, Motorcycles}', 'Two-wheelers: {Motorcycles, Bicycles}']
+                },
+                food: {
+                    universal: 'All Food Items',
+                    elements: ['Fruits', 'Vegetables', 'Grains', 'Meat', 'Dairy', 'Beverages'],
+                    subsets: ['Healthy Foods: {Fruits, Vegetables, Grains}', 'Animal Products: {Meat, Dairy}', 'Plant Products: {Fruits, Vegetables, Grains}']
+                },
+                sports: {
+                    universal: 'All Sports',
+                    elements: ['Football', 'Basketball', 'Tennis', 'Swimming', 'Cricket', 'Golf'],
+                    subsets: ['Team Sports: {Football, Basketball, Cricket}', 'Individual Sports: {Tennis, Swimming, Golf}', 'Ball Sports: {Football, Basketball, Tennis, Cricket, Golf}']
+                }
+            };
+            
+            const selected = contexts[context];
+            
+            result.innerHTML = `
+                <div class="result success">
+                    <h4>Context: ${selected.universal}</h4>
+                    <p><strong>Universal Set U:</strong> {${selected.elements.join(', ')}}</p>
+                    <p><strong>Example Subsets:</strong></p>
+                    <ul>
+                        ${selected.subsets.map(subset => `<li>${subset}</li>`).join('')}
+                    </ul>
+                    <p><em>In this context, every subset must contain only elements from U</em></p>
+                </div>
+            `;
+        }
+
+        // Solve textbook problem
+        function solveTextbookProblem() {
+            const result = document.getElementById('textbookSolution');
+            
+            if (!result) {
+                console.error('Result element not found');
+                return;
+            }
+            
+            result.innerHTML = `
+                <div class="result success">
+                    <h4>Step-by-Step Solution</h4>
+                    <p><strong>Given:</strong> φ = { }, A = {1, 3}, B = {1, 5, 9}, C = {1, 3, 5, 7, 9}</p>
+                    <br>
+                    <p><strong>(i) φ ... B:</strong></p>
+                    <p>φ ⊂ B ✓ (Empty set is subset of every set)</p>
+                    <br>
+                    <p><strong>(ii) A ... B:</strong></p>
+                    <p>A = {1, 3}, B = {1, 5, 9}</p>
+                    <p>3 ∈ A but 3 ∉ B</p>
+                    <p>Therefore: A ⊄ B ✗</p>
+                    <br>
+                    <p><strong>(iii) A ... C:</strong></p>
+                    <p>A = {1, 3}, C = {1, 3, 5, 7, 9}</p>
+                    <p>Both 1 ∈ C and 3 ∈ C</p>
+                    <p>Therefore: A ⊂ C ✓</p>
+                    <br>
+                    <p><strong>(iv) B ... C:</strong></p>
+                    <p>B = {1, 5, 9}, C = {1, 3, 5, 7, 9}</p>
+                    <p>All elements 1, 5, 9 ∈ C</p>
+                    <p>Therefore: B ⊂ C ✓</p>
+                </div>
+            `;
+        }
+
+        // Quiz functions
+        function generateQuizQuestion() {
+            const questions = [
+                {
+                    question: "Which of the following is always true?",
+                    options: ["A ⊂ A", "A ⊄ A", "φ ⊄ A", "A = φ"],
+                    correct: 0
+                },
+                {
+                    question: "If A = {1, 2} and B = {1, 2, 3}, then:",
+                    options: ["A = B", "A ⊂ B", "B ⊂ A", "A ⊄ B"],
+                    correct: 1
+                },
+                {
+                    question: "The interval (-3, 5] represents:",
+                    options: ["{x : -3 < x < 5}", "{x : -3 ≤ x ≤ 5}", "{x : -3 < x ≤ 5}", "{x : -3 ≤ x < 5}"],
+                    correct: 2
+                },
+                {
+                    question: "Which statement about ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ is correct?",
+                    options: ["Every real number is rational", "Every integer is natural", "Every natural number is an integer", "Every rational number is an integer"],
+                    correct: 2
+                },
+                {
+                    question: "The universal set in a given context contains:",
+                    options: ["Only finite elements", "All elements under consideration", "Only infinite elements", "Only proper subsets"],
+                    correct: 1
+                }
+            ];
+            
+            const randomQ = questions[Math.floor(Math.random() * questions.length)];
+            currentQuizAnswer = randomQ.correct;
+            
+            const questionElement = document.getElementById('quizQuestionText');
+            const optionsElement = document.getElementById('quizOptions');
+            const submitBtn = document.getElementById('quizSubmitBtn');
+            const resultElement = document.getElementById('quizResult');
+            
+            if (!questionElement || !optionsElement) {
+                console.error('Quiz elements not found');
+                return;
+            }
+            
+            questionElement.textContent = randomQ.question;
+            
+            const optionsHtml = randomQ.options.map((option, index) => 
+                `<div class="quiz-option" onclick="selectQuizOption(${index})">${option}</div>`
+            ).join('');
+            
+            optionsElement.innerHTML = optionsHtml;
+            
+            if (submitBtn) submitBtn.style.display = 'inline-block';
+            if (resultElement) resultElement.innerHTML = '';
+            selectedQuizOption = '';
+        }
+        
+        function selectQuizOption(index) {
+            document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+            const options = document.querySelectorAll('.quiz-option');
+            if (options[index]) {
+                options[index].classList.add('selected');
+            }
+            selectedQuizOption = index;
+        }
+        
+        function submitQuizAnswer() {
+            const resultElement = document.getElementById('quizResult');
+            const scoreElement = document.getElementById('quizScore');
+            const totalElement = document.getElementById('totalQuizQuestions');
+            const submitBtn = document.getElementById('quizSubmitBtn');
+            
+            if (selectedQuizOption === '') {
+                if (resultElement) {
+                    resultElement.innerHTML = '<div class="result error">Please select an answer.</div>';
+                }
+                return;
+            }
+            
+            totalQuizQuestions++;
+            const isCorrect = selectedQuizOption === currentQuizAnswer;
+            
+            if (isCorrect) {
+                quizScore++;
+                if (resultElement) {
+                    resultElement.innerHTML = '<div class="result success">Correct! Excellent work!</div>';
+                }
+            } else {
+                if (resultElement) {
+                    resultElement.innerHTML = '<div class="result error">Incorrect. Try another question!</div>';
+                }
+            }
+            
+            if (scoreElement) scoreElement.textContent = quizScore;
+            if (totalElement) totalElement.textContent = totalQuizQuestions;
+            if (submitBtn) submitBtn.style.display = 'none';
+        }
+
+        // Exercise functions
+        function generateExercise1() {
+            const exercises = [
+                { setA: "{2, 4}", setB: "{1, 2, 3, 4, 5}", answer: "subset", explanation: "Every element of A is in B" },
+                { setA: "{a, b, c}", setB: "{a, b}", answer: "not-subset", explanation: "c ∈ A but c ∉ B" },
+                { setA: "{1, 3, 5}", setB: "{1, 3, 5}", answer: "equal", explanation: "Both sets contain the same elements" },
+                { setA: "{vowels}", setB: "{a, e, i, o, u}", answer: "equal", explanation: "Same elements, different representation" }
+            ];
+            
+            const random = exercises[Math.floor(Math.random() * exercises.length)];
+            exerciseData.ex1 = random;
+            
+            const questionElement = document.getElementById('exerciseQ1');
+            const answerElement = document.getElementById('exerciseA1');
+            const resultElement = document.getElementById('exerciseR1');
+            
+            if (questionElement) {
+                questionElement.innerHTML = `What is the relationship between A and B?<br><strong>A = ${random.setA}</strong><br><strong>B = ${random.setB}</strong>`;
+            }
+            if (answerElement) answerElement.value = '';
+            if (resultElement) resultElement.innerHTML = '';
+        }
+        
+        function checkExercise1() {
+            const answerElement = document.getElementById('exerciseA1');
+            const resultElement = document.getElementById('exerciseR1');
+            
+            if (!answerElement || !resultElement || !exerciseData.ex1) {
+                console.error('Exercise elements not found');
+                return;
+            }
+            
+            const userAnswer = answerElement.value;
+            const correct = exerciseData.ex1;
+            
+            if (!userAnswer) {
+                resultElement.innerHTML = '<div class="result error">Please select a relationship.</div>';
+                return;
+            }
+            
+            if (userAnswer === correct.answer) {
+                resultElement.innerHTML = `<div class="result success">Correct! ${correct.explanation}</div>`;
+            } else {
+                resultElement.innerHTML = `<div class="result error">Incorrect. The answer is "${correct.answer}". ${correct.explanation}</div>`;
+            }
+        }
+        
+        function generateExercise2() {
+            const exercises = [
+                { description: "Convert to interval notation: All real numbers x such that x > -2 and x ≤ 5", answer: "(-2, 5]", type: "set-to-interval" },
+                { description: "Convert to set-builder form: The interval [0, 10)", answer: "{x : 0 ≤ x < 10}", type: "interval-to-set" },
+                { description: "Convert to interval notation: All real numbers x such that -1 ≤ x ≤ 3", answer: "[-1, 3]", type: "set-to-interval" },
+                { description: "Convert to set-builder form: The interval (-∞, 4)", answer: "{x : x < 4}", type: "interval-to-set" }
+            ];
+            
+            const random = exercises[Math.floor(Math.random() * exercises.length)];
+            exerciseData.ex2 = random;
+            
+            const questionElement = document.getElementById('exerciseQ2');
+            const answerElement = document.getElementById('exerciseA2');
+            const resultElement = document.getElementById('exerciseR2');
+            
+            if (questionElement) questionElement.innerHTML = random.description;
+            if (answerElement) answerElement.value = '';
+            if (resultElement) resultElement.innerHTML = '';
+        }
+        
+        function checkExercise2() {
+            const answerElement = document.getElementById('exerciseA2');
+            const resultElement = document.getElementById('exerciseR2');
+            
+            if (!answerElement || !resultElement || !exerciseData.ex2) {
+                console.error('Exercise elements not found');
+                return;
+            }
+            
+            const userAnswer = answerElement.value.trim();
+            const correct = exerciseData.ex2;
+            
+            if (!userAnswer) {
+                resultElement.innerHTML = '<div class="result error">Please enter your answer.</div>';
+                return;
+            }
+            
+            const isCorrect = userAnswer.toLowerCase().replace(/\s/g, '') === correct.answer.toLowerCase().replace(/\s/g, '');
+            
+            if (isCorrect) {
+                resultElement.innerHTML = `<div class="result success">Correct! Well done!</div>`;
+            } else {
+                resultElement.innerHTML = `<div class="result error">Incorrect. The correct answer is: ${correct.answer}</div>`;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize exercises
+            generateExercise1();
+            generateExercise2();
+            
+            // Ensure the first tab is active
+            const firstTab = document.querySelector('.nav-tab.active');
+            const firstContent = document.getElementById('subsets');
+            if (firstTab && firstContent) {
+                firstContent.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

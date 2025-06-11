@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raoult's Law & Vapour Pressure Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a365d, #2d3748);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #3182ce;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            margin: 5px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab.active {
+            background: #3182ce;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #3182ce;
+        }
+
+        .simulation-container {
+            width: 250px;
+            height: 200px;
+            margin: 20px auto;
+            border: 3px solid #3182ce;
+            border-radius: 10px;
+            position: relative;
+            background: rgba(49, 130, 206, 0.2);
+        }
+
+        .liquid-phase {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60%;
+            background: rgba(49, 130, 206, 0.6);
+            border-radius: 0 0 7px 7px;
+        }
+
+        .vapor-phase {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 40%;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="range"], select, input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: 1px solid #3182ce;
+        }
+
+        .value-display {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-family: monospace;
+            color: #63b3ed;
+        }
+
+        button {
+            background: #3182ce;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #2c5282;
+        }
+
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .quiz-option.selected {
+            border-color: #3182ce;
+            background: rgba(49, 130, 206, 0.2);
+        }
+
+        .quiz-option.correct {
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.2);
+        }
+
+        .quiz-option.incorrect {
+            border-color: #f56565;
+            background: rgba(245, 101, 101, 0.2);
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(49, 130, 206, 0.15), rgba(102, 126, 234, 0.1));
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            border-left: 5px solid #3182ce;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(49, 130, 206, 0.3);
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border-left-color: #63b3ed;
+            background: linear-gradient(135deg, rgba(49, 130, 206, 0.25), rgba(102, 126, 234, 0.15));
+        }
+
+        .info-card h3 {
+            color: #63b3ed;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card h3::before {
+            content: "📊";
+            font-size: 1.2em;
+        }
+
+        .info-card:nth-child(2) h3::before { content: "🔬"; }
+        .info-card:nth-child(3) h3::before { content: "⚗️"; }
+        .info-card:nth-child(4) h3::before { content: "🔗"; }
+
+        .info-card p {
+            line-height: 1.6;
+            margin-bottom: 12px;
+            color: #e2e8f0;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-card li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #cbd5e0;
+            transition: color 0.2s ease;
+        }
+
+        .info-card li::before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #3182ce;
+            font-size: 0.8em;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .info-card li:hover {
+            color: #e2e8f0;
+        }
+
+        .formula-box {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(45, 55, 72, 0.4));
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            border: 2px solid #3182ce;
+            box-shadow: 0 5px 15px rgba(49, 130, 206, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .formula-box::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #3182ce, #667eea, #9f7aea);
+            border-radius: 12px;
+            z-index: -1;
+            animation: borderGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes bubble {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .formula-box strong {
+            color: #90cdf4;
+            font-size: 1.1em;
+        }
+
+        #theory {
+            background: linear-gradient(135deg, rgba(45, 55, 72, 0.3), rgba(49, 130, 206, 0.1));
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        #theory h2 {
+            text-align: center;
+            color: #63b3ed;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 0 0 20px rgba(99, 179, 237, 0.5);
+            animation: titlePulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes titlePulse {
+            0% { text-shadow: 0 0 20px rgba(99, 179, 237, 0.5); }
+            100% { text-shadow: 0 0 30px rgba(99, 179, 237, 0.8); }
+        }
+
+        .theory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .result-display {
+            background: rgba(49, 130, 206, 0.2);
+            border: 2px solid #3182ce;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2em; }
+            .tabs { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Raoult's Law & Vapour Pressure</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('binary')">Binary Solutions</button>
+            <button class="tab" onclick="showTab('solid')">Solid Solutions</button>
+            <button class="tab" onclick="showTab('calculator')">Calculator</button>
+            <button class="tab" onclick="showTab('quiz')">Quiz</button>
+            <button class="tab" onclick="showTab('theory')">Theory</button>
+        </div>
+
+        <div id="binary" class="tab-content active">
+            <div class="grid">
+                <div class="panel">
+                    <h2>Binary Solution</h2>
+                    <div class="simulation-container">
+                        <div class="vapor-phase" id="binaryVapor"></div>
+                        <div class="liquid-phase" id="binaryLiquid"></div>
+                    </div>
+                    <div class="value-display" id="totalPressure">P_total = 0 mmHg</div>
+                    <div class="value-display" id="p1">P₁ = 0 mmHg</div>
+                    <div class="value-display" id="p2">P₂ = 0 mmHg</div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Controls</h2>
+                    
+                    <div class="control-group">
+                        <label>Component 1:</label>
+                        <select id="comp1">
+                            <option value="200">CHCl₃ (P° = 200 mmHg)</option>
+                            <option value="100">Benzene (P° = 100 mmHg)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Component 2:</label>
+                        <select id="comp2">
+                            <option value="415">CH₂Cl₂ (P° = 415 mmHg)</option>
+                            <option value="230">Acetone (P° = 230 mmHg)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Mole Fraction x₂: <span id="x2Display">0.5</span></label>
+                        <input type="range" id="moleFraction" min="0" max="1" step="0.01" value="0.5">
+                        <div class="value-display">x₁ = <span id="x1Display">0.5</span></div>
+                    </div>
+                    
+                    <button onclick="updateBinary()">Update</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="solid" class="tab-content">
+            <div class="grid">
+                <div class="panel">
+                    <h2>Solid in Liquid</h2>
+                    <div class="simulation-container">
+                        <div class="vapor-phase" id="solidVapor"></div>
+                        <div class="liquid-phase" id="solidLiquid"></div>
+                    </div>
+                    <div class="value-display" id="solutionPressure">P_solution = 0 mmHg</div>
+                    <div class="value-display" id="pressureDecrease">ΔP = 0 mmHg</div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Controls</h2>
+                    
+                    <div class="control-group">
+                        <label>Solvent:</label>
+                        <select id="solvent">
+                            <option value="24">Water (P° = 24 mmHg)</option>
+                            <option value="100">Benzene (P° = 100 mmHg)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Solute Mole Fraction: <span id="xSoluteDisplay">0.1</span></label>
+                        <input type="range" id="soluteFraction" min="0" max="0.5" step="0.01" value="0.1">
+                        <div class="value-display">x_solvent = <span id="xSolventDisplay">0.9</span></div>
+                    </div>
+                    
+                    <button onclick="updateSolid()">Update</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="calculator" class="tab-content">
+            <div class="panel">
+                <h2>Raoult's Law Calculator</h2>
+                
+                <div class="formula-box">
+                    <strong>Raoult's Law:</strong><br>
+                    P₁ = x₁ × P₁°<br>
+                    P₂ = x₂ × P₂°<br>
+                    P_total = P₁ + P₂
+                </div>
+                
+                <div class="grid">
+                    <div>
+                        <h3>Input</h3>
+                        <div class="control-group">
+                            <label>Mass Component 1 (g):</label>
+                            <input type="number" id="mass1" value="25.5">
+                        </div>
+                        <div class="control-group">
+                            <label>Molar Mass 1 (g/mol):</label>
+                            <input type="number" id="molar1" value="119.5">
+                        </div>
+                        <div class="control-group">
+                            <label>P₁° (mmHg):</label>
+                            <input type="number" id="pure1" value="200">
+                        </div>
+                        <div class="control-group">
+                            <label>Mass Component 2 (g):</label>
+                            <input type="number" id="mass2" value="40">
+                        </div>
+                        <div class="control-group">
+                            <label>Molar Mass 2 (g/mol):</label>
+                            <input type="number" id="molar2" value="85">
+                        </div>
+                        <div class="control-group">
+                            <label>P₂° (mmHg):</label>
+                            <input type="number" id="pure2" value="415">
+                        </div>
+                        <button onclick="calculate()">Calculate</button>
+                    </div>
+                    
+                    <div>
+                        <h3>Results</h3>
+                        <div class="result-display">Moles 1: <span id="mol1Result">0</span></div>
+                        <div class="result-display">Moles 2: <span id="mol2Result">0</span></div>
+                        <div class="result-display">x₁: <span id="x1Result">0</span></div>
+                        <div class="result-display">x₂: <span id="x2Result">0</span></div>
+                        <div class="result-display">P₁: <span id="p1Result">0</span> mmHg</div>
+                        <div class="result-display">P₂: <span id="p2Result">0</span> mmHg</div>
+                        <div class="result-display">P_total: <span id="ptotalResult">0</span> mmHg</div>
+                        <div class="result-display">y₁: <span id="y1Result">0</span></div>
+                        <div class="result-display">y₂: <span id="y2Result">0</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz" class="tab-content">
+            <div class="panel">
+                <h2>Quiz</h2>
+                <div id="question">Loading...</div>
+                <div id="options"></div>
+                <button onclick="checkAnswer()" id="checkBtn">Check Answer</button>
+                <button onclick="nextQuestion()" id="nextBtn" style="display:none;">Next</button>
+                <div id="feedback"></div>
+            </div>
+        </div>
+
+        <div id="theory" class="tab-content">
+            <h2>📚 Raoult's Law Theory & Principles</h2>
+            
+            <div class="theory-grid">
+                <div class="info-card">
+                    <h3>Raoult's Law</h3>
+                    <p>For volatile liquids, partial vapor pressure is proportional to mole fraction in solution:</p>
+                    <div class="formula-box">
+                        <strong>P₁ = x₁ × P₁°</strong><br>
+                        <strong>P₂ = x₂ × P₂°</strong><br>
+                        Where P° = vapor pressure of pure component
+                    </div>
+                    <p>This fundamental relationship shows that each component contributes to total vapor pressure based on its abundance in solution.</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Binary Solutions</h3>
+                    <p>Solutions with two volatile components follow specific patterns:</p>
+                    <ul>
+                        <li><strong>Total pressure:</strong> P_total = P₁ + P₂ (Dalton's Law)</li>
+                        <li><strong>Linear relationship:</strong> Pressure varies linearly with mole fraction</li>
+                        <li><strong>Vapor enrichment:</strong> More volatile component enriched in vapor phase</li>
+                        <li><strong>Composition range:</strong> P varies between pure component pressures</li>
+                    </ul>
+                    <div class="formula-box">
+                        <strong>y₁ = P₁ / P_total</strong><br>
+                        Where y₁ = mole fraction in vapor phase
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Non-volatile Solutes</h3>
+                    <p>When non-volatile solids dissolve in liquids, vapor pressure decreases:</p>
+                    <ul>
+                        <li><strong>Surface area effect:</strong> Solute particles occupy surface space</li>
+                        <li><strong>Reduced evaporation:</strong> Fewer solvent molecules can escape</li>
+                        <li><strong>Colligative property:</strong> Depends on particle number, not nature</li>
+                        <li><strong>Only solvent evaporates:</strong> P_solution = x_solvent × P_solvent°</li>
+                    </ul>
+                    <p><strong>Examples:</strong> Salt in water, sugar in water, urea solutions</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Henry's Law Connection</h3>
+                    <p>Raoult's Law is a special case of Henry's Law:</p>
+                    <div class="formula-box">
+                        <strong>Henry's Law:</strong> P = K_H × x<br>
+                        <strong>When K_H = P°:</strong> P = P° × x (Raoult's Law)
+                    </div>
+                    <ul>
+                        <li><strong>General case:</strong> Henry's Law applies to all gas-liquid equilibria</li>
+                        <li><strong>Special case:</strong> When Henry's constant equals pure vapor pressure</li>
+                        <li><strong>Ideal behavior:</strong> Components behave like pure substances</li>
+                        <li><strong>Real solutions:</strong> May deviate from Raoult's Law</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Real-World Applications</h3>
+                    <p>Raoult's Law principles are essential in many processes:</p>
+                    <ul>
+                        <li><strong>Distillation:</strong> Separation based on different volatilities</li>
+                        <li><strong>Fractional distillation:</strong> Petroleum refining, alcohol purification</li>
+                        <li><strong>Chemical industry:</strong> Solvent recovery and purification</li>
+                        <li><strong>Environmental science:</strong> Air pollution and evaporation studies</li>
+                        <li><strong>Food industry:</strong> Concentration of solutions, flavor extraction</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Mathematical Relationships</h3>
+                    <p>Key equations and their significance:</p>
+                    <div class="formula-box">
+                        <strong>Total Pressure:</strong><br>
+                        P_total = P₁° + (P₂° - P₁°) × x₂<br><br>
+                        <strong>Vapor Composition:</strong><br>
+                        y₁ = (x₁ × P₁°) / P_total<br><br>
+                        <strong>Pressure Lowering:</strong><br>
+                        ΔP = x_solute × P_solvent°
+                    </div>
+                    <p>These equations allow quantitative prediction of solution behavior and vapor phase composition.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedAnswer = -1;
+        let currentQ = 0;
+        let score = 0;
+
+        const questions = [
+            {
+                q: "Raoult's Law states partial pressure is proportional to:",
+                options: ["Mass fraction", "Mole fraction", "Volume fraction", "Pressure"],
+                correct: 1,
+                exp: "P₁ = x₁ × P₁° shows proportionality to mole fraction"
+            },
+            {
+                q: "Adding non-volatile solute to solvent:",
+                options: ["Increases vapor pressure", "Decreases vapor pressure", "No change", "Makes it zero"],
+                correct: 1,
+                exp: "Non-volatile solute reduces surface area for evaporation"
+            },
+            {
+                q: "In binary solution, total pressure equals:",
+                options: ["Average of pure pressures", "Sum of partial pressures", "Higher pure pressure", "Lower pure pressure"],
+                correct: 1,
+                exp: "Dalton's law: P_total = P₁ + P₂"
+            },
+            {
+                q: "More volatile component in vapor phase is:",
+                options: ["Depleted", "Enriched", "Same as liquid", "Absent"],
+                correct: 1,
+                exp: "Higher vapor pressure means more molecules in vapor phase"
+            },
+            {
+                q: "Raoult's Law is special case of Henry's Law when:",
+                options: ["Temperature is constant", "K_H = P°", "Pressure is low", "Solution is dilute"],
+                correct: 1,
+                exp: "When Henry's constant equals pure component vapor pressure"
+            }
+        ];
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function updateBinary() {
+            const p1Pure = parseFloat(document.getElementById('comp1').value);
+            const p2Pure = parseFloat(document.getElementById('comp2').value);
+            const x2 = parseFloat(document.getElementById('moleFraction').value);
+            const x1 = 1 - x2;
+            
+            document.getElementById('x2Display').textContent = x2.toFixed(2);
+            document.getElementById('x1Display').textContent = x1.toFixed(2);
+            
+            const p1 = x1 * p1Pure;
+            const p2 = x2 * p2Pure;
+            const pTotal = p1 + p2;
+            
+            document.getElementById('totalPressure').textContent = `P_total = ${pTotal.toFixed(1)} mmHg`;
+            document.getElementById('p1').textContent = `P₁ = ${p1.toFixed(1)} mmHg`;
+            document.getElementById('p2').textContent = `P₂ = ${p2.toFixed(1)} mmHg`;
+            
+            // Update visual simulation - liquid phase color based on composition
+            const liquidPhase = document.getElementById('binaryLiquid');
+            const vaporPhase = document.getElementById('binaryVapor');
+            
+            // Color mixing: blue for comp1, orange for comp2
+            const blueIntensity = x1;
+            const orangeIntensity = x2;
+            const liquidColor = `rgba(${49 + orangeIntensity * 150}, ${130 + orangeIntensity * 70}, ${206 - orangeIntensity * 100}, 0.6)`;
+            liquidPhase.style.background = liquidColor;
+            
+            // Vapor phase density based on total pressure
+            const vaporDensity = Math.min(pTotal / 500, 0.8); // Scale factor
+            const vaporColor = `rgba(102, 126, 234, ${0.2 + vaporDensity * 0.3})`;
+            vaporPhase.style.background = vaporColor;
+            
+            // Add bubbles animation for higher pressures
+            if (pTotal > 300) {
+                liquidPhase.style.animation = 'bubble 1s ease-in-out infinite';
+            } else {
+                liquidPhase.style.animation = 'none';
+            }
+        }
+
+        function updateSolid() {
+            const pPure = parseFloat(document.getElementById('solvent').value);
+            const xSolute = parseFloat(document.getElementById('soluteFraction').value);
+            const xSolvent = 1 - xSolute;
+            
+            document.getElementById('xSoluteDisplay').textContent = xSolute.toFixed(2);
+            document.getElementById('xSolventDisplay').textContent = xSolvent.toFixed(2);
+            
+            const pSolution = xSolvent * pPure;
+            const decrease = pPure - pSolution;
+            
+            document.getElementById('solutionPressure').textContent = `P_solution = ${pSolution.toFixed(1)} mmHg`;
+            document.getElementById('pressureDecrease').textContent = `ΔP = ${decrease.toFixed(1)} mmHg`;
+            
+            // Update visual simulation
+            const liquidPhase = document.getElementById('solidLiquid');
+            const vaporPhase = document.getElementById('solidVapor');
+            
+            // Liquid color becomes darker with more solute (like adding salt/sugar)
+            const liquidColor = `rgba(${49 + xSolute * 100}, ${130 - xSolute * 50}, ${206 - xSolute * 100}, ${0.6 + xSolute * 0.2})`;
+            liquidPhase.style.background = liquidColor;
+            
+            // Vapor phase becomes less dense with lower pressure
+            const vaporDensity = pSolution / pPure;
+            const vaporColor = `rgba(102, 126, 234, ${0.2 * vaporDensity})`;
+            vaporPhase.style.background = vaporColor;
+            vaporPhase.style.height = `${40 * vaporDensity}%`;
+        }
+
+        function calculate() {
+            const mass1 = parseFloat(document.getElementById('mass1').value);
+            const molar1 = parseFloat(document.getElementById('molar1').value);
+            const pure1 = parseFloat(document.getElementById('pure1').value);
+            const mass2 = parseFloat(document.getElementById('mass2').value);
+            const molar2 = parseFloat(document.getElementById('molar2').value);
+            const pure2 = parseFloat(document.getElementById('pure2').value);
+            
+            const mol1 = mass1 / molar1;
+            const mol2 = mass2 / molar2;
+            const totalMol = mol1 + mol2;
+            
+            const x1 = mol1 / totalMol;
+            const x2 = mol2 / totalMol;
+            
+            const p1 = x1 * pure1;
+            const p2 = x2 * pure2;
+            const ptotal = p1 + p2;
+            
+            const y1 = p1 / ptotal;
+            const y2 = p2 / ptotal;
+            
+            document.getElementById('mol1Result').textContent = mol1.toFixed(3);
+            document.getElementById('mol2Result').textContent = mol2.toFixed(3);
+            document.getElementById('x1Result').textContent = x1.toFixed(3);
+            document.getElementById('x2Result').textContent = x2.toFixed(3);
+            document.getElementById('p1Result').textContent = p1.toFixed(1);
+            document.getElementById('p2Result').textContent = p2.toFixed(1);
+            document.getElementById('ptotalResult').textContent = ptotal.toFixed(1);
+            document.getElementById('y1Result').textContent = y1.toFixed(3);
+            document.getElementById('y2Result').textContent = y2.toFixed(3);
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQ];
+            document.getElementById('question').textContent = 
+                `Question ${currentQ + 1}/${questions.length}: ${q.q}`;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((option, i) => {
+                const div = document.createElement('div');
+                div.className = 'quiz-option';
+                div.textContent = option;
+                div.onclick = () => selectOption(i);
+                optionsDiv.appendChild(div);
+            });
+            
+            selectedAnswer = -1;
+            document.getElementById('checkBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('feedback').innerHTML = '';
+        }
+
+        function selectOption(index) {
+            selectedAnswer = index;
+            document.querySelectorAll('.quiz-option').forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === index) opt.classList.add('selected');
+            });
+        }
+
+        function checkAnswer() {
+            if (selectedAnswer === -1) return;
+            
+            const q = questions[currentQ];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            if (selectedAnswer === q.correct) score++;
+            
+            options.forEach((opt, i) => {
+                if (i === q.correct) opt.classList.add('correct');
+                else if (i === selectedAnswer) opt.classList.add('incorrect');
+            });
+            
+            document.getElementById('feedback').innerHTML = 
+                `<p style="color: ${selectedAnswer === q.correct ? '#48bb78' : '#f56565'}">
+                ${selectedAnswer === q.correct ? 'Correct!' : 'Incorrect.'}</p>
+                <p>${q.exp}</p>`;
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            if (currentQ < questions.length - 1) {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                setTimeout(() => {
+                    alert(`Quiz Complete! Score: ${score}/${questions.length}`);
+                }, 1000);
+            }
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ < questions.length) loadQuestion();
+        }
+
+        // Event listeners
+        document.getElementById('moleFraction').addEventListener('input', updateBinary);
+        document.getElementById('soluteFraction').addEventListener('input', updateSolid);
+
+        // Initialize
+        updateBinary();
+        updateSolid();
+        calculate();
+        loadQuestion();
+    </script>
+</body>
+</html>

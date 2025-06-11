@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empty, Finite/Infinite, and Equal Sets - Interactive Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #ff6b6b;
+            border-bottom: 3px solid #ff6b6b;
+        }
+        
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .content {
+            padding: 30px;
+            min-height: 600px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .concept-box {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .concept-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .interactive-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #e9ecef;
+        }
+        
+        .set-display {
+            background: white;
+            border: 3px solid #ff6b6b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .empty-set {
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 2em;
+        }
+        
+        .finite-set {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .infinite-set {
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .equal-sets {
+            color: #6f42c1;
+            font-weight: bold;
+        }
+        
+        .input-section {
+            margin: 20px 0;
+        }
+        
+        .input-section input, .input-section select, .input-section textarea {
+            padding: 12px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1em;
+            margin: 5px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-section input:focus, .input-section select:focus, .input-section textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255,107,107,0.5);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d1edff;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .example-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .example-card h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .visual-indicator {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+            font-size: 2em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .empty-indicator {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: 3px dashed #fff;
+        }
+        
+        .finite-indicator {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .infinite-indicator {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .set-analyzer {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #2196f3;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .equality-checker {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border: 2px solid #9c27b0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .quiz-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 20%);
+            border: 2px solid #ff9800;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .quiz-question {
+            background: white;
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .quiz-option {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .quiz-option:hover {
+            border-color: #ff9800;
+            background: #fff3e0;
+        }
+        
+        .quiz-option.selected {
+            background: #ff9800;
+            color: white;
+            border-color: #f57c00;
+        }
+        
+        .score-display {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tab {
+                font-size: 0.8em;
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Empty, Finite/Infinite, and Equal Sets</h1>
+            <p>Advanced Set Theory Concepts - Interactive Learning Tool</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('empty')">Empty Sets (φ)</button>
+            <button class="nav-tab" onclick="showTab('finite')">Finite vs Infinite</button>
+            <button class="nav-tab" onclick="showTab('equal')">Equal Sets</button>
+            <button class="nav-tab" onclick="showTab('analyzer')">Set Analyzer</button>
+            <button class="nav-tab" onclick="showTab('quiz')">Practice Quiz</button>
+        </div>
+        
+        <div class="content">
+            <!-- Empty Sets Tab -->
+            <div id="empty" class="tab-content active">
+                <div class="concept-box">
+                    <h3>The Empty Set (φ or { })</h3>
+                    <p>A set which does not contain any element is called the empty set, null set, or void set.</p>
+                    <p><strong>Symbol:</strong> φ or { }</p>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>Example 1: No Natural Numbers</h4>
+                        <div class="visual-indicator empty-indicator">φ</div>
+                        <p><strong>Set:</strong> {x : 1 < x < 2, x ∈ ℕ}</p>
+                        <p><strong>Why Empty:</strong> No natural number exists between 1 and 2</p>
+                        <div class="set-display">
+                            <span class="empty-set">φ = { }</span>
+                        </div>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 2: Irrational Solution</h4>
+                        <div class="visual-indicator empty-indicator">φ</div>
+                        <p><strong>Set:</strong> {x : x² - 2 = 0, x ∈ ℚ}</p>
+                        <p><strong>Why Empty:</strong> √2 is irrational, not rational</p>
+                        <div class="set-display">
+                            <span class="empty-set">φ = { }</span>
+                        </div>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 3: Even Prime > 2</h4>
+                        <div class="visual-indicator empty-indicator">φ</div>
+                        <p><strong>Set:</strong> {x : x is even prime > 2}</p>
+                        <p><strong>Why Empty:</strong> 2 is the only even prime number</p>
+                        <div class="set-display">
+                            <span class="empty-set">φ = { }</span>
+                        </div>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 4: Impossible Condition</h4>
+                        <div class="visual-indicator empty-indicator">φ</div>
+                        <p><strong>Set:</strong> {x : x² = 4, x is odd}</p>
+                        <p><strong>Why Empty:</strong> Solutions are ±2 (both even)</p>
+                        <div class="set-display">
+                            <span class="empty-set">φ = { }</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Empty Set Detector</h4>
+                    <p>Enter a set description and check if it's empty</p>
+                    <div class="input-section">
+                        <textarea id="emptySetInput" placeholder="Enter set description (e.g., {x : x > 5 and x < 3})" rows="3" style="width: 80%;"></textarea>
+                        <br>
+                        <button class="btn" onclick="checkEmptySet()">Check if Empty</button>
+                    </div>
+                    <div id="emptySetResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Create Your Own Empty Set</h4>
+                    <p>Try to create conditions that result in empty sets</p>
+                    <div class="input-section">
+                        <select id="emptySetType">
+                            <option value="range">Number range (a < x < b)</option>
+                            <option value="equation">Equation with restrictions</option>
+                            <option value="prime">Prime number conditions</option>
+                            <option value="custom">Custom condition</option>
+                        </select>
+                        <button class="btn" onclick="generateEmptySet()">Generate Example</button>
+                    </div>
+                    <div id="generatedEmptySet"></div>
+                </div>
+            </div>
+            
+            <!-- Finite vs Infinite Tab -->
+            <div id="finite" class="tab-content">
+                <div class="concept-box">
+                    <h3>Finite and Infinite Sets</h3>
+                    <p><strong>Finite Set:</strong> A set with a definite number of elements (or empty)</p>
+                    <p><strong>Infinite Set:</strong> A set with unlimited number of elements</p>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>Finite Set Examples</h4>
+                        <div class="visual-indicator finite-indicator">5</div>
+                        <p><strong>Days of week:</strong> {Mon, Tue, Wed, Thu, Fri, Sat, Sun}</p>
+                        <p><strong>n(Set) = 7</strong> (finite)</p>
+                        <br>
+                        <p><strong>Solutions of x² = 16:</strong> {-4, 4}</p>
+                        <p><strong>n(Set) = 2</strong> (finite)</p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Infinite Set Examples</h4>
+                        <div class="visual-indicator infinite-indicator">∞</div>
+                        <p><strong>Natural numbers:</strong> {1, 2, 3, ...}</p>
+                        <p><strong>n(Set) = ∞</strong> (infinite)</p>
+                        <br>
+                        <p><strong>Points on a line:</strong> Uncountably infinite</p>
+                        <p><strong>n(Set) = ∞</strong> (infinite)</p>
+                    </div>
+                </div>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>Set Description</th>
+                        <th>Type</th>
+                        <th>n(Set)</th>
+                        <th>Reason</th>
+                    </tr>
+                    <tr>
+                        <td>{x : x ∈ ℕ and (x-1)(x-2) = 0}</td>
+                        <td class="finite-set">Finite</td>
+                        <td>2</td>
+                        <td>Solutions: {1, 2}</td>
+                    </tr>
+                    <tr>
+                        <td>{x : x ∈ ℕ and x² = 4}</td>
+                        <td class="finite-set">Finite</td>
+                        <td>1</td>
+                        <td>Only 2 ∈ ℕ satisfies x² = 4</td>
+                    </tr>
+                    <tr>
+                        <td>{x : x ∈ ℕ and 2x-1 = 0}</td>
+                        <td class="empty-set">Empty (Finite)</td>
+                        <td>0</td>
+                        <td>x = 1/2 ∉ ℕ</td>
+                    </tr>
+                    <tr>
+                        <td>{x : x ∈ ℕ and x is prime}</td>
+                        <td class="infinite-set">Infinite</td>
+                        <td>∞</td>
+                        <td>Infinitely many primes</td>
+                    </tr>
+                    <tr>
+                        <td>{x : x ∈ ℕ and x is odd}</td>
+                        <td class="infinite-set">Infinite</td>
+                        <td>∞</td>
+                        <td>Infinitely many odd numbers</td>
+                    </tr>
+                </table>
+                
+                <div class="set-analyzer">
+                    <h4>Finite/Infinite Set Classifier</h4>
+                    <div class="input-section">
+                        <input type="text" id="setDescription" placeholder="Enter set description (e.g., {x : x < 10, x ∈ ℕ})" style="width: 70%;">
+                        <button class="btn btn-primary" onclick="classifySet()">Classify Set</button>
+                    </div>
+                    <div id="classificationResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Interactive Set Builder</h4>
+                    <div class="input-section">
+                        <select id="setTypeBuilder">
+                            <option value="natural">Natural numbers with condition</option>
+                            <option value="integers">Integers with condition</option>
+                            <option value="equation">Solutions of equation</option>
+                            <option value="geometric">Geometric objects</option>
+                        </select>
+                        <input type="text" id="condition" placeholder="Enter condition">
+                        <button class="btn" onclick="buildAndClassify()">Build & Classify</button>
+                    </div>
+                    <div id="buildResult"></div>
+                </div>
+            </div>
+            
+            <!-- Equal Sets Tab -->
+            <div id="equal" class="tab-content">
+                <div class="concept-box">
+                    <h3>Equal Sets</h3>
+                    <p><strong>Definition:</strong> Two sets A and B are equal if they have exactly the same elements</p>
+                    <p><strong>Notation:</strong> A = B (equal) or A ≠ B (not equal)</p>
+                    <p><strong>Key Point:</strong> Order and repetition don't matter!</p>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>Equal Sets Example 1</h4>
+                        <p><strong>Set A:</strong> {1, 2, 3, 4}</p>
+                        <p><strong>Set B:</strong> {3, 1, 4, 2}</p>
+                        <div class="set-display">
+                            <span class="equal-sets">A = B ✓</span>
+                        </div>
+                        <p><em>Same elements, different order</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Equal Sets Example 2</h4>
+                        <p><strong>Set A:</strong> {1, 2, 3}</p>
+                        <p><strong>Set B:</strong> {2, 2, 1, 3, 3}</p>
+                        <div class="set-display">
+                            <span class="equal-sets">A = B ✓</span>
+                        </div>
+                        <p><em>Repetition doesn't change a set</em></p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Not Equal Sets</h4>
+                        <p><strong>Set A:</strong> {1, 2, 3}</p>
+                        <p><strong>Set B:</strong> {1, 2, 4}</p>
+                        <div class="set-display">
+                            <span class="error">A ≠ B ✗</span>
+                        </div>
+                        <p><em>Different elements: 3 vs 4</em></p>
+                    </div>
+                </div>
+                
+                <div class="equality-checker">
+                    <h4>Set Equality Checker</h4>
+                    <div class="input-section">
+                        <input type="text" id="setA" placeholder="Enter Set A elements (comma separated)" style="width: 45%;">
+                        <input type="text" id="setB" placeholder="Enter Set B elements (comma separated)" style="width: 45%;">
+                        <br>
+                        <button class="btn btn-primary" onclick="checkEquality()">Check if A = B</button>
+                    </div>
+                    <div id="equalityResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Solve Example Problems</h4>
+                    <div class="example-card">
+                        <h4>Problem: Find Equal Sets</h4>
+                        <p>A = {0}, B = {x : x > 15 and x < 5}, C = {x : x - 5 = 0}, D = {x : x² = 25}, E = {x : x is positive root of x² - 2x - 15 = 0}</p>
+                        <button class="btn" onclick="solveEqualityProblem()">Solve Step by Step</button>
+                        <div id="equalityProblemResult"></div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Letter Set Equality</h4>
+                    <p>Check equality of sets formed by letters in words</p>
+                    <div class="input-section">
+                        <input type="text" id="word1" placeholder="Enter first word (e.g., ALLOY)">
+                        <input type="text" id="word2" placeholder="Enter second word (e.g., LOYAL)">
+                        <button class="btn" onclick="checkWordEquality()">Check Word Sets</button>
+                    </div>
+                    <div id="wordEqualityResult"></div>
+                </div>
+            </div>
+            
+            <!-- Set Analyzer Tab -->
+            <div id="analyzer" class="tab-content">
+                <div class="concept-box">
+                    <h3>Complete Set Analyzer</h3>
+                    <p>Analyze any set for all properties: Empty, Finite/Infinite, and compare with other sets</p>
+                </div>
+                
+                <div class="set-analyzer">
+                    <h4>Universal Set Analyzer</h4>
+                    <div class="input-section">
+                        <textarea id="analyzeSetInput" placeholder="Enter set description or elements..." rows="3" style="width: 80%;"></textarea>
+                        <br>
+                        <button class="btn btn-primary" onclick="analyzeSet()">Complete Analysis</button>
+                    </div>
+                    <div id="analysisResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Multiple Set Comparison</h4>
+                    <div class="input-section">
+                        <input type="text" id="multiSet1" placeholder="Set 1" style="width: 30%;">
+                        <input type="text" id="multiSet2" placeholder="Set 2" style="width: 30%;">
+                        <input type="text" id="multiSet3" placeholder="Set 3 (optional)" style="width: 30%;">
+                        <br>
+                        <button class="btn" onclick="compareMultipleSets()">Compare All Sets</button>
+                    </div>
+                    <div id="multiComparisonResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Set Property Calculator</h4>
+                    <div class="input-section">
+                        <select id="propertyType">
+                            <option value="cardinality">Find n(Set) - Number of elements</option>
+                            <option value="subset">Check if A ⊆ B</option>
+                            <option value="powerset">Find power set elements</option>
+                            <option value="complement">Find complement (if universal set given)</option>
+                        </select>
+                        <input type="text" id="propertyInput" placeholder="Enter set(s)">
+                        <button class="btn" onclick="calculateProperty()">Calculate</button>
+                    </div>
+                    <div id="propertyResult"></div>
+                </div>
+            </div>
+            
+            <!-- Quiz Tab -->
+            <div id="quiz" class="tab-content">
+                <div class="concept-box">
+                    <h3>Practice Quiz</h3>
+                    <p>Test your understanding of empty sets, finite/infinite sets, and equal sets</p>
+                </div>
+                
+                <div class="score-display">
+                    Score: <span id="quizScore">0</span> / <span id="totalQuizQuestions">0</span>
+                </div>
+                
+                <div class="quiz-section">
+                    <div class="quiz-question">
+                        <h4 id="quizQuestionText">Click "New Question" to start!</h4>
+                        <div class="quiz-options" id="quizOptions"></div>
+                        <div class="input-section">
+                            <button class="btn" onclick="generateQuizQuestion()">New Question</button>
+                            <button class="btn btn-secondary" onclick="submitQuizAnswer()" id="quizSubmitBtn" style="display: none;">Submit Answer</button>
+                        </div>
+                        <div id="quizResult"></div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Quick Practice Problems</h4>
+                    
+                    <div class="example-card">
+                        <h4>Problem 1: Identify Set Type</h4>
+                        <p id="practiceP1"></p>
+                        <div class="input-section">
+                            <button class="btn" onclick="generatePractice1()">New Problem</button>
+                            <select id="practiceA1">
+                                <option value="">Select type</option>
+                                <option value="empty">Empty Set (φ)</option>
+                                <option value="finite">Finite Set</option>
+                                <option value="infinite">Infinite Set</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="checkPractice1()">Check Answer</button>
+                        </div>
+                        <div id="practiceR1"></div>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Problem 2: Set Equality</h4>
+                        <p id="practiceP2"></p>
+                        <div class="input-section">
+                            <button class="btn" onclick="generatePractice2()">New Problem</button>
+                            <select id="practiceA2">
+                                <option value="">Select answer</option>
+                                <option value="equal">Equal (A = B)</option>
+                                <option value="not-equal">Not Equal (A ≠ B)</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="checkPractice2()">Check Answer</button>
+                        </div>
+                        <div id="practiceR2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let quizScore = 0;
+        let totalQuizQuestions = 0;
+        let currentQuizAnswer = '';
+        let selectedQuizOption = '';
+        let practiceData = {};
+
+        // Tab functionality
+        function showTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Empty Set Functions
+        function checkEmptySet() {
+            const input = document.getElementById('emptySetInput').value.toLowerCase();
+            const result = document.getElementById('emptySetResult');
+            
+            if (!input) {
+                result.innerHTML = '<div class="result error">Please enter a set description.</div>';
+                return;
+            }
+            
+            let isEmpty = false;
+            let reason = '';
+            
+            // Check for contradictory ranges
+            if (input.includes('x >') && input.includes('x <')) {
+                const numbers = input.match(/\d+/g);
+                if (numbers && numbers.length >= 2) {
+                    const num1 = parseInt(numbers[0]);
+                    const num2 = parseInt(numbers[1]);
+                    if (num1 >= num2) {
+                        isEmpty = true;
+                        reason = `No number can be both greater than ${num1} and less than ${num2}`;
+                    }
+                }
+            }
+            
+            // Check common empty set patterns
+            if (input.includes('even') && input.includes('prime') && input.includes('> 2')) {
+                isEmpty = true;
+                reason = 'The only even prime is 2, no even primes greater than 2';
+            }
+            
+            if (input.includes('natural') && input.includes('1') && input.includes('2') && input.includes('<') && input.includes('>')) {
+                isEmpty = true;
+                reason = 'No natural numbers between 1 and 2';
+            }
+            
+            if (input.includes('rational') && input.includes('x²') && input.includes('2')) {
+                isEmpty = true;
+                reason = '√2 is irrational, not rational';
+            }
+            
+            if (input.includes('x²') && input.includes('4') && input.includes('odd')) {
+                isEmpty = true;
+                reason = 'Solutions of x² = 4 are ±2, both even';
+            }
+            
+            const resultClass = isEmpty ? 'error' : 'success';
+            const resultText = isEmpty ? 'Empty Set (φ)' : 'Not Empty';
+            const explanation = isEmpty ? reason : 'This set contains at least one element';
+            
+            result.innerHTML = `
+                <div class="result ${resultClass}">
+                    <div class="set-display">
+                        <div class="${isEmpty ? 'empty-set' : 'finite-set'}">
+                            ${resultText}
+                        </div>
+                        <p style="margin-top: 10px; font-size: 0.9em;">${explanation}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateEmptySet() {
+            const type = document.getElementById('emptySetType').value;
+            const result = document.getElementById('generatedEmptySet');
+            
+            const examples = {
+                range: [
+                    '{x : 5 < x < 3, x ∈ ℝ}',
+                    '{x : x > 10 and x < 5, x ∈ ℕ}',
+                    '{x : -2 < x < -5, x ∈ ℤ}'
+                ],
+                equation: [
+                    '{x : x² + 1 = 0, x ∈ ℝ}',
+                    '{x : x² - 3 = 0, x ∈ ℚ}',
+                    '{x : 2x + 1 = 0, x ∈ ℕ}'
+                ],
+                prime: [
+                    '{x : x is even prime > 2}',
+                    '{x : x is prime and x² = 9}',
+                    '{x : x is prime divisor of 1}'
+                ],
+                custom: [
+                    '{x : x is a month with 32 days}',
+                    '{x : x² = -4, x ∈ ℝ}',
+                    '{x : x is integer and 0 < x < 1}'
+                ]
+            };
+            
+            const randomExample = examples[type][Math.floor(Math.random() * examples[type].length)];
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <div class="empty-set">φ = { }</div>
+                    <p><strong>Example:</strong> ${randomExample}</p>
+                    <p><em>Try to explain why this set is empty!</em></p>
+                </div>
+            `;
+        }
+
+        // Finite/Infinite Set Functions
+        function classifySet() {
+            const input = document.getElementById('setDescription').value;
+            const result = document.getElementById('classificationResult');
+            
+            if (!input) {
+                result.innerHTML = '<div class="result error">Please enter a set description.</div>';
+                return;
+            }
+            
+            let classification = '';
+            let cardinality = '';
+            let reasoning = '';
+            let type = '';
+            
+            if (input.toLowerCase().includes('φ') || input.toLowerCase().includes('empty')) {
+                classification = 'Empty Set';
+                cardinality = '0';
+                reasoning = 'Empty set is considered finite';
+                type = 'finite';
+            } else if (input.includes('{') && input.includes('}') && !input.includes('...')) {
+                const elements = input.match(/[^{},\s]+/g);
+                if (elements) {
+                    classification = 'Finite Set';
+                    cardinality = elements.length.toString();
+                    reasoning = `Contains exactly ${elements.length} distinct elements`;
+                    type = 'finite';
+                }
+            } else if (input.includes('...') || input.toLowerCase().includes('all') || 
+                     input.toLowerCase().includes('infinite') || 
+                     input.toLowerCase().includes('natural numbers') ||
+                     input.toLowerCase().includes('prime') ||
+                     input.toLowerCase().includes('odd') ||
+                     input.toLowerCase().includes('even')) {
+                classification = 'Infinite Set';
+                cardinality = '∞';
+                reasoning = 'Contains unlimited number of elements';
+                type = 'infinite';
+            } else {
+                classification = 'Finite Set (likely)';
+                cardinality = 'Finite number';
+                reasoning = 'Most explicitly defined sets are finite';
+                type = 'finite';
+            }
+            
+            const iconClass = type === 'infinite' ? 'infinite-indicator' : 
+                             (cardinality === '0' ? 'empty-indicator' : 'finite-indicator');
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <div class="visual-indicator ${iconClass}">
+                        ${cardinality === '∞' ? '∞' : (cardinality === '0' ? 'φ' : cardinality)}
+                    </div>
+                    <h4 class="${type === 'infinite' ? 'infinite-set' : (cardinality === '0' ? 'empty-set' : 'finite-set')}">
+                        ${classification}
+                    </h4>
+                    <p><strong>n(Set) = ${cardinality}</strong></p>
+                    <p><em>${reasoning}</em></p>
+                </div>
+            `;
+        }
+        
+        function buildAndClassify() {
+            const type = document.getElementById('setTypeBuilder').value;
+            const condition = document.getElementById('condition').value;
+            const result = document.getElementById('buildResult');
+            
+            if (!condition) {
+                result.innerHTML = '<div class="result error">Please enter a condition.</div>';
+                return;
+            }
+            
+            let setDescription = `{x : ${condition}}`;
+            let analysis = '<div class="finite-set">Analysis depends on specific condition</div>';
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <h4>Built Set:</h4>
+                    <p><strong>${setDescription}</strong></p>
+                    <br>
+                    ${analysis}
+                </div>
+            `;
+        }
+
+        // Equal Sets Functions
+        function checkEquality() {
+            const setAInput = document.getElementById('setA').value;
+            const setBInput = document.getElementById('setB').value;
+            const result = document.getElementById('equalityResult');
+            
+            if (!setAInput || !setBInput) {
+                result.innerHTML = '<div class="result error">Please enter both sets.</div>';
+                return;
+            }
+            
+            const setA = setAInput.split(',').map(e => e.trim()).filter(e => e);
+            const setB = setBInput.split(',').map(e => e.trim()).filter(e => e);
+            
+            const uniqueA = [...new Set(setA)].sort();
+            const uniqueB = [...new Set(setB)].sort();
+            
+            const areEqual = JSON.stringify(uniqueA) === JSON.stringify(uniqueB);
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <h4>Set A: {${uniqueA.join(', ')}}</h4>
+                    <h4>Set B: {${uniqueB.join(', ')}}</h4>
+                    <br>
+                    <div class="${areEqual ? 'equal-sets' : 'error'}">
+                        ${areEqual ? 'A = B ✓' : 'A ≠ B ✗'}
+                    </div>
+                    <p><em>${areEqual ? 'Sets have exactly the same elements' : 'Sets have different elements'}</em></p>
+                </div>
+            `;
+        }
+        
+        function solveEqualityProblem() {
+            const result = document.getElementById('equalityProblemResult');
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <h4>Step-by-step Solution:</h4>
+                    <p><strong>A = {0}</strong></p>
+                    <p><strong>B = {x : x > 15 and x < 5} = φ</strong> (impossible condition)</p>
+                    <p><strong>C = {x : x - 5 = 0} = {5}</strong></p>
+                    <p><strong>D = {x : x² = 25} = {-5, 5}</strong></p>
+                    <p><strong>E = {x : x is positive root of x² - 2x - 15 = 0}</strong></p>
+                    <p>Solving: x² - 2x - 15 = (x-5)(x+3) = 0</p>
+                    <p>Roots: x = 5, x = -3. Positive root: <strong>E = {5}</strong></p>
+                    <br>
+                    <div class="equal-sets">
+                        <strong>Answer: C = E (both equal {5})</strong>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function checkWordEquality() {
+            const word1 = document.getElementById('word1').value.toUpperCase();
+            const word2 = document.getElementById('word2').value.toUpperCase();
+            const result = document.getElementById('wordEqualityResult');
+            
+            if (!word1 || !word2) {
+                result.innerHTML = '<div class="result error">Please enter both words.</div>';
+                return;
+            }
+            
+            const set1 = [...new Set(word1.split(''))].sort();
+            const set2 = [...new Set(word2.split(''))].sort();
+            
+            const areEqual = JSON.stringify(set1) === JSON.stringify(set2);
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <h4>Word 1: "${word1}" → {${set1.join(', ')}}</h4>
+                    <h4>Word 2: "${word2}" → {${set2.join(', ')}}</h4>
+                    <br>
+                    <div class="${areEqual ? 'equal-sets' : 'error'}">
+                        ${areEqual ? 'Equal Sets ✓' : 'Not Equal Sets ✗'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Set Analyzer Functions
+        function analyzeSet() {
+            const input = document.getElementById('analyzeSetInput').value;
+            const result = document.getElementById('analysisResult');
+            
+            if (!input) {
+                result.innerHTML = '<div class="result error">Please enter a set.</div>';
+                return;
+            }
+            
+            let analysis = {
+                isEmpty: false,
+                isFinite: true,
+                cardinality: 0,
+                elements: [],
+                properties: []
+            };
+            
+            if (input.toLowerCase().includes('φ') || input.trim() === '{}') {
+                analysis.isEmpty = true;
+                analysis.cardinality = 0;
+                analysis.properties.push('Empty set');
+            } else if (input.includes('{') && input.includes('}')) {
+                const match = input.match(/\{([^}]*)\}/);
+                if (match) {
+                    const elementsStr = match[1];
+                    if (elementsStr.includes('...')) {
+                        analysis.isFinite = false;
+                        analysis.cardinality = '∞';
+                        analysis.properties.push('Infinite set (contains ...)');
+                    } else {
+                        analysis.elements = elementsStr.split(',').map(e => e.trim()).filter(e => e);
+                        analysis.elements = [...new Set(analysis.elements)];
+                        analysis.cardinality = analysis.elements.length;
+                        analysis.properties.push(`Finite set with ${analysis.cardinality} elements`);
+                    }
+                }
+            }
+            
+            const typeClass = analysis.isEmpty ? 'empty-set' : 
+                             (analysis.isFinite ? 'finite-set' : 'infinite-set');
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <h4>Complete Set Analysis</h4>
+                    <div class="visual-indicator ${analysis.isEmpty ? 'empty-indicator' : 
+                         (analysis.isFinite ? 'finite-indicator' : 'infinite-indicator')}">
+                        ${analysis.isEmpty ? 'φ' : (analysis.isFinite ? analysis.cardinality : '∞')}
+                    </div>
+                    <p><strong>Type:</strong> <span class="${typeClass}">
+                        ${analysis.isEmpty ? 'Empty Set' : (analysis.isFinite ? 'Finite Set' : 'Infinite Set')}
+                    </span></p>
+                    <p><strong>Cardinality:</strong> n(Set) = ${analysis.cardinality}</p>
+                    ${analysis.elements.length > 0 ? `<p><strong>Elements:</strong> {${analysis.elements.join(', ')}}</p>` : ''}
+                    <p><strong>Properties:</strong> ${analysis.properties.join(', ')}</p>
+                </div>
+            `;
+        }
+        
+        function compareMultipleSets() {
+            const set1 = document.getElementById('multiSet1').value;
+            const set2 = document.getElementById('multiSet2').value;
+            const set3 = document.getElementById('multiSet3').value;
+            const result = document.getElementById('multiComparisonResult');
+            
+            if (!set1 || !set2) {
+                result.innerHTML = '<div class="result error">Please enter at least two sets.</div>';
+                return;
+            }
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <h4>Set Comparison</h4>
+                    <p><strong>Set A:</strong> ${set1}</p>
+                    <p><strong>Set B:</strong> ${set2}</p>
+                    ${set3 ? `<p><strong>Set C:</strong> ${set3}</p>` : ''}
+                    <p><em>Comparison analysis will be shown here</em></p>
+                </div>
+            `;
+        }
+        
+        function calculateProperty() {
+            const property = document.getElementById('propertyType').value;
+            const input = document.getElementById('propertyInput').value;
+            const result = document.getElementById('propertyResult');
+            
+            if (!input) {
+                result.innerHTML = '<div class="result error">Please enter set(s).</div>';
+                return;
+            }
+            
+            result.innerHTML = `<div class="set-display">Property calculation for: ${property}</div>`;
+        }
+
+        // Quiz Functions
+        function generateQuizQuestion() {
+            const questions = [
+                {
+                    question: "Which of the following is an empty set?",
+                    options: [
+                        "{x : x ∈ ℕ and x < 5}",
+                        "{x : x ∈ ℕ and 1 < x < 2}",
+                        "{x : x ∈ ℕ and x² = 4}",
+                        "{x : x ∈ ℕ and x is even}"
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "The set of all prime numbers is:",
+                    options: ["Empty", "Finite", "Infinite", "Cannot be determined"],
+                    correct: 2
+                },
+                {
+                    question: "If A = {1, 2, 3} and B = {3, 2, 1, 2}, then:",
+                    options: ["A = B", "A ≠ B", "A ⊂ B", "B ⊂ A"],
+                    correct: 0
+                },
+                {
+                    question: "The number of elements in the empty set is:",
+                    options: ["1", "0", "-1", "Undefined"],
+                    correct: 1
+                },
+                {
+                    question: "Which set is finite?",
+                    options: [
+                        "{x : x ∈ ℕ and x is odd}",
+                        "{x : x ∈ ℕ and x < 100}",
+                        "{x : x ∈ ℕ and x is prime}",
+                        "{x : x ∈ ℕ and x is even}"
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "The set {x : x² + 1 = 0, x ∈ ℝ} is:",
+                    options: ["Finite with 2 elements", "Finite with 1 element", "Empty", "Infinite"],
+                    correct: 2
+                }
+            ];
+            
+            const randomQ = questions[Math.floor(Math.random() * questions.length)];
+            currentQuizAnswer = randomQ.correct;
+            
+            document.getElementById('quizQuestionText').textContent = randomQ.question;
+            
+            const optionsHtml = randomQ.options.map((option, index) => 
+                `<div class="quiz-option" onclick="selectQuizOption(${index})">${option}</div>`
+            ).join('');
+            
+            document.getElementById('quizOptions').innerHTML = optionsHtml;
+            document.getElementById('quizSubmitBtn').style.display = 'inline-block';
+            document.getElementById('quizResult').innerHTML = '';
+            selectedQuizOption = '';
+        }
+        
+        function selectQuizOption(index) {
+            document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelectorAll('.quiz-option')[index].classList.add('selected');
+            selectedQuizOption = index;
+        }
+        
+        function submitQuizAnswer() {
+            if (selectedQuizOption === '') {
+                document.getElementById('quizResult').innerHTML = '<div class="result error">Please select an answer.</div>';
+                return;
+            }
+            
+            totalQuizQuestions++;
+            const isCorrect = selectedQuizOption === currentQuizAnswer;
+            
+            if (isCorrect) {
+                quizScore++;
+                document.getElementById('quizResult').innerHTML = '<div class="result success">Correct! Well done!</div>';
+            } else {
+                document.getElementById('quizResult').innerHTML = '<div class="result error">Incorrect. Try another question!</div>';
+            }
+            
+            document.getElementById('quizScore').textContent = quizScore;
+            document.getElementById('totalQuizQuestions').textContent = totalQuizQuestions;
+            document.getElementById('quizSubmitBtn').style.display = 'none';
+        }
+
+        // Practice Functions
+        function generatePractice1() {
+            const problems = [
+                { set: "{x : x ∈ ℕ and x² = 9}", answer: "finite", explanation: "Only x = 3 satisfies this in ℕ" },
+                { set: "{x : x ∈ ℕ and x is prime}", answer: "infinite", explanation: "Infinitely many prime numbers" },
+                { set: "{x : x ∈ ℕ and x > 5 and x < 6}", answer: "empty", explanation: "No natural number between 5 and 6" },
+                { set: "{x : x ∈ ℕ and x < 10}", answer: "finite", explanation: "Contains {1, 2, 3, 4, 5, 6, 7, 8, 9}" },
+                { set: "{x : x ∈ ℕ and x is odd}", answer: "infinite", explanation: "Infinitely many odd numbers" }
+            ];
+            
+            const random = problems[Math.floor(Math.random() * problems.length)];
+            practiceData.p1 = random;
+            
+            document.getElementById('practiceP1').innerHTML = `Classify this set: <strong>${random.set}</strong>`;
+            document.getElementById('practiceA1').value = '';
+            document.getElementById('practiceR1').innerHTML = '';
+        }
+        
+        function checkPractice1() {
+            const userAnswer = document.getElementById('practiceA1').value;
+            const correct = practiceData.p1;
+            const result = document.getElementById('practiceR1');
+            
+            if (!userAnswer) {
+                result.innerHTML = '<div class="result error">Please select an answer.</div>';
+                return;
+            }
+            
+            if (userAnswer === correct.answer) {
+                result.innerHTML = `<div class="result success">Correct! ${correct.explanation}</div>`;
+            } else {
+                result.innerHTML = `<div class="result error">Incorrect. This is a ${correct.answer} set. ${correct.explanation}</div>`;
+            }
+        }
+        
+        function generatePractice2() {
+            const problems = [
+                { setA: "{1, 2, 3}", setB: "{3, 1, 2}", answer: "equal", explanation: "Same elements, different order" },
+                { setA: "{a, b, c}", setB: "{c, b, a, b}", answer: "equal", explanation: "Repetition doesn't change a set" },
+                { setA: "{1, 2, 3}", setB: "{1, 2, 4}", answer: "not-equal", explanation: "Different elements: 3 vs 4" },
+                { setA: "{vowels in HELLO}", setB: "{e, o}", answer: "equal", explanation: "Both contain {e, o}" },
+                { setA: "{x : x² = 4}", setB: "{-2, 2}", answer: "equal", explanation: "Both represent solutions to x² = 4" }
+            ];
+            
+            const random = problems[Math.floor(Math.random() * problems.length)];
+            practiceData.p2 = random;
+            
+            document.getElementById('practiceP2').innerHTML = 
+                `Are these sets equal?<br><strong>A = ${random.setA}</strong><br><strong>B = ${random.setB}</strong>`;
+            document.getElementById('practiceA2').value = '';
+            document.getElementById('practiceR2').innerHTML = '';
+        }
+        
+        function checkPractice2() {
+            const userAnswer = document.getElementById('practiceA2').value;
+            const correct = practiceData.p2;
+            const result = document.getElementById('practiceR2');
+            
+            if (!userAnswer) {
+                result.innerHTML = '<div class="result error">Please select an answer.</div>';
+                return;
+            }
+            
+            if (userAnswer === correct.answer) {
+                result.innerHTML = `<div class="result success">Correct! ${correct.explanation}</div>`;
+            } else {
+                result.innerHTML = `<div class="result error">Incorrect. These sets are ${correct.answer}. ${correct.explanation}</div>`;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            generatePractice1();
+            generatePractice2();
+        });
+    </script>
+</body>
+</html>

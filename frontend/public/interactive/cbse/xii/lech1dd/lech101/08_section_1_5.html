@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Ideal and Non-Ideal Solutions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #3f51b5 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffeb3b, #ff9800, #e91e63);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            border: 2px solid transparent;
+        }
+
+        .tab:hover, .tab.active {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-color: #ffeb3b;
+        }
+
+        .content {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .simulation-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .canvas-container {
+            position: relative;
+            background: rgba(0,0,0,0.4);
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 2px solid rgba(255,235,59,0.3);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 15px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .control-group {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #ffeb3b;
+            font-size: 1.2em;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ffeb3b, #ff9800);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .value-display {
+            display: inline-block;
+            background: rgba(255,235,59,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+            border: 2px solid transparent;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .btn.active {
+            background: linear-gradient(45deg, #4caf50, #2e7d32);
+            border-color: #4caf50;
+        }
+
+        .formula-box {
+            background: rgba(0,0,0,0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #ffeb3b;
+        }
+
+        .formula-box h3 {
+            color: #ffeb3b;
+            margin-bottom: 10px;
+        }
+
+        .math-display {
+            font-size: 1.3em;
+            font-family: 'Times New Roman', serif;
+            text-align: center;
+            margin: 15px 0;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .concept-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .concept-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .concept-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-color: #ffeb3b;
+        }
+
+        .concept-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .responsive-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .quiz-option {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        .quiz-option.selected {
+            border-color: #ffeb3b;
+            background: rgba(255,235,59,0.2);
+        }
+
+        .quiz-option.correct {
+            border-color: #4caf50;
+            background: rgba(76,175,80,0.3);
+        }
+
+        .quiz-option.incorrect {
+            border-color: #f44336;
+            background: rgba(244,67,54,0.3);
+        }
+
+        .quiz-progress {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            background: linear-gradient(45deg, #ffeb3b, #ff9800);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .responsive-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Ideal and Non-Ideal Solutions</h1>
+            <p>Explore Raoult's Law, molecular interactions, and solution behavior</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">📋 Overview</button>
+            <button class="tab" onclick="showTab('raoult')">📈 Raoult's Law</button>
+            <button class="tab" onclick="showTab('deviations')">📊 Deviations</button>
+            <button class="tab" onclick="showTab('azeotropes')">⚗️ Azeotropes</button>
+            <button class="tab" onclick="showTab('quiz')">🧠 Quiz</button>
+        </div>
+
+        <!-- Overview Section -->
+        <div id="overview" class="content active">
+            <div class="simulation-container">
+                <h2>📚 Solution Behavior Fundamentals</h2>
+                
+                <div class="concept-cards">
+                    <div class="concept-card">
+                        <div class="concept-icon">⚖️</div>
+                        <h3>Ideal Solutions</h3>
+                        <p>Obey Raoult's Law over entire concentration range</p>
+                        <div class="math-display">ΔHmix = 0, ΔVmix = 0</div>
+                        <p><small>Equal A-A, B-B, and A-B interactions</small></p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="concept-icon">📈</div>
+                        <h3>Positive Deviation</h3>
+                        <p>Higher vapor pressure than predicted</p>
+                        <div class="math-display">A-B < A-A, B-B</div>
+                        <p><small>Weaker intermolecular forces</small></p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="concept-icon">📉</div>
+                        <h3>Negative Deviation</h3>
+                        <p>Lower vapor pressure than predicted</p>
+                        <div class="math-display">A-B > A-A, B-B</div>
+                        <p><small>Stronger intermolecular forces</small></p>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="overviewCanvas" width="900" height="400"></canvas>
+                </div>
+
+                <div class="formula-box">
+                    <h3>🧪 Raoult's Law</h3>
+                    <div class="math-display">p₁ = x₁ × p₁⁰</div>
+                    <p>The partial vapor pressure of a component in solution is proportional to its mole fraction and vapor pressure in pure state.</p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>🔬 Common Examples</h3>
+                    <div class="responsive-layout">
+                        <div>
+                            <h4>📊 Ideal Solutions:</h4>
+                            <ul style="margin-left: 20px;">
+                                <li>n-Hexane + n-Heptane</li>
+                                <li>Benzene + Toluene</li>
+                                <li>Bromoethane + Chloroethane</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>⚡ Non-Ideal Examples:</h4>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Positive:</strong> Ethanol + Acetone</li>
+                                <li><strong>Negative:</strong> Chloroform + Acetone</li>
+                                <li><strong>Negative:</strong> Phenol + Aniline</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raoult's Law Section -->
+        <div id="raoult" class="content">
+            <div class="simulation-container">
+                <h2>📈 Raoult's Law Interactive Simulation</h2>
+                
+                <div class="responsive-layout">
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="raoultCanvas" width="600" height="400"></canvas>
+                        </div>
+                        
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <h3>Component A Properties</h3>
+                                <div class="slider-container">
+                                    <label>Vapor Pressure A (p₁⁰): <span class="value-display" id="vp1Value">450</span> mmHg</label>
+                                    <input type="range" id="vp1Slider" min="100" max="800" step="10" value="450">
+                                </div>
+                                <div class="slider-container">
+                                    <label>Mole Fraction A (x₁): <span class="value-display" id="x1Value">0.50</span></label>
+                                    <input type="range" id="x1Slider" min="0" max="1" step="0.01" value="0.5">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="formula-box">
+                            <h3>📐 Calculations</h3>
+                            <div class="math-display">p₁ = x₁ × p₁⁰ = <span id="p1Result">225</span> mmHg</div>
+                            <div class="math-display">p₂ = x₂ × p₂⁰ = <span id="p2Result">350</span> mmHg</div>
+                            <div class="math-display">P_total = p₁ + p₂ = <span id="ptotalResult">575</span> mmHg</div>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>🔍 Vapor Phase Composition</h3>
+                            <div>
+                                <p><strong>y₁ (A in vapor):</strong> <span id="y1Value">0.391</span></p>
+                                <p><strong>y₂ (B in vapor):</strong> <span id="y2Value">0.609</span></p>
+                                <p><small>y₁ = p₁/P_total, y₂ = p₂/P_total</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deviations Section -->
+        <div id="deviations" class="content">
+            <div class="simulation-container">
+                <h2>📊 Positive and Negative Deviations</h2>
+                
+                <div class="responsive-layout">
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="deviationCanvas" width="600" height="400"></canvas>
+                        </div>
+                        
+                        <div class="control-group">
+                            <h3>Deviation Type</h3>
+                            <button class="btn active" id="idealBtn" onclick="setDeviationType('ideal')">⚖️ Ideal</button>
+                            <button class="btn" id="positiveBtn" onclick="setDeviationType('positive')">📈 Positive</button>
+                            <button class="btn" id="negativeBtn" onclick="setDeviationType('negative')">📉 Negative</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="formula-box">
+                            <h3>📐 Molecular Interactions</h3>
+                            <div id="molecularInfo">
+                                <div class="math-display">Ideal: A-B = A-A = B-B</div>
+                                <p>Equal intermolecular forces between all molecular pairs.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>🔬 Examples</h3>
+                            <div id="exampleInfo">
+                                <h4>🧪 Ideal Solutions:</h4>
+                                <p>n-Hexane + n-Heptane: Similar molecular structure and forces</p>
+                                <p>Benzene + Toluene: Similar aromatic hydrocarbons</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Azeotropes Section -->
+        <div id="azeotropes" class="content">
+            <div class="simulation-container">
+                <h2>⚗️ Azeotropic Mixtures</h2>
+                
+                <div class="responsive-layout">
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="azeotropeCanvas" width="600" height="400"></canvas>
+                        </div>
+                        
+                        <div class="control-group">
+                            <h3>Azeotrope Examples</h3>
+                            <button class="btn active" id="ethanol-waterBtn" onclick="setAzeotrope('ethanol-water')">Ethanol-Water</button>
+                            <button class="btn" id="hno3-waterBtn" onclick="setAzeotrope('hno3-water')">HNO₃-Water</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="formula-box">
+                            <h3>📐 Azeotropic Properties</h3>
+                            <div id="azeotropeData">
+                                <div class="math-display">Ethanol-Water Azeotrope</div>
+                                <p><strong>Composition:</strong> 95% Ethanol, 5% Water</p>
+                                <p><strong>Boiling Point:</strong> 78.1°C</p>
+                                <p><strong>Type:</strong> Minimum Boiling</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>🔍 Key Properties</h3>
+                            <ul style="margin-left: 20px;">
+                                <li>Same composition in liquid and vapor phases</li>
+                                <li>Boil at constant temperature</li>
+                                <li>Cannot be separated by simple distillation</li>
+                                <li>Form due to large deviations from Raoult's law</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="content">
+            <div class="simulation-container">
+                <h2>🧠 Solutions Knowledge Quiz</h2>
+                
+                <div class="info-panel" id="quizIntro">
+                    <h3>📚 Test Your Understanding</h3>
+                    <p>Challenge yourself with 5 questions covering ideal solutions, Raoult's law, deviations, and azeotropes.</p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <button class="btn" onclick="startQuiz()">🎯 Start Quiz</button>
+                    </div>
+                </div>
+
+                <div id="quizContainer" style="display: none;">
+                    <div class="info-panel">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span id="questionNumber">Question 1 of 5</span>
+                            <span id="quizScore">Score: 0/0</span>
+                        </div>
+                        <div class="quiz-progress">
+                            <div class="progress-bar" id="progressBar" style="width: 20%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="formula-box">
+                        <h3 id="questionTitle">Question 1</h3>
+                        <p id="questionText" style="font-size: 1.1em; margin: 15px 0;">Loading question...</p>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>Choose your answer:</h3>
+                        <div id="optionsContainer">
+                            <!-- Options will be dynamically added here -->
+                        </div>
+                    </div>
+
+                    <div id="feedbackContainer" style="display: none;">
+                        <div class="info-panel" id="feedback">
+                            <!-- Feedback will be shown here -->
+                        </div>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <button class="btn" id="nextButton" onclick="nextQuestion()">Next Question →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="quizResults" style="display: none;">
+                    <div class="formula-box">
+                        <h3>🎉 Quiz Complete!</h3>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div style="font-size: 3em; margin: 20px 0;" id="finalScore">0/5</div>
+                            <div style="font-size: 2em; margin: 10px 0;" id="percentage">0%</div>
+                            <div id="performanceMessage" style="font-size: 1.2em; margin: 15px 0;">Great job!</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <button class="btn" onclick="restartQuiz()">🔄 Retake Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentDeviationType = 'ideal';
+        let currentAzeotrope = 'ethanol-water';
+
+        // Quiz variables
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = [];
+        let quizStarted = false;
+
+        const quizQuestions = [
+            {
+                question: "Which condition must be satisfied for an ideal solution?",
+                options: [
+                    "ΔHmix = 0 and ΔVmix = 0",
+                    "ΔHmix > 0 and ΔVmix < 0", 
+                    "ΔHmix < 0 and ΔVmix > 0",
+                    "Only ΔHmix = 0"
+                ],
+                correct: 0,
+                explanation: "For ideal solutions, both enthalpy of mixing (ΔHmix) and volume of mixing (ΔVmix) must be zero, indicating no heat change and no volume change upon mixing."
+            },
+            {
+                question: "A solution shows positive deviation from Raoult's law when:",
+                options: [
+                    "A-B interactions are stronger than A-A and B-B",
+                    "A-B interactions are weaker than A-A and B-B",
+                    "A-B interactions equal A-A and B-B interactions",
+                    "Temperature is very high"
+                ],
+                correct: 1,
+                explanation: "Positive deviation occurs when A-B intermolecular forces are weaker than A-A and B-B forces, making molecules easier to escape, thus increasing vapor pressure."
+            },
+            {
+                question: "Chloroform and acetone show negative deviation because:",
+                options: [
+                    "They form van der Waals forces",
+                    "They form hydrogen bonds between CHCl₃ and acetone",
+                    "They have similar molecular sizes", 
+                    "They are both polar molecules"
+                ],
+                correct: 1,
+                explanation: "CHCl₃ and acetone form hydrogen bonds where the H of CHCl₃ bonds with the O of acetone, creating stronger A-B interactions than individual A-A or B-B interactions."
+            },
+            {
+                question: "Which mixture forms a minimum boiling azeotrope?",
+                options: [
+                    "Nitric acid + Water",
+                    "Ethanol + Water",
+                    "HCl + Water",
+                    "All of the above"
+                ],
+                correct: 1,
+                explanation: "Ethanol and water form a minimum boiling azeotrope (95% ethanol, 5% water) with a boiling point of 78.1°C due to positive deviation from Raoult's law."
+            },
+            {
+                question: "For an ideal binary solution with vapor pressures pA° = 300 mmHg and pB° = 500 mmHg, if xA = 0.4, what is the total vapor pressure?",
+                options: [
+                    "380 mmHg",
+                    "400 mmHg", 
+                    "420 mmHg",
+                    "450 mmHg"
+                ],
+                correct: 2,
+                explanation: "For ideal solution: P_total = xA × pA° + xB × pB° = 0.4 × 300 + 0.6 × 500 = 120 + 300 = 420 mmHg"
+            }
+        ];
+
+        // Initialize
+        window.onload = function() {
+            setupEventListeners();
+            updateAllSimulations();
+        };
+
+        function setupEventListeners() {
+            // Raoult's Law controls
+            document.getElementById('vp1Slider').addEventListener('input', updateRaoultSimulation);
+            document.getElementById('x1Slider').addEventListener('input', updateRaoultSimulation);
+        }
+
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update simulations
+            setTimeout(() => {
+                switch(tabName) {
+                    case 'overview': updateOverviewSimulation(); break;
+                    case 'raoult': updateRaoultSimulation(); break;
+                    case 'deviations': updateDeviationSimulation(); break;
+                    case 'azeotropes': updateAzeotropeSimulation(); break;
+                }
+            }, 100);
+        }
+
+        // Overview Simulation
+        function updateOverviewSimulation() {
+            const canvas = document.getElementById('overviewCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw comparison of ideal vs non-ideal solutions
+            const sectionWidth = canvas.width / 3;
+            
+            // Draw axes
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(80, 50);
+            ctx.lineTo(80, 350);
+            ctx.lineTo(820, 350);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Mole Fraction x₁ →', 450, 380);
+            
+            ctx.save();
+            ctx.translate(40, 200);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Vapor Pressure →', 0, 0);
+            ctx.restore();
+            
+            // Ideal solution
+            drawSolutionType(ctx, sectionWidth * 0.5, 'Ideal', '#4caf50');
+            
+            // Positive deviation
+            drawSolutionType(ctx, sectionWidth * 1.5, 'Positive Deviation', '#ff9800');
+            
+            // Negative deviation
+            drawSolutionType(ctx, sectionWidth * 2.5, 'Negative Deviation', '#2196f3');
+        }
+
+        function drawSolutionType(ctx, centerX, type, color) {
+            const centerY = 200;
+            
+            // Title
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(type, centerX, 80);
+            
+            // Vapor pressure curve
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for(let i = 0; i <= 100; i++) {
+                const x = centerX - 80 + (160 * i / 100);
+                let y;
+                
+                if(type === 'Ideal') {
+                    y = centerY - (50 * i / 100); // Linear
+                } else if(type === 'Positive Deviation') {
+                    y = centerY - (50 * i / 100) - 20 * Math.sin(Math.PI * i / 100); // Above linear
+                } else {
+                    y = centerY - (50 * i / 100) + 20 * Math.sin(Math.PI * i / 100); // Below linear
+                }
+                
+                if(i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Add ideal line for comparison (dashed)
+            if(type !== 'Ideal') {
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(centerX - 80, centerY);
+                ctx.lineTo(centerX + 80, centerY - 50);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // Raoult's Law Simulation
+        function updateRaoultSimulation() {
+            const vp1 = parseFloat(document.getElementById('vp1Slider').value);
+            const vp2 = 700; // Fixed for simplicity
+            const x1 = parseFloat(document.getElementById('x1Slider').value);
+            const x2 = 1 - x1;
+            
+            // Update displays
+            document.getElementById('vp1Value').textContent = vp1;
+            document.getElementById('x1Value').textContent = x1.toFixed(2);
+            
+            // Calculate partial pressures
+            const p1 = x1 * vp1;
+            const p2 = x2 * vp2;
+            const ptotal = p1 + p2;
+            
+            // Update results
+            document.getElementById('p1Result').textContent = p1.toFixed(1);
+            document.getElementById('p2Result').textContent = p2.toFixed(1);
+            document.getElementById('ptotalResult').textContent = ptotal.toFixed(1);
+            
+            // Calculate vapor composition
+            const y1 = p1 / ptotal;
+            const y2 = p2 / ptotal;
+            
+            document.getElementById('y1Value').textContent = y1.toFixed(3);
+            document.getElementById('y2Value').textContent = y2.toFixed(3);
+            
+            // Draw the graph
+            drawRaoultGraph();
+        }
+
+        function drawRaoultGraph() {
+            const canvas = document.getElementById('raoultCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const vp1 = parseFloat(document.getElementById('vp1Slider').value);
+            const vp2 = 700;
+            const x1 = parseFloat(document.getElementById('x1Slider').value);
+            
+            // Draw axes
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(80, 50);
+            ctx.lineTo(80, 350);
+            ctx.lineTo(550, 350);
+            ctx.stroke();
+            
+            // Draw Raoult's law lines
+            const maxPressure = Math.max(vp1, vp2);
+            const scale = 250 / maxPressure;
+            
+            // Component 1 line
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(80, 350);
+            ctx.lineTo(550, 350 - vp1 * scale);
+            ctx.stroke();
+            
+            // Component 2 line
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(80, 350 - vp2 * scale);
+            ctx.lineTo(550, 350);
+            ctx.stroke();
+            
+            // Total pressure line
+            ctx.strokeStyle = '#ffeb3b';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(80, 350 - vp2 * scale);
+            ctx.lineTo(550, 350 - vp1 * scale);
+            ctx.stroke();
+            
+            // Current point
+            const currentX = 80 + x1 * 470;
+            const p1 = x1 * vp1;
+            const p2 = (1 - x1) * vp2;
+            const ptotal = p1 + p2;
+            const currentY = 350 - ptotal * scale;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('0', 80, 370);
+            ctx.fillText('1', 550, 370);
+            ctx.fillText('Mole Fraction x₁', 315, 390);
+            
+            ctx.save();
+            ctx.translate(40, 200);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Pressure (mmHg)', 0, 0);
+            ctx.restore();
+            
+            // Legend
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillText('p₁ (Component A)', 430, 80);
+            ctx.fillStyle = '#4caf50';
+            ctx.fillText('p₂ (Component B)', 430, 100);
+            ctx.fillStyle = '#ffeb3b';
+            ctx.fillText('P_total', 430, 120);
+        }
+
+        // Deviation Simulation
+        function setDeviationType(type) {
+            currentDeviationType = type;
+            
+            // Update button states
+            document.querySelectorAll('#deviations .btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(type + 'Btn').classList.add('active');
+            
+            updateDeviationSimulation();
+            updateMolecularInfo();
+        }
+
+        function updateDeviationSimulation() {
+            drawDeviationGraph();
+        }
+
+        function updateMolecularInfo() {
+            const molecularInfo = document.getElementById('molecularInfo');
+            const exampleInfo = document.getElementById('exampleInfo');
+            
+            switch(currentDeviationType) {
+                case 'ideal':
+                    molecularInfo.innerHTML = `
+                        <div class="math-display">Ideal: A-B = A-A = B-B</div>
+                        <p>Equal intermolecular forces between all molecular pairs.</p>
+                    `;
+                    exampleInfo.innerHTML = `
+                        <h4>🧪 Ideal Solutions:</h4>
+                        <p>n-Hexane + n-Heptane: Similar molecular structure and forces</p>
+                        <p>Benzene + Toluene: Similar aromatic hydrocarbons</p>
+                    `;
+                    break;
+                    
+                case 'positive':
+                    molecularInfo.innerHTML = `
+                        <div class="math-display">Positive: A-B < A-A, B-B</div>
+                        <p>Weaker interactions between different molecules lead to higher vapor pressure.</p>
+                    `;
+                    exampleInfo.innerHTML = `
+                        <h4>📈 Positive Deviation:</h4>
+                        <p>Ethanol + Acetone: Acetone disrupts hydrogen bonding in ethanol</p>
+                        <p>CS₂ + Acetone: Weak dipolar interactions</p>
+                    `;
+                    break;
+                    
+                case 'negative':
+                    molecularInfo.innerHTML = `
+                        <div class="math-display">Negative: A-B > A-A, B-B</div>
+                        <p>Stronger interactions between different molecules lead to lower vapor pressure.</p>
+                    `;
+                    exampleInfo.innerHTML = `
+                        <h4>📉 Negative Deviation:</h4>
+                        <p>Chloroform + Acetone: New hydrogen bonds form</p>
+                        <p>Phenol + Aniline: Strong intermolecular H-bonding</p>
+                    `;
+                    break;
+            }
+        }
+
+        function drawDeviationGraph() {
+            const canvas = document.getElementById('deviationCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(80, 50);
+            ctx.lineTo(80, 350);
+            ctx.lineTo(550, 350);
+            ctx.stroke();
+            
+            // Draw ideal line (reference)
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(80, 300);
+            ctx.lineTo(550, 100);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw actual behavior
+            let color = '#4caf50';
+            if(currentDeviationType === 'positive') color = '#ff9800';
+            else if(currentDeviationType === 'negative') color = '#2196f3';
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            
+            for(let i = 0; i <= 100; i++) {
+                const x = 80 + (470 * i / 100);
+                const moleFraction = i / 100;
+                let y;
+                
+                if(currentDeviationType === 'ideal') {
+                    y = 300 - (200 * moleFraction);
+                } else if(currentDeviationType === 'positive') {
+                    y = 300 - (200 * moleFraction) - 40 * Math.sin(Math.PI * moleFraction);
+                } else {
+                    y = 300 - (200 * moleFraction) + 40 * Math.sin(Math.PI * moleFraction);
+                }
+                
+                if(i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('0', 80, 370);
+            ctx.fillText('1', 550, 370);
+            ctx.fillText('Mole Fraction x₁', 315, 390);
+            
+            ctx.save();
+            ctx.translate(40, 200);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Vapor Pressure', 0, 0);
+            ctx.restore();
+            
+            // Legend
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fillText('Ideal (Raoult\'s Law)', 450, 80);
+            ctx.fillStyle = color;
+            ctx.fillText(`${currentDeviationType.charAt(0).toUpperCase() + currentDeviationType.slice(1)} Deviation`, 450, 100);
+        }
+
+        // Azeotrope Simulation
+        function setAzeotrope(type) {
+            currentAzeotrope = type;
+            
+            // Update button states
+            document.querySelectorAll('#azeotropes .btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(type + 'Btn').classList.add('active');
+            
+            updateAzeotropeData();
+            updateAzeotropeSimulation();
+        }
+
+        function updateAzeotropeData() {
+            const azeotropeData = document.getElementById('azeotropeData');
+            
+            const systems = {
+                'ethanol-water': {
+                    name: 'Ethanol-Water Azeotrope',
+                    composition: '95% Ethanol, 5% Water',
+                    boiling: '78.1°C',
+                    type: 'Minimum Boiling'
+                },
+                'hno3-water': {
+                    name: 'HNO₃-Water Azeotrope',
+                    composition: '68% HNO₃, 32% Water',
+                    boiling: '120.5°C (393.5K)',
+                    type: 'Maximum Boiling'
+                }
+            };
+            
+            const data = systems[currentAzeotrope];
+            azeotropeData.innerHTML = `
+                <div class="math-display">${data.name}</div>
+                <p><strong>Composition:</strong> ${data.composition}</p>
+                <p><strong>Boiling Point:</strong> ${data.boiling}</p>
+                <p><strong>Type:</strong> ${data.type}</p>
+            `;
+        }
+
+        function updateAzeotropeSimulation() {
+            drawAzeotropeGraph();
+        }
+
+        function drawAzeotropeGraph() {
+            const canvas = document.getElementById('azeotropeCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(80, 50);
+            ctx.lineTo(80, 350);
+            ctx.lineTo(550, 350);
+            ctx.stroke();
+            
+            // Draw azeotrope curve
+            let color = '#ff9800';
+            let azeotropeX = 0.95;
+            let isMinimum = true;
+            
+            if(currentAzeotrope === 'hno3-water') {
+                color = '#2196f3';
+                isMinimum = false;
+                azeotropeX = 0.68;
+            }
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            
+            for(let i = 0; i <= 100; i++) {
+                const x = 80 + (470 * i / 100);
+                const moleFraction = i / 100;
+                let y;
+                
+                if(isMinimum) {
+                    const deviation = -50 * Math.exp(-20 * Math.pow(moleFraction - azeotropeX, 2));
+                    y = 200 + deviation;
+                } else {
+                    const deviation = 80 * Math.exp(-20 * Math.pow(moleFraction - azeotropeX, 2));
+                    y = 200 + deviation;
+                }
+                
+                if(i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Mark azeotrope point
+            const azeotropeXpx = 80 + (470 * azeotropeX);
+            const azeotropeY = isMinimum ? 150 : 280;
+            
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(azeotropeXpx, azeotropeY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Label azeotrope point
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Azeotrope', azeotropeXpx, azeotropeY - 15);
+            
+            // Labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('0', 80, 370);
+            ctx.fillText('1', 550, 370);
+            ctx.fillText('Mole Fraction', 315, 390);
+            
+            ctx.save();
+            ctx.translate(40, 200);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Boiling Point', 0, 0);
+            ctx.restore();
+        }
+
+        // Quiz Functions
+        function startQuiz() {
+            quizStarted = true;
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            
+            document.getElementById('quizIntro').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = quizQuestions[currentQuestion];
+            
+            // Update progress
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestion + 1} of ${quizQuestions.length}`;
+            document.getElementById('quizScore').textContent = `Score: ${score}/${currentQuestion}`;
+            document.getElementById('progressBar').style.width = `${((currentQuestion + 1) / quizQuestions.length) * 100}%`;
+            
+            // Update question content
+            document.getElementById('questionTitle').textContent = `Question ${currentQuestion + 1}`;
+            document.getElementById('questionText').textContent = question.question;
+            
+            // Create options
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'quiz-option';
+                optionDiv.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                optionDiv.onclick = () => selectOption(index);
+                optionDiv.id = `option-${index}`;
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // Hide feedback
+            document.getElementById('feedbackContainer').style.display = 'none';
+        }
+
+        function selectOption(selectedIndex) {
+            const question = quizQuestions[currentQuestion];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            // Disable all options
+            options.forEach(option => {
+                option.onclick = null;
+            });
+            
+            // Mark selected option
+            options[selectedIndex].classList.add('selected');
+            
+            // Store answer
+            userAnswers[currentQuestion] = selectedIndex;
+            
+            // Show correct/incorrect feedback
+            setTimeout(() => {
+                options[question.correct].classList.add('correct');
+                if (selectedIndex !== question.correct) {
+                    options[selectedIndex].classList.add('incorrect');
+                } else {
+                    score++;
+                }
+                
+                showFeedback(selectedIndex === question.correct, question.explanation);
+            }, 500);
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const feedback = document.getElementById('feedback');
+            
+            feedback.innerHTML = `
+                <h3>${isCorrect ? '✅ Correct!' : '❌ Incorrect'}</h3>
+                <p><strong>Explanation:</strong> ${explanation}</p>
+            `;
+            
+            feedbackContainer.style.display = 'block';
+            
+            // Update next button text
+            const nextButton = document.getElementById('nextButton');
+            if (currentQuestion === quizQuestions.length - 1) {
+                nextButton.textContent = 'Show Results 🎉';
+            } else {
+                nextButton.textContent = 'Next Question →';
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion >= quizQuestions.length) {
+                showResults();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            
+            document.getElementById('finalScore').textContent = `${score}/${quizQuestions.length}`;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            
+            // Performance message
+            let message = '';
+            if (percentage >= 90) {
+                message = '🌟 Outstanding! You have mastered solution chemistry!';
+            } else if (percentage >= 70) {
+                message = '👍 Great job! You have a solid understanding of solutions.';
+            } else if (percentage >= 50) {
+                message = '📖 Fair performance. Review solution concepts and practice more.';
+            } else {
+                message = '📚 Study more and try again. Focus on the fundamentals!';
+            }
+            
+            document.getElementById('performanceMessage').textContent = message;
+        }
+
+        function restartQuiz() {
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizIntro').style.display = 'block';
+            quizStarted = false;
+        }
+
+        function updateAllSimulations() {
+            updateOverviewSimulation();
+            updateRaoultSimulation();
+            updateDeviationSimulation();
+            updateAzeotropeData();
+            updateAzeotropeSimulation();
+        }
+
+        // Initialize everything
+        updateAllSimulations();
+    </script>
+</body>
+</html>

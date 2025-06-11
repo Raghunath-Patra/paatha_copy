@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.2 Properties of Rational Numbers - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #0891b2;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .interactive-area {
+            background: #f0fdfa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #a7f3d0;
+        }
+
+        .interactive-area h3 {
+            color: #0891b2;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .property-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .property-btn {
+            background: #0891b2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .property-btn:hover {
+            background: #0e7490;
+            transform: translateY(-2px);
+        }
+
+        .property-btn.active {
+            background: #dc2626;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+
+        .calculator-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .input-group {
+            background: #ecfeff;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #22d3ee;
+        }
+
+        .input-group h4 {
+            color: #0891b2;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .fraction-input {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .fraction-input input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .fraction-line {
+            width: 40px;
+            height: 2px;
+            background: #333;
+        }
+
+        .operation-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .op-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .op-btn:hover {
+            background: #d97706;
+            transform: scale(1.1);
+        }
+
+        .op-btn.selected {
+            background: #dc2626;
+        }
+
+        .result-display {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .result-display h4 {
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+
+        .result-fraction {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0891b2;
+        }
+
+        .property-demo {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .property-demo h4 {
+            color: #dc2626;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .comparison-display {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .expression {
+            background: #f0fdfa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #22d3ee;
+        }
+
+        .equals-sign {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0891b2;
+            text-align: center;
+        }
+
+        .property-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .property-table th {
+            background: #0891b2;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .property-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .property-table tr:hover {
+            background: #f0fdfa;
+        }
+
+        .yes-cell {
+            background: #d1fae5;
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        .no-cell {
+            background: #fecaca;
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #0891b2, #06b6d4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .quiz-area {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .quiz-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: #edf2f7;
+            border-color: #0891b2;
+            transform: translateY(-1px);
+        }
+
+        .quiz-option.selected {
+            background: #0891b2;
+            color: white;
+            border-color: #0891b2;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .paatha-tip {
+            background: linear-gradient(135deg, #ecfeff, #f0fdfa);
+            border: 2px solid #22d3ee;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .paatha-tip::before {
+            content: "🤖 Paaṭha AI Smart Tip";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(45deg, #0891b2, #22d3ee);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .info-box {
+            background: #f0fdfa;
+            border-left: 4px solid #0891b2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .info-box::before {
+            content: "💡 Paaṭha AI Explains";
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #0891b2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .example-box {
+            background: #fefce8;
+            border: 2px solid #facc15;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .example-box h4 {
+            color: #ca8a04;
+            margin-bottom: 15px;
+        }
+
+        .step-by-step {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #0891b2;
+        }
+
+        .brand-watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .calculator-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-display {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .property-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="height: 48px; width: 48px;"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8">
+                        </circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Mathematics Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">⚖️ 1.2 Properties of Rational Numbers</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Class IX Mathematics - Chapter 1</p>
+        </div>
+
+        <div class="section">
+            <h2>Interactive Property Explorer</h2>
+            
+            <div class="interactive-area">
+                <h3>🔍 Explore Mathematical Properties</h3>
+                <p>Select a property to explore and test with rational numbers!</p>
+                
+                <div class="property-selector">
+                    <button class="property-btn active" onclick="selectProperty('closure')">🔒 Closure</button>
+                    <button class="property-btn" onclick="selectProperty('commutative')">🔄 Commutativity</button>
+                    <button class="property-btn" onclick="selectProperty('associative')">🤝 Associativity</button>
+                    <button class="property-btn" onclick="selectProperty('distributive')">📐 Distributivity</button>
+                </div>
+                
+                <div id="propertyDescription" class="info-box" style="padding-top: 25px;">
+                    <strong>Closure Property:</strong> When we perform an operation on two numbers from a set, the result is also in the same set.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Rational Number Calculator</h2>
+            
+            <div class="calculator-area">
+                <div class="input-group">
+                    <h4>🔢 First Rational Number</h4>
+                    <div class="fraction-input">
+                        <input type="number" id="num1" value="3" placeholder="p">
+                        <div class="fraction-line"></div>
+                        <input type="number" id="den1" value="4" placeholder="q">
+                    </div>
+                    <div style="text-align: center; font-size: 12px; color: #666; margin-top: 5px;">
+                        Enter as p/q (q ≠ 0)
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <h4>🔢 Second Rational Number</h4>
+                    <div class="fraction-input">
+                        <input type="number" id="num2" value="5" placeholder="p">
+                        <div class="fraction-line"></div>
+                        <input type="number" id="den2" value="6" placeholder="q">
+                    </div>
+                    <div style="text-align: center; font-size: 12px; color: #666; margin-top: 5px;">
+                        Enter as p/q (q ≠ 0)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="operation-selector">
+                <button class="op-btn selected" onclick="selectOperation('+', this)">+</button>
+                <button class="op-btn" onclick="selectOperation('-', this)">−</button>
+                <button class="op-btn" onclick="selectOperation('*', this)">×</button>
+                <button class="op-btn" onclick="selectOperation('/', this)">÷</button>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="calculateAndCheck()">🧮 Calculate & Check Property</button>
+            </div>
+            
+            <div id="calculationResult" class="result-display">
+                <h4>👆 Click Calculate to see the result and property verification!</h4>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Property Demonstration</h2>
+            
+            <div id="propertyDemo" class="property-demo">
+                <h4>🔒 Testing Closure Property</h4>
+                <div id="demoContent">
+                    <p style="text-align: center; color: #666;">Use the calculator above to see property demonstrations here!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Properties Summary Table</h2>
+            
+            <div class="interactive-area">
+                <h3>📊 Complete Properties Overview</h3>
+                <table class="property-table">
+                    <thead>
+                        <tr>
+                            <th>Number System</th>
+                            <th>Addition (+)</th>
+                            <th>Subtraction (−)</th>
+                            <th>Multiplication (×)</th>
+                            <th>Division (÷)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Natural Numbers (ℕ)</strong></td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="no-cell">✗ Not Closed</td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="no-cell">✗ Not Closed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Whole Numbers (W)</strong></td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="no-cell">✗ Not Closed</td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="no-cell">✗ Not Closed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Integers (ℤ)</strong></td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="no-cell">✗ Not Closed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rational Numbers (ℚ)</strong></td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="yes-cell">✓ Closed</td>
+                            <td class="no-cell">✗ Not Closed*</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                    * Rational numbers are closed under division except when dividing by zero
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Identity Elements Explorer</h2>
+            
+            <div class="interactive-area">
+                <h3>🎯 Additive and Multiplicative Identities</h3>
+                
+                <div class="calculator-area">
+                    <div class="input-group">
+                        <h4>🔍 Test Additive Identity (0)</h4>
+                        <p>Enter any rational number and add 0 to it:</p>
+                        <div class="fraction-input">
+                            <input type="number" id="addIdentityNum" value="7" placeholder="p">
+                            <div class="fraction-line"></div>
+                            <input type="number" id="addIdentityDen" value="9" placeholder="q">
+                            <span style="margin: 0 10px; font-size: 18px;">+ 0 =</span>
+                            <span id="addIdentityResult" style="font-weight: bold; color: #0891b2;">?</span>
+                        </div>
+                        <button class="btn" onclick="testAddIdentity()">Test Additive Identity</button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <h4>🔍 Test Multiplicative Identity (1)</h4>
+                        <p>Enter any rational number and multiply by 1:</p>
+                        <div class="fraction-input">
+                            <input type="number" id="mulIdentityNum" value="5" placeholder="p">
+                            <div class="fraction-line"></div>
+                            <input type="number" id="mulIdentityDen" value="8" placeholder="q">
+                            <span style="margin: 0 10px; font-size: 18px;">× 1 =</span>
+                            <span id="mulIdentityResult" style="font-weight: bold; color: #0891b2;">?</span>
+                        </div>
+                        <button class="btn" onclick="testMulIdentity()">Test Multiplicative Identity</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Practice Examples</h2>
+            
+            <div class="example-box">
+                <h4>📚 Worked Example: Using Properties for Calculation</h4>
+                <div class="step-by-step">
+                    <strong>Example:</strong> Find 3/7 + (-6/11) + (-8/21) + (5/22)
+                </div>
+                <div class="step-by-step">
+                    <strong>Step 1:</strong> Group using commutativity and associativity<br>
+                    = [3/7 + (-8/21)] + [(-6/11) + 5/22]
+                </div>
+                <div class="step-by-step">
+                    <strong>Step 2:</strong> Calculate each group<br>
+                    = [9/21 + (-8/21)] + [(-12/22) + 5/22]<br>
+                    = 1/21 + (-7/22)
+                </div>
+                <div class="step-by-step">
+                    <strong>Step 3:</strong> Final calculation<br>
+                    = (22 - 147)/(21 × 22) = -125/462
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="btn" onclick="tryExample()">🧮 Verify This Example</button>
+                </div>
+                <div id="exampleResult" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Knowledge Check Quiz</h2>
+            
+            <div class="quiz-area">
+                <div class="quiz-question">📝 Test Your Understanding</div>
+                
+                <div id="question1">
+                    <p><strong>Question 1:</strong> Which property allows us to write a × b = b × a?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(1, 'commutative', this)">Commutative Property</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'associative', this)">Associative Property</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'distributive', this)">Distributive Property</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'closure', this)">Closure Property</div>
+                    </div>
+                    <div id="feedback1"></div>
+                </div>
+                
+                <div id="question2" style="margin-top: 20px;">
+                    <p><strong>Question 2:</strong> What is the additive identity for rational numbers?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(2, '0', this)">0</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, '1', this)">1</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, '-1', this)">-1</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'none', this)">No identity exists</div>
+                    </div>
+                    <div id="feedback2"></div>
+                </div>
+                
+                <div id="question3" style="margin-top: 20px;">
+                    <p><strong>Question 3:</strong> Are rational numbers closed under division?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(3, 'no', this)">No, because division by zero is undefined</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'yes', this)">Yes, always</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'sometimes', this)">Only sometimes</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'unknown', this)">Cannot be determined</div>
+                    </div>
+                    <div id="feedback3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Key Concepts Summary</h2>
+            
+            <div class="paatha-tip" style="padding-top: 25px;">
+                <h4>🔑 Important Properties to Remember:</h4>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li><span class="highlight">Closure:</span> If a and b are rational, then a ○ b is also rational (○ = +, −, ×, ÷ except by 0)</li>
+                    <li><span class="highlight">Commutativity:</span> a + b = b + a and a × b = b × a</li>
+                    <li><span class="highlight">Associativity:</span> (a + b) + c = a + (b + c) and (a × b) × c = a × (b × c)</li>
+                    <li><span class="highlight">Additive Identity:</span> a + 0 = 0 + a = a</li>
+                    <li><span class="highlight">Multiplicative Identity:</span> a × 1 = 1 × a = a</li>
+                    <li><span class="highlight">Distributivity:</span> a × (b + c) = a × b + a × c</li>
+                </ul>
+            </div>
+            
+            <div class="info-box" style="padding-top: 25px;">
+                <strong>💡 Why These Properties Matter:</strong> These properties allow us to manipulate expressions and solve equations efficiently. They form the foundation for algebraic thinking and problem-solving strategies!
+            </div>
+        </div>
+
+        <!-- Brand Watermark -->
+        <div class="brand-watermark">
+            <svg width="120" height="120" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                <g transform="rotate(-45, 256, 256)">
+                    <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                        c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                        c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                        c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                        c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                        c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                        c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                        c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                        c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                        c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                        c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                        c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                        c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                        c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                        c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                        c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                        c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                        c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                        c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                        c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                        c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                        c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                        c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                        c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                        c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                        c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                        c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                        c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                        fill="#0891b2">
+                    </path>
+                    <circle cx="385" cy="256" r="48" fill="#dc2626"></circle>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.2);">
+            <div style="color: white; opacity: 0.9;">
+                <p style="margin: 5px 0; font-size: 16px; font-weight: 600;">Powered by Paaṭha AI</p>
+                <p style="margin: 5px 0; font-size: 14px;">Interactive Mathematics Learning Platform</p>
+                <p style="margin: 5px 0; font-size: 12px; opacity: 0.7;">© 2024 Paaṭha AI. Transforming Education with AI.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let currentProperty = 'closure';
+        let currentOperation = '+';
+
+        function selectProperty(property) {
+            currentProperty = property;
+            
+            // Update active button
+            document.querySelectorAll('.property-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update description
+            const descriptions = {
+                closure: 'When we perform an operation on two numbers from a set, the result is also in the same set.',
+                commutative: 'We can change the order of numbers in an operation without changing the result. For example: a + b = b + a',
+                associative: 'We can change the grouping of numbers in an operation without changing the result. For example: (a + b) + c = a + (b + c)',
+                distributive: 'Multiplication distributes over addition. For example: a × (b + c) = a × b + a × c'
+            };
+            
+            const propertyNames = {
+                closure: 'Closure Property',
+                commutative: 'Commutative Property', 
+                associative: 'Associative Property',
+                distributive: 'Distributive Property'
+            };
+            
+            document.getElementById('propertyDescription').innerHTML = 
+                `<strong>${propertyNames[property]}:</strong> ${descriptions[property]}`;
+            
+            // Update demo title
+            const icons = { closure: '🔒', commutative: '🔄', associative: '🤝', distributive: '📐' };
+            document.querySelector('#propertyDemo h4').innerHTML = `${icons[property]} Testing ${propertyNames[property]}`;
+        }
+
+        function selectOperation(op, element) {
+            currentOperation = op;
+            
+            // Update active button
+            document.querySelectorAll('.op-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function gcd(a, b) {
+            return b === 0 ? Math.abs(a) : gcd(b, a % b);
+        }
+
+        function simplifyFraction(num, den) {
+            if (den === 0) return { num: NaN, den: 1 };
+            
+            const g = gcd(num, den);
+            num = num / g;
+            den = den / g;
+            
+            if (den < 0) {
+                num = -num;
+                den = -den;
+            }
+            
+            return { num, den };
+        }
+
+        function formatFraction(num, den) {
+            if (den === 1) return num.toString();
+            if (den === 0) return "undefined";
+            return `${num}/${den}`;
+        }
+
+        function calculateRational(num1, den1, num2, den2, operation) {
+            let resultNum, resultDen;
+            
+            switch (operation) {
+                case '+':
+                    resultNum = num1 * den2 + num2 * den1;
+                    resultDen = den1 * den2;
+                    break;
+                case '-':
+                    resultNum = num1 * den2 - num2 * den1;
+                    resultDen = den1 * den2;
+                    break;
+                case '*':
+                    resultNum = num1 * num2;
+                    resultDen = den1 * den2;
+                    break;
+                case '/':
+                    if (num2 === 0) return { num: NaN, den: 1 };
+                    resultNum = num1 * den2;
+                    resultDen = den1 * num2;
+                    break;
+                default:
+                    return { num: NaN, den: 1 };
+            }
+            
+            return simplifyFraction(resultNum, resultDen);
+        }
+
+        function calculateAndCheck() {
+            const num1 = parseInt(document.getElementById('num1').value) || 0;
+            const den1 = parseInt(document.getElementById('den1').value) || 1;
+            const num2 = parseInt(document.getElementById('num2').value) || 0;
+            const den2 = parseInt(document.getElementById('den2').value) || 1;
+            
+            if (den1 === 0 || den2 === 0) {
+                document.getElementById('calculationResult').innerHTML = 
+                    '<h4>❌ Error</h4><p>Denominator cannot be zero!</p>';
+                return;
+            }
+            
+            if (currentOperation === '/' && num2 === 0) {
+                document.getElementById('calculationResult').innerHTML = 
+                    '<h4>❌ Error</h4><p>Cannot divide by zero!</p>';
+                return;
+            }
+            
+            const frac1 = formatFraction(num1, den1);
+            const frac2 = formatFraction(num2, den2);
+            const result = calculateRational(num1, den1, num2, den2, currentOperation);
+            const resultFrac = formatFraction(result.num, result.den);
+            
+            let resultHTML = `
+                <h4>🧮 Calculation Result</h4>
+                <div class="result-fraction">${frac1} ${currentOperation} ${frac2} = ${resultFrac}</div>
+            `;
+            
+            // Add decimal approximation if not a whole number
+            if (result.den !== 1 && !isNaN(result.num)) {
+                const decimal = (result.num / result.den).toFixed(4);
+                resultHTML += `<div style="margin-top: 10px; color: #666;">≈ ${decimal}</div>`;
+            }
+            
+            document.getElementById('calculationResult').innerHTML = resultHTML;
+            
+            // Update property demonstration
+            updatePropertyDemo(num1, den1, num2, den2, result);
+        }
+
+        function updatePropertyDemo(num1, den1, num2, den2, result) {
+            const frac1 = formatFraction(num1, den1);
+            const frac2 = formatFraction(num2, den2);
+            const resultFrac = formatFraction(result.num, result.den);
+            
+            let demoHTML = '';
+            
+            switch (currentProperty) {
+                case 'closure':
+                    const isClosed = !isNaN(result.num) && result.den !== 0;
+                    demoHTML = `
+                        <div class="comparison-display">
+                            <div class="expression">${frac1} ${currentOperation} ${frac2}</div>
+                            <div class="equals-sign">=</div>
+                            <div class="expression">${resultFrac}</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <strong>${isClosed ? '✅' : '❌'} ${isClosed ? 'Result is a rational number!' : 'Result is not defined!'}</strong><br>
+                            <small>${isClosed ? 'Rational numbers are closed under this operation' : 'This shows the limitation of the operation'}</small>
+                        </div>
+                    `;
+                    break;
+                
+                case 'commutative':
+                    const result2 = calculateRational(num2, den2, num1, den1, currentOperation);
+                    const result2Frac = formatFraction(result2.num, result2.den);
+                    const isCommutative = result.num === result2.num && result.den === result2.den;
+                    demoHTML = `
+                        <div class="comparison-display">
+                            <div class="expression">${frac1} ${currentOperation} ${frac2} = ${resultFrac}</div>
+                            <div class="equals-sign">${isCommutative ? '=' : '≠'}</div>
+                            <div class="expression">${frac2} ${currentOperation} ${frac1} = ${result2Frac}</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <strong>${isCommutative ? '✅' : '❌'} ${isCommutative ? 'Commutative property holds!' : 'Commutative property does not hold!'}</strong>
+                        </div>
+                    `;
+                    break;
+                
+                case 'associative':
+                    // For demonstration, we'll use a third fraction 2/3
+                    const num3 = 2, den3 = 3;
+                    const frac3 = formatFraction(num3, den3);
+                    
+                    const temp1 = calculateRational(num1, den1, num2, den2, currentOperation);
+                    const leftSide = calculateRational(temp1.num, temp1.den, num3, den3, currentOperation);
+                    
+                    const temp2 = calculateRational(num2, den2, num3, den3, currentOperation);
+                    const rightSide = calculateRational(num1, den1, temp2.num, temp2.den, currentOperation);
+                    
+                    const leftFrac = formatFraction(leftSide.num, leftSide.den);
+                    const rightFrac = formatFraction(rightSide.num, rightSide.den);
+                    const isAssociative = leftSide.num === rightSide.num && leftSide.den === rightSide.den;
+                    
+                    demoHTML = `
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <small>Testing with third number: ${frac3}</small>
+                        </div>
+                        <div class="comparison-display">
+                            <div class="expression">(${frac1} ${currentOperation} ${frac2}) ${currentOperation} ${frac3} = ${leftFrac}</div>
+                            <div class="equals-sign">${isAssociative ? '=' : '≠'}</div>
+                            <div class="expression">${frac1} ${currentOperation} (${frac2} ${currentOperation} ${frac3}) = ${rightFrac}</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <strong>${isAssociative ? '✅' : '❌'} ${isAssociative ? 'Associative property holds!' : 'Associative property does not hold!'}</strong>
+                        </div>
+                    `;
+                    break;
+                
+                case 'distributive':
+                    if (currentOperation === '*') {
+                        // Show a × (b + c) = a × b + a × c using current fractions
+                        const sum = calculateRational(num2, den2, 1, 2, '+'); // Add 1/2 to second fraction
+                        const leftDist = calculateRational(num1, den1, sum.num, sum.den, '*');
+                        
+                        const prod1 = calculateRational(num1, den1, num2, den2, '*');
+                        const prod2 = calculateRational(num1, den1, 1, 2, '*');
+                        const rightDist = calculateRational(prod1.num, prod1.den, prod2.num, prod2.den, '+');
+                        
+                        const leftDistFrac = formatFraction(leftDist.num, leftDist.den);
+                        const rightDistFrac = formatFraction(rightDist.num, rightDist.den);
+                        const isDistributive = leftDist.num === rightDist.num && leftDist.den === rightDist.den;
+                        
+                        demoHTML = `
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <small>Testing: a × (b + c) = a × b + a × c</small>
+                            </div>
+                            <div class="comparison-display">
+                                <div class="expression">${frac1} × (${frac2} + 1/2) = ${leftDistFrac}</div>
+                                <div class="equals-sign">${isDistributive ? '=' : '≠'}</div>
+                                <div class="expression">${frac1} × ${frac2} + ${frac1} × 1/2 = ${rightDistFrac}</div>
+                            </div>
+                            <div style="text-align: center; margin-top: 15px;">
+                                <strong>${isDistributive ? '✅' : '❌'} ${isDistributive ? 'Distributive property holds!' : 'Distributive property does not hold!'}</strong>
+                            </div>
+                        `;
+                    } else {
+                        demoHTML = `
+                            <div style="text-align: center; padding: 20px;">
+                                <p>🔄 <strong>Switch to multiplication (×) to test the distributive property!</strong></p>
+                                <small>Distributive property applies to multiplication over addition/subtraction</small>
+                            </div>
+                        `;
+                    }
+                    break;
+            }
+            
+            document.getElementById('demoContent').innerHTML = demoHTML;
+        }
+
+        function testAddIdentity() {
+            const num = parseInt(document.getElementById('addIdentityNum').value) || 0;
+            const den = parseInt(document.getElementById('addIdentityDen').value) || 1;
+            
+            if (den === 0) {
+                document.getElementById('addIdentityResult').innerHTML = 'Error: denominator cannot be zero';
+                return;
+            }
+            
+            const result = formatFraction(num, den);
+            document.getElementById('addIdentityResult').innerHTML = result;
+            document.getElementById('addIdentityResult').style.color = '#10b981';
+        }
+
+        function testMulIdentity() {
+            const num = parseInt(document.getElementById('mulIdentityNum').value) || 0;
+            const den = parseInt(document.getElementById('mulIdentityDen').value) || 1;
+            
+            if (den === 0) {
+                document.getElementById('mulIdentityResult').innerHTML = 'Error: denominator cannot be zero';
+                return;
+            }
+            
+            const result = formatFraction(num, den);
+            document.getElementById('mulIdentityResult').innerHTML = result;
+            document.getElementById('mulIdentityResult').style.color = '#10b981';
+        }
+
+        function tryExample() {
+            // Calculate 3/7 + (-6/11) + (-8/21) + (5/22)
+            const step1 = calculateRational(3, 7, -8, 21, '+'); // 3/7 + (-8/21)
+            const step2 = calculateRational(-6, 11, 5, 22, '+'); // (-6/11) + 5/22
+            const final = calculateRational(step1.num, step1.den, step2.num, step2.den, '+');
+            
+            let resultHTML = `
+                <div style="background: #ecfdf5; border-radius: 8px; padding: 15px;">
+                    <h4 style="color: #10b981; margin-bottom: 10px;">✅ Verification Complete!</h4>
+                    <div><strong>Step 1:</strong> 3/7 + (-8/21) = ${formatFraction(step1.num, step1.den)}</div>
+                    <div><strong>Step 2:</strong> (-6/11) + 5/22 = ${formatFraction(step2.num, step2.den)}</div>
+                    <div><strong>Final:</strong> ${formatFraction(step1.num, step1.den)} + ${formatFraction(step2.num, step2.den)} = <strong>${formatFraction(final.num, final.den)}</strong></div>
+                    <div style="margin-top: 10px; color: #10b981;"><small>✨ This matches our textbook answer!</small></div>
+                </div>
+            `;
+            
+            document.getElementById('exampleResult').innerHTML = resultHTML;
+        }
+
+        function answerQuiz(questionNum, answer, element) {
+            // Remove previous selections
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Select current option
+            element.classList.add('selected');
+            
+            const feedback = document.getElementById('feedback' + questionNum);
+            const correctAnswers = {
+                1: 'commutative',
+                2: '0',
+                3: 'no'
+            };
+            
+            const isCorrect = answer === correctAnswers[questionNum];
+            
+            const explanations = {
+                1: 'The commutative property allows us to change the order of numbers in addition and multiplication.',
+                2: 'Zero (0) is the additive identity because a + 0 = 0 + a = a for any rational number a.',
+                3: 'Rational numbers are not closed under division because division by zero is undefined.'
+            };
+            
+            if (isCorrect) {
+                feedback.innerHTML = `<div class="feedback success">✅ Correct! ${explanations[questionNum]}</div>`;
+            } else {
+                feedback.innerHTML = `<div class="feedback error">❌ Not quite right. ${explanations[questionNum]}</div>`;
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test identity elements on load
+            testAddIdentity();
+            testMulIdentity();
+            
+            // Do initial calculation
+            calculateAndCheck();
+        });
+    </script>
+</body>
+</html>

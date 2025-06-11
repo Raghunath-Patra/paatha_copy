@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section 1.3: Real Numbers and Decimal Expansions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-left: 6px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .interactive-tool {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input, select, button {
+            padding: 12px 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .steps {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #fdcb6e;
+        }
+
+        .pattern-display {
+            font-family: 'Courier New', monospace;
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .option.correct {
+            background: #10b981;
+            transform: scale(1.1);
+        }
+
+        .option.incorrect {
+            background: #ef4444;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #333;
+        }
+
+        .animated {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .number-line {
+            background: white;
+            height: 80px;
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .number-line canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Section 1.3: Real Numbers and Decimal Expansions</h1>
+
+        <!-- Division Calculator -->
+        <div class="section">
+            <h2>🧮 Interactive Division Calculator</h2>
+            <p>Explore how division creates decimal expansions and observe remainder patterns!</p>
+            
+            <div class="interactive-tool">
+                <div class="input-group">
+                    <label>Numerator (p):</label>
+                    <input type="number" id="numerator" value="10" min="1">
+                    <label>Denominator (q):</label>
+                    <input type="number" id="denominator" value="3" min="1">
+                    <button onclick="performDivision()">Calculate Division</button>
+                </div>
+                
+                <div id="divisionResult" class="result-box">
+                    Enter numbers and click Calculate!
+                </div>
+                
+                <div id="divisionSteps" class="steps" style="display: none;">
+                    <h3>Step-by-step Division:</h3>
+                    <div id="stepsContent"></div>
+                </div>
+                
+                <div id="remainderPattern" class="pattern-display" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Decimal to Fraction Converter -->
+        <div class="section">
+            <h2>🔄 Decimal to Fraction Converter</h2>
+            <p>Convert recurring decimals back to fractions using algebraic methods!</p>
+            
+            <div class="interactive-tool">
+                <div class="input-group">
+                    <label>Enter decimal (use dots for recurring part):</label>
+                    <input type="text" id="decimalInput" placeholder="e.g., 0.333... or 1.272727...">
+                    <button onclick="convertToFraction()">Convert to Fraction</button>
+                </div>
+                
+                <div id="fractionResult" class="result-box">
+                    Enter a decimal to convert!
+                </div>
+                
+                <div id="conversionSteps" class="steps" style="display: none;">
+                    <h3>Conversion Steps:</h3>
+                    <div id="conversionContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Number Classification Tool -->
+        <div class="section">
+            <h2>🎯 Number Classification Tool</h2>
+            <p>Identify whether numbers are rational or irrational based on their decimal expansions!</p>
+            
+            <div class="interactive-tool">
+                <div class="input-group">
+                    <label>Enter a decimal:</label>
+                    <input type="text" id="classifyInput" placeholder="e.g., 3.14159... or 0.75">
+                    <button onclick="classifyNumber()">Classify Number</button>
+                </div>
+                
+                <div id="classificationResult" class="result-box">
+                    Enter a number to classify!
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Quiz -->
+        <div class="quiz-section">
+            <h2>🎓 Knowledge Check Quiz</h2>
+            
+            <div class="quiz-question">
+                <h3>Question 1: What type of decimal expansion does 7/8 have?</h3>
+                <div class="options">
+                    <div class="option" onclick="checkAnswer(this, false)">Non-terminating recurring</div>
+                    <div class="option" onclick="checkAnswer(this, true)">Terminating</div>
+                    <div class="option" onclick="checkAnswer(this, false)">Non-terminating non-recurring</div>
+                    <div class="option" onclick="checkAnswer(this, false)">Undefined</div>
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>Question 2: Which of these represents an irrational number?</h3>
+                <div class="options">
+                    <div class="option" onclick="checkAnswer(this, false)">0.333...</div>
+                    <div class="option" onclick="checkAnswer(this, false)">22/7</div>
+                    <div class="option" onclick="checkAnswer(this, true)">0.101001000100001...</div>
+                    <div class="option" onclick="checkAnswer(this, false)">0.142857142857...</div>
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>Question 3: What is 0.̅3̅ equal to?</h3>
+                <div class="options">
+                    <div class="option" onclick="checkAnswer(this, false)">3/10</div>
+                    <div class="option" onclick="checkAnswer(this, true)">1/3</div>
+                    <div class="option" onclick="checkAnswer(this, false)">3/9</div>
+                    <div class="option" onclick="checkAnswer(this, false)">0.3</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pattern Generator -->
+        <div class="section">
+            <h2>🌟 Irrational Number Generator</h2>
+            <p>Create your own irrational numbers with non-terminating, non-recurring patterns!</p>
+            
+            <div class="interactive-tool">
+                <div class="input-group">
+                    <label>Choose pattern type:</label>
+                    <select id="patternType">
+                        <option value="increasing">Increasing gaps (0.101001000...)</option>
+                        <option value="fibonacci">Fibonacci pattern</option>
+                        <option value="squares">Perfect squares pattern</option>
+                        <option value="custom">Custom pattern</option>
+                    </select>
+                    <button onclick="generateIrrational()">Generate</button>
+                </div>
+                
+                <div id="irrationalPattern" class="pattern-display">
+                    Click Generate to create an irrational number pattern!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function performDivision() {
+            const num = parseInt(document.getElementById('numerator').value);
+            const den = parseInt(document.getElementById('denominator').value);
+            
+            if (den === 0) {
+                document.getElementById('divisionResult').innerHTML = "Error: Division by zero!";
+                return;
+            }
+            
+            let quotient = Math.floor(num / den);
+            let remainder = num % den;
+            let decimal = quotient + ".";
+            let remainders = [];
+            let positions = {};
+            let steps = [];
+            let position = 0;
+            
+            steps.push(`${num} ÷ ${den} = ${quotient} remainder ${remainder}`);
+            
+            if (remainder === 0) {
+                decimal = quotient.toString();
+                document.getElementById('divisionResult').innerHTML = 
+                    `<span class="highlight">${num}/${den} = ${decimal}</span><br>
+                    Type: Terminating decimal`;
+            } else {
+                while (remainder !== 0 && !(remainder in positions)) {
+                    positions[remainder] = position;
+                    remainders.push(remainder);
+                    
+                    remainder *= 10;
+                    let digit = Math.floor(remainder / den);
+                    decimal += digit;
+                    steps.push(`${remainder} ÷ ${den} = ${digit} remainder ${remainder % den}`);
+                    remainder = remainder % den;
+                    position++;
+                    
+                    if (position > 20) break; // Prevent infinite loop
+                }
+                
+                if (remainder === 0) {
+                    document.getElementById('divisionResult').innerHTML = 
+                        `<span class="highlight">${num}/${den} = ${decimal}</span><br>
+                        Type: Terminating decimal`;
+                } else {
+                    let recurringStart = positions[remainder];
+                    let beforeRecurring = decimal.substring(0, decimal.indexOf('.') + 1 + recurringStart);
+                    let recurringPart = decimal.substring(decimal.indexOf('.') + 1 + recurringStart);
+                    
+                    document.getElementById('divisionResult').innerHTML = 
+                        `<span class="highlight">${num}/${den} = ${beforeRecurring}<span style="text-decoration: overline;">${recurringPart}</span></span><br>
+                        Type: Non-terminating recurring decimal<br>
+                        Recurring block: ${recurringPart}`;
+                }
+            }
+            
+            // Show steps
+            document.getElementById('stepsContent').innerHTML = steps.map(step => 
+                `<div class="step">${step}</div>`).join('');
+            document.getElementById('divisionSteps').style.display = 'block';
+            
+            // Show remainder pattern
+            if (remainders.length > 0) {
+                document.getElementById('remainderPattern').innerHTML = 
+                    `Remainder pattern: ${remainders.join(', ')}${remainder !== 0 ? ', ...' : ''}`;
+                document.getElementById('remainderPattern').style.display = 'block';
+            }
+        }
+
+        function convertToFraction() {
+            const decimal = document.getElementById('decimalInput').value.trim();
+            
+            if (!decimal) {
+                document.getElementById('fractionResult').innerHTML = "Please enter a decimal!";
+                return;
+            }
+            
+            let steps = [];
+            
+            if (decimal.includes('...') || /(\d)\1{2,}/.test(decimal)) {
+                // Recurring decimal
+                if (decimal === "0.333..." || decimal === "0.3̅") {
+                    steps.push("Let x = 0.333...");
+                    steps.push("Multiply by 10: 10x = 3.333...");
+                    steps.push("Since 10x = 3 + 0.333... = 3 + x");
+                    steps.push("Therefore: 10x - x = 3");
+                    steps.push("9x = 3");
+                    steps.push("x = 3/9 = 1/3");
+                    
+                    document.getElementById('fractionResult').innerHTML = 
+                        `<span class="highlight">0.333... = 1/3</span>`;
+                } else if (decimal === "1.272727..." || decimal === "1.2̅7̅") {
+                    steps.push("Let x = 1.272727...");
+                    steps.push("Since 2 digits repeat, multiply by 100: 100x = 127.272727...");
+                    steps.push("So 100x = 126 + 1.272727... = 126 + x");
+                    steps.push("Therefore: 100x - x = 126");
+                    steps.push("99x = 126");
+                    steps.push("x = 126/99 = 14/11");
+                    
+                    document.getElementById('fractionResult').innerHTML = 
+                        `<span class="highlight">1.272727... = 14/11</span>`;
+                } else {
+                    document.getElementById('fractionResult').innerHTML = 
+                        "Try 0.333... or 1.272727... for demonstration!";
+                }
+            } else {
+                // Terminating decimal
+                let decimalPart = decimal.split('.')[1] || '';
+                let denominator = Math.pow(10, decimalPart.length);
+                let numerator = parseInt(decimal.replace('.', ''));
+                
+                // Simplify fraction
+                let gcd = function(a, b) {
+                    return b === 0 ? a : gcd(b, a % b);
+                };
+                
+                let commonFactor = gcd(numerator, denominator);
+                numerator /= commonFactor;
+                denominator /= commonFactor;
+                
+                steps.push(`Convert ${decimal} to fraction`);
+                steps.push(`${decimal} = ${parseInt(decimal.replace('.', ''))}/${Math.pow(10, decimalPart.length)}`);
+                if (commonFactor > 1) {
+                    steps.push(`Simplify by dividing by ${commonFactor}`);
+                    steps.push(`= ${numerator}/${denominator}`);
+                }
+                
+                document.getElementById('fractionResult').innerHTML = 
+                    `<span class="highlight">${decimal} = ${numerator}/${denominator}</span>`;
+            }
+            
+            // Show conversion steps
+            document.getElementById('conversionContent').innerHTML = steps.map(step => 
+                `<div class="step">${step}</div>`).join('');
+            document.getElementById('conversionSteps').style.display = 'block';
+        }
+
+        function classifyNumber() {
+            const input = document.getElementById('classifyInput').value.trim();
+            
+            if (!input) {
+                document.getElementById('classificationResult').innerHTML = "Please enter a number!";
+                return;
+            }
+            
+            let result = "";
+            let explanation = "";
+            
+            if (input.includes('...') && /(\d)\1{2,}/.test(input.replace('...', ''))) {
+                result = "RATIONAL";
+                explanation = "Non-terminating recurring decimal → Rational number";
+            } else if (input.includes('...')) {
+                result = "IRRATIONAL";
+                explanation = "Non-terminating non-recurring decimal → Irrational number";
+            } else if (!isNaN(parseFloat(input))) {
+                result = "RATIONAL";
+                explanation = "Terminating decimal → Rational number";
+            } else {
+                result = "Invalid input";
+                explanation = "Please enter a valid decimal number";
+            }
+            
+            document.getElementById('classificationResult').innerHTML = 
+                `<div style="font-size: 1.5em; margin-bottom: 10px;">${result}</div>
+                <div>${explanation}</div>`;
+        }
+
+        function checkAnswer(element, isCorrect) {
+            const options = element.parentNode.children;
+            for (let option of options) {
+                option.style.pointerEvents = 'none';
+            }
+            
+            if (isCorrect) {
+                element.classList.add('correct');
+                element.innerHTML += ' ✓ Correct!';
+            } else {
+                element.classList.add('incorrect');
+                element.innerHTML += ' ✗ Incorrect';
+                // Highlight correct answer
+                for (let option of options) {
+                    if (option.onclick.toString().includes('true')) {
+                        option.classList.add('correct');
+                        option.innerHTML += ' ← Correct Answer';
+                        break;
+                    }
+                }
+            }
+        }
+
+        function generateIrrational() {
+            const patternType = document.getElementById('patternType').value;
+            let pattern = "0.";
+            
+            switch(patternType) {
+                case 'increasing':
+                    pattern += "1";
+                    for (let i = 1; i <= 8; i++) {
+                        pattern += "0".repeat(i) + "1";
+                    }
+                    pattern += "...";
+                    break;
+                    
+                case 'fibonacci':
+                    let fib = [1, 1];
+                    pattern += "1";
+                    for (let i = 0; i < 10; i++) {
+                        let next = fib[fib.length-1] + fib[fib.length-2];
+                        fib.push(next);
+                        pattern += next.toString();
+                    }
+                    pattern += "...";
+                    break;
+                    
+                case 'squares':
+                    for (let i = 1; i <= 10; i++) {
+                        pattern += (i*i).toString();
+                    }
+                    pattern += "...";
+                    break;
+                    
+                case 'custom':
+                    pattern += "123456789101112131415161718192021222324...";
+                    break;
+            }
+            
+            document.getElementById('irrationalPattern').innerHTML = 
+                `Generated irrational number:\n${pattern}\n\nThis is irrational because the decimal expansion is non-terminating and non-recurring!`;
+        }
+
+        // Initialize with default calculation
+        window.onload = function() {
+            performDivision();
+        };
+    </script>
+</body>
+</html>

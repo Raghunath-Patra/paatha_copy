@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-fertilisation: Structures and Events</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px 10px;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .diagram-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .diagram-section {
+            flex: 1;
+            min-width: 300px;
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .diagram-section h3 {
+            margin-bottom: 15px;
+            color: #2d5a2d;
+            font-size: 1.3em;
+        }
+
+        .stamen-diagram, .pistil-diagram, .pollen-diagram, .pollination-diagram {
+            width: 100%;
+            max-width: 350px;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        .interactive-element {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .interactive-element:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .info-panel h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .info-panel ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .info-panel li {
+            margin: 8px 0;
+            list-style-type: none;
+            position: relative;
+        }
+
+        .info-panel li:before {
+            content: "🔬";
+            position: absolute;
+            left: -20px;
+        }
+
+        .process-container {
+            background: linear-gradient(135deg, #20c997, #38d9a9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .step-number {
+            background: #ffd43b;
+            color: #333;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 15px;
+            font-size: 1.2em;
+        }
+
+        .quiz-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            border-color: #ffd43b;
+            background: rgba(255, 212, 59, 0.3);
+        }
+
+        .option.correct {
+            border-color: #51cf66;
+            background: rgba(81, 207, 102, 0.3);
+        }
+
+        .option.incorrect {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .interactive-section {
+            background: linear-gradient(135deg, #e91e63, #f06292);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .matching-game {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .match-column {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .match-item {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .match-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .match-item.selected {
+            border-color: #ffd43b;
+            background: rgba(255, 212, 59, 0.8);
+        }
+
+        .match-item.correct {
+            border-color: #51cf66;
+            background: rgba(81, 207, 102, 0.8);
+            pointer-events: none;
+        }
+
+        .match-item.incorrect {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.8);
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 768px) {
+            .diagram-container {
+                flex-direction: column;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            .matching-game {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab {
+                font-size: 0.8em;
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Pre-fertilisation: Structures and Events 🔬</h1>
+            <p>Explore the intricate world of reproductive structures and processes in flowering plants</p>
+        </div>
+
+        <div class="section">
+            <h2>📚 Section Overview</h2>
+            <div class="tab-container">
+                <button class="tab active" onclick="showTab('overview')">Overview</button>
+                <button class="tab" onclick="showTab('stamen')">Stamen</button>
+                <button class="tab" onclick="showTab('pistil')">Pistil</button>
+                <button class="tab" onclick="showTab('pollination')">Pollination</button>
+                <button class="tab" onclick="showTab('pollen-pistil')">Pollen-Pistil</button>
+            </div>
+
+            <div id="overview" class="tab-content active">
+                <h3>🌱 Pre-fertilisation Events</h3>
+                <p>Before fertilisation can occur, flowering plants must develop specialized reproductive structures and undergo specific processes:</p>
+                <ul style="margin: 15px 0; padding-left: 20px;">
+                    <li><strong>Androecium Development:</strong> Male reproductive organs (stamens) produce pollen grains</li>
+                    <li><strong>Gynoecium Development:</strong> Female reproductive organs (pistils) develop ovules</li>
+                    <li><strong>Microsporogenesis:</strong> Formation of male gametes through meiosis</li>
+                    <li><strong>Megasporogenesis:</strong> Formation of female gametes through meiosis</li>
+                    <li><strong>Pollination:</strong> Transfer of pollen from anther to stigma</li>
+                    <li><strong>Pollen-Pistil Interaction:</strong> Recognition and compatibility processes</li>
+                </ul>
+            </div>
+
+            <div id="stamen" class="tab-content">
+                <h3>🏺 Stamen Structure and Function</h3>
+                <p>The stamen consists of two main parts working together for pollen production:</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div>
+                        <h4>🌿 Structural Components</h4>
+                        <ul>
+                            <li><strong>Filament:</strong> Long, slender stalk supporting the anther</li>
+                            <li><strong>Anther:</strong> Bilobed structure containing microsporangia</li>
+                            <li><strong>Microsporangia:</strong> Four pollen sacs (two per lobe)</li>
+                            <li><strong>Tapetum:</strong> Innermost layer nourishing pollen development</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>🔄 Functional Processes</h4>
+                        <ul>
+                            <li><strong>Microsporogenesis:</strong> Meiotic division forming microspores</li>
+                            <li><strong>Pollen maturation:</strong> Development of male gametophytes</li>
+                            <li><strong>Dehiscence:</strong> Opening of anthers to release pollen</li>
+                            <li><strong>Pollen dispersal:</strong> Transfer via wind, water, or animals</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pistil" class="tab-content">
+                <h3>🌺 Pistil Structure and Ovule Development</h3>
+                <p>The pistil forms the female reproductive system with three distinct parts:</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div>
+                        <h4>🎯 Pistil Components</h4>
+                        <ul>
+                            <li><strong>Stigma:</strong> Receptive surface for pollen</li>
+                            <li><strong>Style:</strong> Connecting tube between stigma and ovary</li>
+                            <li><strong>Ovary:</strong> Contains ovules and develops into fruit</li>
+                            <li><strong>Placenta:</strong> Tissue bearing ovules</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>🥚 Ovule Structure</h4>
+                        <ul>
+                            <li><strong>Integuments:</strong> Protective layers around nucellus</li>
+                            <li><strong>Micropyle:</strong> Opening for pollen tube entry</li>
+                            <li><strong>Nucellus:</strong> Central tissue containing embryo sac</li>
+                            <li><strong>Embryo Sac:</strong> 7-celled female gametophyte</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pollination" class="tab-content">
+                <h3>🦋 Pollination Mechanisms</h3>
+                <p>Transfer of pollen from anther to stigma through various agents:</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+                    <div>
+                        <h4>🌪️ Abiotic Pollination</h4>
+                        <ul>
+                            <li><strong>Wind:</strong> Light, non-sticky pollen</li>
+                            <li><strong>Water:</strong> Ribbon-like pollen grains</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>🐝 Biotic Pollination</h4>
+                        <ul>
+                            <li><strong>Insects:</strong> Bees, butterflies, beetles</li>
+                            <li><strong>Birds:</strong> Hummingbirds, sunbirds</li>
+                            <li><strong>Mammals:</strong> Bats, primates</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>🎯 Pollination Types</h4>
+                        <ul>
+                            <li><strong>Autogamy:</strong> Self-pollination</li>
+                            <li><strong>Geitonogamy:</strong> Same plant</li>
+                            <li><strong>Xenogamy:</strong> Different plants</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pollen-pistil" class="tab-content">
+                <h3>🤝 Pollen-Pistil Interaction</h3>
+                <p>Complex molecular dialogue between pollen and pistil determining compatibility:</p>
+                <ol style="margin: 15px 0; padding-left: 20px;">
+                    <li><strong>Pollen Recognition:</strong> Chemical identification of pollen type</li>
+                    <li><strong>Compatibility Assessment:</strong> Accept compatible, reject incompatible pollen</li>
+                    <li><strong>Pollen Germination:</strong> Formation of pollen tube through germ pore</li>
+                    <li><strong>Tube Growth:</strong> Navigation through stigma and style tissues</li>
+                    <li><strong>Ovule Entry:</strong> Guidance by filiform apparatus of synergids</li>
+                    <li><strong>Gamete Delivery:</strong> Release of male gametes for fertilization</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔬 Interactive Reproductive Structures</h2>
+            <p>Click on different parts to explore their structure and function!</p>
+            
+            <div class="diagram-container">
+                <div class="diagram-section">
+                    <h3>🏺 Stamen Anatomy</h3>
+                    <svg class="stamen-diagram" viewBox="0 0 350 400">
+                        <defs>
+                            <radialGradient id="antherGrad" cx="50%" cy="30%" r="70%">
+                                <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#ffa500;stop-opacity:1" />
+                            </radialGradient>
+                            <linearGradient id="filamentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#90ee90;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#228b22;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- Filament -->
+                        <rect x="170" y="200" width="10" height="180" fill="url(#filamentGrad)" class="interactive-element" onclick="showInfo('filament')" rx="5"/>
+                        
+                        <!-- Anther lobes -->
+                        <ellipse cx="155" cy="150" rx="20" ry="60" fill="url(#antherGrad)" class="interactive-element" onclick="showInfo('anther')" stroke="#ff8c00" stroke-width="2"/>
+                        <ellipse cx="195" cy="150" rx="20" ry="60" fill="url(#antherGrad)" class="interactive-element" onclick="showInfo('anther')" stroke="#ff8c00" stroke-width="2"/>
+                        
+                        <!-- Connective -->
+                        <rect x="172" y="90" width="6" height="120" fill="#8b4513" class="interactive-element" onclick="showInfo('connective')"/>
+                        
+                        <!-- Microsporangia (pollen sacs) -->
+                        <ellipse cx="145" cy="120" rx="12" ry="25" fill="#ffff99" class="interactive-element" onclick="showInfo('microsporangia')" opacity="0.8"/>
+                        <ellipse cx="165" cy="120" rx="12" ry="25" fill="#ffff99" class="interactive-element" onclick="showInfo('microsporangia')" opacity="0.8"/>
+                        <ellipse cx="185" cy="120" rx="12" ry="25" fill="#ffff99" class="interactive-element" onclick="showInfo('microsporangia')" opacity="0.8"/>
+                        <ellipse cx="205" cy="120" rx="12" ry="25" fill="#ffff99" class="interactive-element" onclick="showInfo('microsporangia')" opacity="0.8"/>
+                        
+                        <!-- Pollen grains -->
+                        <circle cx="145" cy="115" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        <circle cx="150" cy="125" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        <circle cx="160" cy="115" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        <circle cx="165" cy="125" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        <circle cx="185" cy="115" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        <circle cx="190" cy="125" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        <circle cx="200" cy="115" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        <circle cx="205" cy="125" r="3" fill="#ffd700" class="interactive-element" onclick="showInfo('pollen')"/>
+                        
+                        <!-- Labels -->
+                        <text x="250" y="100" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Anther</text>
+                        <line x1="230" y1="105" x2="195" y2="150" stroke="#333" stroke-width="1"/>
+                        
+                        <text x="250" y="250" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Filament</text>
+                        <line x1="250" y1="245" x2="180" y2="290" stroke="#333" stroke-width="1"/>
+                        
+                        <text x="50" y="130" font-family="Arial" font-size="10" font-weight="bold" fill="#333">Pollen Sacs</text>
+                        <line x1="110" y1="135" x2="145" y2="120" stroke="#333" stroke-width="1"/>
+                    </svg>
+                </div>
+
+                <div class="diagram-section">
+                    <h3>🌺 Pistil and Ovule</h3>
+                    <svg class="pistil-diagram" viewBox="0 0 350 400">
+                        <defs>
+                            <radialGradient id="stigmaGrad" cx="50%" cy="30%" r="70%">
+                                <stop offset="0%" style="stop-color:#ff69b4;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#ff1493;stop-opacity:1" />
+                            </radialGradient>
+                            <linearGradient id="styleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#dda0dd;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#9370db;stop-opacity:1" />
+                            </linearGradient>
+                            <radialGradient id="ovaryGrad" cx="50%" cy="30%" r="70%">
+                                <stop offset="0%" style="stop-color:#98fb98;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#32cd32;stop-opacity:1" />
+                            </radialGradient>
+                        </defs>
+                        
+                        <!-- Stigma -->
+                        <ellipse cx="175" cy="80" rx="25" ry="15" fill="url(#stigmaGrad)" class="interactive-element" onclick="showInfo('stigma')" stroke="#ff1493" stroke-width="2"/>
+                        <circle cx="170" cy="75" r="4" fill="#ff1493"/>
+                        <circle cx="180" cy="75" r="4" fill="#ff1493"/>
+                        <circle cx="175" cy="85" r="4" fill="#ff1493"/>
+                        
+                        <!-- Style -->
+                        <rect x="170" y="95" width="10" height="100" fill="url(#styleGrad)" class="interactive-element" onclick="showInfo('style')" rx="5"/>
+                        
+                        <!-- Ovary -->
+                        <ellipse cx="175" cy="230" rx="45" ry="35" fill="url(#ovaryGrad)" class="interactive-element" onclick="showInfo('ovary')" stroke="#228b22" stroke-width="2"/>
+                        
+                        <!-- Ovules -->
+                        <ellipse cx="155" cy="220" rx="12" ry="18" fill="#fff" class="interactive-element" onclick="showInfo('ovule')" stroke="#666" stroke-width="1"/>
+                        <ellipse cx="175" cy="225" rx="12" ry="18" fill="#fff" class="interactive-element" onclick="showInfo('ovule')" stroke="#666" stroke-width="1"/>
+                        <ellipse cx="195" cy="220" rx="12" ry="18" fill="#fff" class="interactive-element" onclick="showInfo('ovule')" stroke="#666" stroke-width="1"/>
+                        
+                        <!-- Detailed ovule structure -->
+                        <g transform="translate(260, 150)">
+                            <text x="0" y="-10" font-family="Arial" font-size="10" font-weight="bold" fill="#333">Ovule Detail</text>
+                            
+                            <!-- Integuments -->
+                            <ellipse cx="0" cy="30" rx="20" ry="35" fill="#f0f0f0" stroke="#999" stroke-width="2" class="interactive-element" onclick="showInfo('integuments')"/>
+                            <ellipse cx="0" cy="30" rx="15" ry="30" fill="#fff" stroke="#999" stroke-width="1"/>
+                            
+                            <!-- Nucellus -->
+                            <ellipse cx="0" cy="30" rx="10" ry="20" fill="#e6e6fa" class="interactive-element" onclick="showInfo('nucellus')"/>
+                            
+                            <!-- Embryo sac -->
+                            <ellipse cx="0" cy="30" rx="6" ry="12" fill="#ffb6c1" class="interactive-element" onclick="showInfo('embryosac')"/>
+                            
+                            <!-- Micropyle -->
+                            <circle cx="0" cy="10" r="3" fill="none" stroke="#333" stroke-width="2" class="interactive-element" onclick="showInfo('micropyle')"/>
+                            
+                            <!-- Labels -->
+                            <text x="25" y="15" font-family="Arial" font-size="8" fill="#333">Micropyle</text>
+                            <text x="25" y="35" font-family="Arial" font-size="8" fill="#333">Embryo Sac</text>
+                            <text x="25" y="50" font-family="Arial" font-size="8" fill="#333">Integuments</text>
+                        </g>
+                        
+                        <!-- Main labels -->
+                        <text x="250" y="85" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Stigma</text>
+                        <line x1="240" y1="90" x2="200" y2="80" stroke="#333" stroke-width="1"/>
+                        
+                        <text x="50" y="150" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Style</text>
+                        <line x1="90" y1="155" x2="170" y2="145" stroke="#333" stroke-width="1"/>
+                        
+                        <text x="50" y="240" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Ovary</text>
+                        <line x1="80" y1="235" x2="130" y2="230" stroke="#333" stroke-width="1"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div id="structure-info" class="info-panel">
+                <h3 id="structure-title"></h3>
+                <p id="structure-description"></p>
+                <ul id="structure-functions"></ul>
+            </div>
+        </div>
+
+        <div class="process-container">
+            <h2>🔄 Microsporogenesis and Megasporogenesis</h2>
+            <p>Understanding the formation of male and female gametes through meiotic divisions</p>
+            
+            <div class="process-steps">
+                <div class="step" onclick="showProcessInfo('microsporogenesis')">
+                    <div class="step-number">1</div>
+                    <h3>Microsporogenesis</h3>
+                    <p>Formation of microspores from pollen mother cells (PMCs) through meiosis</p>
+                </div>
+                
+                <div class="step" onclick="showProcessInfo('pollen-development')">
+                    <div class="step-number">2</div>
+                    <h3>Pollen Development</h3>
+                    <p>Microspores mature into pollen grains containing male gametes</p>
+                </div>
+                
+                <div class="step" onclick="showProcessInfo('megasporogenesis')">
+                    <div class="step-number">3</div>
+                    <h3>Megasporogenesis</h3>
+                    <p>Formation of megaspores from megaspore mother cells (MMCs)</p>
+                </div>
+                
+                <div class="step" onclick="showProcessInfo('embryosac-formation')">
+                    <div class="step-number">4</div>
+                    <h3>Embryo Sac Formation</h3>
+                    <p>Development of 7-celled female gametophyte from functional megaspore</p>
+                </div>
+            </div>
+            
+            <div id="process-info" class="info-panel">
+                <h3 id="process-title"></h3>
+                <p id="process-description"></p>
+                <ul id="process-details"></ul>
+            </div>
+        </div>
+
+        <div class="interactive-section">
+            <h2>🎯 Structure-Function Matching Game</h2>
+            <p>Match each reproductive structure with its correct function!</p>
+            
+            <div class="matching-game">
+                <div class="match-column">
+                    <h3>🔬 Structures</h3>
+                    <div class="match-item" data-type="structure" data-id="tapetum" onclick="selectMatch(this)">Tapetum</div>
+                    <div class="match-item" data-type="structure" data-id="filiform" onclick="selectMatch(this)">Filiform Apparatus</div>
+                    <div class="match-item" data-type="structure" data-id="exine" onclick="selectMatch(this)">Exine</div>
+                    <div class="match-item" data-type="structure" data-id="synergids" onclick="selectMatch(this)">Synergids</div>
+                    <div class="match-item" data-type="structure" data-id="integuments" onclick="selectMatch(this)">Integuments</div>
+                    <div class="match-item" data-type="structure" data-id="sporopollenin" onclick="selectMatch(this)">Sporopollenin</div>
+                </div>
+                
+                <div class="match-column">
+                    <h3>⚡ Functions</h3>
+                    <div class="match-item" data-type="function" data-id="tapetum" onclick="selectMatch(this)">Nourishes developing pollen grains</div>
+                    <div class="match-item" data-type="function" data-id="filiform" onclick="selectMatch(this)">Guides pollen tube into synergid</div>
+                    <div class="match-item" data-type="function" data-id="exine" onclick="selectMatch(this)">Hard outer wall of pollen grain</div>
+                    <div class="match-item" data-type="function" data-id="synergids" onclick="selectMatch(this)">Help in fertilization process</div>
+                    <div class="match-item" data-type="function" data-id="integuments" onclick="selectMatch(this)">Protective layers around ovule</div>
+                    <div class="match-item" data-type="function" data-id="sporopollenin" onclick="selectMatch(this)">Most resistant organic material</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="checkMatches()">Check Matches</button>
+                <button class="btn" onclick="resetMatching()">Reset Game</button>
+            </div>
+        </div>
+
+        <div class="quiz-container">
+            <h2>🧠 Test Your Knowledge</h2>
+            <div id="quiz">
+                <!-- Quiz questions will be loaded here -->
+            </div>
+            <div class="score" id="score" style="display: none;"></div>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+            <button class="btn" onclick="resetQuiz()" style="display: none;" id="resetBtn">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let totalQuestions = 0;
+        let quizData = [];
+        let selectedMatches = { structure: null, function: null };
+        let correctMatches = 0;
+
+        const questions = [
+            {
+                question: "What is the function of the tapetum in microsporangia?",
+                options: ["Protects pollen grains", "Nourishes developing pollen grains", "Helps in dehiscence", "Stores water"],
+                correct: 1,
+                explanation: "The tapetum is the innermost wall layer that nourishes the developing pollen grains with dense cytoplasm and nutrients."
+            },
+            {
+                question: "How many cells are present in a typical mature embryo sac?",
+                options: ["6 cells", "7 cells", "8 cells", "9 cells"],
+                correct: 1,
+                explanation: "A mature embryo sac is 8-nucleate but 7-celled: 3 antipodals, 2 synergids, 1 egg cell, and 1 central cell with 2 polar nuclei."
+            },
+            {
+                question: "What is the most resistant organic material found in pollen grain walls?",
+                options: ["Cellulose", "Lignin", "Sporopollenin", "Chitin"],
+                correct: 2,
+                explanation: "Sporopollenin in the exine is the most resistant organic material known, withstanding high temperatures and strong acids."
+            },
+            {
+                question: "Which type of pollination brings genetically different pollen to the stigma?",
+                options: ["Autogamy", "Geitonogamy", "Xenogamy", "Cleistogamy"],
+                correct: 2,
+                explanation: "Xenogamy involves transfer of pollen between different plants, ensuring genetic diversity."
+            },
+            {
+                question: "What guides the pollen tube into the synergid during fertilization?",
+                options: ["Micropyle", "Filiform apparatus", "Integuments", "Polar nuclei"],
+                correct: 1,
+                explanation: "The filiform apparatus consists of special cellular thickenings at the micropylar tip of synergids that guide pollen tubes."
+            },
+            {
+                question: "In which plants does the generative cell divide before pollen grain release?",
+                options: ["60% of angiosperms", "40% of angiosperms", "All angiosperms", "No angiosperms"],
+                correct: 1,
+                explanation: "In about 40% of angiosperms, the generative cell divides to form two male gametes before pollen grains are shed (3-celled stage)."
+            }
+        ];
+
+        const structureInfo = {
+            filament: {
+                title: "Filament - The Supporting Stalk 🌿",
+                description: "The filament is the long, slender stalk that supports the anther, positioning it optimally for pollen dispersal.",
+                functions: [
+                    "Supports and elevates the anther for effective pollen release",
+                    "Positions anther for optimal exposure to wind or pollinators",
+                    "Varies in length among different species",
+                    "Attached to thalamus or petal base",
+                    "May have different arrangements (exserted vs. included)"
+                ]
+            },
+            anther: {
+                title: "Anther - The Pollen Factory 🏭",
+                description: "The anther is a bilobed structure containing four microsporangia where pollen grains develop and mature.",
+                functions: [
+                    "Houses four microsporangia (pollen sacs)",
+                    "Protects developing pollen grains",
+                    "Undergoes dehiscence to release mature pollen",
+                    "Contains tapetum for nourishing pollen",
+                    "Shows various dehiscence patterns (longitudinal, poricidal, etc.)"
+                ]
+            },
+            connective: {
+                title: "Connective - The Central Support 🔗",
+                description: "The connective is the tissue that connects the two anther lobes and contains the vascular bundle.",
+                functions: [
+                    "Connects the two anther lobes structurally",
+                    "Contains vascular tissue for nutrient transport",
+                    "Provides mechanical support to anther",
+                    "May extend beyond anther lobes in some species",
+                    "Houses the continuation of filament tissue"
+                ]
+            },
+            microsporangia: {
+                title: "Microsporangia - Pollen Development Centers 🧬",
+                description: "Four chambers within the anther where microsporogenesis occurs and pollen grains develop.",
+                functions: [
+                    "Site of microsporogenesis (meiotic divisions)",
+                    "Protected environment for pollen development",
+                    "Contains sporogenous tissue that forms microspores",
+                    "Surrounded by four wall layers including tapetum",
+                    "Mature into pollen sacs containing thousands of pollen grains"
+                ]
+            },
+            pollen: {
+                title: "Pollen Grains - Male Gametophytes 🌾",
+                description: "Mature male gametophytes containing vegetative and generative cells for reproduction.",
+                functions: [
+                    "Carry male gametes for fertilization",
+                    "Protected by resistant sporopollenin wall",
+                    "Germinate on compatible stigma surface",
+                    "Form pollen tubes for gamete delivery",
+                    "May be 2-celled or 3-celled at maturity"
+                ]
+            },
+            stigma: {
+                title: "Stigma - The Landing Platform 🎯",
+                description: "The receptive tip of the pistil that receives and recognizes pollen grains.",
+                functions: [
+                    "Receives pollen grains during pollination",
+                    "Recognizes compatible vs. incompatible pollen",
+                    "Provides surface for pollen germination",
+                    "May be sticky, feathery, or smooth depending on pollination type",
+                    "Initiates pollen-pistil interaction dialogue"
+                ]
+            },
+            style: {
+                title: "Style - The Connecting Tube 🔄",
+                description: "The elongated structure connecting stigma to ovary, through which pollen tubes grow.",
+                functions: [
+                    "Connects stigma to ovary",
+                    "Provides pathway for pollen tube growth",
+                    "May contain inhibitory substances for incompatible pollen",
+                    "Varies in length among different species",
+                    "Contains transmitting tissue for guiding pollen tubes"
+                ]
+            },
+            ovary: {
+                title: "Ovary - The Seed House 🏠",
+                description: "The basal swollen part of pistil containing ovules that develop into seeds after fertilization.",
+                functions: [
+                    "Contains and protects ovules",
+                    "Develops into fruit after fertilization",
+                    "Provides nutrients for seed development",
+                    "May have one or multiple chambers (locules)",
+                    "Bears ovules on placental tissue"
+                ]
+            },
+            ovule: {
+                title: "Ovule - Future Seed 🌱",
+                description: "The structure containing the female gametophyte, which develops into a seed after fertilization.",
+                functions: [
+                    "Contains embryo sac (female gametophyte)",
+                    "Develops into seed after fertilization",
+                    "Protected by integuments",
+                    "Has micropyle for pollen tube entry",
+                    "Attached to placenta via funicle"
+                ]
+            },
+            integuments: {
+                title: "Integuments - Protective Layers 🛡️",
+                description: "One or two protective envelopes surrounding the nucellus, forming the seed coat after fertilization.",
+                functions: [
+                    "Protect the developing nucellus and embryo sac",
+                    "Form the seed coat after fertilization",
+                    "Leave micropyle opening for pollen tube entry",
+                    "May be single (unitegmic) or double (bitegmic)",
+                    "Provide structural support to ovule"
+                ]
+            },
+            nucellus: {
+                title: "Nucellus - Nutritive Tissue 🍯",
+                description: "Central tissue of ovule containing abundant food reserves and housing the embryo sac.",
+                functions: [
+                    "Provides nutrition with abundant food reserves",
+                    "Houses the embryo sac (female gametophyte)",
+                    "Site where megaspore mother cell differentiates",
+                    "May persist as perisperm in some seeds",
+                    "Equivalent to megasporangium"
+                ]
+            },
+            embryosac: {
+                title: "Embryo Sac - Female Gametophyte ♀️",
+                description: "The 7-celled, 8-nucleate female gametophyte containing egg apparatus and central cell.",
+                functions: [
+                    "Houses egg cell for fertilization",
+                    "Contains synergids that guide pollen tube",
+                    "Has central cell with polar nuclei for endosperm formation",
+                    "Includes antipodal cells at chalazal end",
+                    "Formed through monosporic development"
+                ]
+            },
+            micropyle: {
+                title: "Micropyle - Entry Point 🚪",
+                description: "Small opening in integuments through which pollen tube enters the ovule.",
+                functions: [
+                    "Allows pollen tube entry into ovule",
+                    "Formed by incomplete closure of integuments",
+                    "Located at opposite end from funicle attachment",
+                    "Guides pollen tube to synergids",
+                    "Important for successful fertilization"
+                ]
+            }
+        };
+
+        const processInfo = {
+            microsporogenesis: {
+                title: "Microsporogenesis - Male Gamete Formation 👨",
+                description: "The process of forming microspores from pollen mother cells through meiotic division.",
+                details: [
+                    "Sporogenous tissue cells act as pollen mother cells (PMCs)",
+                    "Each PMC undergoes meiosis to form microspore tetrad",
+                    "Four haploid microspores are produced from each diploid PMC",
+                    "Microspores separate and develop into pollen grains",
+                    "Occurs within microsporangia of anther"
+                ]
+            },
+            "pollen-development": {
+                title: "Pollen Development - Gametophyte Maturation 🌾",
+                description: "Maturation of microspores into functional male gametophytes (pollen grains).",
+                details: [
+                    "Microspore nucleus divides to form vegetative and generative cells",
+                    "Vegetative cell is larger with abundant food reserves",
+                    "Generative cell is smaller and may divide to form male gametes",
+                    "Two-layered wall develops: exine (sporopollenin) and intine (cellulose)",
+                    "60% of angiosperms shed pollen at 2-celled stage"
+                ]
+            },
+            megasporogenesis: {
+                title: "Megasporogenesis - Female Gamete Formation 👩",
+                description: "Formation of megaspores from megaspore mother cell in the nucellus.",
+                details: [
+                    "Single megaspore mother cell (MMC) differentiates in nucellus",
+                    "MMC undergoes meiosis to produce four megaspores",
+                    "Three megaspores degenerate, one remains functional",
+                    "Functional megaspore develops into embryo sac",
+                    "This is called monosporic development"
+                ]
+            },
+            "embryosac-formation": {
+                title: "Embryo Sac Formation - Female Gametophyte Development 🥚",
+                description: "Development of the 7-celled female gametophyte from functional megaspore.",
+                details: [
+                    "Functional megaspore nucleus divides mitotically three times",
+                    "Forms 2-nucleate, 4-nucleate, then 8-nucleate stages",
+                    "Cell walls form around 6 nuclei, 2 polar nuclei remain free",
+                    "Results in 7-celled structure: 3 antipodals, 2 synergids, 1 egg, 1 central cell",
+                    "Synergids develop filiform apparatus for pollen tube guidance"
+                ]
+            }
+        };
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showInfo(structureName) {
+            const info = structureInfo[structureName];
+            const infoPanel = document.getElementById('structure-info');
+            const title = document.getElementById('structure-title');
+            const description = document.getElementById('structure-description');
+            const functions = document.getElementById('structure-functions');
+            
+            title.textContent = info.title;
+            description.textContent = info.description;
+            
+            functions.innerHTML = '';
+            info.functions.forEach(func => {
+                const li = document.createElement('li');
+                li.textContent = func;
+                functions.appendChild(li);
+            });
+            
+            infoPanel.style.display = 'block';
+            infoPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showProcessInfo(processName) {
+            const info = processInfo[processName];
+            const infoPanel = document.getElementById('process-info');
+            const title = document.getElementById('process-title');
+            const description = document.getElementById('process-description');
+            const details = document.getElementById('process-details');
+            
+            title.textContent = info.title;
+            description.textContent = info.description;
+            
+            details.innerHTML = '';
+            info.details.forEach(detail => {
+                const li = document.createElement('li');
+                li.textContent = detail;
+                details.appendChild(li);
+            });
+            
+            infoPanel.style.display = 'block';
+            infoPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selectMatch(element) {
+            const type = element.getAttribute('data-type');
+            const id = element.getAttribute('data-id');
+            
+            // Remove previous selection of same type
+            document.querySelectorAll(`.match-item[data-type="${type}"]`).forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Select current element
+            element.classList.add('selected');
+            selectedMatches[type] = id;
+            
+            // Check if both structure and function are selected
+            if (selectedMatches.structure && selectedMatches.function) {
+                setTimeout(() => {
+                    checkSingleMatch();
+                }, 300);
+            }
+        }
+
+        function checkSingleMatch() {
+            const structureId = selectedMatches.structure;
+            const functionId = selectedMatches.function;
+            
+            const structureElement = document.querySelector(`.match-item[data-type="structure"][data-id="${structureId}"]`);
+            const functionElement = document.querySelector(`.match-item[data-type="function"][data-id="${functionId}"]`);
+            
+            if (structureId === functionId) {
+                // Correct match
+                structureElement.classList.remove('selected');
+                structureElement.classList.add('correct');
+                functionElement.classList.remove('selected');
+                functionElement.classList.add('correct');
+                correctMatches++;
+            } else {
+                // Incorrect match
+                structureElement.classList.remove('selected');
+                structureElement.classList.add('incorrect');
+                functionElement.classList.remove('selected');
+                functionElement.classList.add('incorrect');
+                
+                setTimeout(() => {
+                    structureElement.classList.remove('incorrect');
+                    functionElement.classList.remove('incorrect');
+                }, 1000);
+            }
+            
+            // Reset selections
+            selectedMatches = { structure: null, function: null };
+        }
+
+        function checkMatches() {
+            const totalPairs = 6;
+            const percentage = Math.round((correctMatches / totalPairs) * 100);
+            alert(`You matched ${correctMatches} out of ${totalPairs} correctly!\nScore: ${percentage}%\n${correctMatches === totalPairs ? '🎉 Perfect! You understand the structures!' : correctMatches >= 4 ? '👍 Good job!' : '📚 Keep learning!'}`);
+        }
+
+        function resetMatching() {
+            document.querySelectorAll('.match-item').forEach(item => {
+                item.classList.remove('selected', 'correct', 'incorrect');
+            });
+            selectedMatches = { structure: null, function: null };
+            correctMatches = 0;
+        }
+
+        function startQuiz() {
+            quizData = [...questions];
+            totalQuestions = quizData.length;
+            currentQuestion = 0;
+            score = 0;
+            
+            document.querySelector('.btn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('score').style.display = 'none';
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                showResults();
+                return;
+            }
+            
+            const question = quizData[currentQuestion];
+            const quizContainer = document.getElementById('quiz');
+            
+            quizContainer.innerHTML = `
+                <div class="question">Question ${currentQuestion + 1}/${totalQuestions}: ${question.question}</div>
+                <div class="options">
+                    ${question.options.map((option, index) => 
+                        `<div class="option" onclick="selectAnswer(${index})">${option}</div>`
+                    ).join('')}
+                </div>
+                <button class="btn" onclick="nextQuestion()" style="display: none;" id="nextBtn">Next Question</button>
+                <div id="explanation" style="display: none; margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;"></div>
+            `;
+        }
+
+        function selectAnswer(selectedIndex) {
+            const options = document.querySelectorAll('.option');
+            const question = quizData[currentQuestion];
+            
+            options.forEach((option, index) => {
+                option.classList.remove('selected');
+                option.style.pointerEvents = 'none';
+                if (index === selectedIndex) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            setTimeout(() => {
+                options.forEach((option, index) => {
+                    if (index === question.correct) {
+                        option.classList.add('correct');
+                    } else if (index === selectedIndex && index !== question.correct) {
+                        option.classList.add('incorrect');
+                    }
+                });
+                
+                if (selectedIndex === question.correct) {
+                    score++;
+                }
+                
+                const explanation = document.getElementById('explanation');
+                explanation.innerHTML = `<strong>Explanation:</strong> ${question.explanation}`;
+                explanation.style.display = 'block';
+                
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            }, 500);
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            showQuestion();
+        }
+
+        function showResults() {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const quizContainer = document.getElementById('quiz');
+            const scoreContainer = document.getElementById('score');
+            
+            quizContainer.innerHTML = '';
+            scoreContainer.innerHTML = `
+                🎉 Quiz Complete! 🎉<br>
+                You scored ${score} out of ${totalQuestions}<br>
+                Percentage: ${percentage}%<br>
+                ${percentage >= 80 ? '🌟 Outstanding! You\'ve mastered pre-fertilisation!' : percentage >= 60 ? '👍 Good understanding!' : '📚 Review the material and try again!'}
+            `;
+            scoreContainer.style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+        }
+
+        function resetQuiz() {
+            document.querySelector('.btn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('score').style.display = 'none';
+            document.getElementById('quiz').innerHTML = '';
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add some initial animations
+            setTimeout(() => {
+                const interactiveElements = document.querySelectorAll('.interactive-element');
+                interactiveElements.forEach((element, index) => {
+                    setTimeout(() => {
+                        element.style.animation = 'pulse 0.6s ease';
+                    }, index * 100);
+                });
+            }, 1000);
+        });
+
+        // Add pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

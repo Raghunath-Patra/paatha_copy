@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties of Matter and Measurement - Interactive Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating particles background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            margin-top: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding: 40px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe, #fd79a8);
+            border-radius: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            padding: 40px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(108, 92, 231, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .section:hover::before {
+            left: 100%;
+        }
+
+        .section:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2.3em;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 4px solid #6c5ce7;
+            position: relative;
+        }
+
+        /* Animated property cards */
+        .properties-showcase {
+            background: linear-gradient(135deg, #fd79a8, #fdcb6e, #e84393);
+            padding: 50px;
+            border-radius: 25px;
+            color: white;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .properties-showcase::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: rotate 25s linear infinite reverse;
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 40px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .property-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 35px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .property-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .property-card:hover::before {
+            left: 100%;
+        }
+
+        .property-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.08) rotateY(5deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .property-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #ffd32a;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .property-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .example-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 18px;
+            border-radius: 25px;
+            text-align: center;
+            font-size: 0.95em;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .example-tag::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.4s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .example-tag:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .example-tag:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.15) translateY(-5px);
+            border-color: #ffd32a;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Futuristic converter tool */
+        .converter-lab {
+            background: linear-gradient(135deg, #00b894, #00cec9, #74b9ff);
+            padding: 50px;
+            border-radius: 25px;
+            color: white;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .converter-lab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.06)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .converter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+            margin: 40px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .converter-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .converter-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .converter-card h3 {
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            color: #ffd32a;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .converter-input, .converter-select {
+            width: 100%;
+            padding: 15px;
+            margin: 12px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .converter-input:focus, .converter-select:focus {
+            outline: none;
+            border-color: #ffd32a;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 211, 42, 0.5);
+        }
+
+        .converter-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .converter-result {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-height: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .converter-result.updated {
+            background: rgba(255, 211, 42, 0.3);
+            border-color: #ffd32a;
+            animation: resultPulse 0.6s ease;
+        }
+
+        @keyframes resultPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* 3D Temperature scales */
+        .temperature-lab {
+            background: linear-gradient(135deg, #2d3436, #636e72, #74b9ff);
+            padding: 50px;
+            border-radius: 25px;
+            color: white;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .temperature-lab::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .temp-scales {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .temp-scale {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .temp-scale::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #74b9ff, #ffd32a, #fd79a8);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .temp-scale:hover::before {
+            transform: scaleX(1);
+        }
+
+        .temp-scale:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .temp-label {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd32a;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .temp-input {
+            width: 100%;
+            padding: 18px;
+            margin: 18px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.4em;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .temp-input:focus {
+            outline: none;
+            border-color: #ffd32a;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 25px rgba(255, 211, 42, 0.6);
+            transform: scale(1.05);
+        }
+
+        /* Interactive quiz with animations */
+        .quiz-arena {
+            background: linear-gradient(135deg, #00cec9, #55a3ff, #a29bfe);
+            color: white;
+            padding: 50px;
+            border-radius: 25px;
+            margin: 50px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-arena::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: rotate 30s linear infinite;
+        }
+
+        .quiz-question {
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quiz-question h3 {
+            font-size: 1.6em;
+            margin-bottom: 25px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .quiz-option {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            text-align: center;
+            font-weight: bold;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .quiz-option:hover::before {
+            left: 100%;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffd32a;
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-option.correct {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            border-color: #ffd32a;
+            animation: correctBounce 1s ease;
+        }
+
+        .quiz-option.wrong {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            border-color: #fab1a0;
+            animation: wrongShake 0.6s ease;
+        }
+
+        @keyframes correctBounce {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.1) rotateZ(5deg); }
+            75% { transform: scale(1.05) rotateZ(-2deg); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 40px 0;
+            padding: 35px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+            position: relative;
+            z-index: 1;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ffd32a, #fdcb6e);
+            color: #2d3436;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            margin: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px) scale(1.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 8px;
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 30px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .section {
+                padding: 30px;
+                margin-bottom: 35px;
+            }
+            
+            .properties-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .converter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .temp-scales {
+                grid-template-columns: 1fr;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚗️ Properties of Matter & Measurement</h1>
+            <p>Discover the fundamental properties and master precise measurement techniques!</p>
+        </div>
+
+        <!-- Physical vs Chemical Properties -->
+        <div class="section">
+            <div class="properties-showcase">
+                <h2 style="color: white; border-bottom-color: #ffd32a; text-align: center;">🔬 Physical vs Chemical Properties</h2>
+                <p style="text-align: center; margin-bottom: 30px; font-size: 1.2em; position: relative; z-index: 1;">
+                    Click on the examples below to understand the key differences!
+                </p>
+                
+                <div class="properties-grid">
+                    <div class="property-card">
+                        <h3>🌡️ Physical Properties</h3>
+                        <p style="margin-bottom: 25px; font-size: 1.1em;">Observable without changing the substance's identity</p>
+                        
+                        <div class="property-examples">
+                            <div class="example-tag" onclick="showPropertyInfo('color')">Color</div>
+                            <div class="example-tag" onclick="showPropertyInfo('odor')">Odor</div>
+                            <div class="example-tag" onclick="showPropertyInfo('melting')">Melting Point</div>
+                            <div class="example-tag" onclick="showPropertyInfo('boiling')">Boiling Point</div>
+                            <div class="example-tag" onclick="showPropertyInfo('density')">Density</div>
+                            <div class="example-tag" onclick="showPropertyInfo('hardness')">Hardness</div>
+                        </div>
+                    </div>
+                    
+                    <div class="temp-scale">
+                        <div class="temp-label">⚗️ Kelvin (K)</div>
+                        <input type="number" class="temp-input" id="kelvinInput" placeholder="K">
+                        <div style="font-size: 0.95em; margin-top: 12px; opacity: 0.85;">
+                            Absolute zero at 0K<br>No negative temperatures
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 40px; padding: 30px; background: rgba(255,255,255,0.15); border-radius: 20px; position: relative; z-index: 1;">
+                    <h4 style="color: #74b9ff; margin-bottom: 20px; font-size: 1.4em;">🔬 Conversion Formulas:</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; font-family: monospace; font-size: 1.1em;">
+                        <div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">°F = (9/5 × °C) + 32</div>
+                        <div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">K = °C + 273.15</div>
+                        <div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">°C = (°F - 32) × 5/9</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="quiz-arena">
+            <h2 style="color: white; border-bottom-color: #ffd32a; position: relative; z-index: 1;">🧠 Properties & Measurement Quiz</h2>
+            <div class="score-display">Score: <span id="score">0</span> / <span id="totalQuestions">5</span></div>
+            
+            <div class="quiz-question">
+                <h3>1. Which of the following is a physical property?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Combustibility requires a chemical change to observe')">Combustibility</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Melting point can be observed without changing identity')">Melting point</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Reactivity requires chemical change')">Reactivity with acids</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Toxicity is a chemical property')">Toxicity</div>
+                </div>
+                <div class="feedback" id="feedback1" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>2. What is the SI base unit for mass?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Gram is a derived unit')">gram (g)</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Kilogram is the SI base unit for mass')">kilogram (kg)</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Pound is not an SI unit')">pound (lb)</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Newton is a unit of force')">newton (N)</div>
+                </div>
+                <div class="feedback" id="feedback2" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>3. Convert 25°C to Fahrenheit:</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Check the conversion formula')">57°F</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! °F = (9/5 × 25) + 32 = 77°F')">77°F</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This would be freezing point')">32°F</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This is too high')">100°F</div>
+                </div>
+                <div class="feedback" id="feedback3" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>4. What is the density formula?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This is incorrect - density is mass divided by volume')">Density = Mass × Volume</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Density = Mass ÷ Volume')">Density = Mass ÷ Volume</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This gives volume per mass, not density')">Density = Volume ÷ Mass</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This is not the density formula')">Density = Mass + Volume</div>
+                </div>
+                <div class="feedback" id="feedback4" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>5. What is absolute zero in Kelvin?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Absolute zero is 0 K, the lowest possible temperature')">0 K</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This is approximately room temperature in Kelvin')">273 K</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Negative temperatures do not exist in the Kelvin scale')">-273 K</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This is the boiling point of water in Kelvin')">373 K</div>
+                </div>
+                <div class="feedback" id="feedback5" style="display: none;"></div>
+            </div>
+
+            <button class="btn" onclick="resetQuiz()">Reset Quiz</button>
+            <button class="btn" onclick="showResults()">Show Results</button>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="section">
+            <h2>📋 Chapter Summary</h2>
+            <div style="background: linear-gradient(135deg, #e8f5e8, #c8e6c9); padding: 35px; border-radius: 20px; margin: 25px 0;">
+                <h3 style="color: #2d3436; margin-bottom: 25px; font-size: 1.6em;">🎯 Key Concepts Mastered:</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                    <div style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h4 style="color: #2d3436; margin-bottom: 12px; font-size: 1.3em;">🔬 Property Types</h4>
+                        <p style="color: #2d3436; font-size: 1.05em;">Physical properties vs chemical properties and their measurement methods</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h4 style="color: #2d3436; margin-bottom: 12px; font-size: 1.3em;">🔄 Unit Conversions</h4>
+                        <p style="color: #2d3436; font-size: 1.05em;">Convert between different measurement systems accurately</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h4 style="color: #2d3436; margin-bottom: 12px; font-size: 1.3em;">🌡️ Temperature Scales</h4>
+                        <p style="color: #2d3436; font-size: 1.05em;">Celsius, Fahrenheit, and Kelvin conversions and applications</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h4 style="color: #2d3436; margin-bottom: 12px; font-size: 1.3em;">📏 Scientific Measurement</h4>
+                        <p style="color: #2d3436; font-size: 1.05em;">Precise measurement techniques and laboratory instruments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        const totalQuestions = 5;
+        let questionsAnswered = new Set();
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Property information data
+        const propertyData = {
+            color: {
+                title: "🎨 Color",
+                description: "The visual appearance of a substance due to the wavelengths of light it reflects or absorbs.",
+                example: "Example: Copper is reddish-brown, gold is yellow. You can observe these colors without changing the metals' chemical composition."
+            },
+            odor: {
+                title: "👃 Odor", 
+                description: "The characteristic smell of a substance that can be detected without causing any chemical change.",
+                example: "Example: Vanilla extract has a sweet smell, ammonia has a sharp smell. No chemical change occurs when detecting these odors."
+            },
+            melting: {
+                title: "🧊 Melting Point",
+                description: "The temperature at which a solid becomes a liquid. The substance's identity remains unchanged.",
+                example: "Example: Ice melts at 0°C to become water. H₂O remains H₂O in both solid and liquid states."
+            },
+            boiling: {
+                title: "💨 Boiling Point",
+                description: "The temperature at which a liquid becomes a gas. No chemical change occurs during this process.",
+                example: "Example: Water boils at 100°C at standard pressure. Steam is still H₂O, just in gas form."
+            },
+            density: {
+                title: "⚖️ Density",
+                description: "Mass per unit volume of a substance. Can be measured without changing the substance's composition.",
+                example: "Example: Gold has density 19.3 g/cm³, water has 1.0 g/cm³. The substances remain unchanged during measurement."
+            },
+            hardness: {
+                title: "💎 Hardness",
+                description: "Resistance to scratching or deformation. Can be tested without changing chemical composition.",
+                example: "Example: Diamond is the hardest natural substance. Testing hardness doesn't change what diamond is made of."
+            },
+            combustibility: {
+                title: "🔥 Combustibility",
+                description: "The ability to burn or undergo combustion, which involves a chemical reaction with oxygen.",
+                example: "Example: Paper burns to form ash, CO₂, and water vapor. The original paper molecules are chemically changed."
+            },
+            reactivity: {
+                title: "⚡ Reactivity",
+                description: "How readily a substance undergoes chemical reactions with other substances.",
+                example: "Example: Sodium reacts violently with water to form sodium hydroxide and hydrogen gas - new compounds are formed."
+            },
+            acidity: {
+                title: "🧪 Acidity",
+                description: "The ability to donate protons (H⁺) in chemical reactions, changing molecular structure.",
+                example: "Example: Hydrochloric acid donates H⁺ ions when dissolved, forming new ionic compounds in solution."
+            },
+            toxicity: {
+                title: "☠️ Toxicity",
+                description: "The degree to which a substance can damage living organisms through chemical interactions.",
+                example: "Example: Carbon monoxide is toxic because it chemically binds to hemoglobin, preventing oxygen transport."
+            },
+            stability: {
+                title: "🛡️ Stability",
+                description: "The tendency of a substance to remain unchanged or resist decomposition over time.",
+                example: "Example: Some compounds decompose into simpler substances when heated, showing their chemical instability."
+            },
+            oxidation: {
+                title: "🦠 Oxidation",
+                description: "The loss of electrons in chemical reactions, often involving reaction with oxygen.",
+                example: "Example: Iron rusts when it oxidizes in air, forming iron oxide (Fe₂O₃) - a completely different compound."
+            }
+        };
+
+        // Unit conversion factors
+        const conversionFactors = {
+            length: {
+                m: 1,
+                cm: 0.01,
+                mm: 0.001,
+                km: 1000
+            },
+            mass: {
+                kg: 1,
+                g: 0.001,
+                mg: 0.000001
+            },
+            volume: {
+                L: 1,
+                mL: 0.001,
+                cm3: 0.001
+            }
+        };
+
+        // Show property information
+        function showPropertyInfo(property) {
+            const info = propertyData[property];
+            if (!info) return;
+            
+            document.getElementById('propertyTitle').textContent = info.title;
+            document.getElementById('propertyDescription').textContent = info.description;
+            document.getElementById('propertyExample').innerHTML = '<strong>' + info.example + '</strong>';
+            document.getElementById('propertyInfo').style.display = 'block';
+            
+            // Add animation
+            const propertyInfoElement = document.getElementById('propertyInfo');
+            propertyInfoElement.style.transform = 'scale(0.8)';
+            propertyInfoElement.style.opacity = '0';
+            setTimeout(function() {
+                propertyInfoElement.style.transform = 'scale(1)';
+                propertyInfoElement.style.opacity = '1';
+            }, 100);
+        }
+
+        // Unit conversions with visual feedback
+        function convertLength() {
+            const value = parseFloat(document.getElementById('lengthInput').value);
+            const fromUnit = document.getElementById('lengthFrom').value;
+            const resultElement = document.getElementById('lengthResult');
+            
+            if (isNaN(value) || value === '') {
+                resultElement.textContent = 'Enter a valid number';
+                resultElement.classList.remove('updated');
+                return;
+            }
+            
+            const inMeters = value * conversionFactors.length[fromUnit];
+            const results = [];
+            
+            for (const unit in conversionFactors.length) {
+                if (unit !== fromUnit) {
+                    const converted = inMeters / conversionFactors.length[unit];
+                    results.push(converted.toFixed(4) + ' ' + unit);
+                }
+            }
+            
+            resultElement.innerHTML = results.join('<br>');
+            resultElement.classList.add('updated');
+            setTimeout(function() {
+                resultElement.classList.remove('updated');
+            }, 600);
+        }
+
+        function convertMass() {
+            const value = parseFloat(document.getElementById('massInput').value);
+            const fromUnit = document.getElementById('massFrom').value;
+            const resultElement = document.getElementById('massResult');
+            
+            if (isNaN(value) || value === '') {
+                resultElement.textContent = 'Enter a valid number';
+                resultElement.classList.remove('updated');
+                return;
+            }
+            
+            const inKg = value * conversionFactors.mass[fromUnit];
+            const results = [];
+            
+            for (const unit in conversionFactors.mass) {
+                if (unit !== fromUnit) {
+                    const converted = inKg / conversionFactors.mass[unit];
+                    results.push(converted.toFixed(4) + ' ' + unit);
+                }
+            }
+            
+            resultElement.innerHTML = results.join('<br>');
+            resultElement.classList.add('updated');
+            setTimeout(function() {
+                resultElement.classList.remove('updated');
+            }, 600);
+        }
+
+        function convertVolume() {
+            const value = parseFloat(document.getElementById('volumeInput').value);
+            const fromUnit = document.getElementById('volumeFrom').value;
+            const resultElement = document.getElementById('volumeResult');
+            
+            if (isNaN(value) || value === '') {
+                resultElement.textContent = 'Enter a valid number';
+                resultElement.classList.remove('updated');
+                return;
+            }
+            
+            const inLiters = value * conversionFactors.volume[fromUnit];
+            const results = [];
+            
+            for (const unit in conversionFactors.volume) {
+                if (unit !== fromUnit) {
+                    const converted = inLiters / conversionFactors.volume[unit];
+                    results.push(converted.toFixed(4) + ' ' + unit);
+                }
+            }
+            
+            resultElement.innerHTML = results.join('<br>');
+            resultElement.classList.add('updated');
+            setTimeout(function() {
+                resultElement.classList.remove('updated');
+            }, 600);
+        }
+
+        // Temperature conversions
+        function convertFromCelsius() {
+            const celsius = parseFloat(document.getElementById('celsiusInput').value);
+            if (isNaN(celsius)) return;
+            
+            const fahrenheit = (9/5 * celsius) + 32;
+            const kelvin = celsius + 273.15;
+            
+            document.getElementById('fahrenheitInput').value = fahrenheit.toFixed(2);
+            document.getElementById('kelvinInput').value = kelvin.toFixed(2);
+        }
+
+        function convertFromFahrenheit() {
+            const fahrenheit = parseFloat(document.getElementById('fahrenheitInput').value);
+            if (isNaN(fahrenheit)) return;
+            
+            const celsius = (fahrenheit - 32) * 5/9;
+            const kelvin = celsius + 273.15;
+            
+            document.getElementById('celsiusInput').value = celsius.toFixed(2);
+            document.getElementById('kelvinInput').value = kelvin.toFixed(2);
+        }
+
+        function convertFromKelvin() {
+            const kelvin = parseFloat(document.getElementById('kelvinInput').value);
+            if (isNaN(kelvin)) return;
+            
+            const celsius = kelvin - 273.15;
+            const fahrenheit = (9/5 * celsius) + 32;
+            
+            document.getElementById('celsiusInput').value = celsius.toFixed(2);
+            document.getElementById('fahrenheitInput').value = fahrenheit.toFixed(2);
+        }
+
+        // Quiz functionality
+        function checkAnswer(element, isCorrect, feedbackText) {
+            const questionNum = element.closest('.quiz-question').querySelector('h3').textContent.charAt(0);
+            
+            if (questionsAnswered.has(questionNum)) return;
+            
+            questionsAnswered.add(questionNum);
+            
+            const allOptions = element.parentNode.children;
+            for (let i = 0; i < allOptions.length; i++) {
+                const option = allOptions[i];
+                if (option.classList && option.classList.contains('quiz-option')) {
+                    option.style.pointerEvents = 'none';
+                    if (option === element) {
+                        option.classList.add(isCorrect ? 'correct' : 'wrong');
+                    }
+                }
+            }
+            
+            const feedbackId = 'feedback' + questionNum;
+            const feedbackElement = document.getElementById(feedbackId);
+            if (feedbackElement) {
+                feedbackElement.textContent = feedbackText;
+                feedbackElement.style.display = 'block';
+                feedbackElement.style.marginTop = '20px';
+                feedbackElement.style.padding = '20px';
+                feedbackElement.style.borderRadius = '15px';
+                feedbackElement.style.fontWeight = 'bold';
+                
+                if (isCorrect) {
+                    feedbackElement.style.background = 'rgba(0, 184, 148, 0.2)';
+                    feedbackElement.style.border = '2px solid #00b894';
+                    feedbackElement.style.color = '#00b894';
+                } else {
+                    feedbackElement.style.background = 'rgba(231, 76, 60, 0.2)';
+                    feedbackElement.style.border = '2px solid #e74c3c';
+                    feedbackElement.style.color = '#e74c3c';
+                }
+            }
+            
+            if (isCorrect) {
+                score++;
+                const scoreElement = document.getElementById('score');
+                if (scoreElement) scoreElement.textContent = score;
+            }
+        }
+
+        function resetQuiz() {
+            score = 0;
+            questionsAnswered.clear();
+            const scoreElement = document.getElementById('score');
+            if (scoreElement) scoreElement.textContent = score;
+            
+            const quizOptions = document.querySelectorAll('.quiz-option');
+            for (let i = 0; i < quizOptions.length; i++) {
+                const option = quizOptions[i];
+                option.className = 'quiz-option';
+                option.style.pointerEvents = 'auto';
+            }
+            
+            const feedbacks = document.querySelectorAll('.feedback');
+            for (let i = 0; i < feedbacks.length; i++) {
+                feedbacks[i].style.display = 'none';
+            }
+        }
+
+        function showResults() {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 90) {
+                message = 'Outstanding! You have mastered properties and measurement!';
+                emoji = '🏆';
+            } else if (percentage >= 70) {
+                message = 'Great job! You understand measurement principles well.';
+                emoji = '👍';
+            } else if (percentage >= 50) {
+                message = 'Good effort! Review the conversion formulas and property types.';
+                emoji = '📚';
+            } else {
+                message = 'Keep studying! Practice with the interactive tools above.';
+                emoji = '💪';
+            }
+            
+            alert(emoji + ' Your Score: ' + score + '/' + totalQuestions + ' (' + percentage + '%)\n\n' + message);
+        }
+
+        // Initialize everything when page loads
+        window.addEventListener('load', function() {
+            createParticles();
+            
+            // Set default temperature for demonstration
+            document.getElementById('celsiusInput').value = 25;
+            convertFromCelsius();
+            
+            // Add event listeners for real-time conversion
+            document.getElementById('lengthInput').addEventListener('input', convertLength);
+            document.getElementById('lengthFrom').addEventListener('change', convertLength);
+            
+            document.getElementById('massInput').addEventListener('input', convertMass);
+            document.getElementById('massFrom').addEventListener('change', convertMass);
+            
+            document.getElementById('volumeInput').addEventListener('input', convertVolume);
+            document.getElementById('volumeFrom').addEventListener('change', convertVolume);
+            
+            document.getElementById('celsiusInput').addEventListener('input', convertFromCelsius);
+            document.getElementById('fahrenheitInput').addEventListener('input', convertFromFahrenheit);
+            document.getElementById('kelvinInput').addEventListener('input', convertFromKelvin);
+            
+            // Add entrance animations
+            setTimeout(function() {
+                const exampleTags = document.querySelectorAll('.example-tag');
+                for (let i = 0; i < exampleTags.length; i++) {
+                    const tag = exampleTags[i];
+                    setTimeout(function() {
+                        tag.style.transform = 'scale(1.1)';
+                        setTimeout(function() {
+                            tag.style.transform = 'scale(1)';
+                        }, 200);
+                    }, i * 100);
+                }
+            }, 1000);
+            
+            console.log('Properties and Measurement Interactive Tool Loaded Successfully! 🧪⚗️');
+        });
+    </script>
+</body>
+</html>
+                    </div>
+                    
+                    <div class="property-card">
+                        <h3>⚡ Chemical Properties</h3>
+                        <p style="margin-bottom: 25px; font-size: 1.1em;">Require a chemical change to observe</p>
+                        
+                        <div class="property-examples">
+                            <div class="example-tag" onclick="showPropertyInfo('combustibility')">Combustibility</div>
+                            <div class="example-tag" onclick="showPropertyInfo('reactivity')">Reactivity</div>
+                            <div class="example-tag" onclick="showPropertyInfo('acidity')">Acidity</div>
+                            <div class="example-tag" onclick="showPropertyInfo('toxicity')">Toxicity</div>
+                            <div class="example-tag" onclick="showPropertyInfo('stability')">Stability</div>
+                            <div class="example-tag" onclick="showPropertyInfo('oxidation')">Oxidation</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="propertyInfo" style="margin-top: 40px; padding: 30px; background: rgba(255,255,255,0.25); border-radius: 20px; display: none; position: relative; z-index: 1;">
+                    <h3 id="propertyTitle" style="color: #ffd32a; margin-bottom: 18px; font-size: 1.6em;"></h3>
+                    <p id="propertyDescription" style="font-size: 1.15em; margin-bottom: 15px;"></p>
+                    <div id="propertyExample" style="margin-top: 18px; padding: 18px; background: rgba(255,255,255,0.15); border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Unit Converter -->
+        <div class="section">
+            <div class="converter-lab">
+                <h2 style="color: white; border-bottom-color: #ffd32a; position: relative; z-index: 1;">🔄 Interactive Unit Converter</h2>
+                <p style="text-align: center; margin-bottom: 30px; font-size: 1.2em; position: relative; z-index: 1;">
+                    Convert between different units with real-time calculations!
+                </p>
+                
+                <div class="converter-grid">
+                    <div class="converter-card">
+                        <h3>📏 Length Converter</h3>
+                        <input type="number" class="converter-input" id="lengthInput" placeholder="Enter value">
+                        <select class="converter-select" id="lengthFrom">
+                            <option value="m">metres (m)</option>
+                            <option value="cm">centimetres (cm)</option>
+                            <option value="mm">millimetres (mm)</option>
+                            <option value="km">kilometres (km)</option>
+                        </select>
+                        <div class="converter-result" id="lengthResult">Enter a value to see conversions</div>
+                    </div>
+                    
+                    <div class="converter-card">
+                        <h3>⚖️ Mass Converter</h3>
+                        <input type="number" class="converter-input" id="massInput" placeholder="Enter value">
+                        <select class="converter-select" id="massFrom">
+                            <option value="kg">kilograms (kg)</option>
+                            <option value="g">grams (g)</option>
+                            <option value="mg">milligrams (mg)</option>
+                        </select>
+                        <div class="converter-result" id="massResult">Enter a value to see conversions</div>
+                    </div>
+                    
+                    <div class="converter-card">
+                        <h3>🧪 Volume Converter</h3>
+                        <input type="number" class="converter-input" id="volumeInput" placeholder="Enter value">
+                        <select class="converter-select" id="volumeFrom">
+                            <option value="L">litres (L)</option>
+                            <option value="mL">millilitres (mL)</option>
+                            <option value="cm3">cubic cm (cm³)</option>
+                        </select>
+                        <div class="converter-result" id="volumeResult">Enter a value to see conversions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temperature Converter -->
+        <div class="section">
+            <div class="temperature-lab">
+                <h2 style="color: white; border-bottom-color: #74b9ff; position: relative; z-index: 1;">🌡️ Temperature Scale Converter</h2>
+                <p style="text-align: center; margin-bottom: 30px; font-size: 1.2em; position: relative; z-index: 1;">
+                    Enter temperature in any scale to see instant conversions!
+                </p>
+                
+                <div class="temp-scales">
+                    <div class="temp-scale">
+                        <div class="temp-label">🧊 Celsius (°C)</div>
+                        <input type="number" class="temp-input" id="celsiusInput" placeholder="°C">
+                        <div style="font-size: 0.95em; margin-top: 12px; opacity: 0.85;">
+                            Water freezes at 0°C<br>Water boils at 100°C
+                        </div>
+                    </div>
+                    
+                    <div class="temp-scale">
+                        <div class="temp-label">🌡️ Fahrenheit (°F)</div>
+                        <input type="number" class="temp-input" id="fahrenheitInput" placeholder="°F">
+                        <div style="font-size: 0.95em; margin-top: 12px; opacity: 0.85;">
+                            Water freezes at 32°F<br>Water boils at 212°F

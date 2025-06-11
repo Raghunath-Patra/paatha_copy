@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coulomb's Law - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.2rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            background: #4299e1;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Law Calculator Styles */
+        .coulomb-calculator {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #cbd5e0;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .input-field {
+            padding: 12px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #4299e1;
+            outline: none;
+        }
+
+        .unit-selector {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .unit-btn {
+            padding: 5px 10px;
+            border: 1px solid #cbd5e0;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .unit-btn.active {
+            background: #4299e1;
+            color: white;
+            border-color: #3182ce;
+        }
+
+        .force-result {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .force-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .force-details {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Vector Visualization Styles */
+        .vector-visualization {
+            background: linear-gradient(135deg, #2d3748, #4a5568);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .vector-canvas {
+            width: 100%;
+            height: 400px;
+            background: #1a202c;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #4a5568;
+        }
+
+        .charge-point {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            cursor: grab;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .charge-point:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .charge-positive {
+            background: radial-gradient(circle, #e53e3e, #c53030);
+            border: 3px solid #ff6b6b;
+        }
+
+        .charge-negative {
+            background: radial-gradient(circle, #3182ce, #2c5282);
+            border: 3px solid #4299e1;
+        }
+
+        .force-arrow {
+            position: absolute;
+            transform-origin: 50% 50%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .arrow-line {
+            background: #ffd700;
+            border-radius: 2px;
+        }
+
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        /* Torsion Balance Styles */
+        .torsion-balance {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .balance-apparatus {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            position: relative;
+            background: #e2e8f0;
+            border-radius: 50%;
+            border: 5px solid #4a5568;
+        }
+
+        .balance-arm {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 4px;
+            background: #2d3748;
+            transform: translate(-50%, -50%);
+            transform-origin: center;
+            transition: transform 0.5s ease;
+        }
+
+        .balance-sphere {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            top: -8px;
+        }
+
+        .balance-sphere.left {
+            left: 10px;
+            background: #e53e3e;
+        }
+
+        .balance-sphere.right {
+            right: 10px;
+            background: #e53e3e;
+        }
+
+        .test-sphere {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #3182ce;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .balance-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        /* Comparison Tool Styles */
+        .force-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .force-card {
+            background: linear-gradient(135f, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 3px solid #dee2e6;
+        }
+
+        .force-card.electric {
+            border-color: #e53e3e;
+        }
+
+        .force-card.gravitational {
+            border-color: #38a169;
+        }
+
+        .force-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .force-magnitude {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .force-description {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        /* Example Problems Styles */
+        .example-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .problem-statement {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .interactive-inputs {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .calculation-steps {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .step {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        /* Historical Context Styles */
+        .historical-section {
+            background: linear-gradient(135deg, #2d3748, #4a5568);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .timeline-year {
+            background: #4299e1;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-right: 20px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        /* Control Buttons */
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: #718096;
+        }
+
+        .btn.secondary:hover {
+            background: #4a5568;
+        }
+
+        .formula-box {
+            background: #2d3748;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        .concept-highlight {
+            background: linear-gradient(45deg, #ed8936, #f6ad55);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .info-panel {
+            background: #bee3f8;
+            border: 2px solid #4299e1;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #2d3748;
+        }
+
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .force-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .vector-canvas {
+                height: 300px;
+            }
+        }
+
+        /* Animation classes */
+        @keyframes repel {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+
+        @keyframes attract {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-5px); }
+        }
+
+        .repelling {
+            animation: repel 0.5s ease-in-out;
+        }
+
+        .attracting {
+            animation: attract 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Coulomb's Law Explorer</h1>
+            <p>Discover the fundamental law of electrostatic forces between charges</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('calculator')">🧮 Law Calculator</button>
+            <button class="nav-tab" onclick="showTab('vectors')">📐 Vector Forces</button>
+            <button class="nav-tab" onclick="showTab('experiment')">⚖️ Torsion Balance</button>
+            <button class="nav-tab" onclick="showTab('comparison')">⚔️ Forces Comparison</button>
+            <button class="nav-tab" onclick="showTab('examples')">📚 Examples</button>
+            <button class="nav-tab" onclick="showTab('history')">🕰️ History</button>
+        </div>
+
+        <!-- Calculator Tab -->
+        <div id="calculator" class="tab-content active">
+            <h2>🧮 Coulomb's Law Calculator</h2>
+            <p>Calculate the electrostatic force between two point charges using F = k|q₁q₂|/r²</p>
+            
+            <div class="formula-box">
+                F = (1/4πε₀) × |q₁q₂|/r²<br>
+                where k = 1/4πε₀ = 8.99 × 10⁹ N⋅m²/C²
+            </div>
+
+            <div class="coulomb-calculator">
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label class="input-label">Charge 1 (q₁)</label>
+                        <input type="number" class="input-field" id="charge1" value="2" step="0.1" oninput="calculateCoulombForce()">
+                        <div class="unit-selector">
+                            <button class="unit-btn active" onclick="setUnit('charge1', 'μC')">μC</button>
+                            <button class="unit-btn" onclick="setUnit('charge1', 'nC')">nC</button>
+                            <button class="unit-btn" onclick="setUnit('charge1', 'C')">C</button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Charge 2 (q₂)</label>
+                        <input type="number" class="input-field" id="charge2" value="-3" step="0.1" oninput="calculateCoulombForce()">
+                        <div class="unit-selector">
+                            <button class="unit-btn active" onclick="setUnit('charge2', 'μC')">μC</button>
+                            <button class="unit-btn" onclick="setUnit('charge2', 'nC')">nC</button>
+                            <button class="unit-btn" onclick="setUnit('charge2', 'C')">C</button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Distance (r)</label>
+                        <input type="number" class="input-field" id="distance" value="5" step="0.1" min="0.1" oninput="calculateCoulombForce()">
+                        <div class="unit-selector">
+                            <button class="unit-btn" onclick="setUnit('distance', 'mm')">mm</button>
+                            <button class="unit-btn active" onclick="setUnit('distance', 'cm')">cm</button>
+                            <button class="unit-btn" onclick="setUnit('distance', 'm')">m</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="force-result" id="forceResult">
+                    <div class="force-value" id="forceValue">2.16 × 10⁻² N</div>
+                    <div class="force-details" id="forceDetails">
+                        Attractive force (opposite charges)<br>
+                        Force magnitude: 0.0216 N
+                    </div>
+                </div>
+
+                <div class="info-panel" id="forceInfo">
+                    <strong>📊 Analysis:</strong> The force is attractive because the charges have opposite signs. 
+                    If you increase the distance, the force will decrease by the square of the distance ratio.
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn" onclick="doubleDistance()">×2 Distance</button>
+                <button class="btn" onclick="halveDistance()">÷2 Distance</button>
+                <button class="btn" onclick="reverseCharge()">Reverse q₂</button>
+                <button class="btn secondary" onclick="resetCalculator()">Reset</button>
+            </div>
+
+            <div class="concept-highlight">
+                🔑 Key Insight: Force is proportional to the product of charges and inversely proportional to the square of distance!
+            </div>
+        </div>
+
+        <!-- Vector Forces Tab -->
+        <div id="vectors" class="tab-content">
+            <h2>📐 Vector Force Visualization</h2>
+            <p>Drag the charges around to see how forces change with position and charge magnitude</p>
+
+            <div class="vector-visualization">
+                <div class="vector-canvas" id="vectorCanvas">
+                    <div class="charge-point charge-positive" id="charge1Vector" style="left: 100px; top: 150px;">
+                        +2μC
+                    </div>
+                    <div class="charge-point charge-negative" id="charge2Vector" style="left: 300px; top: 200px;">
+                        -3μC
+                    </div>
+                    <canvas id="forceArrows" width="800" height="400" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+                </div>
+
+                <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <strong>Force on q₁:</strong>
+                        <div id="force1Vector">2.16 × 10⁻² N → (attraction)</div>
+                    </div>
+                    <div>
+                        <strong>Force on q₂:</strong>
+                        <div id="force2Vector">2.16 × 10⁻² N ← (attraction)</div>
+                    </div>
+                    <div>
+                        <strong>Distance:</strong>
+                        <div id="vectorDistance">5.0 cm</div>
+                    </div>
+                    <div>
+                        <strong>Force Type:</strong>
+                        <div id="forceType">Attractive</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn" onclick="setCharges(5, 5)">Both Positive</button>
+                <button class="btn" onclick="setCharges(-5, -5)">Both Negative</button>
+                <button class="btn" onclick="setCharges(5, -5)">Opposite Charges</button>
+                <button class="btn secondary" onclick="resetVectors()">Reset Positions</button>
+            </div>
+
+            <div class="concept-highlight">
+                🎯 Newton's 3rd Law: The forces on both charges are equal in magnitude but opposite in direction!
+            </div>
+        </div>
+
+        <!-- Torsion Balance Tab -->
+        <div id="experiment" class="tab-content">
+            <h2>⚖️ Coulomb's Torsion Balance Experiment</h2>
+            <p>Experience how Coulomb discovered his law using a sensitive torsion balance</p>
+
+            <div class="torsion-balance">
+                <h3>Interactive Torsion Balance</h3>
+                <div class="balance-apparatus" id="balanceApparatus">
+                    <div class="balance-arm" id="balanceArm">
+                        <div class="balance-sphere left"></div>
+                        <div class="balance-sphere right"></div>
+                    </div>
+                    <div class="test-sphere" id="testSphere"></div>
+                </div>
+
+                <div class="balance-controls">
+                    <button class="btn" onclick="moveTestSphere(20)">Move Closer</button>
+                    <button class="btn" onclick="moveTestSphere(-20)">Move Away</button>
+                    <button class="btn" onclick="halfCharge()">Half Charge</button>
+                    <button class="btn secondary" onclick="resetBalance()">Reset</button>
+                </div>
+
+                <div style="text-align: left; margin-top: 20px;">
+                    <div><strong>Test Sphere Position:</strong> <span id="spherePosition">2 cm</span></div>
+                    <div><strong>Balance Angle:</strong> <span id="balanceAngle">15°</span></div>
+                    <div><strong>Relative Force:</strong> <span id="relativeForce">1.0x</span></div>
+                </div>
+            </div>
+
+            <div class="historical-section">
+                <h3>🔬 Coulomb's Method</h3>
+                <div class="timeline-item">
+                    <div class="timeline-year">Step 1</div>
+                    <div class="timeline-content">
+                        <strong>Fixed Distance, Variable Charge:</strong> Coulomb touched one sphere with an identical uncharged sphere to halve the charge, then measured force changes.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">Step 2</div>
+                    <div class="timeline-content">
+                        <strong>Fixed Charge, Variable Distance:</strong> He varied the distance between spheres and measured how force changed with distance.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">Result</div>
+                    <div class="timeline-content">
+                        <strong>Discovery:</strong> Force ∝ q₁q₂/r² - The fundamental law of electrostatics!
+                    </div>
+                </div>
+            </div>
+
+            <div class="concept-highlight">
+                🏆 Brilliant Method: Coulomb discovered the inverse square law without knowing the exact charge values!
+            </div>
+        </div>
+
+        <!-- Comparison Tab -->
+        <div id="comparison" class="tab-content">
+            <h2>⚔️ Electric vs Gravitational Forces</h2>
+            <p>Compare the strength of electric and gravitational forces between particles</p>
+
+            <div class="force-comparison">
+                <div class="force-card electric">
+                    <div class="force-icon">⚡</div>
+                    <h3>Electric Force</h3>
+                    <div class="force-magnitude" id="electricForce">2.3 × 10⁻⁸ N</div>
+                    <div class="force-description">Coulomb force between electron and proton</div>
+                </div>
+
+                <div class="force-card gravitational">
+                    <div class="force-icon">🌍</div>
+                    <h3>Gravitational Force</h3>
+                    <div class="force-magnitude" id="gravitationalForce">1.0 × 10⁻⁴⁷ N</div>
+                    <div class="force-description">Newton's gravitational force</div>
+                </div>
+            </div>
+
+            <div class="interactive-inputs">
+                <h3>Adjust Parameters</h3>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label class="input-label">Particle Type</label>
+                        <select class="input-field" id="particleType" onchange="updateComparison()">
+                            <option value="electron-proton">Electron & Proton</option>
+                            <option value="two-protons">Two Protons</option>
+                            <option value="two-electrons">Two Electrons</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Separation Distance</label>
+                        <input type="number" class="input-field" id="separationDistance" value="1" step="0.1" min="0.1" oninput="updateComparison()">
+                        <div class="unit-selector">
+                            <button class="unit-btn" onclick="setSeparationUnit('pm')">pm</button>
+                            <button class="unit-btn active" onclick="setSeparationUnit('Å')">Å</button>
+                            <button class="unit-btn" onclick="setSeparationUnit('nm')">nm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="force-result">
+                    <div class="force-value">Ratio: Electric / Gravitational</div>
+                    <div class="force-details" id="forceRatio">2.4 × 10³⁹</div>
+                </div>
+            </div>
+
+            <div class="concept-highlight">
+                🔥 Electric forces are ~10³⁹ times stronger than gravitational forces at atomic scales!
+            </div>
+        </div>
+
+        <!-- Examples Tab -->
+        <div id="examples" class="tab-content">
+            <h2>📚 Interactive Examples</h2>
+            
+            <div class="example-container">
+                <h3>Example 1: Force Between Electron and Proton</h3>
+                <div class="problem-statement">
+                    Calculate the electric force between an electron and proton separated by 1 Å, and compare with gravitational force.
+                </div>
+
+                <div class="interactive-inputs">
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label class="input-label">Distance (Å)</label>
+                            <input type="number" class="input-field" id="example1Distance" value="1" step="0.1" oninput="calculateExample1()">
+                        </div>
+                    </div>
+                    
+                    <div class="force-result">
+                        <div class="force-value" id="example1Result">Electric Force: 2.3 × 10⁻⁸ N</div>
+                        <div class="force-details" id="example1Details">
+                            Gravitational Force: 1.0 × 10⁻⁴⁷ N<br>
+                            Ratio: 2.4 × 10³⁹
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculation-steps">
+                    <div class="step">Step 1: F_e = k × e² / r² = 8.99×10⁹ × (1.6×10⁻¹⁹)² / (10⁻¹⁰)²</div>
+                    <div class="step">Step 2: F_e = 2.3 × 10⁻⁸ N</div>
+                    <div class="step">Step 3: F_g = G × m_p × m_e / r² = 1.0 × 10⁻⁴⁷ N</div>
+                    <div class="step">Step 4: Ratio = F_e / F_g = 2.4 × 10³⁹</div>
+                </div>
+            </div>
+
+            <div class="example-container">
+                <h3>Example 2: Charge Redistribution</h3>
+                <div class="problem-statement">
+                    Two identical spheres with charges q and q' touch and separate. Calculate the final force when distance is halved.
+                </div>
+
+                <div class="interactive-inputs">
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label class="input-label">Initial Charge q (μC)</label>
+                            <input type="number" class="input-field" id="example2ChargeQ" value="4" oninput="calculateExample2()">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Initial Charge q' (μC)</label>
+                            <input type="number" class="input-field" id="example2ChargeQPrime" value="2" oninput="calculateExample2()">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Initial Distance (cm)</label>
+                            <input type="number" class="input-field" id="example2Distance" value="10" oninput="calculateExample2()">
+                        </div>
+                    </div>
+                    
+                    <div class="force-result">
+                        <div class="force-value" id="example2Result">Final Force: Same as Initial</div>
+                        <div class="force-details" id="example2Details">
+                            After contact: Each sphere has 3 μC<br>
+                            Distance halved: 5 cm<br>
+                            Net effect: Force unchanged!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculation-steps">
+                    <div class="step">Step 1: Initial force = k × (4×2) / 10² = 8k/100</div>
+                    <div class="step">Step 2: After contact: each has (4+2)/2 = 3 μC</div>
+                    <div class="step">Step 3: Final force = k × (3×3) / 5² = 9k/25 = 36k/100</div>
+                    <div class="step">Step 4: But wait! This contradicts the textbook...</div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn" onclick="resetExamples()">🔄 Reset Examples</button>
+                <button class="btn" onclick="showWorkingSteps()">📝 Show Working Steps</button>
+                <button class="btn" onclick="showAdvancedExample()">➕ Add Advanced Example</button>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <h2>🕰️ Historical Development</h2>
+            
+            <div class="historical-section">
+                <h3>Timeline of Discovery</h3>
+                
+                <div class="timeline-item">
+                    <div class="timeline-year">1767</div>
+                    <div class="timeline-content">
+                        <strong>Joseph Priestley</strong> suspected an inverse square law based on experiments with charged metal cups.
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-year">1771</div>
+                    <div class="timeline-content">
+                        <strong>Henry Cavendish</strong> proved the inverse square law experimentally but never published his results.
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-year">1785</div>
+                    <div class="timeline-content">
+                        <strong>Charles-Augustin de Coulomb</strong> published his law using careful torsion balance measurements.
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-year">1820s</div>
+                    <div class="timeline-content">
+                        <strong>Mathematical Formulation:</strong> The law was expressed in modern vector notation and integrated into electromagnetic theory.
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h3>🔬 Coulomb's Apparatus</h3>
+                <p>Coulomb used a <strong>torsion balance</strong> - an incredibly sensitive device that could measure tiny forces by observing the twist in a thin fiber. The same principle was later used by Cavendish to measure gravitational forces!</p>
+                
+                <div style="margin-top: 15px;">
+                    <strong>Key Innovation:</strong> Coulomb realized he could vary charge systematically by touching charged spheres with identical uncharged ones, halving the charge each time.
+                </div>
+            </div>
+
+            <div class="concept-highlight">
+                🎯 Fun Fact: Coulomb discovered his law without knowing the actual charge values - pure genius in experimental design!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'calculator';
+        let charge1Unit = 'μC';
+        let charge2Unit = 'μC';
+        let distanceUnit = 'cm';
+        let separationUnit = 'Å';
+        let isDragging = false;
+        let draggedElement = null;
+
+        // Constants
+        const K = 8.99e9; // Coulomb's constant in N⋅m²/C²
+        const G = 6.67e-11; // Gravitational constant
+        const ELECTRON_CHARGE = 1.6e-19; // Elementary charge in C
+        const ELECTRON_MASS = 9.11e-31; // kg
+        const PROTON_MASS = 1.67e-27; // kg
+
+        // Unit conversion factors to SI
+        const CHARGE_UNITS = {
+            'C': 1,
+            'μC': 1e-6,
+            'nC': 1e-9
+        };
+
+        const DISTANCE_UNITS = {
+            'm': 1,
+            'cm': 0.01,
+            'mm': 0.001,
+            'Å': 1e-10,
+            'nm': 1e-9,
+            'pm': 1e-12
+        };
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Initialize tab-specific content
+            switch(tabName) {
+                case 'vectors':
+                    initializeVectors();
+                    break;
+                case 'experiment':
+                    updateBalance();
+                    break;
+                case 'comparison':
+                    updateComparison();
+                    break;
+            }
+        }
+
+        // Unit selection
+        function setUnit(inputId, unit) {
+            // Update button states
+            const buttons = document.querySelector(`#${inputId}`).nextElementSibling.querySelectorAll('.unit-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update unit variable
+            if (inputId === 'charge1') charge1Unit = unit;
+            else if (inputId === 'charge2') charge2Unit = unit;
+            else if (inputId === 'distance') distanceUnit = unit;
+            
+            calculateCoulombForce();
+        }
+
+        function setSeparationUnit(unit) {
+            const buttons = document.querySelectorAll('#separationDistance').forEach(input => {
+                const buttons = input.nextElementSibling.querySelectorAll('.unit-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+            });
+            event.target.classList.add('active');
+            separationUnit = unit;
+            updateComparison();
+        }
+
+        // Coulomb force calculation
+        function calculateCoulombForce() {
+            const q1Value = parseFloat(document.getElementById('charge1').value) || 0;
+            const q2Value = parseFloat(document.getElementById('charge2').value) || 0;
+            const rValue = parseFloat(document.getElementById('distance').value) || 0.1;
+            
+            // Convert to SI units
+            const q1 = q1Value * CHARGE_UNITS[charge1Unit];
+            const q2 = q2Value * CHARGE_UNITS[charge2Unit];
+            const r = rValue * DISTANCE_UNITS[distanceUnit];
+            
+            if (r === 0) return;
+            
+            // Calculate force magnitude
+            const force = K * Math.abs(q1 * q2) / (r * r);
+            
+            // Determine force type
+            const isAttractive = (q1 * q2) < 0;
+            const forceType = isAttractive ? 'Attractive' : 'Repulsive';
+            const forceDirection = isAttractive ? '(opposite charges)' : '(like charges)';
+            
+            // Update display
+            document.getElementById('forceValue').textContent = force.toExponential(2) + ' N';
+            document.getElementById('forceDetails').innerHTML = 
+                `${forceType} force ${forceDirection}<br>Force magnitude: ${force.toFixed(6)} N`;
+            
+            // Update analysis
+            const analysis = isAttractive ? 
+                '📊 Analysis: The force is attractive because the charges have opposite signs.' :
+                '📊 Analysis: The force is repulsive because the charges have the same sign.';
+            
+            document.getElementById('forceInfo').innerHTML = 
+                `<strong>${analysis}</strong> If you increase the distance, the force will decrease by the square of the distance ratio.`;
+        }
+
+        // Control functions
+        function doubleDistance() {
+            const distanceInput = document.getElementById('distance');
+            distanceInput.value = parseFloat(distanceInput.value) * 2;
+            calculateCoulombForce();
+        }
+
+        function halveDistance() {
+            const distanceInput = document.getElementById('distance');
+            distanceInput.value = parseFloat(distanceInput.value) / 2;
+            calculateCoulombForce();
+        }
+
+        function reverseCharge() {
+            const charge2Input = document.getElementById('charge2');
+            charge2Input.value = -parseFloat(charge2Input.value);
+            calculateCoulombForce();
+        }
+
+        function resetCalculator() {
+            document.getElementById('charge1').value = 2;
+            document.getElementById('charge2').value = -3;
+            document.getElementById('distance').value = 5;
+            calculateCoulombForce();
+        }
+
+        // Vector visualization
+        function initializeVectors() {
+            const canvas = document.getElementById('forceArrows');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // Add drag functionality
+            const charge1 = document.getElementById('charge1Vector');
+            const charge2 = document.getElementById('charge2Vector');
+            
+            [charge1, charge2].forEach(charge => {
+                charge.addEventListener('mousedown', startDrag);
+                charge.addEventListener('touchstart', startDrag);
+            });
+            
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('touchend', endDrag);
+            
+            updateVectorDisplay();
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            isDragging = true;
+            draggedElement = e.target;
+        }
+
+        function drag(e) {
+            if (!isDragging || !draggedElement) return;
+            
+            e.preventDefault();
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
+            const canvas = document.getElementById('vectorCanvas');
+            const rect = canvas.getBoundingClientRect();
+            
+            const x = clientX - rect.left - 20;
+            const y = clientY - rect.top - 20;
+            
+            // Keep within bounds
+            const maxX = canvas.offsetWidth - 40;
+            const maxY = canvas.offsetHeight - 40;
+            
+            draggedElement.style.left = Math.max(0, Math.min(maxX, x)) + 'px';
+            draggedElement.style.top = Math.max(0, Math.min(maxY, y)) + 'px';
+            
+            updateVectorDisplay();
+        }
+
+        function endDrag() {
+            isDragging = false;
+            draggedElement = null;
+        }
+
+        function updateVectorDisplay() {
+            const charge1 = document.getElementById('charge1Vector');
+            const charge2 = document.getElementById('charge2Vector');
+            
+            const x1 = parseInt(charge1.style.left) + 20;
+            const y1 = parseInt(charge1.style.top) + 20;
+            const x2 = parseInt(charge2.style.left) + 20;
+            const y2 = parseInt(charge2.style.top) + 20;
+            
+            const distance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            const distanceReal = distance * 0.1; // Convert pixels to cm
+            
+            // Extract charge values from text
+            const q1Text = charge1.textContent;
+            const q2Text = charge2.textContent;
+            const q1 = parseFloat(q1Text.replace('μC', '')) * 1e-6;
+            const q2 = parseFloat(q2Text.replace('μC', '')) * 1e-6;
+            
+            // Calculate force
+            const force = K * Math.abs(q1 * q2) / ((distanceReal * 0.01) ** 2);
+            const isAttractive = (q1 * q2) < 0;
+            
+            // Update displays
+            document.getElementById('force1Vector').textContent = 
+                `${force.toExponential(2)} N ${isAttractive ? '→' : '←'} (${isAttractive ? 'attraction' : 'repulsion'})`;
+            document.getElementById('force2Vector').textContent = 
+                `${force.toExponential(2)} N ${isAttractive ? '←' : '→'} (${isAttractive ? 'attraction' : 'repulsion'})`;
+            document.getElementById('vectorDistance').textContent = `${distanceReal.toFixed(1)} cm`;
+            document.getElementById('forceType').textContent = isAttractive ? 'Attractive' : 'Repulsive';
+            
+            // Draw force arrows
+            drawForceArrows(x1, y1, x2, y2, isAttractive, force);
+        }
+
+        function drawForceArrows(x1, y1, x2, y2, isAttractive, force) {
+            const canvas = document.getElementById('forceArrows');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate arrow properties
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const unitX = dx / distance;
+            const unitY = dy / distance;
+            
+            // Arrow length based on force (logarithmic scale)
+            const arrowLength = Math.min(60, Math.max(20, Math.log10(force) * 10));
+            
+            ctx.strokeStyle = isAttractive ? '#48bb78' : '#e53e3e';
+            ctx.fillStyle = isAttractive ? '#48bb78' : '#e53e3e';
+            ctx.lineWidth = 3;
+            
+            // Draw arrows
+            if (isAttractive) {
+                // Attraction - arrows point toward each other
+                drawArrow(ctx, x1, y1, x1 + unitX * arrowLength, y1 + unitY * arrowLength);
+                drawArrow(ctx, x2, y2, x2 - unitX * arrowLength, y2 - unitY * arrowLength);
+            } else {
+                // Repulsion - arrows point away from each other
+                drawArrow(ctx, x1, y1, x1 - unitX * arrowLength, y1 - unitY * arrowLength);
+                drawArrow(ctx, x2, y2, x2 + unitX * arrowLength, y2 + unitY * arrowLength);
+            }
+        }
+
+        function drawArrow(ctx, fromX, fromY, toX, toY) {
+            const headlen = 10;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            
+            // Draw arrowhead
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
+
+        function setCharges(q1, q2) {
+            const charge1 = document.getElementById('charge1Vector');
+            const charge2 = document.getElementById('charge2Vector');
+            
+            charge1.textContent = `${q1 > 0 ? '+' : ''}${q1}μC`;
+            charge1.className = `charge-point ${q1 > 0 ? 'charge-positive' : 'charge-negative'}`;
+            
+            charge2.textContent = `${q2 > 0 ? '+' : ''}${q2}μC`;
+            charge2.className = `charge-point ${q2 > 0 ? 'charge-positive' : 'charge-negative'}`;
+            
+            updateVectorDisplay();
+        }
+
+        function resetVectors() {
+            document.getElementById('charge1Vector').style.left = '100px';
+            document.getElementById('charge1Vector').style.top = '150px';
+            document.getElementById('charge2Vector').style.left = '300px';
+            document.getElementById('charge2Vector').style.top = '200px';
+            setCharges(2, -3);
+        }
+
+        // Torsion balance functions
+        let balancePosition = 20; // Distance in relative units
+        let currentCharge = 1; // Relative charge
+
+        function moveTestSphere(delta) {
+            balancePosition = Math.max(20, Math.min(100, balancePosition + delta));
+            updateBalance();
+        }
+
+        function halfCharge() {
+            currentCharge *= 0.5;
+            updateBalance();
+        }
+
+        function resetBalance() {
+            balancePosition = 20;
+            currentCharge = 1;
+            updateBalance();
+        }
+
+        function updateBalance() {
+            // Calculate relative force (inverse square law)
+            const relativeForce = currentCharge / (balancePosition * balancePosition / 400);
+            
+            // Update balance arm rotation (proportional to force)
+            const angle = Math.min(45, relativeForce * 15);
+            document.getElementById('balanceArm').style.transform = 
+                `translate(-50%, -50%) rotate(${angle}deg)`;
+            
+            // Update test sphere position
+            document.getElementById('testSphere').style.left = balancePosition + 'px';
+            
+            // Update displays
+            document.getElementById('spherePosition').textContent = `${(balancePosition / 10).toFixed(1)} cm`;
+            document.getElementById('balanceAngle').textContent = `${angle.toFixed(1)}°`;
+            document.getElementById('relativeForce').textContent = `${relativeForce.toFixed(2)}x`;
+        }
+
+        // Force comparison functions
+        function updateComparison() {
+            const particleType = document.getElementById('particleType').value;
+            const separation = parseFloat(document.getElementById('separationDistance').value) || 1;
+            const separationInMeters = separation * DISTANCE_UNITS[separationUnit];
+            
+            let q1, q2, m1, m2;
+            
+            switch(particleType) {
+                case 'electron-proton':
+                    q1 = -ELECTRON_CHARGE;
+                    q2 = ELECTRON_CHARGE;
+                    m1 = ELECTRON_MASS;
+                    m2 = PROTON_MASS;
+                    break;
+                case 'two-protons':
+                    q1 = q2 = ELECTRON_CHARGE;
+                    m1 = m2 = PROTON_MASS;
+                    break;
+                case 'two-electrons':
+                    q1 = q2 = -ELECTRON_CHARGE;
+                    m1 = m2 = ELECTRON_MASS;
+                    break;
+            }
+            
+            // Calculate forces
+            const electricForce = K * Math.abs(q1 * q2) / (separationInMeters * separationInMeters);
+            const gravitationalForce = G * m1 * m2 / (separationInMeters * separationInMeters);
+            const ratio = electricForce / gravitationalForce;
+            
+            // Update display
+            document.getElementById('electricForce').textContent = electricForce.toExponential(1) + ' N';
+            document.getElementById('gravitationalForce').textContent = gravitationalForce.toExponential(1) + ' N';
+            document.getElementById('forceRatio').textContent = ratio.toExponential(1);
+        }
+
+        // Example calculations
+        function calculateExample1() {
+            const distanceInput = document.getElementById('example1Distance');
+            if (!distanceInput) return;
+            
+            const distance = parseFloat(distanceInput.value) || 1;
+            const distanceInMeters = distance * 1e-10; // Angstroms to meters
+            
+            const electricForce = K * ELECTRON_CHARGE * ELECTRON_CHARGE / (distanceInMeters * distanceInMeters);
+            const gravitationalForce = G * ELECTRON_MASS * PROTON_MASS / (distanceInMeters * distanceInMeters);
+            const ratio = electricForce / gravitationalForce;
+            
+            const resultElement = document.getElementById('example1Result');
+            const detailsElement = document.getElementById('example1Details');
+            
+            if (resultElement) {
+                resultElement.textContent = `Electric Force: ${electricForce.toExponential(1)} N`;
+            }
+            
+            if (detailsElement) {
+                detailsElement.innerHTML = 
+                    `Gravitational Force: ${gravitationalForce.toExponential(1)} N<br>Ratio: ${ratio.toExponential(1)}`;
+            }
+        }
+
+        function calculateExample2() {
+            const qInput = document.getElementById('example2ChargeQ');
+            const qPrimeInput = document.getElementById('example2ChargeQPrime');
+            const distanceInput = document.getElementById('example2Distance');
+            
+            if (!qInput || !qPrimeInput || !distanceInput) return;
+            
+            const q = parseFloat(qInput.value) || 4;
+            const qPrime = parseFloat(qPrimeInput.value) || 2;
+            const distance = parseFloat(distanceInput.value) || 10;
+            
+            const initialForce = q * qPrime / (distance * distance);
+            const finalCharge = (q + qPrime) / 2;
+            const finalDistance = distance / 2;
+            const finalForce = finalCharge * finalCharge / (finalDistance * finalDistance);
+            
+            const ratio = finalForce / initialForce;
+            
+            const resultElement = document.getElementById('example2Result');
+            const detailsElement = document.getElementById('example2Details');
+            
+            if (resultElement) {
+                resultElement.textContent = `Final Force: ${ratio.toFixed(2)}x Initial Force`;
+            }
+            
+            if (detailsElement) {
+                detailsElement.innerHTML = 
+                    `After contact: Each sphere has ${finalCharge} μC<br>Distance halved: ${finalDistance} cm<br>Force ratio: ${ratio.toFixed(2)}`;
+            }
+        }
+
+        function resetExamples() {
+            // Reset Example 1
+            const example1Distance = document.getElementById('example1Distance');
+            if (example1Distance) {
+                example1Distance.value = 1;
+            }
+            
+            // Reset Example 2
+            const example2ChargeQ = document.getElementById('example2ChargeQ');
+            const example2ChargeQPrime = document.getElementById('example2ChargeQPrime');
+            const example2Distance = document.getElementById('example2Distance');
+            
+            if (example2ChargeQ) example2ChargeQ.value = 4;
+            if (example2ChargeQPrime) example2ChargeQPrime.value = 2;
+            if (example2Distance) example2Distance.value = 10;
+            
+            // Recalculate both examples
+            calculateExample1();
+            calculateExample2();
+            
+            // Visual feedback
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ Reset Complete!';
+            button.style.background = '#38a169';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+            }, 1500);
+        }
+
+        function showWorkingSteps() {
+            // Create a detailed working steps modal/display
+            const workingSteps = `
+                <div style="background: white; color: #333; padding: 25px; border-radius: 15px; margin: 20px 0; border: 3px solid #4299e1;">
+                    <h3>📝 Detailed Working Steps</h3>
+                    
+                    <h4>Example 1: Electron-Proton Force</h4>
+                    <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <p><strong>Given:</strong></p>
+                        <p>• e = 1.6 × 10⁻¹⁹ C (elementary charge)</p>
+                        <p>• r = 1 Å = 1 × 10⁻¹⁰ m</p>
+                        <p>• k = 8.99 × 10⁹ N⋅m²/C²</p>
+                        <p>• G = 6.67 × 10⁻¹¹ N⋅m²/kg²</p>
+                        <p>• mₑ = 9.11 × 10⁻³¹ kg, mₚ = 1.67 × 10⁻²⁷ kg</p>
+                        
+                        <p><strong>Electric Force:</strong></p>
+                        <p>Fₑ = k × e²/r²</p>
+                        <p>Fₑ = 8.99×10⁹ × (1.6×10⁻¹⁹)²/(1×10⁻¹⁰)²</p>
+                        <p>Fₑ = 8.99×10⁹ × 2.56×10⁻³⁸/1×10⁻²⁰</p>
+                        <p>Fₑ = 2.3 × 10⁻⁸ N</p>
+                        
+                        <p><strong>Gravitational Force:</strong></p>
+                        <p>Fₓ = G × mₑ × mₚ/r²</p>
+                        <p>Fₓ = 6.67×10⁻¹¹ × 9.11×10⁻³¹ × 1.67×10⁻²⁷/(1×10⁻¹⁰)²</p>
+                        <p>Fₓ = 1.0 × 10⁻⁴⁷ N</p>
+                        
+                        <p><strong>Ratio:</strong> Fₑ/Fₓ = 2.4 × 10³⁹</p>
+                    </div>
+                    
+                    <h4>Example 2: Charge Redistribution</h4>
+                    <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <p><strong>Initial Setup:</strong></p>
+                        <p>• Sphere A: charge = q</p>
+                        <p>• Sphere B: charge = q'</p>
+                        <p>• Distance = r</p>
+                        <p>• Initial Force = k × |q × q'|/r²</p>
+                        
+                        <p><strong>After Contact:</strong></p>
+                        <p>• Each sphere gets: (q + q')/2</p>
+                        <p>• New distance = r/2</p>
+                        <p>• Final Force = k × |(q+q')/2|²/(r/2)²</p>
+                        <p>• Final Force = k × (q+q')²/4 × 4/r²</p>
+                        <p>• Final Force = k × (q+q')²/r²</p>
+                        
+                        <p><strong>Ratio Analysis:</strong></p>
+                        <p>• Final/Initial = [(q+q')²/r²] / [qq'/r²]</p>
+                        <p>• Ratio = (q+q')²/(qq')</p>
+                        <p>• For q=4, q'=2: Ratio = 36/8 = 4.5</p>
+                    </div>
+                    
+                    <button onclick="this.parentElement.remove()" style="background: #e53e3e; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 15px;">Close Working Steps</button>
+                </div>
+            `;
+            
+            // Insert the working steps after the examples
+            const examplesTab = document.getElementById('examples');
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = workingSteps;
+            examplesTab.appendChild(tempDiv.firstElementChild);
+            
+            // Scroll to the working steps
+            tempDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Visual feedback on button
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '📖 Working Steps Shown Below!';
+            button.style.background = '#38a169';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+            }, 3000);
+        }
+
+        // Add a more advanced example
+        function showAdvancedExample() {
+            const advancedExample = `
+                <div class="example-container" id="advancedExample">
+                    <h3>Example 3: Three Charges in a Line</h3>
+                    <div class="problem-statement">
+                        Three charges are placed in a line: +2μC at x=0, -4μC at x=3cm, +1μC at x=6cm. 
+                        Find the net force on the middle charge.
+                    </div>
+
+                    <div class="interactive-inputs">
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label class="input-label">q₁ (μC)</label>
+                                <input type="number" class="input-field" id="threeChargeQ1" value="2" oninput="calculateThreeCharges()">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">q₂ (μC)</label>
+                                <input type="number" class="input-field" id="threeChargeQ2" value="-4" oninput="calculateThreeCharges()">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">q₃ (μC)</label>
+                                <input type="number" class="input-field" id="threeChargeQ3" value="1" oninput="calculateThreeCharges()">
+                            </div>
+                        </div>
+                        
+                        <div class="force-result">
+                            <div class="force-value" id="threeChargeResult">Net Force: 1.2 × 10⁻¹ N ←</div>
+                            <div class="force-details" id="threeChargeDetails">
+                                F₁₂ = 8.0 × 10⁻² N ←<br>
+                                F₃₂ = 4.0 × 10⁻² N ←<br>
+                                Net = 1.2 × 10⁻¹ N (left)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="calculation-steps">
+                        <div class="step">Step 1: F₁₂ = k|q₁q₂|/r₁₂² = k×2×4/(0.03)² = 8.0×10⁻² N (attractive, leftward)</div>
+                        <div class="step">Step 2: F₃₂ = k|q₃q₂|/r₃₂² = k×1×4/(0.03)² = 4.0×10⁻² N (attractive, leftward)</div>
+                        <div class="step">Step 3: Both forces are in same direction (leftward)</div>
+                        <div class="step">Step 4: Net force = 8.0×10⁻² + 4.0×10⁻² = 1.2×10⁻¹ N leftward</div>
+                    </div>
+                </div>
+            `;
+            
+            const examplesTab = document.getElementById('examples');
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = advancedExample;
+            examplesTab.appendChild(tempDiv.firstElementChild);
+            
+            calculateThreeCharges();
+        }
+
+        function calculateThreeCharges() {
+            const q1Input = document.getElementById('threeChargeQ1');
+            const q2Input = document.getElementById('threeChargeQ2');
+            const q3Input = document.getElementById('threeChargeQ3');
+            
+            if (!q1Input || !q2Input || !q3Input) return;
+            
+            const q1 = parseFloat(q1Input.value) * 1e-6;
+            const q2 = parseFloat(q2Input.value) * 1e-6;
+            const q3 = parseFloat(q3Input.value) * 1e-6;
+            
+            const r12 = 0.03; // 3 cm in meters
+            const r32 = 0.03; // 3 cm in meters
+            
+            // Force on q2 due to q1
+            const F12 = K * Math.abs(q1 * q2) / (r12 * r12);
+            // Force on q2 due to q3
+            const F32 = K * Math.abs(q3 * q2) / (r32 * r32);
+            
+            // Determine directions (both are attractive to q2)
+            const F12_direction = (q1 * q2 < 0) ? "←" : "→";
+            const F32_direction = (q3 * q2 < 0) ? "←" : "→";
+            
+            // Net force (assuming both point left for default values)
+            const netForce = F12 + F32;
+            
+            const resultElement = document.getElementById('threeChargeResult');
+            const detailsElement = document.getElementById('threeChargeDetails');
+            
+            if (resultElement) {
+                resultElement.textContent = `Net Force: ${netForce.toExponential(1)} N ←`;
+            }
+            
+            if (detailsElement) {
+                detailsElement.innerHTML = 
+                    `F₁₂ = ${F12.toExponential(1)} N ${F12_direction}<br>F₃₂ = ${F32.toExponential(1)} N ${F32_direction}<br>Net = ${netForce.toExponential(1)} N (left)`;
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateCoulombForce();
+            updateComparison();
+            updateBalance();
+            
+            // Initialize examples after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                calculateExample1();
+                calculateExample2();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

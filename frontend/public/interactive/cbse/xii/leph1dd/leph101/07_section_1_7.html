@@ -1,0 +1,2992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electric Field Laboratory - Advanced Visualization</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 25%, #16213e 50%, #0f4c75 75%, #3282b8 100%);
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: auto;
+            animation: backgroundFlow 12s ease-in-out infinite alternate;
+        }
+        
+        @keyframes backgroundFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .container {
+            max-width: 1900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 35px;
+            backdrop-filter: blur(25px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.4);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 25% 25%, rgba(52, 152, 219, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 75% 75%, rgba(155, 89, 182, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, rgba(46, 204, 113, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            animation: orbitalMotion 20s linear infinite;
+        }
+        
+        @keyframes orbitalMotion {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db, #9b59b6, #e74c3c, #f39c12);
+            color: white;
+            padding: 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            background-size: 600% 600%;
+            animation: gradientWave 10s ease infinite;
+        }
+        
+        @keyframes gradientWave {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="fieldPattern" width="15" height="15" patternUnits="userSpaceOnUse"><circle cx="7.5" cy="7.5" r="1" fill="rgba(255,255,255,0.3)"/><path d="M 7.5 0 L 7.5 15 M 0 7.5 L 15 7.5" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23fieldPattern)"/></svg>');
+            animation: fieldFlow 6s linear infinite;
+        }
+        
+        @keyframes fieldFlow {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(15px, 15px); }
+        }
+        
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 4em;
+            margin-bottom: 25px;
+            font-weight: 900;
+            text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(52,152,219,0.6);
+            position: relative;
+            z-index: 1;
+            animation: electricGlow 4s ease-in-out infinite alternate;
+        }
+        
+        @keyframes electricGlow {
+            0% { text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(52,152,219,0.6); }
+            100% { text-shadow: 0 0 50px rgba(255,255,255,1), 0 0 100px rgba(52,152,219,0.9); }
+        }
+        
+        .header p {
+            font-size: 1.5em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+            animation: slideInFromBottom 1.5s ease-out 0.8s both;
+        }
+        
+        @keyframes slideInFromBottom {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 0.95; transform: translateY(0); }
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 550px;
+            gap: 35px;
+            padding: 40px;
+        }
+        
+        .canvas-section {
+            background: linear-gradient(145deg, rgba(10, 10, 20, 0.95), rgba(20, 20, 40, 0.9));
+            border-radius: 30px;
+            padding: 35px;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .canvas-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #3498db, #9b59b6, #e74c3c, #f39c12, #3498db);
+            border-radius: 30px;
+            z-index: -1;
+            margin: -3px;
+            background-size: 400% 400%;
+            animation: electricBorder 8s linear infinite;
+        }
+        
+        @keyframes electricBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .canvas-container {
+            position: relative;
+            background: radial-gradient(circle at center, #001122, #002244, #003366);
+            border-radius: 25px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.9), 0 25px 50px rgba(0,0,0,0.6);
+            overflow: hidden;
+            border: 4px solid transparent;
+            background-clip: padding-box;
+        }
+        
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(45deg, #3498db, #9b59b6, #e74c3c, #f39c12, #3498db);
+            border-radius: 25px;
+            z-index: -1;
+            background-size: 400% 400%;
+            animation: canvasBorderGlow 8s linear infinite;
+        }
+        
+        @keyframes canvasBorderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        #fieldCanvas {
+            display: block;
+            cursor: crosshair;
+            border-radius: 21px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .field-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            pointer-events: none;
+            border-radius: 21px;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(52, 152, 219, 0.08) 100%);
+            animation: fieldPulse 6s ease-in-out infinite;
+        }
+        
+        @keyframes fieldPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        
+        .controls {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+            border-radius: 30px;
+            padding: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            backdrop-filter: blur(25px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .controls::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.08), rgba(155, 89, 182, 0.08));
+            animation: controlsShimmer 8s ease-in-out infinite alternate;
+        }
+        
+        @keyframes controlsShimmer {
+            0% { opacity: 0.4; }
+            100% { opacity: 0.9; }
+        }
+        
+        .control-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            border: 2px solid rgba(52, 152, 219, 0.25);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .control-section:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(52, 152, 219, 0.25);
+            border-color: rgba(52, 152, 219, 0.5);
+        }
+        
+        .control-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+            opacity: 0.8;
+        }
+        
+        .control-section h3 {
+            color: #ffffff;
+            margin-bottom: 30px;
+            font-size: 1.6em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+        
+        .control-section h3::before {
+            content: '⚡';
+            font-size: 1.4em;
+            animation: iconRotate 4s linear infinite;
+        }
+        
+        @keyframes iconRotate {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        
+        .slider-group {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(52, 152, 219, 0.12);
+            border-radius: 20px;
+            border: 2px solid rgba(52, 152, 219, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slider-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            animation: sliderShimmer 4s infinite;
+        }
+        
+        @keyframes sliderShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .slider-group label {
+            display: block;
+            margin-bottom: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 1.3em;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+        
+        .slider {
+            width: 100%;
+            height: 14px;
+            border-radius: 7px;
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 25%, #f1c40f 50%, #27ae60 75%, #3498db 100%);
+            outline: none;
+            -webkit-appearance: none;
+            position: relative;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff, #e0e0e0);
+            cursor: pointer;
+            box-shadow: 0 0 25px rgba(52, 152, 219, 1), 0 8px 20px rgba(0,0,0,0.4);
+            border: 4px solid #3498db;
+            transition: all 0.2s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 35px rgba(52, 152, 219, 1), 0 12px 30px rgba(0,0,0,0.5);
+        }
+        
+        .value-display {
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: #ffffff;
+            padding: 18px 30px;
+            border-radius: 15px;
+            margin-top: 18px;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            font-size: 1.4em;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border: 3px solid rgba(52, 152, 219, 0.6);
+            animation: valueFlicker 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes valueFlicker {
+            0% { box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 25px rgba(52, 152, 219, 0.4); }
+            100% { box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 50px rgba(52, 152, 219, 0.8); }
+        }
+        
+        .visualization-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .toggle-btn {
+            padding: 18px 25px;
+            border: 3px solid rgba(52, 152, 219, 0.6);
+            background: rgba(52, 152, 219, 0.15);
+            color: #ffffff;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .toggle-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .toggle-btn:hover::before {
+            left: 100%;
+        }
+        
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-color: #3498db;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.5);
+            transform: translateY(-3px);
+        }
+        
+        .toggle-btn.active::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            color: #2ecc71;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .toggle-btn:not(.active) {
+            opacity: 0.7;
+        }
+        
+        .toggle-btn:not(.active) small {
+            opacity: 0.6;
+        }
+        
+        .toggle-btn:not(.active)::after {
+            content: '○';
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        
+        /* Enhanced Tooltips */
+        [title] {
+            position: relative;
+        }
+        
+        [title]:hover::before {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            animation: tooltipFadeIn 0.3s ease;
+            max-width: 200px;
+            white-space: normal;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        [title]:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(2px);
+            border: 4px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+        }
+        
+        @keyframes tooltipFadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        @keyframes hintPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(46, 204, 113, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(46, 204, 113, 0.6); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+        
+        .toggle-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(52, 152, 219, 0.4);
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 22px 30px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 12px 35px rgba(52, 152, 219, 0.5);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 12px 35px rgba(231, 76, 60, 0.5);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            box-shadow: 0 12px 35px rgba(39, 174, 96, 0.5);
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .example-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 18px;
+            border-radius: 15px;
+            background: rgba(52, 152, 219, 0.12);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(52, 152, 219, 0.25);
+        }
+        
+        .legend-item:hover {
+            background: rgba(52, 152, 219, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.25);
+        }
+        
+        .legend-color {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        
+        .legend-item span {
+            color: #ffffff;
+            font-weight: 600;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+        
+        .instructions {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(230, 126, 34, 0.25));
+            border: 3px solid rgba(243, 156, 18, 0.6);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 35px;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .instructions::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #f39c12, #e67e22, #d35400);
+            animation: instructionPulse 4s ease-in-out infinite alternate;
+        }
+        
+        @keyframes instructionPulse {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .instructions h4 {
+            color: #f39c12;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+        
+        .instructions h4::before {
+            content: '💡';
+            animation: bulbGlow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes bulbGlow {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        
+        .instructions p {
+            color: #f39c12;
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding-left: 30px;
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .instructions p::before {
+            content: '▶';
+            position: absolute;
+            left: 10px;
+            color: #e67e22;
+            font-weight: bold;
+            animation: arrowMove 2s ease-in-out infinite;
+        }
+        
+        @keyframes arrowMove {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(8px); }
+        }
+        
+        .test-charge-info {
+            background: rgba(46, 204, 113, 0.15);
+            border: 2px solid rgba(46, 204, 113, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #2ecc71;
+            font-weight: 600;
+        }
+        
+        .field-calculations {
+            background: linear-gradient(145deg, rgba(52, 73, 94, 0.9), rgba(44, 62, 80, 0.9));
+            color: white;
+            border-radius: 25px;
+            padding: 35px;
+            margin-top: 35px;
+            border: 3px solid rgba(52, 152, 219, 0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .field-calculations::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+            animation: calculationFlow 5s linear infinite;
+        }
+        
+        @keyframes calculationFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .field-calculations h4 {
+            color: #3498db;
+            margin-bottom: 30px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 700;
+        }
+        
+        .field-calculations h4::before {
+            content: '📐';
+            animation: measureBounce 3s ease-in-out infinite;
+        }
+        
+        @keyframes measureBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        .field-info {
+            font-family: 'Orbitron', monospace;
+            font-size: 15px;
+            line-height: 1.9;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 30px;
+            border-radius: 18px;
+            border: 2px solid rgba(52, 152, 219, 0.4);
+            backdrop-filter: blur(12px);
+        }
+        
+        .status-panel {
+            background: linear-gradient(145deg, rgba(39, 174, 96, 0.25), rgba(46, 204, 113, 0.25));
+            border-radius: 18px;
+            padding: 25px;
+            margin-top: 25px;
+            border: 3px solid rgba(39, 174, 96, 0.5);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            animation: statusFlow 4s infinite;
+        }
+        
+        @keyframes statusFlow {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .status-info {
+            font-size: 16px;
+            color: #ffffff;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+        
+        .quiz-panel, .challenges-panel {
+            background: linear-gradient(145deg, rgba(155, 89, 182, 0.15), rgba(142, 68, 173, 0.15));
+            color: white;
+            border-radius: 25px;
+            padding: 35px;
+            margin-top: 35px;
+            border: 3px solid rgba(155, 89, 182, 0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quiz-panel::before, .challenges-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #9b59b6, #8e44ad, #bb86fc);
+            animation: quizFlow 5s linear infinite;
+        }
+        
+        @keyframes quizFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .quiz-panel h4, .challenges-panel h4 {
+            color: #bb86fc;
+            margin-bottom: 30px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 700;
+        }
+        
+        .quiz-progress {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #9b59b6, #bb86fc);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+            width: 8.33%;
+        }
+        
+        .question-container {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 30px;
+            border-radius: 18px;
+            border: 2px solid rgba(155, 89, 182, 0.4);
+            backdrop-filter: blur(12px);
+        }
+        
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            line-height: 1.7;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .answer-options {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .answer-option {
+            padding: 18px 25px;
+            background: rgba(52, 152, 219, 0.12);
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        
+        .answer-option:hover {
+            background: rgba(52, 152, 219, 0.25);
+            border-color: rgba(52, 152, 219, 0.6);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+        }
+        
+        .answer-option.selected {
+            background: rgba(52, 152, 219, 0.4);
+            border-color: #3498db;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+        }
+        
+        .answer-option.correct {
+            background: rgba(39, 174, 96, 0.4);
+            border-color: #27ae60;
+            box-shadow: 0 0 20px rgba(39, 174, 96, 0.5);
+        }
+        
+        .answer-option.incorrect {
+            background: rgba(231, 76, 60, 0.4);
+            border-color: #e74c3c;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+        }
+        
+        .quiz-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+        
+        .quiz-score {
+            background: rgba(155, 89, 182, 0.25);
+            padding: 20px 30px;
+            border-radius: 15px;
+            border: 3px solid rgba(155, 89, 182, 0.5);
+            text-align: center;
+            margin-top: 25px;
+        }
+        
+        .challenge-item {
+            background: rgba(52, 152, 219, 0.12);
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 18px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .challenge-item:hover {
+            background: rgba(52, 152, 219, 0.25);
+            border-color: rgba(52, 152, 219, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(52, 152, 219, 0.25);
+        }
+        
+        .challenge-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #4fc3f7;
+        }
+        
+        .challenge-description {
+            color: #ffffff;
+            margin-bottom: 18px;
+            line-height: 1.6;
+            font-size: 1.05em;
+        }
+        
+        .challenge-difficulty {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(231, 76, 60, 0.25);
+            border: 2px solid #e74c3c;
+            border-radius: 25px;
+            font-size: 0.9em;
+            color: #ff6b6b;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .challenge-difficulty.easy {
+            background: rgba(39, 174, 96, 0.25);
+            border-color: #27ae60;
+            color: #2ecc71;
+        }
+        
+        .challenge-difficulty.medium {
+            background: rgba(243, 156, 18, 0.25);
+            border-color: #f39c12;
+            color: #f1c40f;
+        }
+        
+        .explanation {
+            background: rgba(52, 152, 219, 0.15);
+            border-left: 5px solid #3498db;
+            padding: 20px 25px;
+            border-radius: 0 12px 12px 0;
+            margin-top: 20px;
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #e8f4fd;
+        }
+        
+        @media (max-width: 1700px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .legend {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .visualization-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .legend {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ ELECTRIC FIELD LABORATORY ⚡</h1>
+            <p>🔬 Advanced Visualization of Electric Fields, Field Lines & Vector Analysis 🔬</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="canvas-section">
+                <div class="instructions">
+                    <h4>🎮 Complete Control Guide:</h4>
+                    <p><strong>LEFT CLICK:</strong> Place source charges (large, μC scale)</p>
+                    <p><strong>RIGHT CLICK:</strong> Place test charges (small, nC scale) OR activate Test Charge Mode button first</p>
+                    <p><strong>DOUBLE-CLICK:</strong> Drop field probe to measure E-field strength & direction</p>
+                    <p><strong>CTRL + DRAG:</strong> Move any charge around the field</p>
+                    <p><strong>SHIFT + CLICK:</strong> Remove charges with explosion effect</p>
+                    <p><strong>SPACE BAR:</strong> Pause/resume all animations</p>
+                    <p><strong>Toggle Buttons:</strong> Blue = Active, Gray = Inactive</p>
+                    <p><strong>Field Lines Button:</strong> Show/hide flowing electric field lines</p>
+                    <p><strong>Test Charge Mode:</strong> When active, left-clicks place test charges instead</p>
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="fieldCanvas" width="1100" height="800"></canvas>
+                    <div class="field-overlay"></div>
+                </div>
+                
+                <div class="test-charge-info" id="testChargeInfo" style="display: none;">
+                    🧪 <strong>Test Charge Mode ACTIVE:</strong> Left-clicks now place test charges (green, nC scale). Right-click still works too. Click the Test Charge button again to return to normal mode.
+                </div>
+                
+                <div class="onboarding-hint" id="onboardingHint" style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.25), rgba(39, 174, 96, 0.25)); border: 2px solid rgba(46, 204, 113, 0.6); border-radius: 15px; padding: 20px; margin-bottom: 25px; animation: hintPulse 2s infinite;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: #2ecc71;">👋 First time? Start here:</strong><br>
+                            <span style="color: #ffffff;">1. LEFT-CLICK on field to place charges &nbsp;|&nbsp; 2. Try the "Single Point Charge" example &nbsp;|&nbsp; 3. Explore visualization buttons</span>
+                        </div>
+                        <button onclick="dismissHint()" style="background: none; border: 2px solid #2ecc71; color: #2ecc71; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">Got it!</button>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: radial-gradient(circle, #ff6b6b, #e74c3c); box-shadow: 0 0 25px #ff6b6b;"></div>
+                        <span><strong>⊕ Source Charge (+)</strong><br><small>Left-click to place</small></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: radial-gradient(circle, #4dabf7, #3498db); box-shadow: 0 0 25px #4dabf7;"></div>
+                        <span><strong>⊖ Source Charge (-)</strong><br><small>Left-click to place</small></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: radial-gradient(circle, #2ecc71, #27ae60); box-shadow: 0 0 25px #2ecc71;"></div>
+                        <span><strong>🧪 Test Charge</strong><br><small>Right-click or Test Mode</small></span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 45px; height: 4px; background: linear-gradient(90deg, #f39c12, #e67e22); border-radius: 2px; box-shadow: 0 0 12px #f39c12;"></div>
+                        <span><strong>→ Electric Field Lines</strong><br><small>Toggle with Field Lines button</small></span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 45px; height: 6px; background: linear-gradient(90deg, #9b59b6, #8e44ad); border-radius: 3px; box-shadow: 0 0 15px #9b59b6;"></div>
+                        <span><strong>⟹ Field Vectors</strong><br><small>Toggle with Field Vectors button</small></span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 20px; height: 20px; background: radial-gradient(circle, #e67e22, #d35400); border-radius: 50%; box-shadow: 0 0 10px #e67e22;"></div>
+                        <span><strong>📍 Field Probe</strong><br><small>Double-click to place</small></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-section">
+                    <h3>🔍 Current Mode Status</h3>
+                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px;">
+                        <div id="modeStatus" style="font-size: 16px; line-height: 1.6; color: #ffffff;">
+                            <div style="margin-bottom: 12px;">
+                                <strong>🖱️ Mouse Modes:</strong><br>
+                                <span id="leftClickMode" style="color: #ff6b6b;">LEFT CLICK:</span> <span id="leftClickAction">Place Source Charges</span><br>
+                                <span style="color: #2ecc71;">RIGHT CLICK:</span> Place Test Charges<br>
+                                <span style="color: #e67e22;">DOUBLE CLICK:</span> Drop Field Probes
+                            </div>
+                            <div>
+                                <strong>🎨 Active Features:</strong><br>
+                                <span id="activeFeatures">Field Lines</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🎮 Quick Reference</h3>
+                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; font-size: 14px; line-height: 1.8;">
+                        <strong>🖱️ Mouse Controls:</strong><br>
+                        • <span style="color: #ff6b6b;">LEFT CLICK</span> = Place source charge<br>
+                        • <span style="color: #2ecc71;">RIGHT CLICK</span> = Place test charge<br>
+                        • <span style="color: #e67e22;">DOUBLE CLICK</span> = Drop field probe<br>
+                        • <span style="color: #3498db;">CTRL + DRAG</span> = Move charges<br>
+                        • <span style="color: #e74c3c;">SHIFT + CLICK</span> = Remove charge<br><br>
+                        
+                        <strong>🎛️ Button States:</strong><br>
+                        • <span style="color: #3498db;">BLUE buttons</span> = Feature active<br>
+                        • <span style="color: #7f8c8d;">GRAY buttons</span> = Feature inactive<br><br>
+                        
+                        <strong>⌨️ Keyboard:</strong><br>
+                        • <span style="color: #f39c12;">SPACE</span> = Pause/resume animations<br>
+                        • <span style="color: #e74c3c;">H or F1</span> = Show help message<br>
+                        • <span style="color: #3498db;">F, V, T</span> = Toggle features
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>⚡ Charge Configuration</h3>
+                    <div class="slider-group">
+                        <label for="chargeValue">🔋 Source Charge Value (for LEFT-CLICK placement):</label>
+                        <input type="range" id="chargeValue" class="slider" min="-25" max="25" value="12" step="0.5" title="Drag to set charge value. Positive = red charges, Negative = blue charges">
+                        <div class="value-display" id="chargeDisplay">+12.0 μC</div>
+                        <small style="color: #ffffff; opacity: 0.8; margin-top: 8px; display: block;">Left-click on canvas to place source charges of this value</small>
+                    </div>
+                    <div class="slider-group">
+                        <label for="testChargeValue">🧪 Test Charge Value (for RIGHT-CLICK or Test Mode):</label>
+                        <input type="range" id="testChargeValue" class="slider" min="-10" max="10" value="1" step="0.1" title="Drag to set test charge value. Test charges are smaller and respond to the field">
+                        <div class="value-display" id="testChargeDisplay">+1.0 nC</div>
+                        <small style="color: #ffffff; opacity: 0.8; margin-top: 8px; display: block;">Right-click on canvas OR enable Test Mode to place these charges</small>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🎨 Field Visualization</h3>
+                    <div class="visualization-controls">
+                        <button class="toggle-btn active" id="fieldLinesToggle" onclick="toggleFieldLines()" title="Show/hide orange flowing lines from + to - charges">
+                            <div>Field Lines</div>
+                            <small>Orange Flow Lines</small>
+                        </button>
+                        <button class="toggle-btn" id="fieldVectorsToggle" onclick="toggleFieldVectors()" title="Show/hide purple arrows indicating field direction and strength">
+                            <div>Field Vectors</div>
+                            <small>Purple Arrows</small>
+                        </button>
+                        <button class="toggle-btn" id="equipotentialToggle" onclick="toggleEquipotential()" title="Show/hide colored dashed lines of equal electric potential">
+                            <div>Equipotential</div>
+                            <small>Energy Levels</small>
+                        </button>
+                        <button class="toggle-btn" id="fieldStrengthToggle" onclick="toggleFieldStrength()" title="Show/hide colored dots representing field intensity">
+                            <div>Field Map</div>
+                            <small>Intensity Dots</small>
+                        </button>
+                        <button class="toggle-btn" id="testChargeToggle" onclick="toggleTestCharge()" title="When ON: left-clicks place test charges instead of source charges">
+                            <div>Test Charge Mode</div>
+                            <small>Changes Left-Click</small>
+                        </button>
+                        <button class="toggle-btn" id="gridToggle" onclick="toggleGrid()" title="Show/hide coordinate grid for precise positioning">
+                            <div>Grid</div>
+                            <small>Position Guide</small>
+                        </button>
+                        <button class="toggle-btn" id="animationToggle" onclick="toggleAnimations()" title="Enable/disable particle effects and charge animations">
+                            <div>Animations</div>
+                            <small>Sparkle Effects</small>
+                        </button>
+                        <button class="toggle-btn" id="3dToggle" onclick="toggle3DEffect()" title="Add/remove 3D shadows and depth effects">
+                            <div>3D Mode</div>
+                            <small>Depth Effects</small>
+                        </button>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-danger" onclick="clearField()" title="Remove all charges and reset the field">
+                            <div>🗑️ CLEAR FIELD</div>
+                            <small>Remove All Charges</small>
+                        </button>
+                        <button class="btn btn-success" onclick="toggleCalculations()" title="Show/hide live mathematical analysis of electric fields">
+                            <div>📐 FIELD MATH</div>
+                            <small>Live Calculations</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>📚 Physics Examples</h3>
+                    <div class="example-buttons">
+                        <button class="btn btn-primary example-btn" onclick="loadSingleChargeExample()" title="Create a single positive charge showing radial field pattern">
+                            <div>⚡ Single Point Charge</div>
+                            <small>Radial Field Pattern</small>
+                        </button>
+                        <button class="btn btn-primary example-btn" onclick="loadDipoleExample()" title="Two opposite charges showing classic dipole field lines">
+                            <div>🧲 Electric Dipole</div>
+                            <small>+ and - Charge Pair</small>
+                        </button>
+                        <button class="btn btn-primary example-btn" onclick="loadExample17()" title="Recreate textbook Example 1.7: electron motion in uniform field">
+                            <div>📖 Example 1.7</div>
+                            <small>Particle Motion Simulation</small>
+                        </button>
+                        <button class="btn btn-primary example-btn" onclick="loadExample18()" title="Recreate textbook Example 1.8: field calculations at specific points">
+                            <div>📖 Example 1.8</div>
+                            <small>Field Calculation Points</small>
+                        </button>
+                        <button class="btn btn-primary example-btn" onclick="loadLinearChargesExample()" title="Multiple charges arranged in a straight line">
+                            <div>📏 Linear Charges</div>
+                            <small>Straight Line Array</small>
+                        </button>
+                        <button class="btn btn-primary example-btn" onclick="loadSquareChargesExample()" title="Four charges at corners of a square with test charge in center">
+                            <div>⬜ Square Formation</div>
+                            <small>Symmetric Arrangement</small>
+                        </button>
+                        <button class="btn btn-primary example-btn" onclick="loadTriangleExample()" title="Three charges forming triangular field pattern">
+                            <div>🔺 Triangle Configuration</div>
+                            <small>Three-Charge System</small>
+                        </button>
+                        <button class="btn btn-primary example-btn" onclick="loadComplexFieldExample()" title="Advanced multi-charge system showing field superposition">
+                            <div>🌟 Complex Field</div>
+                            <small>Advanced Multi-Charge</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🧠 Test Your Knowledge</h3>
+                    <div class="button-group">
+                        <button class="btn btn-success" onclick="startQuiz()" title="Take a comprehensive quiz on electric field concepts">
+                            <div>📝 START QUIZ</div>
+                            <small>12 Field Theory Questions</small>
+                        </button>
+                        <button class="btn btn-primary" onclick="showChallenges()" title="Interactive challenges using the field visualization tools">
+                            <div>🎯 CHALLENGES</div>
+                            <small>Hands-On Problem Solving</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="status-panel">
+                    <div class="status-info" id="statusInfo">
+                        🚀 Electric Field Laboratory initialized. Ready to explore the invisible forces around us!
+                    </div>
+                </div>
+                
+                <div class="field-calculations" id="calculationsPanel" style="display: none;">
+                    <h4>📐 Electric Field Analysis</h4>
+                    <div class="field-info" id="fieldInfo">
+                        Place charges and probe points to see detailed field calculations...
+                    </div>
+                </div>
+                
+                <div class="quiz-panel" id="quizPanel" style="display: none;">
+                    <h4>🧠 Electric Field Knowledge Test</h4>
+                    <div class="quiz-content" id="quizContent">
+                        <div class="quiz-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <span id="questionCounter">Question 1 of 12</span>
+                        </div>
+                        <div class="question-container" id="questionContainer">
+                            <!-- Quiz questions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="challenges-panel" id="challengesPanel" style="display: none;">
+                    <h4>🎯 Interactive Field Challenges</h4>
+                    <div class="challenge-content" id="challengeContent">
+                        <!-- Challenges will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('fieldCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let sourceCharges = [];
+        let testCharges = [];
+        let probePoints = [];
+        let fieldLines = [];
+        let fieldVectors = [];
+        let equipotentialLines = [];
+        
+        let showFieldLines = true;
+        let showFieldVectors = false;
+        let showEquipotential = false;
+        let showFieldStrength = false;
+        let showTestCharge = false;
+        let showGrid = false;
+        let showAnimations = true;
+        let show3DEffect = false;
+        let showCalculations = false;
+        
+        let dragIndex = -1;
+        let dragType = 'none'; // 'source' or 'test'
+        let dragOffset = { x: 0, y: 0 };
+        let animationFrame = 0;
+        let sparkles = [];
+        let electricArcs = [];
+        let isPaused = false;
+        
+        const k = 8.99e9; // Coulomb's constant
+        const scaleFactor = 1e6; // Scale factor for visualization
+        
+        class Sparkle {
+            constructor(x, y, color = '#4fc3f7') {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.03 + 0.02;
+                this.size = Math.random() * 4 + 2;
+                this.color = color;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.97;
+                this.vy *= 0.97;
+                this.life -= this.decay;
+                this.size *= 0.98;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        class Charge {
+            constructor(x, y, q, type = 'source') {
+                this.x = x;
+                this.y = y;
+                this.q = q; // in microCoulombs for source, nanoCoulombs for test
+                this.type = type;
+                this.radius = type === 'source' ? Math.max(18, Math.abs(q) * 1.5 + 15) : 12;
+                this.glowRadius = this.radius * 2.5;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.sparkleTimer = 0;
+            }
+            
+            update() {
+                if (showAnimations) {
+                    this.pulsePhase += 0.06;
+                    this.sparkleTimer++;
+                    
+                    // Generate field sparkles around source charges
+                    if (this.type === 'source' && this.sparkleTimer % 15 === 0 && Math.random() < 0.4) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = this.radius + Math.random() * 30;
+                        const color = this.q > 0 ? '#ff6b6b' : '#4dabf7';
+                        sparkles.push(new Sparkle(
+                            this.x + Math.cos(angle) * distance,
+                            this.y + Math.sin(angle) * distance,
+                            color
+                        ));
+                    }
+                }
+            }
+            
+            draw() {
+                const pulseSize = showAnimations ? Math.sin(this.pulsePhase) * 0.15 + 1 : 1;
+                
+                // Draw energy field aura
+                const fieldGradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.glowRadius * pulseSize);
+                let color;
+                if (this.type === 'test') {
+                    color = '#2ecc71';
+                } else {
+                    color = this.q > 0 ? '#ff6b6b' : '#4dabf7';
+                }
+                
+                fieldGradient.addColorStop(0, color + '80');
+                fieldGradient.addColorStop(0.3, color + '40');
+                fieldGradient.addColorStop(0.7, color + '15');
+                fieldGradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = fieldGradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.glowRadius * pulseSize, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw outer energy ring for source charges
+                if (this.type === 'source') {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([8, 8]);
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * 2.2 * pulseSize, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                
+                // Draw main charge body with 3D effect
+                const chargeRadius = this.radius * pulseSize;
+                
+                if (show3DEffect) {
+                    // 3D shadow
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(this.x + 4, this.y + 4, chargeRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+                
+                // Main charge gradient
+                const mainGradient = ctx.createRadialGradient(
+                    this.x - chargeRadius/3, this.y - chargeRadius/3, 0,
+                    this.x, this.y, chargeRadius
+                );
+                
+                if (this.type === 'test') {
+                    mainGradient.addColorStop(0, '#ffffff');
+                    mainGradient.addColorStop(0.3, '#58d68d');
+                    mainGradient.addColorStop(0.8, '#2ecc71');
+                    mainGradient.addColorStop(1, '#27ae60');
+                    ctx.strokeStyle = '#1e8449';
+                    ctx.lineWidth = 4;
+                } else {
+                    if (this.q > 0) {
+                        mainGradient.addColorStop(0, '#ffffff');
+                        mainGradient.addColorStop(0.3, '#ff9999');
+                        mainGradient.addColorStop(0.8, '#ff6b6b');
+                        mainGradient.addColorStop(1, '#e74c3c');
+                    } else {
+                        mainGradient.addColorStop(0, '#ffffff');
+                        mainGradient.addColorStop(0.3, '#74c0fc');
+                        mainGradient.addColorStop(0.8, '#4dabf7');
+                        mainGradient.addColorStop(1, '#3498db');
+                    }
+                    ctx.strokeStyle = '#2c3e50';
+                    ctx.lineWidth = 5;
+                }
+                
+                ctx.fillStyle = mainGradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, chargeRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw charge value with enhanced styling
+                ctx.save();
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#ffffff';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if (this.type === 'test') {
+                    ctx.fillText('T', this.x, this.y);
+                } else {
+                    ctx.fillText((this.q > 0 ? '+' : '') + this.q.toFixed(1), this.x, this.y);
+                }
+                ctx.restore();
+                
+                // Draw charge symbol with animation
+                ctx.save();
+                ctx.translate(this.x, this.y - chargeRadius - 30);
+                if (showAnimations) {
+                    ctx.rotate(Math.sin(this.pulsePhase) * 0.1);
+                }
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = color;
+                
+                let symbol;
+                if (this.type === 'test') {
+                    symbol = '🧪';
+                } else {
+                    symbol = this.q > 0 ? '⊕' : '⊖';
+                }
+                ctx.fillText(symbol, 0, 0);
+                ctx.restore();
+            }
+            
+            contains(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                return dx * dx + dy * dy <= this.radius * this.radius;
+            }
+            
+            getFieldAt(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                const r = Math.sqrt(dx * dx + dy * dy);
+                if (r < 1) return { Ex: 0, Ey: 0, magnitude: 0 };
+                
+                const multiplier = this.type === 'source' ? 1e-6 : 1e-9;
+                const E = k * Math.abs(this.q) * multiplier / (r * r);
+                const Ex = E * dx / r * (this.q > 0 ? 1 : -1);
+                const Ey = E * dy / r * (this.q > 0 ? 1 : -1);
+                
+                return { Ex, Ey, magnitude: E };
+            }
+        }
+        
+        class ProbePoint {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.field = { Ex: 0, Ey: 0, magnitude: 0 };
+                this.life = 3.0; // Fade out after 3 seconds
+                this.maxLife = 3.0;
+            }
+            
+            update() {
+                this.life -= 0.016; // ~60fps
+                
+                // Calculate field at this point
+                let Ex = 0, Ey = 0;
+                sourceCharges.forEach(charge => {
+                    const field = charge.getFieldAt(this.x, this.y);
+                    Ex += field.Ex;
+                    Ey += field.Ey;
+                });
+                
+                this.field = {
+                    Ex: Ex,
+                    Ey: Ey,
+                    magnitude: Math.sqrt(Ex * Ex + Ey * Ey)
+                };
+            }
+            
+            draw() {
+                if (this.life <= 0) return;
+                
+                const alpha = this.life / this.maxLife;
+                
+                // Draw probe point
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = '#e67e22';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#e67e22';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw field vector if field exists
+                if (this.field.magnitude > 1e-10) {
+                    const vectorLength = Math.min(this.field.magnitude / 1e6 * 100, 80);
+                    const angle = Math.atan2(this.field.Ey, this.field.Ex);
+                    
+                    const endX = this.x + vectorLength * Math.cos(angle);
+                    const endY = this.y + vectorLength * Math.sin(angle);
+                    
+                    // Draw vector
+                    ctx.strokeStyle = '#9b59b6';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                    
+                    // Draw arrowhead
+                    const arrowSize = 8;
+                    ctx.fillStyle = '#9b59b6';
+                    ctx.beginPath();
+                    ctx.moveTo(endX, endY);
+                    ctx.lineTo(endX - arrowSize * Math.cos(angle - 0.4), endY - arrowSize * Math.sin(angle - 0.4));
+                    ctx.lineTo(endX - arrowSize * Math.cos(angle + 0.4), endY - arrowSize * Math.sin(angle + 0.4));
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        function updateChargeDisplays() {
+            const sourceValue = parseFloat(document.getElementById('chargeValue').value);
+            const testValue = parseFloat(document.getElementById('testChargeValue').value);
+            
+            document.getElementById('chargeDisplay').textContent = 
+                (sourceValue > 0 ? '+' : '') + sourceValue.toFixed(1) + ' μC';
+            document.getElementById('testChargeDisplay').textContent = 
+                (testValue > 0 ? '+' : '') + testValue.toFixed(1) + ' nC';
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('statusInfo').textContent = '🔬 ' + message;
+        }
+        
+        function createSparklesBurst(x, y, count = 12, color = '#4fc3f7') {
+            for (let i = 0; i < count; i++) {
+                sparkles.push(new Sparkle(x, y, color));
+            }
+        }
+        
+        function drawAnimatedBackground() {
+            if (!showAnimations) return;
+            
+            // Flowing energy background
+            const time = animationFrame * 0.005;
+            
+            // Subtle energy waves
+            ctx.save();
+            ctx.globalAlpha = 0.1;
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#3498db');
+            gradient.addColorStop(0.5, '#9b59b6');
+            gradient.addColorStop(1, '#e74c3c');
+            
+            for (let i = 0; i < 5; i++) {
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([10, 20]);
+                ctx.beginPath();
+                
+                const offset = Math.sin(time + i) * 50;
+                ctx.moveTo(-50, i * canvas.height / 5 + offset);
+                ctx.lineTo(canvas.width + 50, i * canvas.height / 5 + offset);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+        
+        function drawGrid() {
+            if (!showGrid) return;
+            
+            ctx.strokeStyle = 'rgba(52, 152, 219, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            
+            const spacing = 40;
+            for (let x = 0; x <= canvas.width; x += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+        
+        function generateFieldLines() {
+            fieldLines = [];
+            
+            if (!showFieldLines || sourceCharges.length === 0) return;
+            
+            sourceCharges.forEach(charge => {
+                if (charge.type !== 'source') return;
+                
+                const numLines = Math.max(8, Math.abs(charge.q) * 0.8);
+                
+                for (let i = 0; i < numLines; i++) {
+                    const angle = (i * 2 * Math.PI) / numLines;
+                    let x = charge.x + charge.radius * 1.5 * Math.cos(angle);
+                    let y = charge.y + charge.radius * 1.5 * Math.sin(angle);
+                    
+                    const line = [{ x, y }];
+                    
+                    for (let step = 0; step < 200; step++) {
+                        let Ex = 0, Ey = 0;
+                        sourceCharges.forEach(otherCharge => {
+                            if (otherCharge === charge || otherCharge.type !== 'source') return;
+                            const field = otherCharge.getFieldAt(x, y);
+                            Ex += field.Ex;
+                            Ey += field.Ey;
+                        });
+                        
+                        const E = Math.sqrt(Ex * Ex + Ey * Ey);
+                        if (E < 1e-12) break;
+                        
+                        const stepSize = 3;
+                        const sign = charge.q > 0 ? 1 : -1;
+                        x += sign * stepSize * Ex / E;
+                        y += sign * stepSize * Ey / E;
+                        
+                        if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) break;
+                        
+                        // Check if we're too close to another charge
+                        let tooClose = false;
+                        sourceCharges.forEach(otherCharge => {
+                            if (otherCharge.type !== 'source') return;
+                            const dx = x - otherCharge.x;
+                            const dy = y - otherCharge.y;
+                            if (Math.sqrt(dx * dx + dy * dy) < otherCharge.radius * 1.2) {
+                                tooClose = true;
+                            }
+                        });
+                        
+                        if (tooClose) break;
+                        
+                        line.push({ x, y });
+                    }
+                    
+                    if (line.length > 5) {
+                        fieldLines.push({
+                            points: line,
+                            sourceCharge: charge
+                        });
+                    }
+                }
+            });
+        }
+        
+        function drawFieldLines() {
+            if (!showFieldLines) return;
+            
+            fieldLines.forEach(line => {
+                const color = line.sourceCharge.q > 0 ? '#ff6b6b' : '#4dabf7';
+                
+                // Create gradient along the line
+                const gradient = ctx.createLinearGradient(
+                    line.points[0].x, line.points[0].y,
+                    line.points[line.points.length - 1].x, line.points[line.points.length - 1].y
+                );
+                gradient.addColorStop(0, color + 'CC');
+                gradient.addColorStop(0.7, color + '88');
+                gradient.addColorStop(1, color + '44');
+                
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = color;
+                
+                ctx.beginPath();
+                ctx.moveTo(line.points[0].x, line.points[0].y);
+                
+                for (let i = 1; i < line.points.length; i++) {
+                    ctx.lineTo(line.points[i].x, line.points[i].y);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                
+                // Draw arrows along the line
+                for (let i = 10; i < line.points.length - 5; i += 15) {
+                    const p1 = line.points[i - 1];
+                    const p2 = line.points[i];
+                    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                    
+                    const arrowSize = 6;
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(p2.x, p2.y);
+                    ctx.lineTo(p2.x - arrowSize * Math.cos(angle - 0.4), p2.y - arrowSize * Math.sin(angle - 0.4));
+                    ctx.lineTo(p2.x - arrowSize * Math.cos(angle + 0.4), p2.y - arrowSize * Math.sin(angle + 0.4));
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            });
+        }
+        
+        function drawFieldVectors() {
+            if (!showFieldVectors || sourceCharges.length === 0) return;
+            
+            const spacing = 45;
+            const maxVectorLength = 35;
+            
+            for (let x = spacing; x < canvas.width; x += spacing) {
+                for (let y = spacing; y < canvas.height; y += spacing) {
+                    // Skip if too close to any charge
+                    let skipPoint = false;
+                    sourceCharges.forEach(charge => {
+                        const dx = x - charge.x;
+                        const dy = y - charge.y;
+                        if (Math.sqrt(dx * dx + dy * dy) < charge.radius * 2) {
+                            skipPoint = true;
+                        }
+                    });
+                    
+                    if (skipPoint) continue;
+                    
+                    let Ex = 0, Ey = 0;
+                    sourceCharges.forEach(charge => {
+                        if (charge.type !== 'source') return;
+                        const field = charge.getFieldAt(x, y);
+                        Ex += field.Ex;
+                        Ey += field.Ey;
+                    });
+                    
+                    const E = Math.sqrt(Ex * Ex + Ey * Ey);
+                    if (E < 1e-10) continue;
+                    
+                    const vectorLength = Math.min(E / 1e6 * 30, maxVectorLength);
+                    const angle = Math.atan2(Ey, Ex);
+                    
+                    const endX = x + vectorLength * Math.cos(angle);
+                    const endY = y + vectorLength * Math.sin(angle);
+                    
+                    // Color based on field strength
+                    const intensity = Math.min(E / 1e7, 1);
+                    const hue = 280 - intensity * 80; // Purple to red
+                    
+                    ctx.strokeStyle = `hsl(${hue}, 80%, 60%)`;
+                    ctx.lineWidth = 2 + intensity * 2;
+                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = `hsl(${hue}, 80%, 60%)`;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                    
+                    // Arrowhead
+                    const arrowSize = 6;
+                    ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+                    ctx.beginPath();
+                    ctx.moveTo(endX, endY);
+                    ctx.lineTo(endX - arrowSize * Math.cos(angle - 0.4), endY - arrowSize * Math.sin(angle - 0.4));
+                    ctx.lineTo(endX - arrowSize * Math.cos(angle + 0.4), endY - arrowSize * Math.sin(angle + 0.4));
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+        
+        function drawEquipotentialLines() {
+            if (!showEquipotential || sourceCharges.length === 0) return;
+            
+            const numLevels = 12;
+            const maxPotential = 5000;
+            
+            for (let level = 1; level <= numLevels; level++) {
+                const targetPotential = (level / numLevels) * maxPotential * (level % 2 === 0 ? 1 : -1);
+                
+                const hue = 180 + (level / numLevels) * 120;
+                ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.7)`;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 4]);
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = `hsl(${hue}, 70%, 60%)`;
+                
+                for (let startY = 40; startY < canvas.height; startY += 60) {
+                    ctx.beginPath();
+                    let foundStart = false;
+                    
+                    for (let x = 0; x < canvas.width; x += 4) {
+                        let potential = 0;
+                        sourceCharges.forEach(charge => {
+                            if (charge.type !== 'source') return;
+                            const dx = x - charge.x;
+                            const dy = startY - charge.y;
+                            const r = Math.sqrt(dx * dx + dy * dy);
+                            if (r > 8) {
+                                potential += k * charge.q * 1e-6 / r;
+                            }
+                        });
+                        
+                        if (Math.abs(potential - targetPotential) < Math.abs(targetPotential) * 0.2) {
+                            if (!foundStart) {
+                                ctx.moveTo(x, startY);
+                                foundStart = true;
+                            } else {
+                                ctx.lineTo(x, startY);
+                            }
+                        }
+                    }
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+                ctx.setLineDash([]);
+            }
+        }
+        
+        function drawFieldStrength() {
+            if (!showFieldStrength || sourceCharges.length === 0) return;
+            
+            const spacing = 30;
+            const maxIntensity = 1e7;
+            
+            for (let x = spacing; x < canvas.width; x += spacing) {
+                for (let y = spacing; y < canvas.height; y += spacing) {
+                    let Ex = 0, Ey = 0;
+                    sourceCharges.forEach(charge => {
+                        if (charge.type !== 'source') return;
+                        const field = charge.getFieldAt(x, y);
+                        Ex += field.Ex;
+                        Ey += field.Ey;
+                    });
+                    
+                    const E = Math.sqrt(Ex * Ex + Ey * Ey);
+                    const intensity = Math.min(E / maxIntensity, 1);
+                    
+                    if (intensity > 0.02) {
+                        const size = 3 + intensity * 10;
+                        const hue = 240 - intensity * 120; // Blue to red
+                        const alpha = intensity * 0.8;
+                        
+                        ctx.save();
+                        ctx.shadowBlur = size * 1.5;
+                        ctx.shadowColor = `hsla(${hue}, 100%, 60%, ${alpha})`;
+                        ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+            }
+        }
+        
+        function animate() {
+            if (!isPaused) {
+                animationFrame++;
+                
+                // Update all objects
+                [...sourceCharges, ...testCharges].forEach(charge => charge.update());
+                
+                // Update sparkles
+                sparkles = sparkles.filter(sparkle => {
+                    sparkle.update();
+                    return sparkle.life > 0;
+                });
+                
+                // Update probe points
+                probePoints = probePoints.filter(point => {
+                    point.update();
+                    return point.life > 0;
+                });
+                
+                // Regenerate field lines periodically for animation
+                if (showFieldLines && animationFrame % 30 === 0) {
+                    generateFieldLines();
+                }
+                
+                // Update field calculations
+                if (showCalculations && animationFrame % 20 === 0) {
+                    updateFieldCalculations();
+                }
+            }
+            
+            draw();
+            requestAnimationFrame(animate);
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Enhanced background
+            const bgGradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
+            bgGradient.addColorStop(0, '#0a0a15');
+            bgGradient.addColorStop(0.5, '#1a1a25');
+            bgGradient.addColorStop(1, '#15213e');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawAnimatedBackground();
+            drawGrid();
+            drawFieldStrength();
+            drawEquipotentialLines();
+            drawFieldLines();
+            drawFieldVectors();
+            
+            // Draw sparkles
+            sparkles.forEach(sparkle => sparkle.draw());
+            
+            // Draw charges
+            [...sourceCharges, ...testCharges].forEach(charge => charge.draw());
+            
+            // Draw probe points
+            probePoints.forEach(point => point.draw());
+        }
+        
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+        
+        // Enhanced event handlers
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = getMousePos(e);
+            
+            // Check if clicking on existing charge
+            let clickedCharge = false;
+            
+            [...sourceCharges, ...testCharges].forEach((charge, i) => {
+                if (charge.contains(pos.x, pos.y)) {
+                    clickedCharge = true;
+                    
+                    if (e.shiftKey) {
+                        // Remove charge
+                        const color = charge.type === 'test' ? '#2ecc71' : (charge.q > 0 ? '#ff6b6b' : '#4dabf7');
+                        createSparklesBurst(charge.x, charge.y, 20, color);
+                        
+                        if (charge.type === 'source') {
+                            sourceCharges.splice(sourceCharges.indexOf(charge), 1);
+                        } else {
+                            testCharges.splice(testCharges.indexOf(charge), 1);
+                        }
+                        
+                        generateFieldLines();
+                        updateStatus(`${charge.type === 'source' ? 'Source' : 'Test'} charge removed with spectacular effect! ✨`);
+                    } else if (e.ctrlKey || e.metaKey) {
+                        // Start dragging
+                        dragIndex = charge.type === 'source' ? sourceCharges.indexOf(charge) : testCharges.indexOf(charge);
+                        dragType = charge.type;
+                        dragOffset.x = pos.x - charge.x;
+                        dragOffset.y = pos.y - charge.y;
+                        updateStatus(`Dragging ${charge.type} charge through the field... 🔄`);
+                    }
+                }
+            });
+            
+            if (!clickedCharge) {
+                if (e.button === 2 || showTestCharge) {
+                    // Add test charge (right click or test charge mode)
+                    const testValue = parseFloat(document.getElementById('testChargeValue').value);
+                    const newCharge = new Charge(pos.x, pos.y, testValue, 'test');
+                    testCharges.push(newCharge);
+                    createSparklesBurst(pos.x, pos.y, 15, '#2ecc71');
+                    updateStatus(`🧪 Test charge placed! Observe how it interacts with the field.`);
+                } else {
+                    // Add source charge (left click)
+                    const chargeValue = parseFloat(document.getElementById('chargeValue').value);
+                    const newCharge = new Charge(pos.x, pos.y, chargeValue, 'source');
+                    sourceCharges.push(newCharge);
+                    createSparklesBurst(pos.x, pos.y, 18, chargeValue > 0 ? '#ff6b6b' : '#4dabf7');
+                    generateFieldLines();
+                    updateStatus(`⚡ ${chargeValue > 0 ? 'Positive' : 'Negative'} source charge created! Field lines generated.`);
+                }
+            }
+        });
+        
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        canvas.addEventListener('dblclick', (e) => {
+            const pos = getMousePos(e);
+            
+            // Add probe point
+            const probe = new ProbePoint(pos.x, pos.y);
+            probePoints.push(probe);
+            createSparklesBurst(pos.x, pos.y, 8, '#e67e22');
+            updateStatus('📍 DOUBLE-CLICK: Field probe placed! Orange dot shows field strength & direction at this point.');
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (dragIndex !== -1) {
+                const pos = getMousePos(e);
+                const chargeArray = dragType === 'source' ? sourceCharges : testCharges;
+                const charge = chargeArray[dragIndex];
+                
+                charge.x = Math.max(charge.radius, Math.min(canvas.width - charge.radius, pos.x - dragOffset.x));
+                charge.y = Math.max(charge.radius, Math.min(canvas.height - charge.radius, pos.y - dragOffset.y));
+                
+                if (dragType === 'source') {
+                    generateFieldLines();
+                }
+                
+                // Create trail sparkles while dragging
+                if (showAnimations && animationFrame % 4 === 0) {
+                    const color = charge.type === 'test' ? '#2ecc71' : (charge.q > 0 ? '#ff6b6b' : '#4dabf7');
+                    sparkles.push(new Sparkle(charge.x, charge.y, color));
+                }
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            if (dragIndex !== -1) {
+                const chargeArray = dragType === 'source' ? sourceCharges : testCharges;
+                const charge = chargeArray[dragIndex];
+                createSparklesBurst(charge.x, charge.y, 12, charge.type === 'test' ? '#2ecc71' : (charge.q > 0 ? '#ff6b6b' : '#4dabf7'));
+                updateStatus('✅ DRAG COMPLETE: Charge repositioned! Field automatically recalculated.');
+                dragIndex = -1;
+                dragType = 'none';
+            }
+        });
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    isPaused = !isPaused;
+                    updateStatus(`⏯️ SPACEBAR: Animation ${isPaused ? 'PAUSED' : 'RESUMED'}! Use spacebar anytime to pause/resume.`);
+                    break;
+                case 'KeyC':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        clearField();
+                    }
+                    break;
+                case 'KeyF':
+                    toggleFieldLines();
+                    break;
+                case 'KeyV':
+                    toggleFieldVectors();
+                    break;
+                case 'KeyT':
+                    toggleTestCharge();
+                    break;
+                case 'KeyH':
+                case 'F1':
+                    e.preventDefault();
+                    updateStatus('🎮 HELP: LEFT-click=source charges | RIGHT-click=test charges | DOUBLE-click=probes | CTRL+drag=move | SHIFT+click=remove');
+                    break;
+            }
+        });
+        
+        // Toggle functions
+        function toggleFieldLines() {
+            showFieldLines = !showFieldLines;
+            const btn = document.getElementById('fieldLinesToggle');
+            btn.classList.toggle('active', showFieldLines);
+            
+            if (showFieldLines) {
+                generateFieldLines();
+                updateStatus(`🌊 Field Lines ON: Orange flowing lines show electric field direction from + to - charges.`);
+            } else {
+                updateStatus(`🌊 Field Lines OFF: Field lines hidden. Click Field Lines button to show flowing field patterns.`);
+            }
+        }
+        
+        function toggleFieldVectors() {
+            showFieldVectors = !showFieldVectors;
+            const btn = document.getElementById('fieldVectorsToggle');
+            btn.classList.toggle('active', showFieldVectors);
+            
+            if (showFieldVectors) {
+                updateStatus(`🎯 Field Vectors ON: Purple arrows show field strength & direction at grid points.`);
+            } else {
+                updateStatus(`🎯 Field Vectors OFF: Vector arrows hidden. Click Field Vectors button to show E-field arrows.`);
+            }
+        }
+        
+        function toggleEquipotential() {
+            showEquipotential = !showEquipotential;
+            const btn = document.getElementById('equipotentialToggle');
+            btn.classList.toggle('active', showEquipotential);
+            
+            if (showEquipotential) {
+                updateStatus(`⚡ Equipotential Lines ON: Colored dashed lines show points of equal electric potential.`);
+            } else {
+                updateStatus(`⚡ Equipotential Lines OFF: Potential lines hidden. Click Equipotential button to show energy levels.`);
+            }
+        }
+        
+        function toggleFieldStrength() {
+            showFieldStrength = !showFieldStrength;
+            const btn = document.getElementById('fieldStrengthToggle');
+            btn.classList.toggle('active', showFieldStrength);
+            
+            if (showFieldStrength) {
+                updateStatus(`🔥 Field Map ON: Colored dots show field strength - blue=weak, red=strong intensity.`);
+            } else {
+                updateStatus(`🔥 Field Map OFF: Strength visualization hidden. Click Field Map to see intensity heat map.`);
+            }
+        }
+        
+        function updateModeStatus() {
+            const leftClickAction = document.getElementById('leftClickAction');
+            const activeFeatures = document.getElementById('activeFeatures');
+            
+            // Update left click mode
+            if (showTestCharge) {
+                leftClickAction.textContent = 'Place Test Charges (Test Mode ON)';
+                leftClickAction.style.color = '#2ecc71';
+            } else {
+                leftClickAction.textContent = 'Place Source Charges';
+                leftClickAction.style.color = '#ff6b6b';
+            }
+            
+            // Update active features
+            const features = [];
+            if (showFieldLines) features.push('Field Lines');
+            if (showFieldVectors) features.push('Field Vectors');
+            if (showEquipotential) features.push('Equipotential');
+            if (showFieldStrength) features.push('Field Map');
+            if (showGrid) features.push('Grid');
+            if (showAnimations) features.push('Animations');
+            if (show3DEffect) features.push('3D Effects');
+            if (showCalculations) features.push('Live Math');
+            
+            activeFeatures.textContent = features.length > 0 ? features.join(', ') : 'None (all features off)';
+        }
+        
+        function toggleTestCharge() {
+            showTestCharge = !showTestCharge;
+            const btn = document.getElementById('testChargeToggle');
+            const info = document.getElementById('testChargeInfo');
+            btn.classList.toggle('active', showTestCharge);
+            info.style.display = showTestCharge ? 'block' : 'none';
+            
+            updateModeStatus();
+            
+            if (showTestCharge) {
+                updateStatus(`🧪 Test Charge Mode ON: Left-clicks now place test charges (green). Right-click also works. Click button again to return to normal.`);
+            } else {
+                updateStatus(`🧪 Test Charge Mode OFF: Left-clicks place source charges (red/blue). Right-clicks place test charges.`);
+            }
+        }
+        
+        function toggleGrid() {
+            showGrid = !showGrid;
+            const btn = document.getElementById('gridToggle');
+            btn.classList.toggle('active', showGrid);
+            updateStatus(`📐 Precision grid ${showGrid ? 'overlaid' : 'cleared'}!`);
+        }
+        
+        function toggleAnimations() {
+            showAnimations = !showAnimations;
+            const btn = document.getElementById('animationToggle');
+            btn.classList.toggle('active', showAnimations);
+            updateStatus(`🎬 Animations ${showAnimations ? 'energized' : 'paused'}!`);
+        }
+        
+        function toggle3DEffect() {
+            show3DEffect = !show3DEffect;
+            const btn = document.getElementById('3dToggle');
+            btn.classList.toggle('active', show3DEffect);
+            updateStatus(`🌍 3D effects ${show3DEffect ? 'dimensionally enhanced' : 'flattened'}!`);
+        }
+        
+        function clearField() {
+            sourceCharges.forEach(charge => createSparklesBurst(charge.x, charge.y, 25, charge.q > 0 ? '#ff6b6b' : '#4dabf7'));
+            testCharges.forEach(charge => createSparklesBurst(charge.x, charge.y, 20, '#2ecc71'));
+            
+            sourceCharges = [];
+            testCharges = [];
+            probePoints = [];
+            fieldLines = [];
+            sparkles = [];
+            
+            updateStatus('💥 Field cleared! Ready for new charges. LEFT-CLICK: source charges | RIGHT-CLICK: test charges | DOUBLE-CLICK: field probes');
+        }
+        
+        function toggleCalculations() {
+            showCalculations = !showCalculations;
+            const panel = document.getElementById('calculationsPanel');
+            panel.style.display = showCalculations ? 'block' : 'none';
+            
+            if (showCalculations) {
+                updateFieldCalculations();
+                updateStatus(`📐 Field Math ON: Live calculations show field strength, direction & forces. Place charges to see analysis!`);
+            } else {
+                updateStatus(`📐 Field Math OFF: Calculations hidden. Click FIELD MATH button to show live physics analysis.`);
+            }
+        }
+        
+        // Example configurations
+        function loadSingleChargeExample() {
+            clearField();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            sourceCharges.push(new Charge(centerX, centerY, 15.0, 'source'));
+            createSparklesBurst(centerX, centerY, 25, '#ff6b6b');
+            generateFieldLines();
+            updateStatus('⚡ Single point charge field generated! Perfect radial symmetry achieved.');
+        }
+        
+        function loadDipoleExample() {
+            clearField();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const separation = 150;
+            
+            sourceCharges.push(new Charge(centerX - separation, centerY, 12.0, 'source'));
+            sourceCharges.push(new Charge(centerX + separation, centerY, -12.0, 'source'));
+            
+            sourceCharges.forEach(charge => {
+                createSparklesBurst(charge.x, charge.y, 20, charge.q > 0 ? '#ff6b6b' : '#4dabf7');
+            });
+            
+            generateFieldLines();
+            updateStatus('🧲 Electric dipole configured! Observe the characteristic field pattern.');
+        }
+        
+        function loadExample17() {
+            clearField();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Create uniform field between two parallel charged plates (simplified)
+            const plateCharges = 8;
+            const spacing = 80;
+            
+            // Top plate (negative)
+            for (let i = 0; i < 5; i++) {
+                sourceCharges.push(new Charge(centerX - 200 + i * 100, centerY - 150, -plateCharges, 'source'));
+            }
+            
+            // Bottom plate (positive)
+            for (let i = 0; i < 5; i++) {
+                sourceCharges.push(new Charge(centerX - 200 + i * 100, centerY + 150, plateCharges, 'source'));
+            }
+            
+            // Add test charge (electron simulation)
+            testCharges.push(new Charge(centerX, centerY - 100, -0.1, 'test'));
+            
+            sourceCharges.forEach(charge => {
+                createSparklesBurst(charge.x, charge.y, 15, charge.q > 0 ? '#ff6b6b' : '#4dabf7');
+            });
+            
+            generateFieldLines();
+            updateStatus('📖 Example 1.7 setup: Uniform field with electron motion simulation!');
+        }
+        
+        function loadExample18() {
+            clearField();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Two point charges as in Example 1.8
+            sourceCharges.push(new Charge(centerX - 100, centerY, 10.0, 'source'));  // +10 μC
+            sourceCharges.push(new Charge(centerX + 100, centerY, -10.0, 'source')); // -10 μC
+            
+            // Add probe points at A, B, C positions
+            setTimeout(() => {
+                probePoints.push(new ProbePoint(centerX, centerY)); // Point A (midpoint)
+                probePoints.push(new ProbePoint(centerX - 150, centerY)); // Point B
+                probePoints.push(new ProbePoint(centerX, centerY - 100)); // Point C
+            }, 500);
+            
+            sourceCharges.forEach(charge => {
+                createSparklesBurst(charge.x, charge.y, 18, charge.q > 0 ? '#ff6b6b' : '#4dabf7');
+            });
+            
+            generateFieldLines();
+            updateStatus('📖 Example 1.8 recreated: Two charges with field calculation points A, B, C!');
+        }
+        
+        function loadLinearChargesExample() {
+            clearField();
+            const y = canvas.height / 2;
+            const spacing = 160;
+            const startX = 150;
+            
+            const values = [15, -10, 8, -12, 10];
+            for (let i = 0; i < values.length; i++) {
+                const x = startX + i * spacing;
+                sourceCharges.push(new Charge(x, y, values[i], 'source'));
+                createSparklesBurst(x, y, 12, values[i] > 0 ? '#ff6b6b' : '#4dabf7');
+            }
+            
+            generateFieldLines();
+            updateStatus('📏 Linear charge array deployed! Complex field interactions visualized.');
+        }
+        
+        function loadSquareChargesExample() {
+            clearField();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const size = 120;
+            
+            const positions = [
+                {x: centerX - size, y: centerY - size, q: 8},
+                {x: centerX + size, y: centerY - size, q: -8},
+                {x: centerX + size, y: centerY + size, q: 8},
+                {x: centerX - size, y: centerY + size, q: -8}
+            ];
+            
+            positions.forEach(pos => {
+                sourceCharges.push(new Charge(pos.x, pos.y, pos.q, 'source'));
+                createSparklesBurst(pos.x, pos.y, 15, pos.q > 0 ? '#ff6b6b' : '#4dabf7');
+            });
+            
+            // Add test charge at center
+            testCharges.push(new Charge(centerX, centerY, 2.0, 'test'));
+            
+            generateFieldLines();
+            updateStatus('⬜ Square charge formation with central test charge! Observe symmetry.');
+        }
+        
+        function loadTriangleExample() {
+            clearField();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 140;
+            
+            for (let i = 0; i < 3; i++) {
+                const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                const q = i === 2 ? -12 : 12; // Two positive, one negative
+                sourceCharges.push(new Charge(x, y, q, 'source'));
+                createSparklesBurst(x, y, 16, q > 0 ? '#ff6b6b' : '#4dabf7');
+            }
+            
+            generateFieldLines();
+            updateStatus('🔺 Triangular charge configuration! Mixed polarity creates fascinating patterns.');
+        }
+        
+        function loadComplexFieldExample() {
+            clearField();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Create a complex multi-charge system
+            const positions = [
+                {x: centerX, y: centerY - 150, q: 20},
+                {x: centerX - 130, y: centerY - 75, q: -15},
+                {x: centerX + 130, y: centerY - 75, q: -15},
+                {x: centerX - 130, y: centerY + 75, q: 10},
+                {x: centerX + 130, y: centerY + 75, q: 10},
+                {x: centerX, y: centerY + 150, q: -25},
+                {x: centerX, y: centerY, q: 5}
+            ];
+            
+            positions.forEach(pos => {
+                sourceCharges.push(new Charge(pos.x, pos.y, pos.q, 'source'));
+                createSparklesBurst(pos.x, pos.y, 14, pos.q > 0 ? '#ff6b6b' : '#4dabf7');
+            });
+            
+            generateFieldLines();
+            updateStatus('🌟 Complex multi-charge field! Advanced field line patterns demonstrated.');
+        }
+        
+        // Complete Quiz and Challenge System
+        let currentQuizQuestion = 0;
+        let quizScore = 0;
+        let selectedAnswer = null;
+        let quizQuestions = [
+            {
+                question: "Electric field is defined as:",
+                options: [
+                    "The force experienced by any charge in the field",
+                    "The force per unit positive test charge",
+                    "The potential energy per unit charge",
+                    "The work done to move a charge in the field"
+                ],
+                correct: 1,
+                explanation: "Electric field E = F/q, where F is the force on a small positive test charge q. It represents force per unit charge."
+            },
+            {
+                question: "The SI unit of electric field is:",
+                options: [
+                    "N (Newton)",
+                    "C (Coulomb)",
+                    "N/C (Newton per Coulomb)",
+                    "J/C (Joule per Coulomb)"
+                ],
+                correct: 2,
+                explanation: "Since E = F/q, the units are force (N) divided by charge (C), giving N/C. Note: V/m is equivalent."
+            },
+            {
+                question: "Electric field lines from a positive charge:",
+                options: [
+                    "Point radially inward toward the charge",
+                    "Point radially outward from the charge",
+                    "Form closed circular loops around the charge",
+                    "Are parallel to each other"
+                ],
+                correct: 1,
+                explanation: "By convention, electric field lines point away from positive charges and toward negative charges."
+            },
+            {
+                question: "The electric field due to multiple charges is found using:",
+                options: [
+                    "Coulomb's law only",
+                    "The principle of superposition",
+                    "Conservation of energy",
+                    "Newton's third law"
+                ],
+                correct: 1,
+                explanation: "The principle of superposition states that the total electric field is the vector sum of fields due to individual charges."
+            },
+            {
+                question: "In Example 1.7, the electron and proton fall through the same distance in a uniform electric field. Which takes longer?",
+                options: [
+                    "Electron takes longer",
+                    "Proton takes longer",
+                    "Both take the same time",
+                    "Depends on the field strength"
+                ],
+                correct: 1,
+                explanation: "The proton is much heavier (mp = 1836 me), so it has smaller acceleration and takes longer to fall the same distance."
+            },
+            {
+                question: "Electric field lines never:",
+                options: [
+                    "Start from positive charges",
+                    "End on negative charges",
+                    "Cross each other",
+                    "Have arrows indicating direction"
+                ],
+                correct: 2,
+                explanation: "Field lines never cross because the electric field has a unique direction at every point in space."
+            },
+            {
+                question: "The magnitude of electric field due to a point charge varies as:",
+                options: [
+                    "1/r (inversely with distance)",
+                    "1/r² (inversely with square of distance)",
+                    "r (directly with distance)",
+                    "r² (directly with square of distance)"
+                ],
+                correct: 1,
+                explanation: "From E = kq/r², the electric field magnitude varies as 1/r², following the inverse square law."
+            },
+            {
+                question: "In a uniform electric field, a charged particle moves:",
+                options: [
+                    "In a circular path",
+                    "With constant velocity",
+                    "With constant acceleration",
+                    "In a random path"
+                ],
+                correct: 2,
+                explanation: "In a uniform field, F = qE is constant, so acceleration a = F/m = qE/m is also constant."
+            },
+            {
+                question: "The concept of electric field is most important when dealing with:",
+                options: [
+                    "Static charges only",
+                    "Time-dependent electromagnetic phenomena",
+                    "Gravitational forces",
+                    "Nuclear forces"
+                ],
+                correct: 1,
+                explanation: "Electric field concept becomes crucial for time-dependent phenomena, accounting for the finite speed of electromagnetic effects."
+            },
+            {
+                question: "In Example 1.8, at point A (midpoint between +q and -q), the electric field:",
+                options: [
+                    "Is zero due to symmetry",
+                    "Points toward the positive charge",
+                    "Points toward the negative charge",
+                    "Points perpendicular to the line joining charges"
+                ],
+                correct: 2,
+                explanation: "Both charges create fields pointing toward the negative charge at point A, so they add up in the same direction."
+            },
+            {
+                question: "The physical significance of electric field emerges most clearly in:",
+                options: [
+                    "Electrostatics",
+                    "Electromagnetic wave propagation",
+                    "Coulomb's law applications",
+                    "Point charge calculations"
+                ],
+                correct: 1,
+                explanation: "Electric fields are essential for understanding electromagnetic waves and the finite speed of electromagnetic effects."
+            },
+            {
+                question: "A test charge must be made negligibly small to:",
+                options: [
+                    "Increase the electric field",
+                    "Avoid disturbing the source charge configuration",
+                    "Make calculations easier",
+                    "Reduce the force on it"
+                ],
+                correct: 1,
+                explanation: "A small test charge ensures the source charges remain undisturbed, giving accurate field measurements."
+            }
+        ];
+        
+        let challenges = [
+            {
+                title: "🎯 Field Direction Challenge",
+                description: "Place charges and predict where the electric field points at various locations.",
+                difficulty: "easy",
+                setup: () => {
+                    clearField();
+                    sourceCharges.push(new Charge(300, 400, 12, 'source'));
+                    sourceCharges.push(new Charge(700, 400, -8, 'source'));
+                    generateFieldLines();
+                    updateStatus("🎯 Challenge: Double-click at different points to probe field direction. Can you predict before probing?");
+                }
+            },
+            {
+                title: "⚖️ Zero Field Hunt",
+                description: "Find the point where electric field is exactly zero between two charges.",
+                difficulty: "medium",
+                setup: () => {
+                    clearField();
+                    sourceCharges.push(new Charge(250, 400, 16, 'source'));
+                    sourceCharges.push(new Charge(750, 400, -9, 'source'));
+                    generateFieldLines();
+                    updateStatus("⚖️ Challenge: Find the point where E = 0. It's closer to the smaller charge!");
+                }
+            },
+            {
+                title: "🔬 Example 1.8 Verification",
+                description: "Recreate Example 1.8 and verify field calculations at points A, B, and C.",
+                difficulty: "medium",
+                setup: () => {
+                    loadExample18();
+                    updateStatus("🔬 Challenge: Use probe points to verify the calculated field values from Example 1.8!");
+                }
+            },
+            {
+                title: "🌊 Field Line Mapping",
+                description: "Create a configuration where field lines form beautiful symmetric patterns.",
+                difficulty: "medium",
+                setup: () => {
+                    clearField();
+                    updateStatus("🌊 Challenge: Create symmetric charge arrangements and observe beautiful field line patterns!");
+                }
+            },
+            {
+                title: "⚡ Uniform Field Creation",
+                description: "Arrange charges to approximate a uniform electric field in a region.",
+                difficulty: "hard",
+                setup: () => {
+                    clearField();
+                    updateStatus("⚡ Expert Challenge: Create parallel 'plates' of charges to approximate uniform field!");
+                }
+            },
+            {
+                title: "🧪 Test Charge Behavior",
+                description: "Predict and verify how test charges move in complex field configurations.",
+                difficulty: "hard",
+                setup: () => {
+                    clearField();
+                    // Create a complex field
+                    sourceCharges.push(new Charge(300, 300, 15, 'source'));
+                    sourceCharges.push(new Charge(700, 300, -10, 'source'));
+                    sourceCharges.push(new Charge(500, 500, 8, 'source'));
+                    generateFieldLines();
+                    updateStatus("🧪 Master Challenge: Place test charges and predict their behavior in this complex field!");
+                }
+            }
+        ];
+        
+        function startQuiz() {
+            const quizPanel = document.getElementById('quizPanel');
+            const challengesPanel = document.getElementById('challengesPanel');
+            
+            // Hide other panels
+            challengesPanel.style.display = 'none';
+            
+            // Show quiz panel
+            quizPanel.style.display = 'block';
+            
+            // Reset quiz state
+            currentQuizQuestion = 0;
+            quizScore = 0;
+            selectedAnswer = null;
+            
+            // Load first question
+            loadQuizQuestion();
+            updateStatus('🧠 Electric Field Quiz started! Test your understanding of field concepts.');
+        }
+        
+        function loadQuizQuestion() {
+            if (currentQuizQuestion >= quizQuestions.length) {
+                showQuizResults();
+                return;
+            }
+            
+            const question = quizQuestions[currentQuizQuestion];
+            const container = document.getElementById('questionContainer');
+            
+            // Update progress
+            const progress = ((currentQuizQuestion + 1) / quizQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('questionCounter').textContent = 
+                `Question ${currentQuizQuestion + 1} of ${quizQuestions.length}`;
+            
+            container.innerHTML = `
+                <div class="question-text">
+                    <strong>Q${currentQuizQuestion + 1}:</strong> ${question.question}
+                </div>
+                <div class="answer-options" id="answerOptions">
+                    ${question.options.map((option, index) => `
+                        <div class="answer-option" onclick="selectAnswer(${index})" data-index="${index}">
+                            <strong>${String.fromCharCode(65 + index)})</strong> ${option}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="quiz-controls">
+                    <button class="btn btn-secondary" onclick="previousQuestion()" ${currentQuizQuestion === 0 ? 'disabled' : ''}>
+                        ← Previous
+                    </button>
+                    <button class="btn btn-primary" onclick="nextQuestion()" id="nextBtn" disabled>
+                        Next →
+                    </button>
+                </div>
+            `;
+            
+            selectedAnswer = null;
+        }
+        
+        function selectAnswer(index) {
+            selectedAnswer = index;
+            
+            // Update visual selection
+            const options = document.querySelectorAll('.answer-option');
+            options.forEach((option, i) => {
+                option.classList.remove('selected');
+                if (i === index) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+        
+        function nextQuestion() {
+            if (selectedAnswer === null) return;
+            
+            const question = quizQuestions[currentQuizQuestion];
+            const isCorrect = selectedAnswer === question.correct;
+            
+            if (isCorrect) {
+                quizScore++;
+                createSparklesBurst(canvas.width/2, canvas.height/2, 20, '#2ecc71');
+            }
+            
+            // Show correct answer
+            const options = document.querySelectorAll('.answer-option');
+            options.forEach((option, i) => {
+                if (i === question.correct) {
+                    option.classList.add('correct');
+                } else if (i === selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Show explanation
+            const container = document.getElementById('questionContainer');
+            container.innerHTML += `
+                <div class="explanation">
+                    <strong>${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</strong><br>
+                    ${question.explanation}
+                </div>
+            `;
+            
+            // Update next button
+            document.getElementById('nextBtn').textContent = 
+                currentQuizQuestion === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next →';
+            document.getElementById('nextBtn').onclick = () => {
+                currentQuizQuestion++;
+                loadQuizQuestion();
+            };
+            
+            updateStatus(`${isCorrect ? '✅ Excellent! Field mastery growing!' : '❌ Keep learning! Fields are complex!'} Moving forward...`);
+        }
+        
+        function previousQuestion() {
+            if (currentQuizQuestion > 0) {
+                currentQuizQuestion--;
+                loadQuizQuestion();
+            }
+        }
+        
+        function showQuizResults() {
+            const container = document.getElementById('questionContainer');
+            const percentage = Math.round((quizScore / quizQuestions.length) * 100);
+            
+            let grade, message, emoji;
+            if (percentage >= 90) {
+                grade = "Field Master!";
+                message = "You have mastered electric field theory!";
+                emoji = "🏆";
+            } else if (percentage >= 75) {
+                grade = "Field Expert!";
+                message = "Excellent understanding of electric fields!";
+                emoji = "⭐";
+            } else if (percentage >= 60) {
+                grade = "Good Progress!";
+                message = "Solid foundation, keep exploring fields!";
+                emoji = "👍";
+            } else {
+                grade = "Keep Learning!";
+                message = "Practice more with field visualizations!";
+                emoji = "📚";
+            }
+            
+            container.innerHTML = `
+                <div class="quiz-score">
+                    <h2>${emoji} ${grade}</h2>
+                    <div style="font-size: 2.2em; margin: 25px 0;">${quizScore}/${quizQuestions.length}</div>
+                    <div style="font-size: 1.6em; margin-bottom: 20px;">${percentage}%</div>
+                    <p style="font-size: 1.1em;">${message}</p>
+                    <div style="margin-top: 30px;">
+                        <button class="btn btn-primary" onclick="startQuiz()" style="margin: 8px;">
+                            🔄 Retake Quiz
+                        </button>
+                        <button class="btn btn-success" onclick="showChallenges()" style="margin: 8px;">
+                            🎯 Try Challenges
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Epic celebration effects
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    createSparklesBurst(
+                        Math.random() * canvas.width,
+                        Math.random() * canvas.height,
+                        4,
+                        ['#ff6b6b', '#4dabf7', '#2ecc71', '#f39c12', '#9b59b6'][Math.floor(Math.random() * 5)]
+                    );
+                }, i * 150);
+            }
+            
+            updateStatus(`🎉 Quiz mastery achieved! Score: ${quizScore}/${quizQuestions.length} (${percentage}%). ${message}`);
+        }
+        
+        function showChallenges() {
+            const quizPanel = document.getElementById('quizPanel');
+            const challengesPanel = document.getElementById('challengesPanel');
+            
+            // Hide quiz panel
+            quizPanel.style.display = 'none';
+            
+            // Show challenges panel  
+            challengesPanel.style.display = 'block';
+            
+            const container = document.getElementById('challengeContent');
+            container.innerHTML = `
+                <div style="margin-bottom: 30px; color: #ffffff;">
+                    <p style="font-size: 1.1em; margin-bottom: 10px;">🎯 Interactive challenges to master electric field concepts!</p>
+                    <p>Each challenge sets up a field scenario - use the visualization tools to explore and solve!</p>
+                </div>
+                ${challenges.map((challenge, index) => `
+                    <div class="challenge-item" onclick="startChallenge(${index})">
+                        <div class="challenge-title">${challenge.title}</div>
+                        <div class="challenge-description">${challenge.description}</div>
+                        <div class="challenge-difficulty ${challenge.difficulty}">
+                            ${challenge.difficulty}
+                        </div>
+                    </div>
+                `).join('')}
+                <div style="margin-top: 30px; text-align: center;">
+                    <button class="btn btn-primary" onclick="startQuiz()">
+                        📝 Back to Quiz
+                    </button>
+                </div>
+            `;
+            
+            updateStatus('🎯 Field challenges loaded! Master electric fields through hands-on exploration.');
+        }
+        
+        function startChallenge(index) {
+            const challenge = challenges[index];
+            
+            // Hide challenge panel
+            document.getElementById('challengesPanel').style.display = 'none';
+            
+            // Setup the challenge
+            challenge.setup();
+            
+            // Show relevant visualization modes
+            showFieldLines = true;
+            showFieldVectors = true;
+            document.getElementById('fieldLinesToggle').classList.add('active');
+            document.getElementById('fieldVectorsToggle').classList.add('active');
+            
+            updateStatus(`🎯 Challenge "${challenge.title}" activated! Use field visualization tools to solve it.`);
+            
+            // Add challenge completion button
+            setTimeout(() => {
+                const container = document.querySelector('.status-panel');
+                if (!document.getElementById('challengeComplete')) {
+                    const button = document.createElement('button');
+                    button.id = 'challengeComplete';
+                    button.className = 'btn btn-success';
+                    button.style.marginTop = '20px';
+                    button.innerHTML = '✅ Challenge Complete';
+                    button.onclick = () => {
+                        createSparklesBurst(canvas.width/2, canvas.height/2, 40, '#2ecc71');
+                        updateStatus('🎉 Challenge mastered! Field knowledge expanding! Try another one.');
+                        button.remove();
+                        showChallenges();
+                    };
+                    container.appendChild(button);
+                }
+            }, 3000);
+        }
+        
+        function updateFieldCalculations() {
+            if (!showCalculations) return;
+            
+            let html = `<strong>🔬 Electric Field Analysis</strong><br><br>`;
+            
+            if (sourceCharges.length === 0) {
+                html += '<em>Place source charges to begin field analysis...</em>';
+                document.getElementById('fieldInfo').innerHTML = html;
+                return;
+            }
+            
+            html += '<strong>📊 Source Charges:</strong><br>';
+            sourceCharges.forEach((charge, i) => {
+                html += `Charge ${i+1}: ${charge.q > 0 ? '+' : ''}${charge.q.toFixed(1)} μC at (${charge.x.toFixed(0)}, ${charge.y.toFixed(0)})<br>`;
+            });
+            
+            if (testCharges.length > 0) {
+                html += '<br><strong>🧪 Test Charges:</strong><br>';
+                testCharges.forEach((charge, i) => {
+                    html += `Test ${i+1}: ${charge.q > 0 ? '+' : ''}${charge.q.toFixed(1)} nC at (${charge.x.toFixed(0)}, ${charge.y.toFixed(0)})<br>`;
+                    
+                    // Calculate field at test charge location
+                    let Ex = 0, Ey = 0;
+                    sourceCharges.forEach(source => {
+                        const field = source.getFieldAt(charge.x, charge.y);
+                        Ex += field.Ex;
+                        Ey += field.Ey;
+                    });
+                    
+                    const magnitude = Math.sqrt(Ex * Ex + Ey * Ey);
+                    const direction = Math.atan2(Ey, Ex) * 180 / Math.PI;
+                    
+                    html += `  Field: ${magnitude.toExponential(2)} N/C at ${direction.toFixed(1)}°<br>`;
+                    html += `  Force: ${(magnitude * Math.abs(charge.q) * 1e-9).toExponential(2)} N<br><br>`;
+                });
+            }
+            
+            if (probePoints.length > 0) {
+                html += '<br><strong>📍 Probe Points:</strong><br>';
+                probePoints.forEach((probe, i) => {
+                    html += `Probe ${i+1}: E = ${probe.field.magnitude.toExponential(2)} N/C<br>`;
+                    html += `  Direction: ${(Math.atan2(probe.field.Ey, probe.field.Ex) * 180 / Math.PI).toFixed(1)}°<br><br>`;
+                });
+            }
+            
+            html += '<strong>🧮 Field Equations:</strong><br>';
+            html += 'E = k|q|/r² (point charge)<br>';
+            html += 'E⃗_total = E⃗₁ + E⃗₂ + E⃗₃ + ... (superposition)<br>';
+            html += 'F⃗ = qE⃗ (force on test charge)<br>';
+            html += 'k = 8.99×10⁹ N⋅m²/C²';
+            
+            document.getElementById('fieldInfo').innerHTML = html;
+        }
+        
+        function dismissHint() {
+            const hint = document.getElementById('onboardingHint');
+            hint.style.animation = 'fadeOut 0.5s ease-out forwards';
+            setTimeout(() => {
+                hint.style.display = 'none';
+            }, 500);
+            updateStatus('🚀 Ready to explore! LEFT-CLICK to place charges and start your electric field journey!');
+        }
+        
+        // Make quiz functions globally accessible
+        window.selectAnswer = selectAnswer;
+        window.nextQuestion = nextQuestion;
+        window.previousQuestion = previousQuestion;
+        window.startChallenge = startChallenge;
+        window.dismissHint = dismissHint;
+        
+        // Event listeners
+        document.getElementById('chargeValue').addEventListener('input', updateChargeDisplays);
+        document.getElementById('testChargeValue').addEventListener('input', updateChargeDisplays);
+        
+        // Initialize the laboratory
+        updateChargeDisplays();
+        updateModeStatus();
+        updateStatus('🚀 Electric Field Laboratory ready! LEFT-CLICK: place source charges | RIGHT-CLICK: place test charges | DOUBLE-CLICK: probe field | Blue buttons = active features');
+        
+        // Auto-dismiss hint after 15 seconds
+        setTimeout(() => {
+            const hint = document.getElementById('onboardingHint');
+            if (hint && hint.style.display !== 'none') {
+                dismissHint();
+            }
+        }, 15000);
+        
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+</html>

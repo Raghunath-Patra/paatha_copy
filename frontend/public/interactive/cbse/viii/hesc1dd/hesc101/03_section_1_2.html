@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Practices of Crop Production - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="farmPattern" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M12.5 5 L20 12.5 L12.5 20 L5 12.5 Z" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100" height="100" fill="url(%23farmPattern)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 15px;
+            background: #fef3c7;
+            border-left: 5px solid #f59e0b;
+        }
+
+        .section h2 {
+            color: #92400e;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .practice-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .practice-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #f59e0b;
+        }
+
+        .practice-card.active {
+            border-color: #059669;
+            background: #ecfdf5;
+        }
+
+        .practice-card.completed {
+            border-color: #22c55e;
+            background: #dcfce7;
+        }
+
+        .practice-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .practice-number {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f59e0b;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .sequence-game {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .sequence-instructions {
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .sequence-area {
+            min-height: 200px;
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sequence-area.highlight {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .draggable-practice {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: grab;
+            user-select: none;
+            border: 2px solid #e5e7eb;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .draggable-practice:hover {
+            border-color: #f59e0b;
+            transform: scale(1.05);
+        }
+
+        .draggable-practice.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .practice-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #fefce8;
+            border-radius: 10px;
+            border: 2px solid #eab308;
+        }
+
+        .quiz-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #374151;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option {
+            padding: 15px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            background: #f3f4f6;
+            border-color: #f59e0b;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .simulation {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .field {
+            width: 100%;
+            height: 200px;
+            background: #a16207;
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 3px solid #92400e;
+        }
+
+        .soil-layer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(to bottom, #451a03, #292524);
+            transition: all 1s ease;
+        }
+
+        .seeds {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+
+        .plants {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score {
+            background: linear-gradient(135deg, #92400e, #78350f);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .feedback.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+
+        .feedback.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .practice-detail {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #f59e0b;
+            display: none;
+        }
+
+        .practice-detail.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .workflow {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .practice-pool {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <svg 
+                        viewBox="0 0 512 512" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        style="height: 48px; width: 48px;"
+                        aria-label="Paaṭha AI Logo"
+                    >
+                        <defs>
+                            <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#dc2626" />
+                                <stop offset="33%" stop-color="#dc2626" />
+                                <stop offset="66%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#ecfdf5" />
+                            </linearGradient>
+                        </defs>
+                        <g transform="rotate(-45, 256, 256)">
+                            <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                                c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                                c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                                c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                                c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                                c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                                c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                                c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                                c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                                c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                                c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                                c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                                c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                                c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                                c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                                c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                                c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                                c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                                c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                                c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                                c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                                c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                                c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                                c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                                c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                                c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                                c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                                c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                                fill="url(#brandGradient)"
+                                opacity="0.9">
+                            </path>
+                            <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                        </g>
+                    </svg>
+                    <div>
+                        <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                        <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Agriculture Learning</p>
+                    </div>
+                </div>
+                <h2 style="font-size: 1.8em; margin-bottom: 10px;">🚜 1.2 Basic Practices of Crop Production</h2>
+                <p style="font-size: 1.2em; opacity: 0.9;">Master the seven essential steps of crop production from soil preparation to storage!</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Agricultural Practices Workflow -->
+            <div class="section">
+                <h2>🔄 Agricultural Practices Workflow</h2>
+                <p>Click on each practice to learn more about it!</p>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="workflow-progress"></div>
+                </div>
+
+                <div class="workflow">
+                    <div class="practice-card" onclick="showPracticeDetail(1)" data-practice="1">
+                        <div class="practice-number">1</div>
+                        <div class="practice-icon">🚜</div>
+                        <h3>Preparation of Soil</h3>
+                        <p>Turning and loosening soil</p>
+                    </div>
+
+                    <div class="practice-card" onclick="showPracticeDetail(2)" data-practice="2">
+                        <div class="practice-number">2</div>
+                        <div class="practice-icon">🌱</div>
+                        <h3>Sowing</h3>
+                        <p>Planting seeds in soil</p>
+                    </div>
+
+                    <div class="practice-card" onclick="showPracticeDetail(3)" data-practice="3">
+                        <div class="practice-number">3</div>
+                        <div class="practice-icon">🧪</div>
+                        <h3>Adding Manure & Fertilisers</h3>
+                        <p>Providing nutrients</p>
+                    </div>
+
+                    <div class="practice-card" onclick="showPracticeDetail(4)" data-practice="4">
+                        <div class="practice-number">4</div>
+                        <div class="practice-icon">💧</div>
+                        <h3>Irrigation</h3>
+                        <p>Watering the crops</p>
+                    </div>
+
+                    <div class="practice-card" onclick="showPracticeDetail(5)" data-practice="5">
+                        <div class="practice-number">5</div>
+                        <div class="practice-icon">🌿</div>
+                        <h3>Protecting from Weeds</h3>
+                        <p>Removing unwanted plants</p>
+                    </div>
+
+                    <div class="practice-card" onclick="showPracticeDetail(6)" data-practice="6">
+                        <div class="practice-number">6</div>
+                        <div class="practice-icon">✂️</div>
+                        <h3>Harvesting</h3>
+                        <p>Cutting and collecting crops</p>
+                    </div>
+
+                    <div class="practice-card" onclick="showPracticeDetail(7)" data-practice="7">
+                        <div class="practice-number">7</div>
+                        <div class="practice-icon">🏪</div>
+                        <h3>Storage</h3>
+                        <p>Preserving harvested crops</p>
+                    </div>
+                </div>
+
+                <div id="practice-details-container">
+                    <!-- Practice details will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Sequence Game -->
+            <div class="section">
+                <h2>🎯 Practice Sequence Game</h2>
+                <div class="sequence-game">
+                    <div class="sequence-instructions">
+                        <h3>📋 Instructions:</h3>
+                        <p>Drag and drop the agricultural practices in the correct order from 1 to 7!</p>
+                    </div>
+
+                    <div class="practice-pool" id="practice-pool">
+                        <div class="draggable-practice" draggable="true" data-order="7">🏪 Storage</div>
+                        <div class="draggable-practice" draggable="true" data-order="3">🧪 Manure & Fertilisers</div>
+                        <div class="draggable-practice" draggable="true" data-order="1">🚜 Soil Preparation</div>
+                        <div class="draggable-practice" draggable="true" data-order="5">🌿 Weed Protection</div>
+                        <div class="draggable-practice" draggable="true" data-order="6">✂️ Harvesting</div>
+                        <div class="draggable-practice" draggable="true" data-order="2">🌱 Sowing</div>
+                        <div class="draggable-practice" draggable="true" data-order="4">💧 Irrigation</div>
+                    </div>
+
+                    <div class="sequence-area" id="sequence-area">
+                        <p style="color: #6b7280; font-style: italic;">Drag practices here in correct order</p>
+                    </div>
+
+                    <button class="btn" onclick="checkSequence()">Check Sequence</button>
+                    <button class="btn" onclick="resetSequence()">Reset</button>
+
+                    <div id="sequence-score" class="score">Correct Sequence: 0/7</div>
+                </div>
+            </div>
+
+            <!-- Interactive Quiz -->
+            <div class="section">
+                <h2>🧠 Practice Knowledge Quiz</h2>
+                <div class="quiz-container">
+                    <div id="quiz-question" class="question">Loading question...</div>
+                    <div id="quiz-options" class="options"></div>
+                    <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="nextQuizQuestion()">Next Question</button>
+                    <div id="quiz-score" class="score">Score: 0/0</div>
+                </div>
+            </div>
+
+            <!-- Farm Simulation -->
+            <div class="section">
+                <h2>🎮 Virtual Farm Simulation</h2>
+                <div class="simulation">
+                    <p>Experience the farming process step by step!</p>
+                    
+                    <div class="field" id="virtual-field">
+                        <div class="soil-layer" id="soil-layer"></div>
+                        <div class="seeds" id="seeds">🌰🌰🌰</div>
+                        <div class="plants" id="plants">
+                            <span>🌱</span><span>🌱</span><span>🌱</span><span>🌱</span><span>🌱</span>
+                        </div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="simulateStep(1)" id="sim-btn-1">1. Prepare Soil</button>
+                        <button class="btn" onclick="simulateStep(2)" id="sim-btn-2" disabled>2. Sow Seeds</button>
+                        <button class="btn" onclick="simulateStep(3)" id="sim-btn-3" disabled>3. Add Fertiliser</button>
+                        <button class="btn" onclick="simulateStep(4)" id="sim-btn-4" disabled>4. Water Plants</button>
+                        <button class="btn" onclick="simulateStep(5)" id="sim-btn-5" disabled>5. Remove Weeds</button>
+                        <button class="btn" onclick="simulateStep(6)" id="sim-btn-6" disabled>6. Harvest</button>
+                    </div>
+
+                    <div id="simulation-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="resetSimulation()">Reset Simulation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Practice Details Data
+        const practiceDetails = {
+            1: {
+                title: "🚜 Preparation of Soil",
+                description: "The first and most important step in farming. Soil needs to be turned and loosened to allow roots to penetrate deep and breathe easily.",
+                benefits: ["Allows easy root penetration", "Improves soil aeration", "Brings nutrients to surface", "Helps earthworms and microbes"]
+            },
+            2: {
+                title: "🌱 Sowing",
+                description: "Planting seeds in the prepared soil at the right time, depth, and spacing for optimal growth.",
+                benefits: ["Right seed placement", "Proper spacing", "Optimal timing", "Better germination"]
+            },
+            3: {
+                title: "🧪 Adding Manure & Fertilisers",
+                description: "Providing essential nutrients to plants through organic manure and chemical fertilizers.",
+                benefits: ["Supplies nutrients", "Improves soil fertility", "Enhances plant growth", "Increases yield"]
+            },
+            4: {
+                title: "💧 Irrigation",
+                description: "Providing adequate water to crops at regular intervals for healthy growth.",
+                benefits: ["Maintains soil moisture", "Supports plant metabolism", "Prevents wilting", "Ensures good yield"]
+            },
+            5: {
+                title: "🌿 Protecting from Weeds",
+                description: "Removing unwanted plants that compete with crops for nutrients, water, and sunlight.",
+                benefits: ["Reduces competition", "Saves nutrients", "Prevents pest hiding", "Improves crop quality"]
+            },
+            6: {
+                title: "✂️ Harvesting",
+                description: "Cutting and collecting mature crops at the right time to ensure maximum yield and quality.",
+                benefits: ["Collects mature crops", "Prevents over-ripening", "Maintains quality", "Enables storage"]
+            },
+            7: {
+                title: "🏪 Storage",
+                description: "Properly preserving harvested crops to prevent spoilage and maintain quality for future use.",
+                benefits: ["Prevents spoilage", "Maintains quality", "Enables trade", "Food security"]
+            }
+        };
+
+        // Quiz Questions
+        const quizQuestions = [
+            {
+                question: "What is the first step in crop production?",
+                options: ["Sowing", "Irrigation", "Soil Preparation", "Harvesting"],
+                correct: 2
+            },
+            {
+                question: "Why is Paddy not grown in winter season?",
+                options: ["It's too cold", "Paddy requires lots of water", "Seeds don't germinate", "Soil is hard"],
+                correct: 1
+            },
+            {
+                question: "How many main agricultural practices are there?",
+                options: ["5", "6", "7", "8"],
+                correct: 2
+            },
+            {
+                question: "What comes after sowing seeds?",
+                options: ["Harvesting", "Adding manure and fertilisers", "Storage", "Irrigation"],
+                correct: 1
+            },
+            {
+                question: "What is the last step in crop production?",
+                options: ["Harvesting", "Storage", "Irrigation", "Weed removal"],
+                correct: 1
+            }
+        ];
+
+        // Global Variables
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+        let sequenceItems = [];
+        let simulationStep = 0;
+        let practicesViewed = new Set();
+
+        // Practice Detail Functions
+        function showPracticeDetail(practiceNum) {
+            const practice = practiceDetails[practiceNum];
+            const card = document.querySelector(`[data-practice="${practiceNum}"]`);
+            
+            // Mark as viewed
+            practicesViewed.add(practiceNum);
+            card.classList.add('completed');
+            updateWorkflowProgress();
+
+            const detailsContainer = document.getElementById('practice-details-container');
+            detailsContainer.innerHTML = `
+                <div class="practice-detail active">
+                    <h3>${practice.title}</h3>
+                    <p style="margin: 15px 0; font-size: 1.1rem;">${practice.description}</p>
+                    <h4 style="color: #059669; margin-top: 20px;">Benefits:</h4>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        ${practice.benefits.map(benefit => `<li style="margin: 5px 0;">${benefit}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        function updateWorkflowProgress() {
+            const progress = (practicesViewed.size / 7) * 100;
+            document.getElementById('workflow-progress').style.width = progress + '%';
+        }
+
+        // Sequence Game Functions
+        function initializeDragAndDrop() {
+            const draggableItems = document.querySelectorAll('.draggable-practice');
+            const sequenceArea = document.getElementById('sequence-area');
+
+            draggableItems.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.outerHTML);
+                    e.dataTransfer.setData('text/order', e.target.dataset.order);
+                    e.target.classList.add('dragging');
+                });
+
+                item.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                });
+            });
+
+            sequenceArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                sequenceArea.classList.add('highlight');
+            });
+
+            sequenceArea.addEventListener('dragleave', (e) => {
+                sequenceArea.classList.remove('highlight');
+            });
+
+            sequenceArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                sequenceArea.classList.remove('highlight');
+                
+                const itemHTML = e.dataTransfer.getData('text/plain');
+                const order = e.dataTransfer.getData('text/order');
+                
+                // Remove from pool and add to sequence
+                const draggedElement = document.querySelector('.dragging');
+                if (draggedElement) {
+                    draggedElement.remove();
+                }
+                
+                sequenceArea.innerHTML += itemHTML;
+                sequenceItems.push(parseInt(order));
+                
+                // Remove placeholder text
+                const placeholder = sequenceArea.querySelector('p');
+                if (placeholder) placeholder.remove();
+                
+                updateSequenceScore();
+            });
+        }
+
+        function checkSequence() {
+            const correctSequence = [1, 2, 3, 4, 5, 6, 7];
+            const isCorrect = JSON.stringify(sequenceItems) === JSON.stringify(correctSequence);
+            
+            const feedback = document.getElementById('sequence-feedback') || createSequenceFeedback();
+            
+            if (isCorrect) {
+                feedback.textContent = '🎉 Perfect! You arranged all practices in the correct order!';
+                feedback.className = 'feedback success';
+            } else {
+                feedback.textContent = '❌ Not quite right. The correct order is: Soil Preparation → Sowing → Manure & Fertilisers → Irrigation → Weed Protection → Harvesting → Storage';
+                feedback.className = 'feedback error';
+            }
+            
+            feedback.style.display = 'block';
+        }
+
+        function createSequenceFeedback() {
+            const feedback = document.createElement('div');
+            feedback.id = 'sequence-feedback';
+            feedback.className = 'feedback';
+            document.querySelector('.sequence-game').appendChild(feedback);
+            return feedback;
+        }
+
+        function resetSequence() {
+            sequenceItems = [];
+            const pool = document.getElementById('practice-pool');
+            const sequenceArea = document.getElementById('sequence-area');
+            
+            // Reset pool
+            pool.innerHTML = `
+                <div class="draggable-practice" draggable="true" data-order="7">🏪 Storage</div>
+                <div class="draggable-practice" draggable="true" data-order="3">🧪 Manure & Fertilisers</div>
+                <div class="draggable-practice" draggable="true" data-order="1">🚜 Soil Preparation</div>
+                <div class="draggable-practice" draggable="true" data-order="5">🌿 Weed Protection</div>
+                <div class="draggable-practice" draggable="true" data-order="6">✂️ Harvesting</div>
+                <div class="draggable-practice" draggable="true" data-order="2">🌱 Sowing</div>
+                <div class="draggable-practice" draggable="true" data-order="4">💧 Irrigation</div>
+            `;
+            
+            // Reset sequence area
+            sequenceArea.innerHTML = '<p style="color: #6b7280; font-style: italic;">Drag practices here in correct order</p>';
+            
+            // Hide feedback
+            const feedback = document.getElementById('sequence-feedback');
+            if (feedback) feedback.style.display = 'none';
+            
+            updateSequenceScore();
+            initializeDragAndDrop();
+        }
+
+        function updateSequenceScore() {
+            document.getElementById('sequence-score').textContent = `Items Placed: ${sequenceItems.length}/7`;
+        }
+
+        // Quiz Functions
+        function loadQuizQuestion() {
+            if (currentQuizIndex >= quizQuestions.length) {
+                document.getElementById('quiz-question').textContent = `Quiz Complete! Final Score: ${quizScore}/${quizQuestions.length}`;
+                document.getElementById('quiz-options').innerHTML = '<p style="text-align: center; font-size: 1.2rem; color: #059669;">🎉 Excellent work! You\'ve mastered the agricultural practices!</p>';
+                return;
+            }
+
+            const question = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-question').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectQuizAnswer(index);
+                optionsContainer.appendChild(optionElement);
+            });
+
+            document.getElementById('quiz-feedback').style.display = 'none';
+            quizAnswered = false;
+            updateQuizScore();
+        }
+
+        function selectQuizAnswer(selectedIndex) {
+            if (quizAnswered) return;
+
+            const question = quizQuestions[currentQuizIndex];
+            const options = document.querySelectorAll('#quiz-options .option');
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && selectedIndex !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            const feedback = document.getElementById('quiz-feedback');
+            if (selectedIndex === question.correct) {
+                quizScore++;
+                feedback.textContent = '✅ Correct! Well done!';
+                feedback.className = 'feedback success';
+            } else {
+                feedback.textContent = `❌ Incorrect. The correct answer is: ${question.options[question.correct]}`;
+                feedback.className = 'feedback error';
+            }
+            
+            feedback.style.display = 'block';
+            quizAnswered = true;
+            updateQuizScore();
+        }
+
+        function nextQuizQuestion() {
+            currentQuizIndex++;
+            loadQuizQuestion();
+        }
+
+        function updateQuizScore() {
+            document.getElementById('quiz-score').textContent = `Score: ${quizScore}/${Math.min(currentQuizIndex + 1, quizQuestions.length)}`;
+        }
+
+        // Simulation Functions
+        function simulateStep(step) {
+            const field = document.getElementById('virtual-field');
+            const soilLayer = document.getElementById('soil-layer');
+            const seeds = document.getElementById('seeds');
+            const plants = document.getElementById('plants');
+            const feedback = document.getElementById('simulation-feedback');
+            
+            const messages = {
+                1: "🚜 Soil prepared! The field is now ready for planting.",
+                2: "🌱 Seeds sown! Now they need nutrients to grow.",
+                3: "🧪 Fertiliser added! Plants will grow stronger now.",
+                4: "💧 Plants watered! They're growing beautifully.",
+                5: "🌿 Weeds removed! Plants can grow without competition.",
+                6: "✂️ Harvest complete! Your crops are ready for storage."
+            };
+
+            switch(step) {
+                case 1:
+                    soilLayer.style.background = 'linear-gradient(to bottom, #78350f, #451a03)';
+                    soilLayer.style.height = '70%';
+                    break;
+                case 2:
+                    seeds.style.opacity = '1';
+                    setTimeout(() => {
+                        seeds.style.opacity = '0';
+                        seeds.style.top = '70%';
+                    }, 1000);
+                    break;
+                case 3:
+                    soilLayer.style.background = 'linear-gradient(to bottom, #365314, #1a2e05)';
+                    break;
+                case 4:
+                    field.style.background = '#3b82f6';
+                    setTimeout(() => {
+                        field.style.background = '#a16207';
+                        plants.style.opacity = '1';
+                    }, 1500);
+                    break;
+                case 5:
+                    // Visual effect for weed removal
+                    field.style.border = '3px solid #22c55e';
+                    setTimeout(() => {
+                        field.style.border = '3px solid #92400e';
+                    }, 1000);
+                    break;
+                case 6:
+                    plants.innerHTML = '<span style="font-size: 3rem;">🌾🌾🌾🌾🌾</span>';
+                    setTimeout(() => {
+                        plants.style.opacity = '0.3';
+                    }, 1000);
+                    break;
+            }
+            
+            feedback.textContent = messages[step];
+            feedback.className = 'feedback success';
+            feedback.style.display = 'block';
+            
+            // Enable next button
+            if (step < 6) {
+                document.getElementById(`sim-btn-${step + 1}`).disabled = false;
+            }
+            
+            // Disable current button
+            document.getElementById(`sim-btn-${step}`).disabled = true;
+            
+            simulationStep = step;
+        }
+
+        function resetSimulation() {
+            simulationStep = 0;
+            const field = document.getElementById('virtual-field');
+            const soilLayer = document.getElementById('soil-layer');
+            const seeds = document.getElementById('seeds');
+            const plants = document.getElementById('plants');
+            const feedback = document.getElementById('simulation-feedback');
+            
+            // Reset field appearance
+            field.style.background = '#a16207';
+            field.style.border = '3px solid #92400e';
+            soilLayer.style.background = 'linear-gradient(to bottom, #451a03, #292524)';
+            soilLayer.style.height = '60%';
+            seeds.style.opacity = '0';
+            seeds.style.top = '50%';
+            plants.style.opacity = '0';
+            plants.innerHTML = '<span>🌱</span><span>🌱</span><span>🌱</span><span>🌱</span><span>🌱</span>';
+            
+            // Reset buttons
+            for (let i = 1; i <= 6; i++) {
+                const btn = document.getElementById(`sim-btn-${i}`);
+                btn.disabled = i !== 1;
+            }
+            
+            feedback.style.display = 'none';
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuizQuestion();
+            initializeDragAndDrop();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uncertainty in Measurement - Interactive Learning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .calculator-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .calculator-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: white;
+            color: #f5576c;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .visual-section {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .precision-accuracy-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .target {
+            width: 150px;
+            height: 150px;
+            border: 3px solid #333;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        }
+
+        .target::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: red;
+            border-radius: 50%;
+        }
+
+        .shot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #333;
+            border-radius: 50%;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .quiz-question {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .quiz-options {
+            margin-top: 15px;
+        }
+
+        .quiz-option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quiz-option.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .quiz-option.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .step-by-step {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .precision-accuracy-demo {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Uncertainty in Measurement</h1>
+            <p>Interactive Learning Tool for Class 11 Chemistry</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showTab('scientific-notation')">Scientific Notation</button>
+            <button class="tab-btn" onclick="showTab('significant-figures')">Significant Figures</button>
+            <button class="tab-btn" onclick="showTab('dimensional-analysis')">Dimensional Analysis</button>
+            <button class="tab-btn" onclick="showTab('precision-accuracy')">Precision & Accuracy</button>
+            <button class="tab-btn" onclick="showTab('quiz')">Knowledge Check</button>
+        </div>
+
+        <!-- Scientific Notation Section -->
+        <div id="scientific-notation" class="content-section active">
+            <h2 class="section-title">🧮 Scientific Notation</h2>
+            
+            <div class="visual-section">
+                <h3>📏 Why Scientific Notation?</h3>
+                <p>In chemistry, we deal with extremely large and small numbers:</p>
+                <ul style="margin: 15px 0; padding-left: 20px;">
+                    <li><strong>Avogadro's Number:</strong> 602,200,000,000,000,000,000,000</li>
+                    <li><strong>Mass of H atom:</strong> 0.00000000000000000000000166 g</li>
+                    <li><strong>Planck's constant:</strong> 0.000000000000000000000000000000000663 J·s</li>
+                </ul>
+                <p>Scientific notation expresses numbers as <strong>N × 10ⁿ</strong> where N is between 1.000... and 9.999...</p>
+            </div>
+
+            <div class="calculator-grid">
+                <div class="calculator-card">
+                    <h3>🔄 Number Converter</h3>
+                    <div class="input-group">
+                        <label>Enter a number:</label>
+                        <input type="text" id="numberInput" placeholder="e.g., 0.000123 or 456000000">
+                    </div>
+                    <button class="btn" onclick="convertToScientific()">Convert to Scientific</button>
+                    <div id="scientificResult" class="result" style="display: none;"></div>
+                </div>
+
+                <div class="calculator-card">
+                    <h3>⚡ Scientific Notation Calculator</h3>
+                    <div class="input-group">
+                        <label>Number 1 (N₁ × 10^n₁):</label>
+                        <input type="number" id="n1" placeholder="N₁" step="any">
+                        <input type="number" id="exp1" placeholder="n₁" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Number 2 (N₂ × 10^n₂):</label>
+                        <input type="number" id="n2" placeholder="N₂" step="any">
+                        <input type="number" id="exp2" placeholder="n₂" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Operation:</label>
+                        <select id="operation">
+                            <option value="multiply">Multiply (×)</option>
+                            <option value="divide">Divide (÷)</option>
+                            <option value="add">Add (+)</option>
+                            <option value="subtract">Subtract (-)</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="calculateScientific()">Calculate</button>
+                    <div id="calcResult" class="result" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="step-by-step">
+                <h4>📝 Step-by-Step Example:</h4>
+                <p><strong>Convert 0.00016 to Scientific Notation:</strong></p>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li>Move decimal point to get a number between 1-9: 0.00016 → 1.6</li>
+                    <li>Count decimal places moved: 4 places to the right</li>
+                    <li>Since we moved right, exponent is negative: -4</li>
+                    <li>Result: 1.6 × 10⁻⁴</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Significant Figures Section -->
+        <div id="significant-figures" class="content-section">
+            <h2 class="section-title">🎯 Significant Figures</h2>
+            
+            <div class="visual-section">
+                <h3>🔍 Rules for Significant Figures:</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <div style="background: white; padding: 15px; border-radius: 10px;">
+                        <strong>Rule 1:</strong> All non-zero digits are significant<br>
+                        <em>Example: 285 has 3 sig figs</em>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px;">
+                        <strong>Rule 2:</strong> Leading zeros are not significant<br>
+                        <em>Example: 0.0052 has 2 sig figs</em>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px;">
+                        <strong>Rule 3:</strong> Zeros between non-zeros are significant<br>
+                        <em>Example: 2.005 has 4 sig figs</em>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px;">
+                        <strong>Rule 4:</strong> Trailing zeros after decimal are significant<br>
+                        <em>Example: 0.200 has 3 sig figs</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-grid">
+                <div class="calculator-card">
+                    <h3>🔢 Significant Figures Counter</h3>
+                    <div class="input-group">
+                        <label>Enter a number:</label>
+                        <input type="text" id="sigFigNumber" placeholder="e.g., 0.200, 285, 2.005">
+                    </div>
+                    <button class="btn" onclick="countSigFigs()">Count Sig Figs</button>
+                    <div id="sigFigResult" class="result" style="display: none;"></div>
+                </div>
+
+                <div class="calculator-card">
+                    <h3>🧮 Sig Fig Calculator</h3>
+                    <div class="input-group">
+                        <label>Number 1:</label>
+                        <input type="text" id="sigNum1" placeholder="e.g., 2.5">
+                    </div>
+                    <div class="input-group">
+                        <label>Number 2:</label>
+                        <input type="text" id="sigNum2" placeholder="e.g., 1.25">
+                    </div>
+                    <div class="input-group">
+                        <label>Operation:</label>
+                        <select id="sigOperation">
+                            <option value="multiply">Multiply</option>
+                            <option value="divide">Divide</option>
+                            <option value="add">Add</option>
+                            <option value="subtract">Subtract</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="calculateWithSigFigs()">Calculate</button>
+                    <div id="sigCalcResult" class="result" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="step-by-step">
+                <h4>📊 Rounding Rules:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>If digit > 5:</strong> Round up (1.386 → 1.39)</li>
+                    <li><strong>If digit < 5:</strong> Keep same (4.334 → 4.33)</li>
+                    <li><strong>If digit = 5:</strong> Round to even number (6.35 → 6.4, 6.25 → 6.2)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Dimensional Analysis Section -->
+        <div id="dimensional-analysis" class="content-section">
+            <h2 class="section-title">📐 Dimensional Analysis</h2>
+            
+            <div class="visual-section">
+                <h3>🔄 Unit Conversion Process:</h3>
+                <p>Dimensional analysis uses <strong>unit factors</strong> (conversion ratios that equal 1) to convert between units.</p>
+                <div style="background: white; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    <strong>Example:</strong> Convert 3 inches to cm<br>
+                    Given: 1 in = 2.54 cm<br>
+                    Unit factor: 2.54 cm / 1 in = 1<br>
+                    Solution: 3 in × (2.54 cm / 1 in) = 7.62 cm
+                </div>
+            </div>
+
+            <div class="calculator-grid">
+                <div class="calculator-card">
+                    <h3>📏 Length Converter</h3>
+                    <div class="input-group">
+                        <label>Value:</label>
+                        <input type="number" id="lengthValue" placeholder="Enter value" step="any">
+                    </div>
+                    <div class="input-group">
+                        <label>From:</label>
+                        <select id="fromUnit">
+                            <option value="m">Meters (m)</option>
+                            <option value="cm">Centimeters (cm)</option>
+                            <option value="mm">Millimeters (mm)</option>
+                            <option value="in">Inches (in)</option>
+                            <option value="ft">Feet (ft)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>To:</label>
+                        <select id="toUnit">
+                            <option value="cm">Centimeters (cm)</option>
+                            <option value="m">Meters (m)</option>
+                            <option value="mm">Millimeters (mm)</option>
+                            <option value="in">Inches (in)</option>
+                            <option value="ft">Feet (ft)</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="convertLength()">Convert</button>
+                    <div id="lengthResult" class="result" style="display: none;"></div>
+                </div>
+
+                <div class="calculator-card">
+                    <h3>⏰ Time Converter</h3>
+                    <div class="input-group">
+                        <label>Value:</label>
+                        <input type="number" id="timeValue" placeholder="Enter value" step="any">
+                    </div>
+                    <div class="input-group">
+                        <label>From:</label>
+                        <select id="fromTimeUnit">
+                            <option value="s">Seconds (s)</option>
+                            <option value="min">Minutes (min)</option>
+                            <option value="h">Hours (h)</option>
+                            <option value="day">Days</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>To:</label>
+                        <select id="toTimeUnit">
+                            <option value="s">Seconds (s)</option>
+                            <option value="min">Minutes (min)</option>
+                            <option value="h">Hours (h)</option>
+                            <option value="day">Days</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="convertTime()">Convert</button>
+                    <div id="timeResult" class="result" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="step-by-step">
+                <h4>📝 Multi-Step Conversion Example:</h4>
+                <p><strong>Convert 2 days to seconds:</strong></p>
+                <p>2 days × (24 h/1 day) × (60 min/1 h) × (60 s/1 min) = 172,800 s</p>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                    <small>Notice how units cancel out, leaving only the desired unit (seconds).</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Precision & Accuracy Section -->
+        <div id="precision-accuracy" class="content-section">
+            <h2 class="section-title">🎯 Precision & Accuracy</h2>
+            
+            <div class="visual-section">
+                <h3>🔍 Understanding the Difference:</h3>
+                <p><strong>Precision:</strong> How close measurements are to each other</p>
+                <p><strong>Accuracy:</strong> How close measurements are to the true value</p>
+                
+                <div class="precision-accuracy-demo">
+                    <div style="text-align: center;">
+                        <h4>High Precision, Low Accuracy</h4>
+                        <div class="target" id="target1"></div>
+                        <p><small>Measurements are close together but far from center</small></p>
+                    </div>
+                    <div style="text-align: center;">
+                        <h4>Low Precision, High Accuracy</h4>
+                        <div class="target" id="target2"></div>
+                        <p><small>Measurements average near center but spread out</small></p>
+                    </div>
+                    <div style="text-align: center;">
+                        <h4>High Precision, High Accuracy</h4>
+                        <div class="target" id="target3"></div>
+                        <p><small>Measurements are close together and near center</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-card" style="max-width: 600px; margin: 20px auto;">
+                <h3>📊 Precision & Accuracy Analyzer</h3>
+                <div class="input-group">
+                    <label>True Value:</label>
+                    <input type="number" id="trueValue" placeholder="e.g., 2.00" step="any">
+                </div>
+                <div class="input-group">
+                    <label>Measurements (comma-separated):</label>
+                    <input type="text" id="measurements" placeholder="e.g., 1.95, 1.93, 1.97">
+                </div>
+                <button class="btn" onclick="analyzePrecisionAccuracy()">Analyze</button>
+                <div id="precisionResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="content-section">
+            <h2 class="section-title">🧠 Knowledge Check</h2>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p style="text-align: center; margin-bottom: 20px;">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">10</span></p>
+
+            <div class="quiz-section">
+                <div id="quizContainer">
+                    <!-- Quiz questions will be generated here -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn" onclick="nextQuestion()" id="nextBtn" style="display: none;">Next Question</button>
+                    <button class="btn" onclick="showResults()" id="resultsBtn" style="display: none;">Show Results</button>
+                    <button class="btn" onclick="restartQuiz()" id="restartBtn" style="display: none;">Restart Quiz</button>
+                </div>
+
+                <div id="quizResults" style="display: none; text-align: center; margin-top: 20px;">
+                    <h3>🎉 Quiz Complete!</h3>
+                    <p id="finalScore"></p>
+                    <div id="scoreMessage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizQuestions = [];
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section and activate tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Scientific Notation Functions
+        function convertToScientific() {
+            const input = document.getElementById('numberInput').value;
+            const result = document.getElementById('scientificResult');
+            
+            if (!input || isNaN(input)) {
+                result.innerHTML = '❌ Please enter a valid number';
+                result.style.display = 'block';
+                return;
+            }
+            
+            const num = parseFloat(input);
+            const scientific = num.toExponential();
+            const [coefficient, exponent] = scientific.split('e');
+            const exp = parseInt(exponent);
+            
+            result.innerHTML = `
+                <h4>✅ Conversion Result:</h4>
+                <p><strong>Original:</strong> ${input}</p>
+                <p><strong>Scientific Notation:</strong> ${parseFloat(coefficient).toFixed(3)} × 10<sup>${exp}</sup></p>
+                <p><strong>Standard Form:</strong> ${scientific}</p>
+            `;
+            result.style.display = 'block';
+        }
+
+        function calculateScientific() {
+            const n1 = parseFloat(document.getElementById('n1').value);
+            const exp1 = parseInt(document.getElementById('exp1').value);
+            const n2 = parseFloat(document.getElementById('n2').value);
+            const exp2 = parseInt(document.getElementById('exp2').value);
+            const operation = document.getElementById('operation').value;
+            const result = document.getElementById('calcResult');
+            
+            if (isNaN(n1) || isNaN(exp1) || isNaN(n2) || isNaN(exp2)) {
+                result.innerHTML = '❌ Please fill all fields with valid numbers';
+                result.style.display = 'block';
+                return;
+            }
+            
+            const num1 = n1 * Math.pow(10, exp1);
+            const num2 = n2 * Math.pow(10, exp2);
+            let answer;
+            let operationSymbol;
+            
+            switch(operation) {
+                case 'multiply':
+                    answer = num1 * num2;
+                    operationSymbol = '×';
+                    break;
+                case 'divide':
+                    answer = num1 / num2;
+                    operationSymbol = '÷';
+                    break;
+                case 'add':
+                    answer = num1 + num2;
+                    operationSymbol = '+';
+                    break;
+                case 'subtract':
+                    answer = num1 - num2;
+                    operationSymbol = '-';
+                    break;
+            }
+            
+            const scientific = answer.toExponential();
+            const [coefficient, exponent] = scientific.split('e');
+            const exp = parseInt(exponent);
+            
+            result.innerHTML = `
+                <h4>✅ Calculation Result:</h4>
+                <p>(${n1} × 10<sup>${exp1}</sup>) ${operationSymbol} (${n2} × 10<sup>${exp2}</sup>)</p>
+                <p><strong>Answer:</strong> ${parseFloat(coefficient).toFixed(3)} × 10<sup>${exp}</sup></p>
+                <p><strong>Decimal:</strong> ${answer.toFixed(6)}</p>
+            `;
+            result.style.display = 'block';
+        }
+
+        // Significant Figures Functions
+        function countSigFigs() {
+            const number = document.getElementById('sigFigNumber').value;
+            const result = document.getElementById('sigFigResult');
+            
+            if (!number) {
+                result.innerHTML = '❌ Please enter a number';
+                result.style.display = 'block';
+                return;
+            }
+            
+            const count = countSigFigsLogic(number);
+            result.innerHTML = `
+                <h4>✅ Significant Figures Analysis:</h4>
+                <p><strong>Number:</strong> ${number}</p>
+                <p><strong>Significant Figures:</strong> ${count}</p>
+                <p><strong>Explanation:</strong> ${explainSigFigs(number)}</p>
+            `;
+            result.style.display = 'block';
+        }
+        
+        function countSigFigsLogic(number) {
+            if (!number) return 0;
+            
+            number = number.toString().trim();
+            
+            // Handle scientific notation
+            if (number.includes('e') || number.includes('E')) {
+                const parts = number.toLowerCase().split('e');
+                return countSigFigsLogic(parts[0]);
+            }
+            
+            // Remove leading/trailing whitespace and handle negative sign
+            number = number.replace(/^-/, '');
+            
+            let sigFigs = 0;
+            let hasDecimal = number.includes('.');
+            let afterDecimal = false;
+            let hasSeenNonZero = false;
+            
+            for (let i = 0; i < number.length; i++) {
+                let digit = number[i];
+                
+                if (digit === '.') {
+                    afterDecimal = true;
+                    continue;
+                }
+                
+                if (digit >= '0' && digit <= '9') {
+                    if (digit !== '0') {
+                        hasSeenNonZero = true;
+                        sigFigs++;
+                    } else {
+                        // Zero rules
+                        if (hasSeenNonZero) {
+                            sigFigs++; // Zeros after non-zero digits
+                        } else if (afterDecimal || hasDecimal) {
+                            // Leading zeros in decimal numbers don't count
+                            continue;
+                        }
+                    }
+                }
+            }
+            
+            return sigFigs;
+        }
+        
+        function explainSigFigs(number) {
+            const hasDecimal = number.includes('.');
+            const isScientific = number.includes('e') || number.includes('E');
+            
+            if (isScientific) {
+                return "In scientific notation, all digits in the coefficient are significant.";
+            }
+            
+            let explanation = "Applied rules: ";
+            const rules = [];
+            
+            if (/[1-9]/.test(number)) {
+                rules.push("Non-zero digits are significant");
+            }
+            
+            if (/^0+\./.test(number)) {
+                rules.push("Leading zeros are not significant");
+            }
+            
+            if (/[1-9].*0.*[1-9]/.test(number)) {
+                rules.push("Zeros between non-zero digits are significant");
+            }
+            
+            if (hasDecimal && /0+$/.test(number)) {
+                rules.push("Trailing zeros after decimal are significant");
+            }
+            
+            return explanation + rules.join(", ");
+        }
+
+        function calculateWithSigFigs() {
+            const num1 = document.getElementById('sigNum1').value;
+            const num2 = document.getElementById('sigNum2').value;
+            const operation = document.getElementById('sigOperation').value;
+            const result = document.getElementById('sigCalcResult');
+            
+            if (!num1 || !num2) {
+                result.innerHTML = '❌ Please enter both numbers';
+                result.style.display = 'block';
+                return;
+            }
+            
+            const val1 = parseFloat(num1);
+            const val2 = parseFloat(num2);
+            const sigFigs1 = countSigFigsLogic(num1);
+            const sigFigs2 = countSigFigsLogic(num2);
+            
+            let answer;
+            let operationSymbol;
+            let resultSigFigs;
+            
+            switch(operation) {
+                case 'multiply':
+                case 'divide':
+                    answer = operation === 'multiply' ? val1 * val2 : val1 / val2;
+                    operationSymbol = operation === 'multiply' ? '×' : '÷';
+                    resultSigFigs = Math.min(sigFigs1, sigFigs2);
+                    break;
+                case 'add':
+                case 'subtract':
+                    answer = operation === 'add' ? val1 + val2 : val1 - val2;
+                    operationSymbol = operation === 'add' ? '+' : '-';
+                    // For addition/subtraction, round to least decimal places
+                    const decimals1 = getDecimalPlaces(num1);
+                    const decimals2 = getDecimalPlaces(num2);
+                    const minDecimals = Math.min(decimals1, decimals2);
+                    answer = parseFloat(answer.toFixed(minDecimals));
+                    resultSigFigs = countSigFigsLogic(answer.toString());
+                    break;
+            }
+            
+            const roundedAnswer = roundToSigFigs(answer, resultSigFigs);
+            
+            result.innerHTML = `
+                <h4>✅ Calculation with Significant Figures:</h4>
+                <p><strong>Operation:</strong> ${num1} ${operationSymbol} ${num2}</p>
+                <p><strong>Sig Figs:</strong> ${sigFigs1} and ${sigFigs2}</p>
+                <p><strong>Raw Answer:</strong> ${answer}</p>
+                <p><strong>Rounded Answer:</strong> ${roundedAnswer} (${resultSigFigs} sig figs)</p>
+                <p><strong>Rule:</strong> ${operation === 'multiply' || operation === 'divide' ? 
+                    'Result has same sig figs as least precise measurement' : 
+                    'Result rounded to least decimal places'}</p>
+            `;
+            result.style.display = 'block';
+        }
+        
+        function getDecimalPlaces(num) {
+            const str = num.toString();
+            if (str.indexOf('.') === -1) return 0;
+            return str.split('.')[1].length;
+        }
+        
+        function roundToSigFigs(num, sigFigs) {
+            if (num === 0) return 0;
+            const magnitude = Math.floor(Math.log10(Math.abs(num)));
+            const factor = Math.pow(10, sigFigs - magnitude - 1);
+            return Math.round(num * factor) / factor;
+        }
+
+        // Dimensional Analysis Functions
+        function convertLength() {
+            const value = parseFloat(document.getElementById('lengthValue').value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const result = document.getElementById('lengthResult');
+            
+            if (isNaN(value)) {
+                result.innerHTML = '❌ Please enter a valid number';
+                result.style.display = 'block';
+                return;
+            }
+            
+            // Conversion factors to meters
+            const toMeters = {
+                'm': 1,
+                'cm': 0.01,
+                'mm': 0.001,
+                'in': 0.0254,
+                'ft': 0.3048
+            };
+            
+            const fromMeters = {
+                'm': 1,
+                'cm': 100,
+                'mm': 1000,
+                'in': 39.3701,
+                'ft': 3.28084
+            };
+            
+            const meters = value * toMeters[fromUnit];
+            const converted = meters * fromMeters[toUnit];
+            
+            result.innerHTML = `
+                <h4>✅ Length Conversion:</h4>
+                <p><strong>Original:</strong> ${value} ${fromUnit}</p>
+                <p><strong>Converted:</strong> ${converted.toFixed(6)} ${toUnit}</p>
+                <p><strong>Conversion Factor:</strong> 1 ${fromUnit} = ${(toMeters[fromUnit] * fromMeters[toUnit]).toFixed(6)} ${toUnit}</p>
+            `;
+            result.style.display = 'block';
+        }
+        
+        function convertTime() {
+            const value = parseFloat(document.getElementById('timeValue').value);
+            const fromUnit = document.getElementById('fromTimeUnit').value;
+            const toUnit = document.getElementById('toTimeUnit').value;
+            const result = document.getElementById('timeResult');
+            
+            if (isNaN(value)) {
+                result.innerHTML = '❌ Please enter a valid number';
+                result.style.display = 'block';
+                return;
+            }
+            
+            // Conversion factors to seconds
+            const toSeconds = {
+                's': 1,
+                'min': 60,
+                'h': 3600,
+                'day': 86400
+            };
+            
+            const fromSeconds = {
+                's': 1,
+                'min': 1/60,
+                'h': 1/3600,
+                'day': 1/86400
+            };
+            
+            const seconds = value * toSeconds[fromUnit];
+            const converted = seconds * fromSeconds[toUnit];
+            
+            // Show step-by-step for complex conversions
+            let steps = '';
+            if (fromUnit !== toUnit) {
+                steps = `
+                    <p><strong>Step-by-step:</strong></p>
+                    <p>1. Convert to seconds: ${value} ${fromUnit} × ${toSeconds[fromUnit]} = ${seconds} s</p>
+                    <p>2. Convert to ${toUnit}: ${seconds} s × ${fromSeconds[toUnit]} = ${converted} ${toUnit}</p>
+                `;
+            }
+            
+            result.innerHTML = `
+                <h4>✅ Time Conversion:</h4>
+                <p><strong>Original:</strong> ${value} ${fromUnit}</p>
+                <p><strong>Converted:</strong> ${converted} ${toUnit}</p>
+                ${steps}
+            `;
+            result.style.display = 'block';
+        }
+
+        // Precision & Accuracy Functions
+        function analyzePrecisionAccuracy() {
+            const trueValue = parseFloat(document.getElementById('trueValue').value);
+            const measurementsStr = document.getElementById('measurements').value;
+            const result = document.getElementById('precisionResult');
+            
+            if (isNaN(trueValue) || !measurementsStr) {
+                result.innerHTML = '❌ Please enter true value and measurements';
+                result.style.display = 'block';
+                return;
+            }
+            
+            const measurements = measurementsStr.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+            
+            if (measurements.length < 2) {
+                result.innerHTML = '❌ Please enter at least 2 measurements';
+                result.style.display = 'block';
+                return;
+            }
+            
+            const average = measurements.reduce((a, b) => a + b) / measurements.length;
+            const deviations = measurements.map(x => Math.abs(x - average));
+            const avgDeviation = deviations.reduce((a, b) => a + b) / deviations.length;
+            const accuracy = Math.abs(average - trueValue);
+            
+            // Determine precision and accuracy levels
+            const precisionLevel = avgDeviation < 0.05 ? 'High' : avgDeviation < 0.1 ? 'Medium' : 'Low';
+            const accuracyLevel = accuracy < 0.05 ? 'High' : accuracy < 0.1 ? 'Medium' : 'Low';
+            
+            result.innerHTML = `
+                <h4>✅ Precision & Accuracy Analysis:</h4>
+                <p><strong>True Value:</strong> ${trueValue}</p>
+                <p><strong>Measurements:</strong> ${measurements.join(', ')}</p>
+                <p><strong>Average:</strong> ${average.toFixed(4)}</p>
+                <p><strong>Precision:</strong> ${precisionLevel} (Avg deviation: ${avgDeviation.toFixed(4)})</p>
+                <p><strong>Accuracy:</strong> ${accuracyLevel} (Error: ${accuracy.toFixed(4)})</p>
+                <div style="background: rgba(255,255,255,0.3); padding: 10px; border-radius: 5px; margin-top: 10px;">
+                    <strong>Interpretation:</strong> Your measurements show ${precisionLevel.toLowerCase()} precision and ${accuracyLevel.toLowerCase()} accuracy.
+                </div>
+            `;
+            result.style.display = 'block';
+        }
+
+        // Initialize precision/accuracy targets
+        function initializeTargets() {
+            // Target 1: High precision, low accuracy
+            const target1 = document.getElementById('target1');
+            for (let i = 0; i < 5; i++) {
+                const shot = document.createElement('div');
+                shot.className = 'shot';
+                shot.style.top = (30 + i * 2) + 'px';
+                shot.style.left = (30 + i * 3) + 'px';
+                target1.appendChild(shot);
+            }
+            
+            // Target 2: Low precision, high accuracy
+            const target2 = document.getElementById('target2');
+            const positions = [
+                {top: 70, left: 70},
+                {top: 60, left: 80},
+                {top: 80, left: 60},
+                {top: 75, left: 85},
+                {top: 65, left: 65}
+            ];
+            positions.forEach(pos => {
+                const shot = document.createElement('div');
+                shot.className = 'shot';
+                shot.style.top = pos.top + 'px';
+                shot.style.left = pos.left + 'px';
+                target2.appendChild(shot);
+            });
+            
+            // Target 3: High precision, high accuracy
+            const target3 = document.getElementById('target3');
+            for (let i = 0; i < 5; i++) {
+                const shot = document.createElement('div');
+                shot.className = 'shot';
+                shot.style.top = (71 + i) + 'px';
+                shot.style.left = (71 + i) + 'px';
+                target3.appendChild(shot);
+            }
+        }
+
+        // Quiz Functions
+        function initializeQuiz() {
+            quizQuestions = [
+                {
+                    question: "Convert 0.000456 to scientific notation:",
+                    options: ["4.56 × 10⁻⁴", "45.6 × 10⁻⁵", "4.56 × 10⁻³", "456 × 10⁻⁶"],
+                    correct: 0,
+                    explanation: "Move decimal 4 places right to get 4.56, so exponent is -4"
+                },
+                {
+                    question: "How many significant figures are in 0.00520?",
+                    options: ["2", "3", "4", "5"],
+                    correct: 1,
+                    explanation: "Leading zeros don't count, trailing zero after 2 does count: 5, 2, 0"
+                },
+                {
+                    question: "What is 2.5 × 1.25 with correct significant figures?",
+                    options: ["3.1", "3.13", "3.125", "3"],
+                    correct: 0,
+                    explanation: "2.5 has 2 sig figs, so result should have 2 sig figs: 3.1"
+                },
+                {
+                    question: "Convert 3 feet to inches:",
+                    options: ["36 inches", "12 inches", "24 inches", "48 inches"],
+                    correct: 0,
+                    explanation: "3 ft × 12 in/ft = 36 inches"
+                },
+                {
+                    question: "Which describes high precision, low accuracy?",
+                    options: ["Measurements close to each other but far from true value", "Measurements spread out but average near true value", "Measurements close to each other and near true value", "Measurements spread out and far from true value"],
+                    correct: 0,
+                    explanation: "High precision means consistent (close together), low accuracy means far from true value"
+                },
+                {
+                    question: "In 2.005, how many significant figures are there?",
+                    options: ["3", "4", "2", "5"],
+                    correct: 1,
+                    explanation: "All digits are significant: 2, 0, 0, 5 (zeros between non-zeros count)"
+                },
+                {
+                    question: "What is (5.6 × 10⁵) × (2.0 × 10³)?",
+                    options: ["1.12 × 10⁹", "11.2 × 10⁸", "1.1 × 10⁹", "1.12 × 10⁸"],
+                    correct: 0,
+                    explanation: "(5.6 × 2.0) × 10⁽⁵⁺³⁾ = 11.2 × 10⁸ = 1.12 × 10⁹"
+                },
+                {
+                    question: "How many seconds in 2.5 hours?",
+                    options: ["9000", "9,000", "150", "8,640"],
+                    correct: 0,
+                    explanation: "2.5 h × 60 min/h × 60 s/min = 9,000 s"
+                },
+                {
+                    question: "Round 6.35 to 2 significant figures:",
+                    options: ["6.4", "6.3", "6.35", "6.0"],
+                    correct: 1,
+                    explanation: "When the digit is 5, round to the nearest even number: 6.3"
+                },
+                {
+                    question: "Which measurement is most precise if true value is 10.0?",
+                    options: ["9.8, 9.9, 10.1", "10.5, 9.5, 10.0", "8.0, 12.0, 10.0", "11.0, 9.0, 10.0"],
+                    correct: 0,
+                    explanation: "Option A has measurements closest to each other (most consistent)"
+                }
+            ];
+            
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('totalQuestions').textContent = quizQuestions.length;
+            showQuestion();
+        }
+        
+        function showQuestion() {
+            const question = quizQuestions[currentQuestionIndex];
+            const container = document.getElementById('quizContainer');
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            
+            container.innerHTML = `
+                <div class="quiz-question">
+                    <h4>Question ${currentQuestionIndex + 1}:</h4>
+                    <p>${question.question}</p>
+                    <div class="quiz-options">
+                        ${question.options.map((option, index) => 
+                            `<label class="quiz-option" onclick="selectOption(${index})">
+                                <input type="radio" name="answer" value="${index}" style="display: none;">
+                                ${option}
+                            </label>`
+                        ).join('')}
+                    </div>
+                    <div id="feedback" class="feedback" style="display: none;"></div>
+                </div>
+            `;
+            
+            updateProgress();
+        }
+        
+        function selectOption(selectedIndex) {
+            const question = quizQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('feedback');
+            
+            // Remove previous selections
+            options.forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // Mark selected option
+            options[selectedIndex].classList.add('selected');
+            
+            // Show correct answer
+            options[question.correct].classList.add('correct');
+            if (selectedIndex !== question.correct) {
+                options[selectedIndex].classList.add('incorrect');
+            }
+            
+            // Update score
+            if (selectedIndex === question.correct) {
+                score++;
+                feedback.innerHTML = `✅ Correct! ${question.explanation}`;
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.innerHTML = `❌ Incorrect. ${question.explanation}`;
+                feedback.className = 'feedback incorrect';
+            }
+            
+            feedback.style.display = 'block';
+            
+            // Show next button
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('resultsBtn').style.display = 'inline-block';
+            }
+        }
+        
+        function nextQuestion() {
+            currentQuestionIndex++;
+            document.getElementById('nextBtn').style.display = 'none';
+            showQuestion();
+        }
+        
+        function showResults() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('resultsBtn').style.display = 'none';
+            document.getElementById('restartBtn').style.display = 'inline-block';
+            
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            document.getElementById('finalScore').textContent = `You scored ${score} out of ${quizQuestions.length} (${percentage}%)`;
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = '🌟 Excellent! You have mastered uncertainty in measurement!';
+            } else if (percentage >= 70) {
+                message = '👍 Good job! You understand most concepts well.';
+            } else if (percentage >= 50) {
+                message = '📚 Keep studying! Review the concepts and try again.';
+            } else {
+                message = '💪 Don\'t give up! Go back and review the material carefully.';
+            }
+            
+            document.getElementById('scoreMessage').innerHTML = `<p style="font-size: 1.2em; margin-top: 15px;">${message}</p>`;
+            document.getElementById('quizResults').style.display = 'block';
+        }
+        
+        function restartQuiz() {
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('restartBtn').style.display = 'none';
+            initializeQuiz();
+        }
+        
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTargets();
+            initializeQuiz();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preparation of Soil - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="soilPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="3" fill="rgba(255,255,255,0.08)"/><circle cx="5" cy="15" r="2" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23soilPattern)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 15px;
+            background: #f3e8ff;
+            border-left: 5px solid #8b5cf6;
+        }
+
+        .section h2 {
+            color: #6d28d9;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .soil-simulator {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .soil-container {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to bottom, #92400e 0%, #78350f 50%, #451a03 100%);
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 3px solid #6d28d9;
+            transition: all 1s ease;
+        }
+
+        .soil-layer {
+            position: absolute;
+            width: 100%;
+            transition: all 1s ease;
+        }
+
+        .topsoil {
+            top: 0;
+            height: 30%;
+            background: linear-gradient(to bottom, #a16207, #92400e);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            font-size: 1.5rem;
+        }
+
+        .subsoil {
+            top: 30%;
+            height: 40%;
+            background: linear-gradient(to bottom, #78350f, #451a03);
+        }
+
+        .bedrock {
+            top: 70%;
+            height: 30%;
+            background: linear-gradient(to bottom, #451a03, #1c1917);
+        }
+
+        .soil-particles {
+            position: absolute;
+            font-size: 0.8rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .compacted .topsoil {
+            background: linear-gradient(to bottom, #78350f, #451a03);
+            height: 25%;
+        }
+
+        .loosened .topsoil {
+            background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+            height: 40%;
+        }
+
+        .loosened .soil-particles {
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-8px) scale(1.1); }
+        }
+
+        .tools-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .tool-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #8b5cf6;
+        }
+
+        .tool-card.active {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .tool-image {
+            width: 100%;
+            height: 150px;
+            background: #f8fafc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plough-parts {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #fef3c7;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .part-label {
+            position: absolute;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 2px solid #8b5cf6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .part-label:hover {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .part-label.correct {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+
+        .part-label.incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .quiz-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #374151;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option {
+            padding: 15px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            background: #f3f4f6;
+            border-color: #8b5cf6;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: #8b5cf6;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score {
+            background: linear-gradient(135deg, #6d28d9, #5b21b6);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .feedback.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+
+        .feedback.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .process-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .step {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .step:hover {
+            border-color: #8b5cf6;
+            transform: translateY(-5px);
+        }
+
+        .step.active {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .step-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .draggable-part {
+            background: #8b5cf6;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: grab;
+            display: inline-block;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .draggable-part:hover {
+            background: #7c3aed;
+            transform: scale(1.05);
+        }
+
+        .draggable-part.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .drop-zone {
+            min-height: 40px;
+            border: 2px dashed #d1d5db;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.highlight {
+            border-color: #8b5cf6;
+            background: #f3e8ff;
+        }
+
+        .drop-zone.filled {
+            border-color: #22c55e;
+            background: #dcfce7;
+        }
+
+        @media (max-width: 768px) {
+            .tools-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .process-steps {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <svg 
+                        viewBox="0 0 512 512" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        style="height: 48px; width: 48px;"
+                        aria-label="Paaṭha AI Logo"
+                    >
+                        <defs>
+                            <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#dc2626" />
+                                <stop offset="33%" stop-color="#dc2626" />
+                                <stop offset="66%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#ecfdf5" />
+                            </linearGradient>
+                        </defs>
+                        <g transform="rotate(-45, 256, 256)">
+                            <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                                c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                                c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                                c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                                c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                                c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                                c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                                c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                                c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                                c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                                c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                                c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                                c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                                c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                                c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                                c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                                c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                                c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                                c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                                c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                                c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                                c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                                c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                                c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                                c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                                c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                                c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                                c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                                fill="url(#brandGradient)"
+                                opacity="0.9">
+                            </path>
+                            <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                        </g>
+                    </svg>
+                    <div>
+                        <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                        <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Agriculture Learning</p>
+                    </div>
+                </div>
+                <h2 style="font-size: 1.8em; margin-bottom: 10px;">🚜 1.3 Preparation of Soil</h2>
+                <p style="font-size: 1.2em; opacity: 0.9;">Explore the science of soil preparation, tilling techniques, and agricultural implements!</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Soil Science Simulator -->
+            <div class="section">
+                <h2>🌱 Soil Science Simulator</h2>
+                <p>See how soil preparation affects plant growth!</p>
+                
+                <div class="soil-simulator">
+                    <div class="soil-container" id="soil-container">
+                        <div class="soil-layer topsoil">
+                            <span class="soil-particles">🪨</span>
+                            <span class="soil-particles">🪨</span>
+                            <span class="soil-particles">🪨</span>
+                        </div>
+                        <div class="soil-layer subsoil"></div>
+                        <div class="soil-layer bedrock"></div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="simulateSoilState('compacted')">🔒 Compact Soil</button>
+                        <button class="btn" onclick="simulateSoilState('normal')">🌍 Normal Soil</button>
+                        <button class="btn" onclick="simulateSoilState('loosened')">🚜 Plough Soil</button>
+                    </div>
+
+                    <div id="soil-feedback" class="feedback" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Soil Preparation Process -->
+            <div class="section">
+                <h2>📋 Soil Preparation Process</h2>
+                <p>Click on each step to learn more about soil preparation!</p>
+                
+                <div class="process-steps">
+                    <div class="step" onclick="explainStep('watering')">
+                        <div class="step-icon">💧</div>
+                        <h3>Watering</h3>
+                        <p>Before ploughing</p>
+                    </div>
+
+                    <div class="step" onclick="explainStep('tilling')">
+                        <div class="step-icon">🚜</div>
+                        <h3>Tilling/Ploughing</h3>
+                        <p>Turning soil</p>
+                    </div>
+
+                    <div class="step" onclick="explainStep('breaking')">
+                        <div class="step-icon">🔨</div>
+                        <h3>Breaking Clumps</h3>
+                        <p>Removing crumbs</p>
+                    </div>
+
+                    <div class="step" onclick="explainStep('levelling')">
+                        <div class="step-icon">📏</div>
+                        <h3>Levelling</h3>
+                        <p>Making field even</p>
+                    </div>
+
+                    <div class="step" onclick="explainStep('moistening')">
+                        <div class="step-icon">🌧️</div>
+                        <h3>Moistening</h3>
+                        <p>Before sowing</p>
+                    </div>
+                </div>
+
+                <div id="step-explanation" class="feedback" style="display: none;"></div>
+            </div>
+
+            <!-- Agricultural Tools -->
+            <div class="section">
+                <h2>🛠️ Agricultural Tools</h2>
+                <p>Learn about the different tools used for soil preparation!</p>
+                
+                <div class="tools-section">
+                    <div class="tool-card" onclick="showToolDetails('plough')">
+                        <div class="tool-image">🚜</div>
+                        <h3>Plough</h3>
+                        <p>Traditional wooden tool for tilling soil</p>
+                        <small>Used since ancient times</small>
+                    </div>
+
+                    <div class="tool-card" onclick="showToolDetails('hoe')">
+                        <div class="tool-image">🔨</div>
+                        <h3>Hoe</h3>
+                        <p>Simple tool for removing weeds</p>
+                        <small>Long rod with iron plate</small>
+                    </div>
+
+                    <div class="tool-card" onclick="showToolDetails('cultivator')">
+                        <div class="tool-image">🏗️</div>
+                        <h3>Cultivator</h3>
+                        <p>Modern tractor-driven tool</p>
+                        <small>Saves time and labour</small>
+                    </div>
+                </div>
+
+                <div id="tool-details" class="quiz-container" style="display: none;">
+                    <!-- Tool details will be shown here -->
+                </div>
+            </div>
+
+            <!-- Plough Parts Labeling -->
+            <div class="section">
+                <h2>🏷️ Label the Plough Parts</h2>
+                <p>Drag the correct labels to their positions on the plough!</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                    <div>
+                        <div class="plough-parts" id="plough-diagram">
+                            <!-- SVG-like representation using CSS -->
+                            <div style="position: absolute; top: 20px; left: 20px; width: 200px; height: 40px; background: #92400e; border-radius: 5px;"></div>
+                            <div style="position: absolute; top: 80px; left: 50px; width: 120px; height: 80px; background: #78350f; border-radius: 10px;"></div>
+                            <div style="position: absolute; top: 140px; left: 80px; width: 60px; height: 40px; background: #6b7280; border-radius: 5px; transform: rotate(15deg);"></div>
+                            
+                            <!-- Drop zones -->
+                            <div class="drop-zone" data-part="beam" style="position: absolute; top: 25px; left: 230px; width: 80px;">
+                                Beam
+                            </div>
+                            <div class="drop-zone" data-part="ploughshaft" style="position: absolute; top: 85px; left: 180px; width: 100px;">
+                                Ploughshaft
+                            </div>
+                            <div class="drop-zone" data-part="ploughshare" style="position: absolute; top: 145px; left: 150px; width: 100px;">
+                                Ploughshare
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3>Parts to Label:</h3>
+                        <div style="margin-top: 20px;">
+                            <div class="draggable-part" draggable="true" data-part="beam">Beam</div>
+                            <div class="draggable-part" draggable="true" data-part="ploughshaft">Ploughshaft</div>
+                            <div class="draggable-part" draggable="true" data-part="ploughshare">Ploughshare</div>
+                        </div>
+
+                        <div style="margin-top: 30px;">
+                            <h4>Part Descriptions:</h4>
+                            <ul style="margin-top: 10px; line-height: 1.6;">
+                                <li><strong>Beam:</strong> Placed on bulls' necks</li>
+                                <li><strong>Ploughshaft:</strong> Main long log of wood</li>
+                                <li><strong>Ploughshare:</strong> Triangular iron strip</li>
+                            </ul>
+                        </div>
+
+                        <button class="btn" onclick="checkLabeling()">Check Labels</button>
+                        <button class="btn" onclick="resetLabeling()">Reset</button>
+                        
+                        <div id="labeling-score" class="score">Correct Labels: 0/3</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Quiz -->
+            <div class="section">
+                <h2>🧠 Soil Preparation Quiz</h2>
+                <div class="quiz-container">
+                    <div id="quiz-question" class="question">Loading question...</div>
+                    <div id="quiz-options" class="options"></div>
+                    <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="nextQuestion()">Next Question</button>
+                    <div id="quiz-score" class="score">Score: 0/0</div>
+                </div>
+            </div>
+
+            <!-- Traditional vs Modern Comparison -->
+            <div class="section">
+                <h2>⚖️ Traditional vs Modern Farming</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Traditional (Plough)</th>
+                            <th>Modern (Cultivator)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Power Source</strong></td>
+                            <td>Bullocks, horses, camels</td>
+                            <td>Tractor</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Material</strong></td>
+                            <td>Wood and iron</td>
+                            <td>Metal and machinery</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Time Required</strong></td>
+                            <td>More time needed</td>
+                            <td>Less time required</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Labor</strong></td>
+                            <td>More manual labor</td>
+                            <td>Saves labor</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cost</strong></td>
+                            <td>Lower initial cost</td>
+                            <td>Higher initial cost</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maintenance</strong></td>
+                            <td>Easy maintenance</td>
+                            <td>Requires technical knowledge</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Data
+        const quizQuestions = [
+            {
+                question: "What is the process of loosening and turning soil called?",
+                options: ["Sowing", "Tilling or Ploughing", "Irrigation", "Harvesting"],
+                correct: 1
+            },
+            {
+                question: "Which part of the plough is made of triangular iron?",
+                options: ["Beam", "Ploughshaft", "Ploughshare", "Handle"],
+                correct: 2
+            },
+            {
+                question: "Why does loosening soil help roots breathe easily?",
+                options: ["It adds water", "It allows air circulation", "It adds nutrients", "It removes weeds"],
+                correct: 1
+            },
+            {
+                question: "What is used to break soil clumps after ploughing?",
+                options: ["Hoe", "Leveller", "Cultivator", "All of these"],
+                correct: 3
+            },
+            {
+                question: "Modern ploughing is done using:",
+                options: ["Bullocks", "Horses", "Tractor-driven cultivator", "Manual tools"],
+                correct: 2
+            },
+            {
+                question: "When should the soil be watered?",
+                options: ["After ploughing", "Before ploughing if very dry", "During ploughing", "Never needed"],
+                correct: 1
+            }
+        ];
+
+        // Tool Details Data
+        const toolDetails = {
+            plough: {
+                name: "🚜 Traditional Plough",
+                description: "Ancient tool used for tilling soil, adding fertilizers, removing weeds, and turning soil.",
+                parts: ["Beam - placed on bulls' necks", "Ploughshaft - main wooden log", "Ploughshare - triangular iron strip"],
+                operation: "Operated by one pair of bulls and a farmer"
+            },
+            hoe: {
+                name: "🔨 Hoe",
+                description: "Simple tool for removing weeds and loosening soil.",
+                parts: ["Long rod of wood or iron", "Strong bent iron plate as blade", "Handle and grip"],
+                operation: "Pulled by animals or used manually"
+            },
+            cultivator: {
+                name: "🏗️ Cultivator",
+                description: "Modern tractor-driven tool that saves time and labor.",
+                parts: ["Metal frame", "Multiple blades/discs", "Tractor attachment"],
+                operation: "Driven by tractor, covers large areas quickly"
+            }
+        };
+
+        // Global Variables
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+        let labelingScore = 0;
+        let labeledParts = {};
+
+        // Soil Simulation Functions
+        function simulateSoilState(state) {
+            const soilContainer = document.getElementById('soil-container');
+            const feedback = document.getElementById('soil-feedback');
+            
+            // Remove existing classes
+            soilContainer.classList.remove('compacted', 'loosened');
+            
+            const messages = {
+                compacted: "🔒 Compacted soil is hard and dense. Roots cannot penetrate easily, and water doesn't flow well. Plants struggle to grow.",
+                normal: "🌍 Normal soil has moderate density. Some root penetration is possible, but preparation can improve it further.",
+                loosened: "🚜 Ploughed soil is loose and airy! Roots can easily penetrate, water flows well, and plants grow healthily. Earthworms and microbes thrive!"
+            };
+
+            if (state !== 'normal') {
+                soilContainer.classList.add(state);
+            }
+
+            feedback.textContent = messages[state];
+            feedback.className = state === 'loosened' ? 'feedback success' : 'feedback error';
+            feedback.style.display = 'block';
+        }
+
+        // Step Explanation Functions
+        function explainStep(step) {
+            const explanations = {
+                watering: "💧 If soil is very dry, it needs watering before ploughing to make it easier to work with.",
+                tilling: "🚜 Tilling or ploughing turns and loosens the soil, bringing nutrients to the surface and allowing air circulation.",
+                breaking: "🔨 Large soil clumps (crumbs) must be broken to create a fine, even seedbed for planting.",
+                levelling: "📏 Levelling makes the field smooth and even, which helps with both sowing seeds and irrigation.",
+                moistening: "🌧️ The soil is moistened before sowing to provide the right conditions for seed germination."
+            };
+
+            const stepElements = document.querySelectorAll('.step');
+            stepElements.forEach(el => el.classList.remove('active'));
+            event.target.closest('.step').classList.add('active');
+
+            const feedback = document.getElementById('step-explanation');
+            feedback.textContent = explanations[step];
+            feedback.className = 'feedback success';
+            feedback.style.display = 'block';
+        }
+
+        // Tool Details Functions
+        function showToolDetails(tool) {
+            const toolData = toolDetails[tool];
+            const detailsContainer = document.getElementById('tool-details');
+            
+            // Mark active tool
+            document.querySelectorAll('.tool-card').forEach(card => card.classList.remove('active'));
+            event.target.closest('.tool-card').classList.add('active');
+
+            detailsContainer.innerHTML = `
+                <h3>${toolData.name}</h3>
+                <p style="margin: 15px 0; font-size: 1.1rem;">${toolData.description}</p>
+                <h4 style="color: #6d28d9; margin-top: 20px;">Parts:</h4>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    ${toolData.parts.map(part => `<li style="margin: 5px 0;">${part}</li>`).join('')}
+                </ul>
+                <h4 style="color: #6d28d9; margin-top: 15px;">Operation:</h4>
+                <p style="margin-top: 5px;">${toolData.operation}</p>
+            `;
+            
+            detailsContainer.style.display = 'block';
+        }
+
+        // Labeling Game Functions
+        function initializeLabeling() {
+            const draggableParts = document.querySelectorAll('.draggable-part');
+            const dropZones = document.querySelectorAll('.drop-zone');
+
+            draggableParts.forEach(part => {
+                part.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.part);
+                    e.target.classList.add('dragging');
+                });
+
+                part.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                });
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('highlight');
+                });
+
+                zone.addEventListener('dragleave', (e) => {
+                    zone.classList.remove('highlight');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('highlight');
+                    
+                    const partName = e.dataTransfer.getData('text/plain');
+                    const targetPart = zone.dataset.part;
+                    
+                    if (partName === targetPart) {
+                        zone.classList.add('filled');
+                        zone.textContent = partName.charAt(0).toUpperCase() + partName.slice(1);
+                        labeledParts[targetPart] = true;
+                        
+                        // Remove the dragged item
+                        const draggedElement = document.querySelector('.dragging');
+                        if (draggedElement) {
+                            draggedElement.style.display = 'none';
+                        }
+                        
+                        updateLabelingScore();
+                    }
+                });
+            });
+        }
+
+        function checkLabeling() {
+            const correctLabels = Object.keys(labeledParts).length;
+            const feedback = document.getElementById('labeling-feedback') || createLabelingFeedback();
+            
+            if (correctLabels === 3) {
+                feedback.textContent = '🎉 Perfect! You correctly labeled all parts of the plough!';
+                feedback.className = 'feedback success';
+            } else {
+                feedback.textContent = `Good progress! You have ${correctLabels} out of 3 labels correct. Keep trying!`;
+                feedback.className = 'feedback error';
+            }
+            
+            feedback.style.display = 'block';
+        }
+
+        function createLabelingFeedback() {
+            const feedback = document.createElement('div');
+            feedback.id = 'labeling-feedback';
+            feedback.className = 'feedback';
+            document.querySelector('.section:nth-child(5)').appendChild(feedback);
+            return feedback;
+        }
+
+        function resetLabeling() {
+            labeledParts = {};
+            const dropZones = document.querySelectorAll('.drop-zone');
+            const draggableParts = document.querySelectorAll('.draggable-part');
+            
+            dropZones.forEach(zone => {
+                zone.classList.remove('filled', 'highlight');
+                zone.textContent = zone.dataset.part.charAt(0).toUpperCase() + zone.dataset.part.slice(1);
+            });
+            
+            draggableParts.forEach(part => {
+                part.style.display = 'inline-block';
+            });
+            
+            const feedback = document.getElementById('labeling-feedback');
+            if (feedback) feedback.style.display = 'none';
+            
+            updateLabelingScore();
+        }
+
+        function updateLabelingScore() {
+            document.getElementById('labeling-score').textContent = `Correct Labels: ${Object.keys(labeledParts).length}/3`;
+        }
+
+        // Quiz Functions
+        function loadQuestion() {
+            if (currentQuizIndex >= quizQuestions.length) {
+                document.getElementById('quiz-question').textContent = `Quiz Complete! Final Score: ${quizScore}/${quizQuestions.length}`;
+                document.getElementById('quiz-options').innerHTML = '<p style="text-align: center; font-size: 1.2rem; color: #6d28d9;">🎉 Outstanding! You\'ve mastered soil preparation!</p>';
+                return;
+            }
+
+            const question = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-question').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(optionElement);
+            });
+
+            document.getElementById('quiz-feedback').style.display = 'none';
+            quizAnswered = false;
+            updateQuizScore();
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (quizAnswered) return;
+
+            const question = quizQuestions[currentQuizIndex];
+            const options = document.querySelectorAll('#quiz-options .option');
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && selectedIndex !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            const feedback = document.getElementById('quiz-feedback');
+            if (selectedIndex === question.correct) {
+                quizScore++;
+                feedback.textContent = '✅ Excellent! That\'s correct!';
+                feedback.className = 'feedback success';
+            } else {
+                feedback.textContent = `❌ Not quite right. The correct answer is: ${question.options[question.correct]}`;
+                feedback.className = 'feedback error';
+            }
+            
+            feedback.style.display = 'block';
+            quizAnswered = true;
+            updateQuizScore();
+        }
+
+        function nextQuestion() {
+            currentQuizIndex++;
+            loadQuestion();
+        }
+
+        function updateQuizScore() {
+            document.getElementById('quiz-score').textContent = `Score: ${quizScore}/${Math.min(currentQuizIndex + 1, quizQuestions.length)}`;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuestion();
+            initializeLabeling();
+        });
+    </script>
+</body>
+</html>

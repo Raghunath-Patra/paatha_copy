@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Continuous Charge Distribution</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 50%, #ad1457 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffeb3b, #ff9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+        }
+
+        .tab:hover, .tab.active {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .simulation-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .canvas-container {
+            position: relative;
+            background: rgba(0,0,0,0.4);
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 15px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .control-group {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #ffeb3b;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffeb3b;
+            cursor: pointer;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: rgba(255,235,59,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+        }
+
+        .formula-box {
+            background: rgba(0,0,0,0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #ffeb3b;
+        }
+
+        .formula-box h3 {
+            color: #ffeb3b;
+            margin-bottom: 10px;
+        }
+
+        .math-display {
+            font-size: 1.3em;
+            font-family: 'Times New Roman', serif;
+            text-align: center;
+            margin: 15px 0;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .density-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .density-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .density-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .density-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .responsive-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .quiz-option {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-size: 1em;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        .quiz-option.selected {
+            border-color: #ffeb3b;
+            background: rgba(255,235,59,0.2);
+        }
+
+        .quiz-option.correct {
+            border-color: #4caf50;
+            background: rgba(76,175,80,0.3);
+            color: #ffffff;
+        }
+
+        .quiz-option.incorrect {
+            border-color: #f44336;
+            background: rgba(244,67,54,0.3);
+            color: #ffffff;
+        }
+
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .responsive-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Continuous Charge Distribution</h1>
+            <p>Explore linear, surface, and volume charge densities with interactive visualizations</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">📊 Overview</button>
+            <button class="tab" onclick="showTab('linear')">📏 Linear</button>
+            <button class="tab" onclick="showTab('surface')">📋 Surface</button>
+            <button class="tab" onclick="showTab('volume')">🧊 Volume</button>
+            <button class="tab" onclick="showTab('calculator')">🧮 Calculator</button>
+            <button class="tab" onclick="showTab('quiz')">🧠 Quiz</button>
+        </div>
+
+        <!-- Overview Section -->
+        <div id="overview" class="content active">
+            <div class="simulation-container">
+                <h2>📚 Continuous Charge Distribution Fundamentals</h2>
+                
+                <div class="density-cards">
+                    <div class="density-card">
+                        <div class="density-icon">📏</div>
+                        <h3>Linear Charge Density (λ)</h3>
+                        <div class="math-display">λ = ΔQ/Δl</div>
+                        <p>Charge per unit length</p>
+                        <p><strong>Units:</strong> C/m</p>
+                    </div>
+                    <div class="density-card">
+                        <div class="density-icon">📋</div>
+                        <h3>Surface Charge Density (σ)</h3>
+                        <div class="math-display">σ = ΔQ/ΔS</div>
+                        <p>Charge per unit area</p>
+                        <p><strong>Units:</strong> C/m²</p>
+                    </div>
+                    <div class="density-card">
+                        <div class="density-icon">🧊</div>
+                        <h3>Volume Charge Density (ρ)</h3>
+                        <div class="math-display">ρ = ΔQ/ΔV</div>
+                        <p>Charge per unit volume</p>
+                        <p><strong>Units:</strong> C/m³</p>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="overviewCanvas" width="800" height="300"></canvas>
+                </div>
+
+                <div class="formula-box">
+                    <h3>🔬 From Discrete to Continuous</h3>
+                    <p>When dealing with macroscopic objects, it becomes impractical to consider individual charges. Instead, we use continuous charge distributions:</p>
+                    <ul style="margin: 15px 0; padding-left: 20px;">
+                        <li><strong>Macroscopic scale:</strong> We consider charge densities over small but finite regions</li>
+                        <li><strong>Microscopic reality:</strong> Charges are still discrete (electrons, protons)</li>
+                        <li><strong>Mathematical convenience:</strong> Allows us to use calculus for field calculations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linear Density Section -->
+        <div id="linear" class="content">
+            <div class="simulation-container">
+                <h2>📏 Linear Charge Density (λ)</h2>
+                
+                <div class="responsive-layout">
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="linearCanvas" width="500" height="300"></canvas>
+                        </div>
+                        
+                        <div class="controls">
+                            <div class="control-group">
+                                <h3>Wire Properties</h3>
+                                <div class="slider-container">
+                                    <label>Linear Charge Density (λ): <span class="value-display" id="lambdaValue">2.0</span> nC/m</label>
+                                    <input type="range" id="lambdaSlider" min="-5" max="5" step="0.1" value="2">
+                                </div>
+                                <div class="slider-container">
+                                    <label>Wire Length: <span class="value-display" id="lengthValue">10.0</span> cm</label>
+                                    <input type="range" id="lengthSlider" min="5" max="20" step="0.5" value="10">
+                                </div>
+                                <button class="btn" onclick="startAnimation()">🎯 Animate Charges</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="formula-box">
+                            <h3>📐 Linear Charge Density</h3>
+                            <div class="math-display">λ = ΔQ/Δl</div>
+                            <p>For a wire with uniform charge distribution:</p>
+                            <div id="linearResult" class="math-display">Q = λ × L = 20.0 nC</div>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>🔍 Wire Analysis</h3>
+                            <div id="linearInfo">
+                                <p><strong>Total Charge:</strong> <span id="totalCharge">20.0 nC</span></p>
+                                <p><strong>Charge Type:</strong> <span id="chargeType">Positive</span></p>
+                                <p><strong>Density:</strong> <span id="densityDisplay">2.0 nC/m</span></p>
+                            </div>
+                        </div>
+
+                        <div class="info-panel">
+                            <h3>🎬 Animation Shows:</h3>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>Moving charges along the wire</li>
+                                <li>Current flow direction</li>
+                                <li>Electric field lines radiating outward</li>
+                                <li>Charge density visualization</li>
+                            </ul>
+                            <div id="animStatus">Ready to animate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Surface Density Section -->
+        <div id="surface" class="content">
+            <div class="simulation-container">
+                <h2>📋 Surface Charge Density (σ)</h2>
+                
+                <div class="responsive-layout">
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="surfaceCanvas" width="500" height="400"></canvas>
+                        </div>
+                        
+                        <div class="controls">
+                            <div class="control-group">
+                                <h3>Surface Properties</h3>
+                                <div class="slider-container">
+                                    <label>Surface Charge Density (σ): <span class="value-display" id="sigmaValue">1.5</span> μC/m²</label>
+                                    <input type="range" id="sigmaSlider" min="-3" max="3" step="0.1" value="1.5">
+                                </div>
+                                <div class="slider-container">
+                                    <label>Width: <span class="value-display" id="widthValue">8</span> cm</label>
+                                    <input type="range" id="widthSlider" min="4" max="12" step="0.5" value="8">
+                                </div>
+                                <div class="slider-container">
+                                    <label>Height: <span class="value-display" id="heightValue">6</span> cm</label>
+                                    <input type="range" id="heightSlider" min="3" max="10" step="0.5" value="6">
+                                </div>
+                                <button class="btn" onclick="startAnimation()">🌊 Animate Surface</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="formula-box">
+                            <h3>📐 Surface Charge Density</h3>
+                            <div class="math-display">σ = ΔQ/ΔS</div>
+                            <p>For a surface with uniform charge distribution:</p>
+                            <div id="surfaceResult" class="math-display">Q = σ × A = 72.0 μC</div>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>🔍 Surface Analysis</h3>
+                            <div id="surfaceInfo">
+                                <p><strong>Total Charge:</strong> <span id="surfaceTotalCharge">72.0 μC</span></p>
+                                <p><strong>Surface Area:</strong> <span id="surfaceArea">48.0 cm²</span></p>
+                                <p><strong>Density:</strong> <span id="surfaceDensity">1.5 μC/m²</span></p>
+                            </div>
+                        </div>
+
+                        <div class="info-panel">
+                            <h3>🎬 Animation Shows:</h3>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>Charge distribution across surface</li>
+                                <li>Electric field perpendicular to surface</li>
+                                <li>Equipotential waves</li>
+                                <li>Surface current flow</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Volume Density Section -->
+        <div id="volume" class="content">
+            <div class="simulation-container">
+                <h2>🧊 Volume Charge Density (ρ)</h2>
+                
+                <div class="responsive-layout">
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="volumeCanvas" width="500" height="400"></canvas>
+                        </div>
+                        
+                        <div class="controls">
+                            <div class="control-group">
+                                <h3>Volume Properties</h3>
+                                <div class="slider-container">
+                                    <label>Volume Charge Density (ρ): <span class="value-display" id="rhoValue">0.8</span> mC/m³</label>
+                                    <input type="range" id="rhoSlider" min="-2" max="2" step="0.1" value="0.8">
+                                </div>
+                                <div class="slider-container">
+                                    <label>Width: <span class="value-display" id="volWidthValue">6</span> cm</label>
+                                    <input type="range" id="volWidthSlider" min="3" max="10" step="0.5" value="6">
+                                </div>
+                                <div class="slider-container">
+                                    <label>Height: <span class="value-display" id="volHeightValue">4</span> cm</label>
+                                    <input type="range" id="volHeightSlider" min="2" max="8" step="0.5" value="4">
+                                </div>
+                                <div class="slider-container">
+                                    <label>Depth: <span class="value-display" id="volDepthValue">5</span> cm</label>
+                                    <input type="range" id="volDepthSlider" min="2" max="8" step="0.5" value="5">
+                                </div>
+                                <button class="btn" onclick="startAnimation()">🧊 Animate 3D Volume</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="formula-box">
+                            <h3>📐 Volume Charge Density</h3>
+                            <div class="math-display">ρ = ΔQ/ΔV</div>
+                            <p>For a volume with uniform charge distribution:</p>
+                            <div id="volumeResult" class="math-display">Q = ρ × V = 96.0 mC</div>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>🔍 Volume Analysis</h3>
+                            <div id="volumeInfo">
+                                <p><strong>Total Charge:</strong> <span id="volumeTotalCharge">96.0 mC</span></p>
+                                <p><strong>Volume:</strong> <span id="totalVolume">120.0 cm³</span></p>
+                                <p><strong>Density:</strong> <span id="volumeDensity">0.8 mC/m³</span></p>
+                            </div>
+                        </div>
+
+                        <div class="info-panel">
+                            <h3>🎬 Animation Shows:</h3>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>3D charge movement within volume</li>
+                                <li>Radial electric field</li>
+                                <li>Cross-sectional views</li>
+                                <li>Charge density fluctuations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculator Section -->
+        <div id="calculator" class="content">
+            <div class="simulation-container">
+                <h2>🧮 Charge Density Calculator</h2>
+                
+                <div class="responsive-layout">
+                    <div class="control-group">
+                        <h3>📏 Linear Calculator</h3>
+                        <div class="slider-container">
+                            <label>Charge (Q): <span class="value-display" id="calcQ1">5.0</span> nC</label>
+                            <input type="range" id="calcQ1Slider" min="0.1" max="10" step="0.1" value="5">
+                        </div>
+                        <div class="slider-container">
+                            <label>Length (L): <span class="value-display" id="calcL1">2.5</span> m</label>
+                            <input type="range" id="calcL1Slider" min="0.1" max="5" step="0.1" value="2.5">
+                        </div>
+                        <div class="math-display" id="calcResult1">λ = 2.0 nC/m</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <h3>📋 Surface Calculator</h3>
+                        <div class="slider-container">
+                            <label>Charge (Q): <span class="value-display" id="calcQ2">12.0</span> μC</label>
+                            <input type="range" id="calcQ2Slider" min="0.1" max="20" step="0.1" value="12">
+                        </div>
+                        <div class="slider-container">
+                            <label>Area (A): <span class="value-display" id="calcA2">4.0</span> m²</label>
+                            <input type="range" id="calcA2Slider" min="0.1" max="10" step="0.1" value="4">
+                        </div>
+                        <div class="math-display" id="calcResult2">σ = 3.0 μC/m²</div>
+                    </div>
+                </div>
+                
+                <div class="responsive-layout">
+                    <div class="control-group">
+                        <h3>🧊 Volume Calculator</h3>
+                        <div class="slider-container">
+                            <label>Charge (Q): <span class="value-display" id="calcQ3">15.0</span> mC</label>
+                            <input type="range" id="calcQ3Slider" min="0.1" max="25" step="0.1" value="15">
+                        </div>
+                        <div class="slider-container">
+                            <label>Volume (V): <span class="value-display" id="calcV3">5.0</span> m³</label>
+                            <input type="range" id="calcV3Slider" min="0.1" max="10" step="0.1" value="5">
+                        </div>
+                        <div class="math-display" id="calcResult3">ρ = 3.0 mC/m³</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <h3>🔄 Unit Conversions</h3>
+                        <div class="info-panel">
+                            <p><strong>Charge Units:</strong></p>
+                            <p>1 C = 10³ mC = 10⁶ μC = 10⁹ nC</p>
+                            <p><strong>Length/Area/Volume:</strong></p>
+                            <p>1 m = 100 cm = 1000 mm</p>
+                            <p>1 m² = 10⁴ cm²</p>
+                            <p>1 m³ = 10⁶ cm³</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="content">
+            <div class="simulation-container">
+                <h2>🧠 Quiz: Test Your Understanding</h2>
+                
+                <div class="info-panel" id="quizIntro">
+                    <h3>📚 Knowledge Check</h3>
+                    <p>Test your understanding of continuous charge distributions with these 5 questions covering linear, surface, and volume charge densities.</p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <button class="btn" onclick="startQuiz()">🎯 Start Quiz</button>
+                    </div>
+                </div>
+
+                <div id="quizContainer" style="display: none;">
+                    <div class="info-panel">
+                        <div id="quizProgress">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <span id="questionNumber">Question 1 of 5</span>
+                                <span id="quizScore">Score: 0/0</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div id="progressBar" style="background: #ffeb3b; height: 100%; width: 20%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="formula-box">
+                        <h3 id="questionTitle">Question 1</h3>
+                        <p id="questionText" style="font-size: 1.1em; margin: 15px 0;">Loading question...</p>
+                    </div>
+
+                    <div class="controls">
+                        <div class="control-group">
+                            <h3>Choose your answer:</h3>
+                            <div id="optionsContainer">
+                                <!-- Options will be dynamically added here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="feedbackContainer" style="display: none;">
+                        <div class="info-panel" id="feedback">
+                            <!-- Feedback will be shown here -->
+                        </div>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <button class="btn" id="nextButton" onclick="nextQuestion()">Next Question →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="quizResults" style="display: none;">
+                    <div class="formula-box">
+                        <h3>🎉 Quiz Complete!</h3>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div style="font-size: 3em; margin: 20px 0;" id="finalScore">0/5</div>
+                            <div style="font-size: 2em; margin: 10px 0;" id="percentage">0%</div>
+                            <div id="performanceMessage" style="font-size: 1.2em; margin: 15px 0;">Great job!</div>
+                        </div>
+                    </div>
+
+                    <div class="responsive-layout">
+                        <div class="info-panel">
+                            <h3>📊 Your Performance</h3>
+                            <div id="detailedResults">
+                                <!-- Detailed results will be shown here -->
+                            </div>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>📚 Study Recommendations</h3>
+                            <div id="studyTips">
+                                <!-- Study tips will be shown here -->
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button class="btn" onclick="restartQuiz()">🔄 Retake Quiz</button>
+                                <button class="btn" onclick="showTab('overview')">📊 Review Concepts</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let animating = false;
+
+        // Quiz variables
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = [];
+        let quizStarted = false;
+
+        const quizQuestions = [
+            {
+                question: "What is the formula for linear charge density (λ)?",
+                options: [
+                    "λ = ΔQ/ΔV",
+                    "λ = ΔQ/ΔS", 
+                    "λ = ΔQ/Δl",
+                    "λ = Q/4πε₀r²"
+                ],
+                correct: 2,
+                explanation: "Linear charge density λ is defined as charge per unit length, so λ = ΔQ/Δl. The units are C/m.",
+                topic: "Linear Charge Density"
+            },
+            {
+                question: "A uniformly charged wire has λ = 3 nC/m and length L = 5 m. What is the total charge?",
+                options: [
+                    "15 nC",
+                    "8 nC",
+                    "1.67 nC", 
+                    "0.6 nC"
+                ],
+                correct: 0,
+                explanation: "Total charge Q = λ × L = 3 nC/m × 5 m = 15 nC. This is a direct application of the linear charge density formula.",
+                topic: "Linear Charge Calculations"
+            },
+            {
+                question: "For an infinite charged sheet, the electric field is:",
+                options: [
+                    "E = σ/(4πε₀)",
+                    "E = σ/(2ε₀)",
+                    "E = σ/ε₀",
+                    "E = σ/(πε₀)"
+                ],
+                correct: 1,
+                explanation: "For an infinite charged sheet with surface charge density σ, the electric field is E = σ/(2ε₀) and is independent of distance from the sheet.",
+                topic: "Surface Charge Density"
+            },
+            {
+                question: "A charged cube has uniform volume charge density ρ = 2 mC/m³. If the cube has sides of 0.1 m, what is the total charge?",
+                options: [
+                    "0.002 mC",
+                    "0.02 mC",
+                    "0.2 mC",
+                    "2 mC"
+                ],
+                correct: 0,
+                explanation: "Volume = (0.1 m)³ = 0.001 m³. Total charge Q = ρ × V = 2 mC/m³ × 0.001 m³ = 0.002 mC.",
+                topic: "Volume Charge Calculations"
+            },
+            {
+                question: "Which statement about continuous charge distributions is FALSE?",
+                options: [
+                    "They allow us to use calculus for field calculations",
+                    "They represent a macroscopic average over microscopic charges",
+                    "Individual electrons and protons are still discrete at the microscopic level",
+                    "They can only be used for conductors, not insulators"
+                ],
+                correct: 3,
+                explanation: "Continuous charge distributions can be used for both conductors and insulators. They are a mathematical convenience that represents macroscopic averaging over microscopic discrete charges.",
+                topic: "Continuous Distribution Concepts"
+            }
+        ];
+
+        window.onload = function() {
+            setupEventListeners();
+            updateAll();
+        };
+
+        function setupEventListeners() {
+            // Linear
+            document.getElementById('lambdaSlider').addEventListener('input', updateLinear);
+            document.getElementById('lengthSlider').addEventListener('input', updateLinear);
+
+            // Surface
+            document.getElementById('sigmaSlider').addEventListener('input', updateSurface);
+            document.getElementById('widthSlider').addEventListener('input', updateSurface);
+            document.getElementById('heightSlider').addEventListener('input', updateSurface);
+
+            // Volume
+            document.getElementById('rhoSlider').addEventListener('input', updateVolume);
+            document.getElementById('volWidthSlider').addEventListener('input', updateVolume);
+            document.getElementById('volHeightSlider').addEventListener('input', updateVolume);
+            document.getElementById('volDepthSlider').addEventListener('input', updateVolume);
+
+            // Calculators
+            document.getElementById('calcQ1Slider').addEventListener('input', updateCalc1);
+            document.getElementById('calcL1Slider').addEventListener('input', updateCalc1);
+            document.getElementById('calcQ2Slider').addEventListener('input', updateCalc2);
+            document.getElementById('calcA2Slider').addEventListener('input', updateCalc2);
+            document.getElementById('calcQ3Slider').addEventListener('input', updateCalc3);
+            document.getElementById('calcV3Slider').addEventListener('input', updateCalc3);
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            setTimeout(updateAll, 100);
+        }
+
+        function updateLinear() {
+            const lambda = parseFloat(document.getElementById('lambdaSlider').value);
+            const length = parseFloat(document.getElementById('lengthSlider').value);
+            
+            document.getElementById('lambdaValue').textContent = lambda.toFixed(1);
+            document.getElementById('lengthValue').textContent = length.toFixed(1);
+            
+            const totalCharge = lambda * length;
+            document.getElementById('linearResult').textContent = `Q = λ × L = ${totalCharge.toFixed(1)} nC`;
+            document.getElementById('totalCharge').textContent = `${totalCharge.toFixed(1)} nC`;
+            document.getElementById('chargeType').textContent = lambda >= 0 ? 'Positive' : 'Negative';
+            document.getElementById('densityDisplay').textContent = `${lambda.toFixed(1)} nC/m`;
+            
+            drawLinear();
+        }
+
+        function updateSurface() {
+            const sigma = parseFloat(document.getElementById('sigmaSlider').value);
+            const width = parseFloat(document.getElementById('widthSlider').value);
+            const height = parseFloat(document.getElementById('heightSlider').value);
+            
+            document.getElementById('sigmaValue').textContent = sigma.toFixed(1);
+            document.getElementById('widthValue').textContent = width.toFixed(1);
+            document.getElementById('heightValue').textContent = height.toFixed(1);
+            
+            const area = width * height;
+            const totalCharge = sigma * area;
+            document.getElementById('surfaceResult').textContent = `Q = σ × A = ${totalCharge.toFixed(1)} μC`;
+            document.getElementById('surfaceTotalCharge').textContent = `${totalCharge.toFixed(1)} μC`;
+            document.getElementById('surfaceArea').textContent = `${area.toFixed(1)} cm²`;
+            document.getElementById('surfaceDensity').textContent = `${sigma.toFixed(1)} μC/m²`;
+            
+            drawSurface();
+        }
+
+        function updateVolume() {
+            const rho = parseFloat(document.getElementById('rhoSlider').value);
+            const width = parseFloat(document.getElementById('volWidthSlider').value);
+            const height = parseFloat(document.getElementById('volHeightSlider').value);
+            const depth = parseFloat(document.getElementById('volDepthSlider').value);
+            
+            document.getElementById('rhoValue').textContent = rho.toFixed(1);
+            document.getElementById('volWidthValue').textContent = width.toFixed(1);
+            document.getElementById('volHeightValue').textContent = height.toFixed(1);
+            document.getElementById('volDepthValue').textContent = depth.toFixed(1);
+            
+            const volume = width * height * depth;
+            const totalCharge = rho * volume;
+            document.getElementById('volumeResult').textContent = `Q = ρ × V = ${totalCharge.toFixed(1)} mC`;
+            document.getElementById('volumeTotalCharge').textContent = `${totalCharge.toFixed(1)} mC`;
+            document.getElementById('totalVolume').textContent = `${volume.toFixed(1)} cm³`;
+            document.getElementById('volumeDensity').textContent = `${rho.toFixed(1)} mC/m³`;
+            
+            drawVolume();
+        }
+
+        function updateCalc1() {
+            const q = parseFloat(document.getElementById('calcQ1Slider').value);
+            const l = parseFloat(document.getElementById('calcL1Slider').value);
+            
+            document.getElementById('calcQ1').textContent = q.toFixed(1);
+            document.getElementById('calcL1').textContent = l.toFixed(1);
+            document.getElementById('calcResult1').textContent = `λ = ${(q/l).toFixed(2)} nC/m`;
+        }
+
+        function updateCalc2() {
+            const q = parseFloat(document.getElementById('calcQ2Slider').value);
+            const a = parseFloat(document.getElementById('calcA2Slider').value);
+            
+            document.getElementById('calcQ2').textContent = q.toFixed(1);
+            document.getElementById('calcA2').textContent = a.toFixed(1);
+            document.getElementById('calcResult2').textContent = `σ = ${(q/a).toFixed(2)} μC/m²`;
+        }
+
+        function updateCalc3() {
+            const q = parseFloat(document.getElementById('calcQ3Slider').value);
+            const v = parseFloat(document.getElementById('calcV3Slider').value);
+            
+            document.getElementById('calcQ3').textContent = q.toFixed(1);
+            document.getElementById('calcV3').textContent = v.toFixed(1);
+            document.getElementById('calcResult3').textContent = `ρ = ${(q/v).toFixed(2)} mC/m³`;
+        }
+
+        function drawOverview() {
+            const canvas = document.getElementById('overviewCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const sectionWidth = canvas.width / 3;
+            
+            // Linear section
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Linear (λ)', sectionWidth * 0.5, 40);
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(sectionWidth * 0.5 - 80, canvas.height/2);
+            ctx.lineTo(sectionWidth * 0.5 + 80, canvas.height/2);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#ff4444';
+            for(let i = 0; i < 8; i++) {
+                const x = sectionWidth * 0.5 - 80 + (160 * i / 7);
+                ctx.beginPath();
+                ctx.arc(x, canvas.height/2, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Surface section
+            ctx.fillStyle = '#ffeb3b';
+            ctx.fillText('Surface (σ)', sectionWidth * 1.5, 40);
+            
+            ctx.fillStyle = 'rgba(68,68,255,0.5)';
+            ctx.fillRect(sectionWidth * 1.5 - 60, canvas.height/2 - 40, 120, 80);
+            
+            ctx.fillStyle = '#4444ff';
+            for(let i = 0; i < 4; i++) {
+                for(let j = 0; j < 6; j++) {
+                    const x = sectionWidth * 1.5 - 50 + (100 * j / 5);
+                    const y = canvas.height/2 - 30 + (60 * i / 3);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Volume section
+            ctx.fillStyle = '#ffeb3b';
+            ctx.fillText('Volume (ρ)', sectionWidth * 2.5, 40);
+            
+            const cubeSize = 60;
+            const offset = 20;
+            
+            ctx.fillStyle = 'rgba(255,152,0,0.6)';
+            ctx.fillRect(sectionWidth * 2.5 - cubeSize/2, canvas.height/2 - cubeSize/2, cubeSize, cubeSize);
+            
+            ctx.fillStyle = 'rgba(255,152,0,0.8)';
+            ctx.beginPath();
+            ctx.moveTo(sectionWidth * 2.5 - cubeSize/2, canvas.height/2 - cubeSize/2);
+            ctx.lineTo(sectionWidth * 2.5 - cubeSize/2 + offset, canvas.height/2 - cubeSize/2 - offset);
+            ctx.lineTo(sectionWidth * 2.5 + cubeSize/2 + offset, canvas.height/2 - cubeSize/2 - offset);
+            ctx.lineTo(sectionWidth * 2.5 + cubeSize/2, canvas.height/2 - cubeSize/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = '#ff9800';
+            for(let k = 0; k < 2; k++) {
+                for(let i = 0; i < 3; i++) {
+                    for(let j = 0; j < 3; j++) {
+                        const x = sectionWidth * 2.5 - cubeSize/2 + (cubeSize * j / 2) + k * offset/2;
+                        const y = canvas.height/2 - cubeSize/2 + (cubeSize * i / 2) - k * offset/2;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = '16px Arial';
+            ctx.fillText('λ = ΔQ/Δl', sectionWidth * 0.5, canvas.height - 20);
+            ctx.fillText('σ = ΔQ/ΔS', sectionWidth * 1.5, canvas.height - 20);
+            ctx.fillText('ρ = ΔQ/ΔV', sectionWidth * 2.5, canvas.height - 20);
+        }
+
+        function drawLinear() {
+            const canvas = document.getElementById('linearCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const lambda = parseFloat(document.getElementById('lambdaSlider').value);
+            const length = parseFloat(document.getElementById('lengthSlider').value);
+            
+            const wireLength = length * 20;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            ctx.strokeStyle = lambda >= 0 ? '#ff6b6b' : '#6b6bff';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(centerX - wireLength/2, centerY);
+            ctx.lineTo(centerX + wireLength/2, centerY);
+            ctx.stroke();
+            
+            const numCharges = Math.max(5, Math.floor(wireLength / 25));
+            ctx.fillStyle = lambda >= 0 ? '#ff4444' : '#4444ff';
+            for(let i = 0; i < numCharges; i++) {
+                const x = centerX - wireLength/2 + (wireLength * i) / (numCharges - 1);
+                const chargeSize = 5 + Math.abs(lambda);
+                ctx.beginPath();
+                ctx.arc(x, centerY, chargeSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(lambda >= 0 ? '+' : '-', x, centerY + 4);
+                ctx.fillStyle = lambda >= 0 ? '#ff4444' : '#4444ff';
+            }
+            
+            ctx.strokeStyle = '#ffeb3b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            const dimY = centerY + 50;
+            ctx.beginPath();
+            ctx.moveTo(centerX - wireLength/2, dimY);
+            ctx.lineTo(centerX + wireLength/2, dimY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            drawArrow(ctx, centerX - wireLength/2, dimY, Math.PI);
+            drawArrow(ctx, centerX + wireLength/2, dimY, 0);
+            
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`L = ${length.toFixed(1)} cm`, centerX, dimY + 25);
+        }
+
+        function drawSurface() {
+            const canvas = document.getElementById('surfaceCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const sigma = parseFloat(document.getElementById('sigmaSlider').value);
+            const width = parseFloat(document.getElementById('widthSlider').value);
+            const height = parseFloat(document.getElementById('heightSlider').value);
+            
+            const rectWidth = width * 25;
+            const rectHeight = height * 25;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const gradient = ctx.createLinearGradient(centerX - rectWidth/2, centerY - rectHeight/2,
+                                                    centerX + rectWidth/2, centerY + rectHeight/2);
+            if(sigma >= 0) {
+                gradient.addColorStop(0, 'rgba(255,68,68,0.4)');
+                gradient.addColorStop(1, 'rgba(255,68,68,0.8)');
+            } else {
+                gradient.addColorStop(0, 'rgba(68,68,255,0.4)');
+                gradient.addColorStop(1, 'rgba(68,68,255,0.8)');
+            }
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(centerX - rectWidth/2, centerY - rectHeight/2, rectWidth, rectHeight);
+            
+            ctx.strokeStyle = sigma >= 0 ? '#ff4444' : '#4444ff';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(centerX - rectWidth/2, centerY - rectHeight/2, rectWidth, rectHeight);
+            
+            const chargeRows = Math.max(3, Math.floor(rectHeight / 35));
+            const chargeCols = Math.max(3, Math.floor(rectWidth / 35));
+            ctx.fillStyle = sigma >= 0 ? '#ff4444' : '#4444ff';
+            
+            for(let i = 0; i < chargeRows; i++) {
+                for(let j = 0; j < chargeCols; j++) {
+                    const x = centerX - rectWidth/2 + (rectWidth * j) / (chargeCols - 1);
+                    const y = centerY - rectHeight/2 + (rectHeight * i) / (chargeRows - 1);
+                    const chargeSize = 3 + Math.abs(sigma);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, chargeSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(sigma >= 0 ? '+' : '-', x, y + 3);
+                    ctx.fillStyle = sigma >= 0 ? '#ff4444' : '#4444ff';
+                }
+            }
+            
+            ctx.strokeStyle = '#ffeb3b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            
+            const widthY = centerY + rectHeight/2 + 30;
+            ctx.beginPath();
+            ctx.moveTo(centerX - rectWidth/2, widthY);
+            ctx.lineTo(centerX + rectWidth/2, widthY);
+            ctx.stroke();
+            
+            drawArrow(ctx, centerX - rectWidth/2, widthY, Math.PI);
+            drawArrow(ctx, centerX + rectWidth/2, widthY, 0);
+            
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`W = ${width.toFixed(1)} cm`, centerX, widthY + 20);
+            ctx.fillText(`H = ${height.toFixed(1)} cm`, centerX - rectWidth/2 - 40, centerY);
+        }
+
+        function drawVolume() {
+            const canvas = document.getElementById('volumeCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const rho = parseFloat(document.getElementById('rhoSlider').value);
+            const width = parseFloat(document.getElementById('volWidthSlider').value);
+            const height = parseFloat(document.getElementById('volHeightSlider').value);
+            const depth = parseFloat(document.getElementById('volDepthSlider').value);
+            
+            const cubeWidth = width * 20;
+            const cubeHeight = height * 20;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const offset = depth * 8;
+            
+            if(rho >= 0) {
+                ctx.fillStyle = 'rgba(255,152,0,0.7)';
+            } else {
+                ctx.fillStyle = 'rgba(68,68,255,0.7)';
+            }
+            ctx.fillRect(centerX - cubeWidth/2, centerY - cubeHeight/2, cubeWidth, cubeHeight);
+            
+            if(rho >= 0) {
+                ctx.fillStyle = 'rgba(255,152,0,0.9)';
+            } else {
+                ctx.fillStyle = 'rgba(68,68,255,0.9)';
+            }
+            ctx.beginPath();
+            ctx.moveTo(centerX - cubeWidth/2, centerY - cubeHeight/2);
+            ctx.lineTo(centerX - cubeWidth/2 + offset, centerY - cubeHeight/2 - offset);
+            ctx.lineTo(centerX + cubeWidth/2 + offset, centerY - cubeHeight/2 - offset);
+            ctx.lineTo(centerX + cubeWidth/2, centerY - cubeHeight/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            if(rho >= 0) {
+                ctx.fillStyle = 'rgba(255,152,0,0.5)';
+            } else {
+                ctx.fillStyle = 'rgba(68,68,255,0.5)';
+            }
+            ctx.beginPath();
+            ctx.moveTo(centerX + cubeWidth/2, centerY - cubeHeight/2);
+            ctx.lineTo(centerX + cubeWidth/2 + offset, centerY - cubeHeight/2 - offset);
+            ctx.lineTo(centerX + cubeWidth/2 + offset, centerY + cubeHeight/2 - offset);
+            ctx.lineTo(centerX + cubeWidth/2, centerY + cubeHeight/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = rho >= 0 ? '#ff9800' : '#4444ff';
+            const chargeRows = Math.max(3, Math.floor(cubeHeight / 25));
+            const chargeCols = Math.max(3, Math.floor(cubeWidth / 25));
+            const chargeLayers = 3;
+            
+            for(let k = 0; k < chargeLayers; k++) {
+                const layerOpacity = 1 - (k * 0.2);
+                ctx.globalAlpha = layerOpacity;
+                
+                for(let i = 0; i < chargeRows; i++) {
+                    for(let j = 0; j < chargeCols; j++) {
+                        const x = centerX - cubeWidth/2 + (cubeWidth * j) / (chargeCols - 1) + (k * offset/chargeLayers);
+                        const y = centerY - cubeHeight/2 + (cubeHeight * i) / (chargeRows - 1) - (k * offset/chargeLayers);
+                        const chargeSize = 2 + Math.abs(rho) * 0.5;
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, chargeSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            ctx.globalAlpha = 1;
+            
+            ctx.fillStyle = '#ffeb3b';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`W = ${width.toFixed(1)} cm`, centerX, centerY + cubeHeight/2 + 40);
+            ctx.fillText(`H = ${height.toFixed(1)} cm`, centerX - cubeWidth/2 - 50, centerY);
+            ctx.fillText(`D = ${depth.toFixed(1)} cm`, centerX + cubeWidth/2 + offset + 30, centerY - cubeHeight/2 - offset);
+        }
+
+        function drawArrow(ctx, x, y, angle) {
+            const headLength = 10;
+            const headAngle = Math.PI / 6;
+            
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            
+            ctx.strokeStyle = '#ffeb3b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-headLength * Math.cos(headAngle), -headLength * Math.sin(headAngle));
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-headLength * Math.cos(headAngle), headLength * Math.sin(headAngle));
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function startAnimation() {
+            if(animating) return;
+            animating = true;
+            
+            const statusEl = document.getElementById('animStatus');
+            if(statusEl) statusEl.textContent = "Animation running...";
+            
+            let frame = 0;
+            const maxFrames = 60;
+            
+            function animate() {
+                const activeTab = document.querySelector('.content.active').id;
+                
+                if(activeTab === 'linear') {
+                    animateLinear(frame);
+                } else if(activeTab === 'surface') {
+                    animateSurface(frame);
+                } else if(activeTab === 'volume') {
+                    animateVolume(frame);
+                }
+                
+                frame++;
+                if(frame < maxFrames) {
+                    setTimeout(animate, 50);
+                } else {
+                    animating = false;
+                    if(statusEl) statusEl.textContent = "Animation complete!";
+                    
+                    setTimeout(() => {
+                        if(activeTab === 'linear') drawLinear();
+                        else if(activeTab === 'surface') drawSurface();
+                        else if(activeTab === 'volume') drawVolume();
+                        if(statusEl) statusEl.textContent = "Ready to animate";
+                    }, 1000);
+                }
+            }
+            
+            animate();
+        }
+
+        function animateLinear(frame) {
+            drawLinear();
+            
+            const canvas = document.getElementById('linearCanvas');
+            const ctx = canvas.getContext('2d');
+            const lambda = parseFloat(document.getElementById('lambdaSlider').value);
+            
+            ctx.fillStyle = lambda >= 0 ? 'rgba(255,255,0,0.8)' : 'rgba(0,255,255,0.8)';
+            const flowOffset = (frame * 5) % 30;
+            
+            for(let i = 0; i < 300; i += 30) {
+                const x = 50 + i + flowOffset;
+                if(x < canvas.width - 50) {
+                    ctx.beginPath();
+                    ctx.arc(x, canvas.height/2 - 20, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function animateSurface(frame) {
+            drawSurface();
+            
+            const canvas = document.getElementById('surfaceCanvas');
+            const ctx = canvas.getContext('2d');
+            const sigma = parseFloat(document.getElementById('sigmaSlider').value);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const rippleRadius = (frame * 3) % 80;
+            
+            ctx.strokeStyle = sigma >= 0 ? 'rgba(255,255,0,0.6)' : 'rgba(0,255,255,0.6)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, rippleRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function animateVolume(frame) {
+            drawVolume();
+            
+            const canvas = document.getElementById('volumeCanvas');
+            const ctx = canvas.getContext('2d');
+            const rho = parseFloat(document.getElementById('rhoSlider').value);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const pulseSize = 15 + 10 * Math.sin(frame * 0.2);
+            
+            ctx.strokeStyle = rho >= 0 ? 'rgba(255,255,0,0.8)' : 'rgba(0,255,255,0.8)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, pulseSize, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function updateAll() {
+            drawOverview();
+            updateLinear();
+            updateSurface();
+            updateVolume();
+            updateCalc1();
+            updateCalc2();
+            updateCalc3();
+        }
+
+        // Quiz Functions
+        function startQuiz() {
+            quizStarted = true;
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            
+            document.getElementById('quizIntro').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = quizQuestions[currentQuestion];
+            
+            // Update progress
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestion + 1} of ${quizQuestions.length}`;
+            document.getElementById('quizScore').textContent = `Score: ${score}/${currentQuestion}`;
+            document.getElementById('progressBar').style.width = `${((currentQuestion + 1) / quizQuestions.length) * 100}%`;
+            
+            // Update question content
+            document.getElementById('questionTitle').textContent = `Question ${currentQuestion + 1}: ${question.topic}`;
+            document.getElementById('questionText').textContent = question.question;
+            
+            // Create options
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'quiz-option';
+                optionDiv.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                optionDiv.onclick = () => selectOption(index);
+                optionDiv.id = `option-${index}`;
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // Hide feedback
+            document.getElementById('feedbackContainer').style.display = 'none';
+        }
+
+        function selectOption(selectedIndex) {
+            const question = quizQuestions[currentQuestion];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            // Disable all options
+            options.forEach(option => {
+                option.classList.add('disabled');
+                option.onclick = null;
+            });
+            
+            // Mark selected option
+            options[selectedIndex].classList.add('selected');
+            
+            // Store answer
+            userAnswers[currentQuestion] = selectedIndex;
+            
+            // Show correct/incorrect feedback
+            setTimeout(() => {
+                options[question.correct].classList.add('correct');
+                if (selectedIndex !== question.correct) {
+                    options[selectedIndex].classList.add('incorrect');
+                } else {
+                    score++;
+                }
+                
+                showFeedback(selectedIndex === question.correct, question.explanation);
+            }, 500);
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const feedback = document.getElementById('feedback');
+            
+            feedback.innerHTML = `
+                <h3>${isCorrect ? '✅ Correct!' : '❌ Incorrect'}</h3>
+                <p><strong>Explanation:</strong> ${explanation}</p>
+            `;
+            
+            feedbackContainer.style.display = 'block';
+            
+            // Update next button text
+            const nextButton = document.getElementById('nextButton');
+            if (currentQuestion === quizQuestions.length - 1) {
+                nextButton.textContent = 'Show Results 🎉';
+            } else {
+                nextButton.textContent = 'Next Question →';
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion >= quizQuestions.length) {
+                showResults();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            
+            document.getElementById('finalScore').textContent = `${score}/${quizQuestions.length}`;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            
+            // Performance message
+            let message = '';
+            let studyTips = '';
+            
+            if (percentage >= 90) {
+                message = '🌟 Outstanding! You have mastered continuous charge distributions!';
+                studyTips = '<p>🎯 <strong>Excellent work!</strong> You have a solid understanding of all concepts. Consider helping others or exploring advanced topics like:</p><ul><li>Gauss\'s law applications</li><li>Electric potential calculations</li><li>Advanced electrostatics problems</li></ul>';
+            } else if (percentage >= 70) {
+                message = '👍 Great job! You have a good understanding of the concepts.';
+                studyTips = '<p>📚 <strong>Good progress!</strong> Review these areas for improvement:</p><ul><li>Practice more calculation problems</li><li>Review the formulas and their applications</li><li>Study the differences between linear, surface, and volume densities</li></ul>';
+            } else if (percentage >= 50) {
+                message = '📖 Fair performance. Review the concepts and practice more.';
+                studyTips = '<p>⚠️ <strong>Needs improvement.</strong> Focus on:</p><ul><li>Understanding the basic definitions of λ, σ, and ρ</li><li>Practicing unit conversions</li><li>Working through example problems step by step</li><li>Using the interactive simulations above</li></ul>';
+            } else {
+                message = '📚 Study more and try again. Don\'t give up!';
+                studyTips = '<p>🔄 <strong>More study needed.</strong> Recommendations:</p><ul><li>Start with the Overview section to understand basics</li><li>Use the interactive simulations extensively</li><li>Practice with the calculator tools</li><li>Review each formula and its meaning</li><li>Retake the quiz after studying</li></ul>';
+            }
+            
+            document.getElementById('performanceMessage').textContent = message;
+            document.getElementById('studyTips').innerHTML = studyTips;
+            
+            // Detailed results
+            let detailedHtml = '<div style="margin: 15px 0;">';
+            quizQuestions.forEach((question, index) => {
+                const userAnswer = userAnswers[index];
+                const isCorrect = userAnswer === question.correct;
+                const icon = isCorrect ? '✅' : '❌';
+                
+                detailedHtml += `
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                        <strong>${icon} Q${index + 1}:</strong> ${question.topic}<br>
+                        <small>Your answer: ${String.fromCharCode(65 + userAnswer)}. ${question.options[userAnswer]}</small>
+                        ${!isCorrect ? `<br><small style="color: #4caf50;">Correct: ${String.fromCharCode(65 + question.correct)}. ${question.options[question.correct]}</small>` : ''}
+                    </div>
+                `;
+            });
+            detailedHtml += '</div>';
+            
+            document.getElementById('detailedResults').innerHTML = detailedHtml;
+        }
+
+        function restartQuiz() {
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizIntro').style.display = 'block';
+            quizStarted = false;
+        }
+
+        updateAll();
+    </script>
+</body>
+</html>

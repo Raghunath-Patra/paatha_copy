@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oxidation Effects in Everyday Life - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #0891b2;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .interactive-area {
+            background: #f0fdfa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #a7f3d0;
+        }
+
+        .oxidation-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .oxidation-card {
+            background: white;
+            border: 3px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .oxidation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .oxidation-card.corrosion {
+            border-color: #dc2626;
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        }
+
+        .oxidation-card.rancidity {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        }
+
+        .oxidation-card.active {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .oxidation-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .oxidation-title {
+            color: #0891b2;
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .time-simulation {
+            background: #1f2937;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            min-height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .object-display {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .metal-object {
+            width: 120px;
+            height: 120px;
+            border-radius: 10px;
+            transition: all 3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .iron-nail {
+            background: linear-gradient(45deg, #c0c0c0, #a8a8a8);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        .iron-nail.rusted {
+            background: linear-gradient(45deg, #8b4513, #a0522d);
+            box-shadow: inset 0 0 20px rgba(139,69,19,0.5);
+        }
+
+        .copper-pipe {
+            background: linear-gradient(45deg, #b87333, #cd7f32);
+            border-radius: 50%;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        .copper-pipe.oxidized {
+            background: linear-gradient(45deg, #4f7942, #228b22);
+            box-shadow: inset 0 0 20px rgba(79,121,66,0.5);
+        }
+
+        .silver-coin {
+            background: linear-gradient(45deg, #e5e5e5, #d3d3d3);
+            border-radius: 50%;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .silver-coin.tarnished {
+            background: linear-gradient(45deg, #2f2f2f, #4a4a4a);
+            box-shadow: inset 0 0 20px rgba(47,47,47,0.5);
+        }
+
+        .food-container {
+            width: 150px;
+            height: 100px;
+            background: #fbbf24;
+            border-radius: 10px;
+            position: relative;
+            transition: all 3s ease;
+        }
+
+        .food-container::before {
+            content: "🥜🥜🥜";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        .food-container.rancid {
+            background: #92400e;
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        .food-container.rancid::before {
+            content: "🤢💨🦠";
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .time-control {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+        }
+
+        .time-slider {
+            width: 200px;
+            height: 8px;
+            background: #374151;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .prevention-lab {
+            background: white;
+            border: 2px solid #10b981;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .prevention-method {
+            background: #f0fdf4;
+            border: 2px solid #dcfce7;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .prevention-method:hover {
+            background: #dcfce7;
+            transform: translateX(5px);
+        }
+
+        .prevention-method.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #0891b2, #06b6d4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #6b7280, #9ca3af);
+        }
+
+        .btn.danger {
+            background: linear-gradient(45deg, #dc2626, #f59e0b);
+        }
+
+        .btn.success {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+
+        .environment-factors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .factor-control {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .factor-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .factor-value {
+            font-weight: bold;
+            color: #0891b2;
+            font-size: 1.1em;
+        }
+
+        .cost-calculator {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .cost-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #dc2626;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .quiz-area {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .quiz-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: #edf2f7;
+            border-color: #0891b2;
+            transform: translateY(-1px);
+        }
+
+        .quiz-option.selected {
+            background: #0891b2;
+            color: white;
+            border-color: #0891b2;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .paatha-tip {
+            background: linear-gradient(135deg, #ecfeff, #f0fdfa);
+            border: 2px solid #22d3ee;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .paatha-tip::before {
+            content: "🤖 Paaṭha AI Smart Tip";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(45deg, #0891b2, #22d3ee);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .experiment-station {
+            background: white;
+            border: 2px solid #0891b2;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .experiment-title {
+            color: #0891b2;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .oxidation-showcase {
+                grid-template-columns: 1fr;
+            }
+            
+            .environment-factors {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="height: 48px; width: 48px;"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8">
+                        </circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Chemistry Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">🦠 Oxidation Effects in Everyday Life</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Class X Chemistry - Chapter 1, Section 1.3</p>
+        </div>
+
+        <div class="section">
+            <h2>Oxidation in Our Daily Lives</h2>
+            
+            <div class="interactive-area">
+                <h3>🔍 Explore Common Oxidation Effects</h3>
+                <p>Click on each oxidation effect to learn more and see how it affects our daily lives!</p>
+                
+                <div class="oxidation-showcase">
+                    <div class="oxidation-card corrosion" onclick="exploreOxidation('corrosion')">
+                        <span class="oxidation-icon">🔩</span>
+                        <div class="oxidation-title">Corrosion</div>
+                        <div style="font-family: 'Courier New', monospace; margin: 10px 0;">
+                            Metal + O₂ + H₂O → Metal Oxide
+                        </div>
+                        <p>Metals react with environment to form unwanted compounds</p>
+                        <div style="margin-top: 10px; font-size: 12px;">
+                            Examples: Iron rusting, silver tarnishing, copper patina
+                        </div>
+                    </div>
+                    
+                    <div class="oxidation-card rancidity" onclick="exploreOxidation('rancidity')">
+                        <span class="oxidation-icon">🥜</span>
+                        <div class="oxidation-title">Rancidity</div>
+                        <div style="font-family: 'Courier New', monospace; margin: 10px 0;">
+                            Fats/Oils + O₂ → Rancid Products
+                        </div>
+                        <p>Oxidation of fats and oils causing bad smell and taste</p>
+                        <div style="margin-top: 10px; font-size: 12px;">
+                            Examples: Stale chips, old cooking oil, spoiled nuts
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="oxidationDetails" style="display: none;">
+            <h2 id="oxidationTypeTitle">Oxidation Effect</h2>
+            
+            <div class="experiment-station">
+                <div class="experiment-title">
+                    <span id="oxidationIcon">🔬</span>
+                    <span id="oxidationExperimentTitle">Time-Lapse Simulation</span>
+                </div>
+                
+                <div class="time-simulation">
+                    <div class="object-display" id="objectDisplay">
+                        <!-- Objects will be dynamically added here -->
+                    </div>
+                    
+                    <div class="time-control">
+                        <span>⏰ Time:</span>
+                        <input type="range" class="time-slider" id="timeSlider" min="0" max="100" value="0" onchange="updateTimeLapse(this.value)">
+                        <span id="timeDisplay">0 days</span>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button class="btn success" onclick="startTimeLapse()">⏩ Fast Forward Time</button>
+                    <button class="btn secondary" onclick="resetTimeLapse()">🔄 Reset</button>
+                    <button class="btn" onclick="toggleEnvironment()">🌦️ Change Environment</button>
+                </div>
+                
+                <div class="environment-factors" id="environmentFactors" style="display: none;">
+                    <div class="factor-control">
+                        <h4>💧 Humidity</h4>
+                        <input type="range" class="factor-slider" id="humiditySlider" min="0" max="100" value="50" onchange="updateEnvironment()">
+                        <div class="factor-value" id="humidityValue">50%</div>
+                    </div>
+                    
+                    <div class="factor-control">
+                        <h4>🌡️ Temperature</h4>
+                        <input type="range" class="factor-slider" id="temperatureSlider" min="0" max="50" value="25" onchange="updateEnvironment()">
+                        <div class="factor-value" id="temperatureValue">25°C</div>
+                    </div>
+                    
+                    <div class="factor-control">
+                        <h4>💨 Air Exposure</h4>
+                        <input type="range" class="factor-slider" id="airSlider" min="0" max="100" value="50" onchange="updateEnvironment()">
+                        <div class="factor-value" id="airValue">50%</div>
+                    </div>
+                </div>
+                
+                <div id="oxidationDescription"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Prevention Methods Laboratory</h2>
+            
+            <div class="prevention-lab">
+                <h3>🛡️ How to Prevent Oxidation Effects</h3>
+                <p>Click on each prevention method to learn how it works!</p>
+                
+                <div id="preventionMethods">
+                    <!-- Prevention methods will be dynamically added -->
+                </div>
+                
+                <div id="preventionDetails" style="display: none; margin-top: 20px; padding: 20px; background: #f0fdf4; border-radius: 10px;">
+                    <h4 id="preventionTitle">Prevention Method</h4>
+                    <div id="preventionDescription"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Economic Impact Calculator</h2>
+            
+            <div class="cost-calculator">
+                <h3>💰 Calculate the Cost of Oxidation</h3>
+                <p>See how much money is lost due to corrosion and rancidity!</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+                    <div>
+                        <label>🏭 Number of Metal Objects:</label>
+                        <input type="range" id="metalObjects" min="1" max="1000" value="100" onchange="calculateCost()">
+                        <div class="factor-value" id="metalObjectsValue">100</div>
+                    </div>
+                    
+                    <div>
+                        <label>🍟 Packages of Food Items:</label>
+                        <input type="range" id="foodPackages" min="1" max="10000" value="1000" onchange="calculateCost()">
+                        <div class="factor-value" id="foodPackagesValue">1000</div>
+                    </div>
+                    
+                    <div>
+                        <label>⏰ Time Period (years):</label>
+                        <input type="range" id="timePeriod" min="1" max="10" value="1" onchange="calculateCost()">
+                        <div class="factor-value" id="timePeriodValue">1 year</div>
+                    </div>
+                </div>
+                
+                <div class="cost-display" id="totalCost">₹0</div>
+                
+                <div style="background: white; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    <h4>💡 Cost Breakdown:</h4>
+                    <div id="costBreakdown"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Real-World Applications Quiz</h2>
+            
+            <div class="quiz-area">
+                <div class="quiz-question" id="quizQuestion">🎯 Test Your Understanding of Oxidation Effects</div>
+                
+                <div id="currentQuestion">
+                    <p><strong>Question 1:</strong> Which gas is responsible for the rusting of iron?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="selectQuizAnswer(this, false)">Nitrogen (N₂)</div>
+                        <div class="quiz-option" onclick="selectQuizAnswer(this, true)">Oxygen (O₂)</div>
+                        <div class="quiz-option" onclick="selectQuizAnswer(this, false)">Carbon Dioxide (CO₂)</div>
+                        <div class="quiz-option" onclick="selectQuizAnswer(this, false)">Hydrogen (H₂)</div>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="checkQuizAnswer()">✅ Check Answer</button>
+                <button class="btn secondary" onclick="nextQuestion()">➡️ Next Question</button>
+                
+                <div id="quizFeedback"></div>
+            </div>
+
+            <div class="paatha-tip">
+                <strong>🎯 Did You Know?</strong> Every year, billions of rupees are spent globally to replace metals damaged by corrosion! Understanding oxidation helps us save money and resources by using proper prevention methods.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Food Preservation Simulator</h2>
+            
+            <div class="interactive-area">
+                <h3>🥫 Explore Food Preservation Methods</h3>
+                <p>Discover how different preservation techniques prevent rancidity!</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+                    <div class="prevention-method" onclick="showPreservationMethod('antioxidants')">
+                        <h4>🛡️ Antioxidants</h4>
+                        <p>Substances that prevent oxidation of fats and oils</p>
+                        <div style="font-size: 12px; margin-top: 5px;">Vitamin C, Vitamin E, BHT, BHA</div>
+                    </div>
+                    
+                    <div class="prevention-method" onclick="showPreservationMethod('airtight')">
+                        <h4>🔒 Airtight Containers</h4>
+                        <p>Prevent oxygen contact with food</p>
+                        <div style="font-size: 12px; margin-top: 5px;">Vacuum packing, sealed jars</div>
+                    </div>
+                    
+                    <div class="prevention-method" onclick="showPreservationMethod('nitrogen')">
+                        <h4>💨 Nitrogen Flushing</h4>
+                        <p>Replace oxygen with inert nitrogen gas</p>
+                        <div style="font-size: 12px; margin-top: 5px;">Chip bags, coffee packaging</div>
+                    </div>
+                    
+                    <div class="prevention-method" onclick="showPreservationMethod('refrigeration')">
+                        <h4>❄️ Refrigeration</h4>
+                        <p>Low temperature slows oxidation reactions</p>
+                        <div style="font-size: 12px; margin-top: 5px;">Fridges, freezers</div>
+                    </div>
+                </div>
+                
+                <div id="preservationDetails" style="display: none;">
+                    <div class="experiment-station">
+                        <div class="experiment-title">
+                            <span id="preservationIcon">🔬</span>
+                            <span id="preservationTitle">Preservation Method</span>
+                        </div>
+                        
+                        <div id="preservationDescription"></div>
+                        
+                        <div class="time-simulation" style="min-height: 200px;">
+                            <div style="text-align: center; color: white; padding: 50px;">
+                                <div id="preservationVisual"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.2);">
+            <div style="color: white; opacity: 0.9;">
+                <p style="margin: 5px 0; font-size: 16px; font-weight: 600;">Powered by Paaṭha AI</p>
+                <p style="margin: 5px 0; font-size: 14px;">Interactive Chemistry Learning Platform</p>
+                <p style="margin: 5px 0; font-size: 12px; opacity: 0.7;">© 2024 Paaṭha AI. Transforming Education with AI.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Current simulation state
+        let currentOxidationType = '';
+        let timeLapseInterval = null;
+        let environmentVisible = false;
+        let currentQuestionIndex = 0;
+
+        // Quiz questions data
+        const quizQuestions = [
+            {
+                question: "Which gas is responsible for the rusting of iron?",
+                options: ["Nitrogen (N₂)", "Oxygen (O₂)", "Carbon Dioxide (CO₂)", "Hydrogen (H₂)"],
+                correct: 1,
+                explanation: "Oxygen (O₂) in the presence of moisture causes iron to rust, forming iron oxide (Fe₂O₃)."
+            },
+            {
+                question: "What causes food to become rancid?",
+                options: ["Bacterial growth", "Oxidation of fats and oils", "Moisture absorption", "Temperature changes"],
+                correct: 1,
+                explanation: "Rancidity is caused by the oxidation of fats and oils, which changes their taste and smell."
+            },
+            {
+                question: "Which of these is NOT a method to prevent corrosion?",
+                options: ["Galvanization", "Painting", "Increasing humidity", "Alloying"],
+                correct: 2,
+                explanation: "Increasing humidity actually accelerates corrosion. Dry conditions help prevent rusting."
+            },
+            {
+                question: "Why do chip manufacturers flush nitrogen gas in chip packets?",
+                options: ["To make chips crispy", "To prevent oxidation", "To add flavor", "To increase shelf life only"],
+                correct: 1,
+                explanation: "Nitrogen gas replaces oxygen, preventing the oils in chips from becoming rancid due to oxidation."
+            },
+            {
+                question: "What gives the Statue of Liberty its green color?",
+                options: ["Paint", "Copper corrosion (patina)", "Algae growth", "Natural copper color"],
+                correct: 1,
+                explanation: "The green color is due to copper corrosion called patina, formed over many years of exposure to air and moisture."
+            }
+        ];
+
+        // Oxidation data
+        const oxidationData = {
+            corrosion: {
+                title: "Corrosion",
+                icon: "🔩",
+                objects: [
+                    { type: 'iron-nail', name: 'Iron Nail', initialClass: 'iron-nail', finalClass: 'iron-nail rusted' },
+                    { type: 'copper-pipe', name: 'Copper Pipe', initialClass: 'copper-pipe', finalClass: 'copper-pipe oxidized' },
+                    { type: 'silver-coin', name: 'Silver Coin', initialClass: 'silver-coin', finalClass: 'silver-coin tarnished' }
+                ],
+                description: `
+                    <div class="paatha-tip">
+                        <strong>🔩 Corrosion:</strong> When metals react with substances in their environment 
+                        (like oxygen, moisture, acids), they form unwanted compounds. This process weakens 
+                        and damages metal objects.
+                        <br><br>
+                        <strong>🧪 Chemistry:</strong> Iron rusting is the most common example:
+                        <br>4Fe + 3O₂ + 6H₂O → 4Fe(OH)₃ → 2Fe₂O₃·3H₂O (rust)
+                        <br><br>
+                        <strong>💰 Economic Impact:</strong> Corrosion costs billions of rupees annually 
+                        in infrastructure maintenance and replacement!
+                    </div>
+                `,
+                preventionMethods: [
+                    {
+                        title: "🎨 Painting/Coating",
+                        description: "Paint creates a barrier between metal and air, preventing oxygen and moisture contact.",
+                        example: "Car bodies, metal railings, bridges"
+                    },
+                    {
+                        title: "⚡ Galvanization",
+                        description: "Coating iron with zinc. Zinc corrodes first, protecting the iron underneath.",
+                        example: "Galvanized iron sheets, water tanks"
+                    },
+                    {
+                        title: "🔧 Alloying",
+                        description: "Mixing metals to create alloys that resist corrosion better than pure metals.",
+                        example: "Stainless steel (iron + chromium + nickel)"
+                    },
+                    {
+                        title: "🛢️ Oiling/Greasing",
+                        description: "Oil forms a protective layer that repels water and prevents oxidation.",
+                        example: "Machine parts, tools, bicycle chains"
+                    }
+                ]
+            },
+            rancidity: {
+                title: "Rancidity",
+                icon: "🥜",
+                objects: [
+                    { type: 'food-container', name: 'Food Container', initialClass: 'food-container', finalClass: 'food-container rancid' }
+                ],
+                description: `
+                    <div class="paatha-tip">
+                        <strong>🥜 Rancidity:</strong> When fats and oils in food react with oxygen, 
+                        they break down and form compounds that have unpleasant taste and smell.
+                        <br><br>
+                        <strong>🧪 Chemistry:</strong> Fat molecules contain double bonds that react 
+                        with oxygen, breaking the molecules into smaller, smelly compounds.
+                        <br><br>
+                        <strong>🍟 Examples:</strong> Stale potato chips, old cooking oil, 
+                        expired nuts, butter left in open air.
+                    </div>
+                `,
+                preventionMethods: [
+                    {
+                        title: "🛡️ Antioxidants",
+                        description: "Chemicals that prevent oxidation by reacting with oxygen before it can affect fats.",
+                        example: "BHT, BHA, Vitamin C, Vitamin E in packaged foods"
+                    },
+                    {
+                        title: "🔒 Airtight Storage",
+                        description: "Preventing oxygen contact by storing food in sealed containers or vacuum packing.",
+                        example: "Vacuum-packed nuts, sealed jars, ziplock bags"
+                    },
+                    {
+                        title: "💨 Nitrogen Flushing",
+                        description: "Replacing oxygen with inert nitrogen gas in food packaging.",
+                        example: "Chip packets, coffee bags, wine bottles"
+                    },
+                    {
+                        title: "❄️ Refrigeration",
+                        description: "Low temperatures slow down chemical reactions, including oxidation.",
+                        example: "Storing oils, nuts, and fatty foods in refrigerator"
+                    }
+                ]
+            }
+        };
+
+        function exploreOxidation(type) {
+            currentOxidationType = type;
+            
+            // Remove active class from all cards
+            document.querySelectorAll('.oxidation-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Add active class to clicked card
+            event.target.closest('.oxidation-card').classList.add('active');
+            
+            // Show oxidation details
+            const detailsSection = document.getElementById('oxidationDetails');
+            detailsSection.style.display = 'block';
+            detailsSection.scrollIntoView({ behavior: 'smooth' });
+            
+            // Update details
+            const data = oxidationData[type];
+            document.getElementById('oxidationTypeTitle').textContent = data.title;
+            document.getElementById('oxidationIcon').textContent = data.icon;
+            document.getElementById('oxidationExperimentTitle').textContent = `${data.title} Time-Lapse Simulation`;
+            document.getElementById('oxidationDescription').innerHTML = data.description;
+            
+            // Setup simulation
+            setupOxidationSimulation(data);
+            setupPreventionMethods(data.preventionMethods);
+            resetTimeLapse();
+        }
+
+        function setupOxidationSimulation(data) {
+            const container = document.getElementById('objectDisplay');
+            container.innerHTML = '';
+            
+            // For rancidity, show single food container
+            if (currentOxidationType === 'rancidity') {
+                const object = document.createElement('div');
+                object.className = `metal-object ${data.objects[0].initialClass}`;
+                object.id = 'oxidationObject';
+                object.title = data.objects[0].name;
+                container.appendChild(object);
+            } else {
+                // For corrosion, show multiple metal objects
+                data.objects.forEach((obj, index) => {
+                    const object = document.createElement('div');
+                    object.className = `metal-object ${obj.initialClass}`;
+                    object.id = `oxidationObject${index}`;
+                    object.title = obj.name;
+                    object.style.position = 'absolute';
+                    object.style.left = (150 + index * 140) + 'px';
+                    object.style.top = '50%';
+                    object.style.transform = 'translateY(-50%)';
+                    container.appendChild(object);
+                });
+            }
+        }
+
+        function setupPreventionMethods(methods) {
+            const container = document.getElementById('preventionMethods');
+            container.innerHTML = '';
+            
+            methods.forEach((method, index) => {
+                const methodDiv = document.createElement('div');
+                methodDiv.className = 'prevention-method';
+                methodDiv.onclick = () => showPreventionMethod(method);
+                methodDiv.innerHTML = `
+                    <h4>${method.title}</h4>
+                    <p>${method.description}</p>
+                    <div style="font-size: 12px; margin-top: 5px; color: #6b7280;">
+                        Example: ${method.example}
+                    </div>
+                `;
+                container.appendChild(methodDiv);
+            });
+        }
+
+        function showPreventionMethod(method) {
+            // Remove active class from all prevention methods
+            document.querySelectorAll('.prevention-method').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Add active class to clicked method
+            event.target.classList.add('active');
+            
+            const detailsDiv = document.getElementById('preventionDetails');
+            document.getElementById('preventionTitle').textContent = method.title;
+            document.getElementById('preventionDescription').innerHTML = `
+                <p><strong>How it works:</strong> ${method.description}</p>
+                <p style="margin-top: 10px;"><strong>Examples:</strong> ${method.example}</p>
+            `;
+            
+            detailsDiv.style.display = 'block';
+        }
+
+        function updateTimeLapse(value) {
+            const timeDisplay = document.getElementById('timeDisplay');
+            const days = Math.round((value / 100) * 365);
+            timeDisplay.textContent = `${days} days`;
+            
+            // Update oxidation progress
+            if (currentOxidationType === 'rancidity') {
+                const object = document.getElementById('oxidationObject');
+                if (object) {
+                    const progress = value / 100;
+                    if (progress > 0.6) {
+                        object.className = 'metal-object food-container rancid';
+                    } else {
+                        object.className = 'metal-object food-container';
+                    }
+                }
+            } else {
+                // Corrosion progression for multiple objects
+                const data = oxidationData[currentOxidationType];
+                data.objects.forEach((obj, index) => {
+                    const object = document.getElementById(`oxidationObject${index}`);
+                    if (object) {
+                        const progress = value / 100;
+                        const threshold = 0.3 + (index * 0.2); // Different objects corrode at different rates
+                        
+                        if (progress > threshold) {
+                            object.className = `metal-object ${obj.finalClass}`;
+                        } else {
+                            object.className = `metal-object ${obj.initialClass}`;
+                        }
+                    }
+                });
+            }
+        }
+
+        function startTimeLapse() {
+            if (timeLapseInterval) return;
+            
+            const slider = document.getElementById('timeSlider');
+            let currentValue = parseInt(slider.value);
+            
+            timeLapseInterval = setInterval(() => {
+                currentValue += 2;
+                if (currentValue >= 100) {
+                    currentValue = 100;
+                    clearInterval(timeLapseInterval);
+                    timeLapseInterval = null;
+                }
+                
+                slider.value = currentValue;
+                updateTimeLapse(currentValue);
+            }, 100);
+        }
+
+        function resetTimeLapse() {
+            if (timeLapseInterval) {
+                clearInterval(timeLapseInterval);
+                timeLapseInterval = null;
+            }
+            
+            const slider = document.getElementById('timeSlider');
+            slider.value = 0;
+            updateTimeLapse(0);
+        }
+
+        function toggleEnvironment() {
+            environmentVisible = !environmentVisible;
+            const factors = document.getElementById('environmentFactors');
+            factors.style.display = environmentVisible ? 'grid' : 'none';
+        }
+
+        function updateEnvironment() {
+            const humidity = document.getElementById('humiditySlider').value;
+            const temperature = document.getElementById('temperatureSlider').value;
+            const air = document.getElementById('airSlider').value;
+            
+            document.getElementById('humidityValue').textContent = humidity + '%';
+            document.getElementById('temperatureValue').textContent = temperature + '°C';
+            document.getElementById('airValue').textContent = air + '%';
+            
+            // Adjust corrosion/rancidity rate based on environmental factors
+            const currentTime = parseInt(document.getElementById('timeSlider').value);
+            const environmentalFactor = (parseInt(humidity) + parseInt(temperature) + parseInt(air)) / 300;
+            
+            // Update the visual effect based on environmental conditions
+            updateTimeLapse(currentTime * (0.5 + environmentalFactor));
+        }
+
+        function calculateCost() {
+            const metalObjects = document.getElementById('metalObjects').value;
+            const foodPackages = document.getElementById('foodPackages').value;
+            const timePeriod = document.getElementById('timePeriod').value;
+            
+            document.getElementById('metalObjectsValue').textContent = metalObjects;
+            document.getElementById('foodPackagesValue').textContent = foodPackages;
+            document.getElementById('timePeriodValue').textContent = timePeriod + (timePeriod == 1 ? ' year' : ' years');
+            
+            // Simplified cost calculation (in Indian Rupees)
+            const corrosionCostPerObject = 150; // Average replacement cost per object
+            const rancidityLossPerPackage = 25; // Average loss per package
+            
+            const corrosionLoss = metalObjects * corrosionCostPerObject * 0.1 * timePeriod; // 10% objects affected per year
+            const rancidityLoss = foodPackages * rancidityLossPerPackage * 0.05 * timePeriod; // 5% packages affected per year
+            
+            const totalCost = corrosionLoss + rancidityLoss;
+            
+            document.getElementById('totalCost').textContent = `₹${totalCost.toLocaleString('en-IN')}`;
+            
+            document.getElementById('costBreakdown').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <strong>🔩 Corrosion Losses:</strong><br>
+                        ₹${corrosionLoss.toLocaleString('en-IN')}
+                    </div>
+                    <div>
+                        <strong>🥜 Rancidity Losses:</strong><br>
+                        ₹${rancidityLoss.toLocaleString('en-IN')}
+                    </div>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+                    *Estimates based on average replacement and waste costs
+                </div>
+            `;
+        }
+
+        // Quiz functionality
+        let selectedQuizAnswer = -1;
+
+        function selectQuizAnswer(element, isCorrect) {
+            // Remove previous selections
+            element.parentElement.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            element.classList.add('selected');
+            selectedQuizAnswer = Array.from(element.parentElement.children).indexOf(element);
+        }
+
+        function checkQuizAnswer() {
+            const current = quizQuestions[currentQuestionIndex];
+            const feedback = document.getElementById('quizFeedback');
+            
+            if (selectedQuizAnswer === current.correct) {
+                feedback.innerHTML = `<div class="feedback success">✅ Correct! ${current.explanation}</div>`;
+            } else if (selectedQuizAnswer >= 0) {
+                feedback.innerHTML = `<div class="feedback error">❌ Wrong answer. ${current.explanation}</div>`;
+            } else {
+                feedback.innerHTML = `<div class="feedback error">⚠️ Please select an answer first!</div>`;
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex = (currentQuestionIndex + 1) % quizQuestions.length;
+            const current = quizQuestions[currentQuestionIndex];
+            
+            document.getElementById('currentQuestion').innerHTML = `
+                <p><strong>Question ${currentQuestionIndex + 1}:</strong> ${current.question}</p>
+                <div class="quiz-options">
+                    ${current.options.map(option => 
+                        `<div class="quiz-option" onclick="selectQuizAnswer(this, false)">${option}</div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            // Set correct answer
+            const options = document.querySelectorAll('#currentQuestion .quiz-option');
+            options[current.correct].onclick = function() { selectQuizAnswer(this, true); };
+            
+            document.getElementById('quizFeedback').innerHTML = '';
+            selectedQuizAnswer = -1;
+        }
+
+        function showPreservationMethod(type) {
+            const methods = {
+                antioxidants: {
+                    icon: "🛡️",
+                    title: "Antioxidants in Food",
+                    description: `
+                        <div class="paatha-tip">
+                            <strong>🛡️ Antioxidants:</strong> These are substances that prevent or slow damage 
+                            caused by oxidation. They work by neutralizing free radicals before they can 
+                            react with fats and oils.
+                            <br><br>
+                            <strong>Common antioxidants:</strong>
+                            <ul style="margin-left: 20px;">
+                                <li>Vitamin C (Ascorbic acid)</li>
+                                <li>Vitamin E (Tocopherol)</li>
+                                <li>BHT (Butylated hydroxytoluene)</li>
+                                <li>BHA (Butylated hydroxyanisole)</li>
+                            </ul>
+                        </div>
+                    `,
+                    visual: "🛡️ + 🥜 = 🛡️🥜 (Protected Food)"
+                },
+                airtight: {
+                    icon: "🔒",
+                    title: "Airtight Storage",
+                    description: `
+                        <div class="paatha-tip">
+                            <strong>🔒 Airtight Storage:</strong> By preventing oxygen from reaching the food, 
+                            we eliminate the main cause of rancidity. This is the most effective and 
+                            chemical-free method of preservation.
+                            <br><br>
+                            <strong>Methods include:</strong>
+                            <ul style="margin-left: 20px;">
+                                <li>Vacuum packaging</li>
+                                <li>Sealed glass jars</li>
+                                <li>Ziplock bags</li>
+                                <li>Canned foods</li>
+                            </ul>
+                        </div>
+                    `,
+                    visual: "🥜 + 🔒 = 🔒🥜 (No Air Contact)"
+                },
+                nitrogen: {
+                    icon: "💨",
+                    title: "Nitrogen Flushing",
+                    description: `
+                        <div class="paatha-tip">
+                            <strong>💨 Nitrogen Flushing:</strong> Nitrogen is an inert gas that doesn't react 
+                            with food. By replacing oxygen with nitrogen in packaging, we prevent oxidation 
+                            while maintaining the package structure.
+                            <br><br>
+                            <strong>Why nitrogen?</strong>
+                            <ul style="margin-left: 20px;">
+                                <li>Chemically inert (doesn't react)</li>
+                                <li>Odorless and tasteless</li>
+                                <li>Safe for consumption</li>
+                                <li>Abundant and cheap</li>
+                            </ul>
+                        </div>
+                    `,
+                    visual: "O₂ → N₂ + 🥜 = Fresh Food"
+                },
+                refrigeration: {
+                    icon: "❄️",
+                    title: "Refrigeration",
+                    description: `
+                        <div class="paatha-tip">
+                            <strong>❄️ Refrigeration:</strong> Chemical reactions, including oxidation, 
+                            slow down significantly at lower temperatures. This extends the shelf life 
+                            of foods without adding any chemicals.
+                            <br><br>
+                            <strong>Temperature effects:</strong>
+                            <ul style="margin-left: 20px;">
+                                <li>Room temp (25°C): Normal reaction rate</li>
+                                <li>Refrigerator (4°C): 2-4x slower</li>
+                                <li>Freezer (-18°C): Nearly stopped</li>
+                            </ul>
+                        </div>
+                    `,
+                    visual: "🌡️⬇️ + 🥜 = ⏰⬆️ (Longer Shelf Life)"
+                }
+            };
+            
+            const method = methods[type];
+            const detailsDiv = document.getElementById('preservationDetails');
+            
+            document.getElementById('preservationIcon').textContent = method.icon;
+            document.getElementById('preservationTitle').textContent = method.title;
+            document.getElementById('preservationDescription').innerHTML = method.description;
+            document.getElementById('preservationVisual').innerHTML = `
+                <div style="font-size: 24px; margin-bottom: 20px;">${method.visual}</div>
+                <div style="font-size: 16px;">This method prevents rancidity by controlling the oxidation process</div>
+            `;
+            
+            detailsDiv.style.display = 'block';
+            detailsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateCost();
+            nextQuestion();
+            console.log('Oxidation Effects Interactive Tool Loaded');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-fertilisation: Interactive Learning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe, #43e97b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2c5282;
+            margin-bottom: 20px;
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background: #e2e8f0;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .diagram-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .diagram-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .diagram-card h3 {
+            margin-bottom: 15px;
+            color: #2c5282;
+            font-size: 1.3em;
+        }
+
+        .svg-diagram {
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            border-radius: 10px;
+            background: #f0f8ff;
+        }
+
+        .clickable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clickable:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .info-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .info-box ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .interactive-section {
+            background: linear-gradient(135deg, #43e97b, #38d9a9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 25px 0;
+        }
+
+        .seed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .seed-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .seed-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .seed-item.selected {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .seed-emoji {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 25px 0;
+        }
+
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .option.selected {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .option.correct {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.3);
+        }
+
+        .option.incorrect {
+            border-color: #ff0000;
+            background: rgba(255, 0, 0, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .result {
+            text-align: center;
+            font-size: 1.3em;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .process-timeline {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .timeline-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .timeline-item.active {
+            background: rgba(255, 215, 0, 0.3);
+            border-left: 4px solid #ffd700;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            .diagram-container {
+                grid-template-columns: 1fr;
+            }
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 Post-fertilisation: Structures and Events 🍎</h1>
+            <p>Explore the journey from fertilization to mature seeds and fruits</p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Learning Modules</h2>
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">📚 Overview</button>
+                <button class="tab" data-tab="endosperm">🥥 Endosperm</button>
+                <button class="tab" data-tab="embryo">🌱 Embryo</button>
+                <button class="tab" data-tab="seed">🌰 Seed</button>
+                <button class="tab" data-tab="fruit">🍎 Fruit</button>
+            </div>
+
+            <div id="overview" class="tab-content active">
+                <h3>🌱 Post-fertilisation Overview</h3>
+                <p style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px;">
+                    Following double fertilization, several important events occur that transform the fertilized 
+                    ovule into a seed and the ovary into a fruit.
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div style="background: #e3f2fd; padding: 20px; border-radius: 10px;">
+                        <h4>🔬 Key Processes</h4>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Endosperm development</li>
+                            <li>Embryo formation</li>
+                            <li>Seed coat formation</li>
+                            <li>Fruit development</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f3e5f5; padding: 20px; border-radius: 10px;">
+                        <h4>🎯 Learning Goals</h4>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Understand endosperm types</li>
+                            <li>Compare embryo structures</li>
+                            <li>Analyze seed adaptations</li>
+                            <li>Explore fruit diversity</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="endosperm" class="tab-content">
+                <h3>🥥 Endosperm Development</h3>
+                <p>The endosperm is a nutritive tissue that develops from the triploid primary endosperm nucleus.</p>
+                
+                <div class="diagram-container">
+                    <div class="diagram-card">
+                        <h3>Endosperm Types</h3>
+                        <svg class="svg-diagram" viewBox="0 0 400 400">
+                            <!-- Free-nuclear endosperm -->
+                            <g class="clickable" data-info="free-nuclear">
+                                <ellipse cx="120" cy="100" rx="60" ry="40" fill="#fff9c4" stroke="#f9a825" stroke-width="2"/>
+                                <circle cx="100" cy="85" r="3" fill="#f48fb1"/>
+                                <circle cx="120" cy="90" r="3" fill="#f48fb1"/>
+                                <circle cx="140" cy="95" r="3" fill="#f48fb1"/>
+                                <circle cx="110" cy="105" r="3" fill="#f48fb1"/>
+                                <circle cx="130" cy="110" r="3" fill="#f48fb1"/>
+                                <text x="120" y="150" text-anchor="middle" font-size="12" fill="#333">Free-nuclear</text>
+                            </g>
+                            
+                            <!-- Cellular endosperm -->
+                            <g class="clickable" data-info="cellular">
+                                <ellipse cx="280" cy="100" rx="60" ry="40" fill="#fff9c4" stroke="#f9a825" stroke-width="2"/>
+                                <g stroke="#f57f17" stroke-width="1">
+                                    <line x1="250" y1="80" x2="310" y2="80"/>
+                                    <line x1="250" y1="100" x2="310" y2="100"/>
+                                    <line x1="250" y1="120" x2="310" y2="120"/>
+                                    <line x1="260" y1="70" x2="260" y2="130"/>
+                                    <line x1="280" y1="70" x2="280" y2="130"/>
+                                    <line x1="300" y1="70" x2="300" y2="130"/>
+                                </g>
+                                <text x="280" y="150" text-anchor="middle" font-size="12" fill="#333">Cellular</text>
+                            </g>
+                            
+                            <!-- Coconut example -->
+                            <g class="clickable" data-info="coconut">
+                                <circle cx="200" cy="250" r="50" fill="#8d4004" stroke="#5d2c02" stroke-width="2"/>
+                                <circle cx="200" cy="250" r="40" fill="#3e2723"/>
+                                <circle cx="200" cy="250" r="30" fill="#e3f2fd"/>
+                                <circle cx="200" cy="260" r="20" fill="#b3e5fc"/>
+                                <text x="200" y="320" text-anchor="middle" font-size="12" fill="#333">Coconut Example</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div id="endosperm-info" class="info-box">
+                    <h3 id="endosperm-title">Click on diagram elements to learn more</h3>
+                    <p id="endosperm-desc">Explore the different types of endosperm development</p>
+                    <ul id="endosperm-details"></ul>
+                </div>
+            </div>
+
+            <div id="embryo" class="tab-content">
+                <h3>🌱 Embryo Development</h3>
+                <p>The embryo develops from the zygote through distinct stages.</p>
+                
+                <div class="process-timeline">
+                    <h4>Embryo Development Stages</h4>
+                    <div class="timeline-item active" data-stage="zygote">
+                        <strong>1. Zygote</strong> - Single diploid cell
+                    </div>
+                    <div class="timeline-item" data-stage="proembryo">
+                        <strong>2. Proembryo</strong> - Early cell divisions
+                    </div>
+                    <div class="timeline-item" data-stage="globular">
+                        <strong>3. Globular</strong> - Spherical mass of cells
+                    </div>
+                    <div class="timeline-item" data-stage="heart">
+                        <strong>4. Heart-shaped</strong> - Cotyledon formation begins
+                    </div>
+                    <div class="timeline-item" data-stage="mature">
+                        <strong>5. Mature</strong> - Fully developed embryo
+                    </div>
+                </div>
+                
+                <div id="stage-info" class="info-box">
+                    <h3 id="stage-title">Zygote Stage</h3>
+                    <p id="stage-desc">The first cell of the new sporophyte generation</p>
+                    <ul id="stage-details">
+                        <li>Diploid cell (2n)</li>
+                        <li>Located at micropylar end</li>
+                        <li>Begins division after endosperm starts</li>
+                        <li>Contains genetic material from both parents</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="seed" class="tab-content">
+                <h3>🌰 Seed Structure and Types</h3>
+                <p>Seeds are mature fertilized ovules containing an embryo and stored food.</p>
+                
+                <div class="interactive-section">
+                    <h4>🔍 Seed Explorer</h4>
+                    <p>Click on different seeds to explore their structure:</p>
+                    
+                    <div class="seed-grid">
+                        <div class="seed-item" data-seed="pea">
+                            <span class="seed-emoji">🟢</span>
+                            <h5>Pea</h5>
+                            <p>Non-albuminous</p>
+                        </div>
+                        <div class="seed-item" data-seed="wheat">
+                            <span class="seed-emoji">🌾</span>
+                            <h5>Wheat</h5>
+                            <p>Albuminous</p>
+                        </div>
+                        <div class="seed-item" data-seed="coconut">
+                            <span class="seed-emoji">🥥</span>
+                            <h5>Coconut</h5>
+                            <p>Large endosperm</p>
+                        </div>
+                        <div class="seed-item" data-seed="bean">
+                            <span class="seed-emoji">🫛</span>
+                            <h5>Bean</h5>
+                            <p>Non-albuminous</p>
+                        </div>
+                    </div>
+                    
+                    <div id="seed-analysis" class="info-box">
+                        <h3 id="seed-title">Select a seed to explore</h3>
+                        <p id="seed-desc">Click on any seed above to see detailed information</p>
+                        <div id="seed-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fruit" class="tab-content">
+                <h3>🍎 Fruit Development and Types</h3>
+                <p>Fruits develop from ovary walls and aid in seed dispersal.</p>
+                
+                <div class="diagram-container">
+                    <div class="diagram-card">
+                        <h3>Fruit Types</h3>
+                        <svg class="svg-diagram" viewBox="0 0 400 400">
+                            <!-- True fruit -->
+                            <g class="clickable" data-info="true-fruit">
+                                <circle cx="120" cy="100" r="40" fill="#ff9800" stroke="#f57c00" stroke-width="2"/>
+                                <circle cx="120" cy="100" r="30" fill="#ffb74d"/>
+                                <ellipse cx="115" cy="95" rx="6" ry="4" fill="#8d6e63"/>
+                                <ellipse cx="125" cy="105" rx="6" ry="4" fill="#8d6e63"/>
+                                <text x="120" y="155" text-anchor="middle" font-size="12" fill="#333">True Fruit</text>
+                            </g>
+                            
+                            <!-- False fruit -->
+                            <g class="clickable" data-info="false-fruit">
+                                <circle cx="280" cy="100" r="40" fill="#f44336" stroke="#d32f2f" stroke-width="2"/>
+                                <circle cx="280" cy="100" r="35" fill="#ffcdd2"/>
+                                <ellipse cx="280" cy="100" rx="15" ry="20" fill="#8d6e63"/>
+                                <ellipse cx="275" cy="95" rx="3" ry="2" fill="#5d4037"/>
+                                <ellipse cx="285" cy="105" rx="3" ry="2" fill="#5d4037"/>
+                                <text x="280" y="155" text-anchor="middle" font-size="12" fill="#333">False Fruit</text>
+                            </g>
+                            
+                            <!-- Dispersal types -->
+                            <g class="clickable" data-info="dispersal">
+                                <rect x="150" y="200" width="100" height="60" rx="10" fill="#43e97b" stroke="#38d9a9" stroke-width="2"/>
+                                <text x="200" y="225" text-anchor="middle" font-size="11" fill="#fff">Wind</text>
+                                <text x="200" y="240" text-anchor="middle" font-size="11" fill="#fff">Animal</text>
+                                <text x="200" y="255" text-anchor="middle" font-size="11" fill="#fff">Water</text>
+                                <text x="200" y="280" text-anchor="middle" font-size="10" fill="#333">Dispersal Types</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div id="fruit-info" class="info-box">
+                    <h3 id="fruit-title">Click on diagram elements to learn more</h3>
+                    <p id="fruit-desc">Explore different fruit types and dispersal mechanisms</p>
+                    <ul id="fruit-details"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-section">
+            <h2>🧠 Knowledge Assessment</h2>
+            <div id="quiz-container">
+                <div id="question-display">
+                    <div class="question" id="question-text">Ready to test your knowledge?</div>
+                    <div class="options" id="options-container"></div>
+                    <button class="btn" id="start-quiz">Start Quiz</button>
+                    <button class="btn" id="next-question" style="display: none;">Next Question</button>
+                    <button class="btn" id="reset-quiz" style="display: none;">Try Again</button>
+                </div>
+                <div id="explanation" style="display: none; margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;"></div>
+                <div class="result" id="quiz-result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'overview';
+        let currentQuestion = 0;
+        let score = 0;
+        let quizStarted = false;
+
+        // Quiz data
+        const quizQuestions = [
+            {
+                question: "What is the ploidy of the primary endosperm nucleus?",
+                options: ["Haploid (n)", "Diploid (2n)", "Triploid (3n)", "Tetraploid (4n)"],
+                correct: 2,
+                explanation: "The primary endosperm nucleus is triploid (3n) as it results from the fusion of one sperm nucleus with two polar nuclei."
+            },
+            {
+                question: "What is the liquid endosperm in coconut called?",
+                options: ["Cellular endosperm", "Free-nuclear endosperm", "Perisperm", "Nucellus"],
+                correct: 1,
+                explanation: "Coconut water is free-nuclear endosperm consisting of thousands of nuclei without cell walls."
+            },
+            {
+                question: "Which seeds have no residual endosperm?",
+                options: ["Albuminous seeds", "Non-albuminous seeds", "Both types", "Neither type"],
+                correct: 1,
+                explanation: "Non-albuminous seeds like pea and bean have no residual endosperm as it's completely consumed during development."
+            },
+            {
+                question: "What is an example of a false fruit?",
+                options: ["Orange", "Mango", "Apple", "Tomato"],
+                correct: 2,
+                explanation: "Apple is a false fruit because the fleshy part develops from the thalamus, not just the ovary."
+            },
+            {
+                question: "How many cotyledons do monocot embryos have?",
+                options: ["None", "One", "Two", "Multiple"],
+                correct: 1,
+                explanation: "Monocot embryos have a single cotyledon called the scutellum."
+            }
+        ];
+
+        // Information data
+        const infoData = {
+            'free-nuclear': {
+                title: 'Free-Nuclear Endosperm',
+                desc: 'Initial stage where nuclei divide without cell wall formation',
+                details: [
+                    'Nuclei divide rapidly without cell walls',
+                    'Found in coconut water',
+                    'Contains thousands of free nuclei',
+                    'Eventually becomes cellular'
+                ]
+            },
+            'cellular': {
+                title: 'Cellular Endosperm',
+                desc: 'Mature stage with cell walls around nuclei',
+                details: [
+                    'Cell walls form around nuclei',
+                    'Creates storage compartments',
+                    'Found in coconut meat',
+                    'Rich in nutrients'
+                ]
+            },
+            'coconut': {
+                title: 'Coconut Example',
+                desc: 'Perfect example showing both endosperm types',
+                details: [
+                    'Water = free-nuclear endosperm',
+                    'Meat = cellular endosperm',
+                    'Shows development progression',
+                    'Used in plant propagation'
+                ]
+            },
+            'true-fruit': {
+                title: 'True Fruits',
+                desc: 'Develop only from ovary wall',
+                details: [
+                    'Formed from ovary only',
+                    'Examples: orange, mango',
+                    'Contains seeds from ovules',
+                    'Most common fruit type'
+                ]
+            },
+            'false-fruit': {
+                title: 'False Fruits',
+                desc: 'Other floral parts contribute to development',
+                details: [
+                    'Thalamus contributes to fruit',
+                    'Examples: apple, strawberry',
+                    'Also called accessory fruits',
+                    'Ovary forms only core part'
+                ]
+            },
+            'dispersal': {
+                title: 'Dispersal Mechanisms',
+                desc: 'Various ways fruits and seeds spread',
+                details: [
+                    'Wind: light structures with wings',
+                    'Animals: colorful, nutritious fruits',
+                    'Water: buoyant, waterproof',
+                    'Explosive: mechanical force'
+                ]
+            }
+        };
+
+        const stageData = {
+            'zygote': {
+                title: 'Zygote Stage',
+                desc: 'The first cell of the new sporophyte',
+                details: [
+                    'Diploid cell (2n)',
+                    'Located at micropylar end',
+                    'Begins division after endosperm starts',
+                    'Contains genetic material from both parents'
+                ]
+            },
+            'proembryo': {
+                title: 'Proembryo Stage',
+                desc: 'Early divisions establish body plan',
+                details: [
+                    'Results from early zygotic divisions',
+                    'Establishes polarity',
+                    'Terminal cell forms embryo',
+                    'Basal cell forms suspensor'
+                ]
+            },
+            'globular': {
+                title: 'Globular Stage',
+                desc: 'Spherical mass with tissue organization',
+                details: [
+                    'Spherical mass of cells',
+                    'Basic tissues established',
+                    'Protoderm, ground meristem formed',
+                    'Foundation for organs'
+                ]
+            },
+            'heart': {
+                title: 'Heart-shaped Stage',
+                desc: 'Cotyledon primordia appear',
+                details: [
+                    'Cotyledon primordia emerge',
+                    'Heart shape in dicots',
+                    'Shoot meristem established',
+                    'Bilateral symmetry formed'
+                ]
+            },
+            'mature': {
+                title: 'Mature Stage',
+                desc: 'Fully developed embryo ready for germination',
+                details: [
+                    'All organs differentiated',
+                    'Cotyledons with stored food',
+                    'Meristems active',
+                    'Ready for germination'
+                ]
+            }
+        };
+
+        const seedData = {
+            'pea': {
+                title: 'Pea Seed',
+                desc: 'Non-albuminous dicotyledonous seed',
+                details: {
+                    structure: 'Two large cotyledons, small radicle and plumule',
+                    nutrition: 'Food stored in cotyledons',
+                    germination: 'Hypogeal germination',
+                    example: 'Classic legume seed'
+                }
+            },
+            'wheat': {
+                title: 'Wheat Seed',
+                desc: 'Albuminous monocotyledonous seed',
+                details: {
+                    structure: 'Single cotyledon (scutellum), large endosperm',
+                    nutrition: 'Food stored in endosperm',
+                    germination: 'Epigeal germination',
+                    example: 'Major cereal crop'
+                }
+            },
+            'coconut': {
+                title: 'Coconut Seed',
+                desc: 'Largest seed with liquid and solid endosperm',
+                details: {
+                    structure: 'Single cotyledon, massive endosperm',
+                    nutrition: 'Coconut water and meat',
+                    germination: 'Takes 3-6 months',
+                    example: 'Water dispersed seed'
+                }
+            },
+            'bean': {
+                title: 'Bean Seed',
+                desc: 'Large non-albuminous dicot seed',
+                details: {
+                    structure: 'Two large cotyledons with hilum',
+                    nutrition: 'Food in cotyledons',
+                    germination: 'Epigeal, cotyledons emerge',
+                    example: 'Important protein source'
+                }
+            }
+        };
+
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            setupTabSwitching();
+            setupDiagramInteractions();
+            setupTimelineInteractions();
+            setupSeedExplorer();
+            setupQuiz();
+        }
+
+        function setupTabSwitching() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    switchTab(tabName);
+                });
+            });
+        }
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            const targetContent = document.getElementById(tabName);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+            
+            // Add active class to selected tab
+            const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            currentTab = tabName;
+        }
+
+        function setupDiagramInteractions() {
+            const clickableElements = document.querySelectorAll('.clickable');
+            clickableElements.forEach(element => {
+                element.addEventListener('click', function() {
+                    const infoKey = this.getAttribute('data-info');
+                    showInfo(infoKey);
+                });
+            });
+        }
+
+        function showInfo(infoKey) {
+            const data = infoData[infoKey];
+            if (!data) return;
+            
+            let infoBox, title, desc, details;
+            
+            if (currentTab === 'endosperm') {
+                infoBox = document.getElementById('endosperm-info');
+                title = document.getElementById('endosperm-title');
+                desc = document.getElementById('endosperm-desc');
+                details = document.getElementById('endosperm-details');
+            } else if (currentTab === 'fruit') {
+                infoBox = document.getElementById('fruit-info');
+                title = document.getElementById('fruit-title');
+                desc = document.getElementById('fruit-desc');
+                details = document.getElementById('fruit-details');
+            }
+            
+            if (infoBox && title && desc && details) {
+                title.textContent = data.title;
+                desc.textContent = data.desc;
+                
+                details.innerHTML = '';
+                data.details.forEach(detail => {
+                    const li = document.createElement('li');
+                    li.textContent = detail;
+                    details.appendChild(li);
+                });
+                
+                infoBox.style.display = 'block';
+            }
+        }
+
+        function setupTimelineInteractions() {
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            timelineItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const stage = this.getAttribute('data-stage');
+                    showStageInfo(stage);
+                    
+                    // Update active state
+                    timelineItems.forEach(ti => ti.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        function showStageInfo(stage) {
+            const data = stageData[stage];
+            if (!data) return;
+            
+            const infoBox = document.getElementById('stage-info');
+            const title = document.getElementById('stage-title');
+            const desc = document.getElementById('stage-desc');
+            const details = document.getElementById('stage-details');
+            
+            if (infoBox && title && desc && details) {
+                title.textContent = data.title;
+                desc.textContent = data.desc;
+                
+                details.innerHTML = '';
+                data.details.forEach(detail => {
+                    const li = document.createElement('li');
+                    li.textContent = detail;
+                    details.appendChild(li);
+                });
+                
+                infoBox.style.display = 'block';
+            }
+        }
+
+        function setupSeedExplorer() {
+            const seedItems = document.querySelectorAll('.seed-item');
+            seedItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const seedType = this.getAttribute('data-seed');
+                    showSeedInfo(seedType);
+                    
+                    // Update selection
+                    seedItems.forEach(si => si.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+        }
+
+        function showSeedInfo(seedType) {
+            const data = seedData[seedType];
+            if (!data) return;
+            
+            const analysisBox = document.getElementById('seed-analysis');
+            const title = document.getElementById('seed-title');
+            const desc = document.getElementById('seed-desc');
+            const content = document.getElementById('seed-content');
+            
+            if (analysisBox && title && desc && content) {
+                title.textContent = data.title;
+                desc.textContent = data.desc;
+                
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div><strong>Structure:</strong> ${data.details.structure}</div>
+                        <div><strong>Nutrition:</strong> ${data.details.nutrition}</div>
+                        <div><strong>Germination:</strong> ${data.details.germination}</div>
+                        <div><strong>Example:</strong> ${data.details.example}</div>
+                    </div>
+                `;
+                
+                analysisBox.style.display = 'block';
+            }
+        }
+
+        function setupQuiz() {
+            const startBtn = document.getElementById('start-quiz');
+            const nextBtn = document.getElementById('next-question');
+            const resetBtn = document.getElementById('reset-quiz');
+            
+            if (startBtn) {
+                startBtn.addEventListener('click', startQuiz);
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextQuestion);
+            }
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetQuiz);
+            }
+        }
+
+        function startQuiz() {
+            quizStarted = true;
+            currentQuestion = 0;
+            score = 0;
+            
+            const startBtn = document.getElementById('start-quiz');
+            const resetBtn = document.getElementById('reset-quiz');
+            const result = document.getElementById('quiz-result');
+            
+            if (startBtn) startBtn.style.display = 'none';
+            if (resetBtn) resetBtn.style.display = 'none';
+            if (result) result.style.display = 'none';
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= quizQuestions.length) {
+                showQuizResult();
+                return;
+            }
+            
+            const question = quizQuestions[currentQuestion];
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const explanation = document.getElementById('explanation');
+            const nextBtn = document.getElementById('next-question');
+            
+            if (questionText) {
+                questionText.textContent = `Question ${currentQuestion + 1}/${quizQuestions.length}: ${question.question}`;
+            }
+            
+            if (optionsContainer) {
+                optionsContainer.innerHTML = '';
+                question.options.forEach((option, index) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    optionDiv.textContent = option;
+                    optionDiv.addEventListener('click', () => selectAnswer(index));
+                    optionsContainer.appendChild(optionDiv);
+                });
+            }
+            
+            if (explanation) explanation.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+        }
+
+        function selectAnswer(selectedIndex) {
+            const question = quizQuestions[currentQuestion];
+            const options = document.querySelectorAll('#options-container .option');
+            const explanation = document.getElementById('explanation');
+            const nextBtn = document.getElementById('next-question');
+            
+            // Disable further clicks
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            
+            // Show correct/incorrect
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex) {
+                    option.classList.add('selected');
+                    if (index !== question.correct) {
+                        option.classList.add('incorrect');
+                    }
+                }
+            });
+            
+            // Update score
+            if (selectedIndex === question.correct) {
+                score++;
+            }
+            
+            // Show explanation
+            if (explanation) {
+                explanation.innerHTML = `<strong>Explanation:</strong> ${question.explanation}`;
+                explanation.style.display = 'block';
+            }
+            
+            // Show next button
+            if (nextBtn) {
+                nextBtn.style.display = 'inline-block';
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            showQuestion();
+        }
+
+        function showQuizResult() {
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            const result = document.getElementById('quiz-result');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const explanation = document.getElementById('explanation');
+            const nextBtn = document.getElementById('next-question');
+            const resetBtn = document.getElementById('reset-quiz');
+            
+            if (questionText) questionText.textContent = '';
+            if (optionsContainer) optionsContainer.innerHTML = '';
+            if (explanation) explanation.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            
+            let message = '';
+            if (percentage >= 80) {
+                message = '🌟 Excellent! You have mastered post-fertilisation concepts!';
+            } else if (percentage >= 60) {
+                message = '👍 Good job! Review the missed concepts.';
+            } else {
+                message = '📚 Keep studying! Try again to improve your score.';
+            }
+            
+            if (result) {
+                result.innerHTML = `
+                    <h3>Quiz Complete! 🎉</h3>
+                    <p>Score: ${score}/${quizQuestions.length} (${percentage}%)</p>
+                    <p>${message}</p>
+                `;
+                result.style.display = 'block';
+            }
+            
+            if (resetBtn) {
+                resetBtn.style.display = 'inline-block';
+            }
+        }
+
+        function resetQuiz() {
+            quizStarted = false;
+            currentQuestion = 0;
+            score = 0;
+            
+            const startBtn = document.getElementById('start-quiz');
+            const resetBtn = document.getElementById('reset-quiz');
+            const result = document.getElementById('quiz-result');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const explanation = document.getElementById('explanation');
+            
+            if (startBtn) startBtn.style.display = 'inline-block';
+            if (resetBtn) resetBtn.style.display = 'none';
+            if (result) result.style.display = 'none';
+            if (questionText) questionText.textContent = 'Ready to test your knowledge?';
+            if (optionsContainer) optionsContainer.innerHTML = '';
+            if (explanation) explanation.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

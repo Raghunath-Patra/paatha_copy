@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paaṭha AI - Food from Animals Interactive Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .activity-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            transition: transform 0.3s ease;
+            text-align: center;
+        }
+        
+        .activity-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .activity-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .table-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .interactive-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .interactive-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-size: 16px;
+        }
+        
+        .interactive-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+        
+        .interactive-table tr:hover {
+            background: #f0f8ff;
+        }
+        
+        .source-input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .source-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .source-input.correct {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .source-input.partial {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        
+        .matching-game {
+            background: #e3f2fd;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: 1fr 100px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        .animals-column, .foods-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .drag-item {
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            user-select: none;
+        }
+        
+        .drag-item:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+        
+        .drag-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        
+        .drop-zone {
+            min-height: 60px;
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+        
+        .drop-zone.correct {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .drop-zone.incorrect {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .animal-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 10px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .animal-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .animal-card.selected {
+            border: 3px solid #667eea;
+            transform: scale(1.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn.secondary {
+            background: linear-gradient(135deg, #ffa726 0%, #ff5722 100%);
+        }
+        
+        .quiz-section {
+            background: #fff3e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+        
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .option.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .option.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 8px;
+            color: #155724;
+        }
+        
+        .husbandry-info {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .connection-line {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .line {
+            width: 2px;
+            height: 20px;
+            background: #ddd;
+            margin: 5px 0;
+        }
+        
+        .line.active {
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+            <svg 
+                viewBox="0 0 512 512" 
+                xmlns="http://www.w3.org/2000/svg"
+                style="height: 48px; width: 48px;"
+                aria-label="Paaṭha AI Logo"
+            >
+                <defs>
+                    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#dc2626" />
+                        <stop offset="33%" stop-color="#dc2626" />
+                        <stop offset="66%" stop-color="#fbbf24" />
+                        <stop offset="100%" stop-color="#ecfdf5" />
+                    </linearGradient>
+                </defs>
+                <g transform="rotate(-45, 256, 256)">
+                    <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                        c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                        c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                        c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                        c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                        c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                        c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                        c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                        c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                        c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                        c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                        c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                        c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                        c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                        c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                        c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                        c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                        c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                        c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                        c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                        c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                        c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                        c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                        c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                        c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                        c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                        c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                        c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                        fill="url(#brandGradient)"
+                        opacity="0.9">
+                    </path>
+                    <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                </g>
+            </svg>
+            <div>
+                <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Learning Platform</p>
+            </div>
+    
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.2);">
+        <div style="color: white; opacity: 0.9;">
+            <p style="margin: 5px 0; font-size: 16px; font-weight: 600;">Powered by Paaṭha AI</p>
+            <p style="margin: 5px 0; font-size: 14px;">Interactive Learning Platform</p>
+            <p style="margin: 5px 0; font-size: 12px; opacity: 0.7;">© 2024 Paaṭha AI. Transforming Education with AI.</p>
+        </div>
+    </footer>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2 class="section-title">Section 1.10 - Food from Animals</h2>
+        
+        <div class="activity-grid">
+            <div class="activity-card">
+                <h3 class="activity-title">📝 Complete the Table</h3>
+                <p>Fill in animal sources for different food items</p>
+            </div>
+            <div class="activity-card">
+                <h3 class="activity-title">🔗 Animal-Food Matching</h3>
+                <p>Connect animals with the food they provide</p>
+            </div>
+            <div class="activity-card">
+                <h3 class="activity-title">🏫 Animal Husbandry</h3>
+                <p>Learn about caring for farm animals</p>
+            </div>
+            <div class="activity-card">
+                <h3 class="activity-title">🧠 Knowledge Quiz</h3>
+                <p>Test your understanding of animal foods</p>
+            </div>
+        </div>
+        
+        <div class="table-section">
+            <h3 style="color: #333; text-align: center; margin-bottom: 20px;">📋 Activity 1.3 - Complete the Food Sources Table</h3>
+            <p style="text-align: center; margin-bottom: 20px;">First, study the animal sources below, then fill in the table with the correct sources for each food item.</p>
+            
+            <div style="background: #e3f2fd; border-radius: 15px; padding: 20px; margin-bottom: 25px;">
+                <h4 style="color: #1976d2; text-align: center; margin-bottom: 15px;">🐾 Animal Sources Reference Guide</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                        <h5 style="color: #4CAF50; margin-bottom: 10px;">🥛 Milk Sources</h5>
+                        <p style="margin: 5px 0;">🐄 Cow</p>
+                        <p style="margin: 5px 0;">🐃 Buffalo</p>
+                        <p style="margin: 5px 0;">🐐 She-goat</p>
+                        <p style="margin: 5px 0;">🐪 She-camel</p>
+                        <p style="margin: 5px 0;">🐑 Sheep</p>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                        <h5 style="color: #FF9800; margin-bottom: 10px;">🥚 Egg Sources</h5>
+                        <p style="margin: 5px 0;">🐔 Hen</p>
+                        <p style="margin: 5px 0;">🦆 Duck</p>
+                        <p style="margin: 5px 0;">🦌 Quail</p>
+                        <p style="margin: 5px 0;">🪿 Goose</p>
+                        <p style="margin: 5px 0;">🦃 Turkey</p>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                        <h5 style="color: #F44336; margin-bottom: 10px;">🍖 Meat Sources</h5>
+                        <p style="margin: 5px 0;">🐐 Goat</p>
+                        <p style="margin: 5px 0;">🐔 Chicken</p>
+                        <p style="margin: 5px 0;">🐟 Fish</p>
+                        <p style="margin: 5px 0;">🐄 Cow</p>
+                        <p style="margin: 5px 0;">🐃 Buffalo</p>
+                        <p style="margin: 5px 0;">🐑 Sheep</p>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                        <h5 style="color: #9C27B0; margin-bottom: 10px;">🍯 Honey Sources</h5>
+                        <p style="margin: 5px 0;">🐝 Honeybee</p>
+                        <p style="margin: 5px 0;">🐝 Bee</p>
+                    </div>
+                </div>
+            </div>
+            
+            <table class="interactive-table">
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Food Item</th>
+                        <th>Animal Sources</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>🥛 Milk</td>
+                        <td><input type="text" class="source-input" data-food="milk" placeholder="Enter animal sources..." onkeyup="checkTableAnswer(this)"></td>
+                        <td id="status-milk">❓</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>🥚 Eggs</td>
+                        <td><input type="text" class="source-input" data-food="eggs" placeholder="Enter animal sources..." onkeyup="checkTableAnswer(this)"></td>
+                        <td id="status-eggs">❓</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>🍖 Meat</td>
+                        <td><input type="text" class="source-input" data-food="meat" placeholder="Enter animal sources..." onkeyup="checkTableAnswer(this)"></td>
+                        <td id="status-meat">❓</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>🍯 Honey</td>
+                        <td><input type="text" class="source-input" data-food="honey" placeholder="Enter animal sources..." onkeyup="checkTableAnswer(this)"></td>
+                        <td id="status-honey">❓</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="showTableHints()">💡 Show Hints</button>
+                <button class="btn secondary" onclick="resetTable()">🔄 Reset Table</button>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="tableProgress"></div>
+            </div>
+            <p style="text-align: center; margin-top: 10px;">Table Completion: <span id="tableScore">0/4</span></p>
+        </div>
+        
+        <div class="matching-game">
+            <h3 style="color: #333; text-align: center; margin-bottom: 20px;">🎯 Animal-Food Matching Game</h3>
+            <p style="text-align: center; margin-bottom: 20px;">Drag animals from the left to match with their food products on the right!</p>
+            
+            <div class="game-board">
+                <div class="animals-column">
+                    <h4 style="text-align: center; color: #333;">🐾 Animals</h4>
+                    <div class="drag-item" draggable="true" data-animal="cow" ondragstart="dragStart(event)">🐄 Cow</div>
+                    <div class="drag-item" draggable="true" data-animal="hen" ondragstart="dragStart(event)">🐔 Hen</div>
+                    <div class="drag-item" draggable="true" data-animal="bee" ondragstart="dragStart(event)">🐝 Bee</div>
+                    <div class="drag-item" draggable="true" data-animal="goat" ondragstart="dragStart(event)">🐐 Goat</div>
+                    <div class="drag-item" draggable="true" data-animal="fish" ondragstart="dragStart(event)">🐟 Fish</div>
+                </div>
+                
+                <div class="connection-line">
+                    <div class="line" id="line1"></div>
+                    <div class="line" id="line2"></div>
+                    <div class="line" id="line3"></div>
+                    <div class="line" id="line4"></div>
+                    <div class="line" id="line5"></div>
+                </div>
+                
+                <div class="foods-column">
+                    <h4 style="text-align: center; color: #333;">🍽️ Food Products</h4>
+                    <div class="drop-zone" data-food="milk" ondrop="drop(event)" ondragover="allowDrop(event)">🥛 Milk</div>
+                    <div class="drop-zone" data-food="eggs" ondrop="drop(event)" ondragover="allowDrop(event)">🥚 Eggs</div>
+                    <div class="drop-zone" data-food="honey" ondrop="drop(event)" ondragover="allowDrop(event)">🍯 Honey</div>
+                    <div class="drop-zone" data-food="meat" ondrop="drop(event)" ondragover="allowDrop(event)">🍖 Meat</div>
+                    <div class="drop-zone" data-food="fish" ondrop="drop(event)" ondragover="allowDrop(event)">🐟 Fish Meat</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="resetMatching()">🔄 Reset Game</button>
+                <button class="btn secondary" onclick="showMatchingHints()">💡 Show Hints</button>
+            </div>
+            <p style="text-align: center; margin-top: 10px;">Matches: <span id="matchScore">0/5</span></p>
+        </div>
+        
+        <div class="husbandry-info">
+            <h3>🏡 Animal Husbandry</h3>
+            <p style="margin: 15px 0;">Animal husbandry is the practice of caring for farm animals on a large scale. It involves:</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <h4>🍽️ Proper Food</h4>
+                    <p>Nutritious feed for healthy growth</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <h4>🏠 Shelter</h4>
+                    <p>Protection from weather and predators</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <h4>💊 Healthcare</h4>
+                    <p>Regular check-ups and vaccinations</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                    <h4>🧼 Hygiene</h4>
+                    <p>Clean living conditions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="quiz-section">
+            <h3 style="color: #333; text-align: center; margin-bottom: 20px;">🧠 Knowledge Quiz</h3>
+            
+            <div class="question">
+                <h4>1. Which vitamin is found in cod liver oil from fish?</h4>
+                <div class="options">
+                    <div class="option" onclick="selectQuizOption(this, false)">Vitamin A</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Vitamin C</div>
+                    <div class="option" onclick="selectQuizOption(this, true)">Vitamin D</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Vitamin E</div>
+                </div>
+            </div>
+            
+            <div class="question">
+                <h4>2. What is animal husbandry?</h4>
+                <div class="options">
+                    <div class="option" onclick="selectQuizOption(this, false)">Growing plants for animals</div>
+                    <div class="option" onclick="selectQuizOption(this, true)">Large-scale care of farm animals</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Hunting wild animals</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Training animals for shows</div>
+                </div>
+            </div>
+            
+            <div class="question">
+                <h4>3. Which animals are commonly found in coastal areas' diet?</h4>
+                <div class="options">
+                    <div class="option" onclick="selectQuizOption(this, false)">Cows</div>
+                    <div class="option" onclick="selectQuizOption(this, true)">Fish</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Goats</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Chickens</div>
+                </div>
+            </div>
+            
+            <div class="question">
+                <h4>4. What do animals in farms need for proper care?</h4>
+                <div class="options">
+                    <div class="option" onclick="selectQuizOption(this, false)">Only food</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Only shelter</div>
+                    <div class="option" onclick="selectQuizOption(this, true)">Food, shelter, and care</div>
+                    <div class="option" onclick="selectQuizOption(this, false)">Only medicine</div>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="checkQuizAnswers()">Check Answers</button>
+            <div class="score" id="quizScore" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Table completion data
+        const foodSources = {
+            milk: ['cow', 'buffalo', 'goat', 'camel', 'sheep'],
+            eggs: ['hen', 'duck', 'quail', 'goose', 'turkey'],
+            meat: ['goat', 'chicken', 'fish', 'cow', 'buffalo', 'sheep', 'pig'],
+            honey: ['bee', 'honeybee']
+        };
+        
+        // Matching game data
+        const correctMatches = {
+            cow: 'milk',
+            hen: 'eggs',
+            bee: 'honey',
+            goat: 'meat',
+            fish: 'fish'
+        };
+        
+        let tableScore = 0;
+        let matchScore = 0;
+        let quizAnswered = false;
+        let currentMatches = {};
+        
+        function checkTableAnswer(input) {
+            const food = input.dataset.food;
+            const userInput = input.value.toLowerCase().trim();
+            const sources = foodSources[food];
+            
+            // Split user input by comma and clean up
+            const userSources = userInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            
+            // Check how many correct sources are mentioned
+            const correctSources = userSources.filter(source => 
+                sources.some(correctSource => correctSource.includes(source) || source.includes(correctSource))
+            );
+            
+            const statusElement = document.getElementById(`status-${food}`);
+            
+            if (correctSources.length === 0 && userInput.length > 0) {
+                input.className = 'source-input incorrect';
+                statusElement.textContent = '❌';
+            } else if (correctSources.length > 0 && correctSources.length < 2) {
+                input.className = 'source-input partial';
+                statusElement.textContent = '⚠️';
+            } else if (correctSources.length >= 2) {
+                input.className = 'source-input correct';
+                statusElement.textContent = '✅';
+            } else {
+                input.className = 'source-input';
+                statusElement.textContent = '❓';
+            }
+            
+            updateTableProgress();
+        }
+        
+        function updateTableProgress() {
+            const correctInputs = document.querySelectorAll('.source-input.correct').length;
+            tableScore = correctInputs;
+            document.getElementById('tableScore').textContent = `${tableScore}/4`;
+            document.getElementById('tableProgress').style.width = `${(tableScore / 4) * 100}%`;
+        }
+        
+        function showTableHints() {
+            const hints = {
+                milk: 'Cow, Buffalo, Goat, Camel',
+                eggs: 'Hen, Duck, Quail',
+                meat: 'Goat, Chicken, Fish, Cow',
+                honey: 'Bee, Honeybee'
+            };
+            
+            Object.keys(hints).forEach(food => {
+                const input = document.querySelector(`[data-food="${food}"]`);
+                if (!input.classList.contains('correct')) {
+                    input.value = hints[food];
+                    checkTableAnswer(input);
+                }
+            });
+        }
+        
+        function resetTable() {
+            document.querySelectorAll('.source-input').forEach(input => {
+                input.value = '';
+                input.className = 'source-input';
+            });
+            document.querySelectorAll('[id^="status-"]').forEach(status => {
+                status.textContent = '❓';
+            });
+            tableScore = 0;
+            updateTableProgress();
+        }
+        
+        // Drag and Drop functionality
+        function dragStart(event) {
+            event.dataTransfer.setData('text/plain', event.target.dataset.animal);
+            event.target.classList.add('dragging');
+        }
+        
+        function allowDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        }
+        
+        function drop(event) {
+            event.preventDefault();
+            const animal = event.dataTransfer.getData('text/plain');
+            const food = event.currentTarget.dataset.food;
+            
+            event.currentTarget.classList.remove('drag-over');
+            
+            // Clear previous state
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('correct', 'incorrect');
+            });
+            
+            // Record the match
+            currentMatches[animal] = food;
+            
+            // Check if correct
+            if (correctMatches[animal] === food) {
+                event.currentTarget.classList.add('correct');
+                event.currentTarget.innerHTML = `✅ ${event.currentTarget.textContent}`;
+            } else {
+                event.currentTarget.classList.add('incorrect');
+                event.currentTarget.innerHTML = `❌ ${event.currentTarget.textContent}`;
+            }
+            
+            updateMatchScore();
+        }
+        
+        function updateMatchScore() {
+            matchScore = Object.keys(currentMatches).filter(animal => 
+                correctMatches[animal] === currentMatches[animal]
+            ).length;
+            
+            document.getElementById('matchScore').textContent = `${matchScore}/5`;
+            
+            // Update connection lines
+            for (let i = 1; i <= 5; i++) {
+                const line = document.getElementById(`line${i}`);
+                if (i <= matchScore) {
+                    line.classList.add('active');
+                } else {
+                    line.classList.remove('active');
+                }
+            }
+        }
+        
+        function resetMatching() {
+            currentMatches = {};
+            matchScore = 0;
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('correct', 'incorrect', 'drag-over');
+                const originalText = zone.dataset.food === 'milk' ? '🥛 Milk' :
+                                  zone.dataset.food === 'eggs' ? '🥚 Eggs' :
+                                  zone.dataset.food === 'honey' ? '🍯 Honey' :
+                                  zone.dataset.food === 'meat' ? '🍖 Meat' :
+                                  '🐟 Fish Meat';
+                zone.innerHTML = originalText;
+            });
+            document.querySelectorAll('.drag-item').forEach(item => {
+                item.classList.remove('dragging');
+            });
+            document.querySelectorAll('.line').forEach(line => {
+                line.classList.remove('active');
+            });
+            updateMatchScore();
+        }
+        
+        function showMatchingHints() {
+            alert('💡 Hints:\n🐄 Cow → 🥛 Milk\n🐔 Hen → 🥚 Eggs\n🐝 Bee → 🍯 Honey\n🐐 Goat → 🍖 Meat\n🐟 Fish → 🐟 Fish Meat');
+        }
+        
+        // Quiz functionality
+        function selectQuizOption(element, isCorrect) {
+            if (quizAnswered) return;
+            
+            const options = element.parentNode.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            element.dataset.correct = isCorrect;
+        }
+        
+        function checkQuizAnswers() {
+            if (quizAnswered) return;
+            
+            let score = 0;
+            let total = 0;
+            
+            document.querySelectorAll('.question').forEach(question => {
+                const selected = question.querySelector('.option.selected');
+                const options = question.querySelectorAll('.option');
+                total++;
+                
+                options.forEach(option => {
+                    if (option.dataset.correct === 'true') {
+                        option.classList.add('correct');
+                    } else if (option.classList.contains('selected')) {
+                        option.classList.add('incorrect');
+                    }
+                });
+                
+                if (selected && selected.dataset.correct === 'true') {
+                    score++;
+                }
+            });
+            
+            document.getElementById('quizScore').style.display = 'block';
+            document.getElementById('quizScore').innerHTML = `
+                Your Score: ${score}/${total} (${Math.round(score/total*100)}%)
+                <br>${score === total ? '🎉 Perfect! You understand animal foods well!' : 
+                      score >= 3 ? '👍 Good job! Review the concepts you missed.' : 
+                      '📚 Keep studying! Review the animal food concepts.'}
+            `;
+            
+            quizAnswered = true;
+        }
+        
+        // Clean up drag state when drag ends
+        document.addEventListener('dragend', function(event) {
+            event.target.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atomic and Molecular Masses - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .law-title {
+            color: #2c3e50;
+            border-bottom: 3px solid #4facfe;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        .concept-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .concept-info::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%); }
+            100% { transform: translateX(100%) translateY(100%); }
+        }
+
+        .interactive-demo {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f4fd 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .atom-model {
+            display: inline-block;
+            position: relative;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79, 172, 254, 0.2) 0%, rgba(79, 172, 254, 0.05) 100%);
+            border: 3px solid #4facfe;
+            animation: atomFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes atomFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .nucleus {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #ff6b6b 0%, #e74c3c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            position: relative;
+            margin: 0 auto;
+            animation: nucleusPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+        }
+
+        @keyframes nucleusPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .electron-orbit {
+            position: absolute;
+            border: 2px solid #4facfe;
+            border-radius: 50%;
+            animation: electronOrbit 4s linear infinite;
+        }
+
+        .electron-orbit.orbit1 {
+            width: 80px;
+            height: 80px;
+            top: -20px;
+            left: -20px;
+        }
+
+        .electron-orbit.orbit2 {
+            width: 120px;
+            height: 120px;
+            top: -40px;
+            left: -40px;
+            animation-duration: 6s;
+            animation-direction: reverse;
+        }
+
+        @keyframes electronOrbit {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .electron {
+            width: 8px;
+            height: 8px;
+            background: #00f2fe;
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            left: 36px;
+            box-shadow: 0 0 10px #00f2fe;
+            animation: electronGlow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes electronGlow {
+            0% { box-shadow: 0 0 10px #00f2fe; }
+            100% { box-shadow: 0 0 20px #00f2fe, 0 0 30px #00f2fe; }
+        }
+
+        .isotope-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .isotope-card {
+            background: white;
+            border: 2px solid #4facfe;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .isotope-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .isotope-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(79, 172, 254, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .isotope-card:hover::before {
+            left: 100%;
+        }
+
+        .molecular-builder {
+            background: #f0f8ff;
+            border: 2px solid #4facfe;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .molecule-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .atom-element {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin: 5px;
+            animation: atomBounce 2s ease-in-out infinite;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .atom-element:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        @keyframes atomBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .carbon { background: radial-gradient(circle, #45b7d1 0%, #2980b9 100%); }
+        .hydrogen { background: radial-gradient(circle, #ff6b6b 0%, #e74c3c 100%); }
+        .oxygen { background: radial-gradient(circle, #4ecdc4 0%, #16a085 100%); }
+        .sodium { background: radial-gradient(circle, #f39c12 0%, #e67e22 100%); }
+        .chlorine { background: radial-gradient(circle, #2ecc71 0%, #27ae60 100%); }
+
+        .bond-line {
+            width: 30px;
+            height: 3px;
+            background: #333;
+            margin: 0 5px;
+            animation: bondVibrate 1s ease-in-out infinite;
+        }
+
+        @keyframes bondVibrate {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(1.1); }
+        }
+
+        .calculation-box {
+            background: #e8f5e8;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .crystal-structure {
+            display: grid;
+            grid-template-columns: repeat(4, 50px);
+            grid-template-rows: repeat(4, 50px);
+            gap: 5px;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #dee2e6;
+        }
+
+        .ion {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            animation: ionPulse 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        .ion.sodium {
+            background: radial-gradient(circle, #f39c12 0%, #e67e22 100%);
+            animation-delay: 0s;
+        }
+
+        .ion.chloride {
+            background: radial-gradient(circle, #2ecc71 0%, #27ae60 100%);
+            animation-delay: 1.5s;
+        }
+
+        @keyframes ionPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .calculator-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .input-group {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+
+        .input-group input, .input-group select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 10px rgba(79, 172, 254, 0.3);
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .result-display {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #0c5460;
+        }
+
+        .quiz-section {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #721c24;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quiz-option {
+            background: white;
+            border: 2px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: #fff5f5;
+            transform: translateX(5px);
+        }
+
+        .quiz-option.selected {
+            background: #4caf50;
+            color: white;
+            border-color: #388e3c;
+        }
+
+        .quiz-option.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #d32f2f;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 2rem; }
+            .nav-tabs { flex-direction: column; align-items: center; }
+            .isotope-container, .molecule-display { flex-direction: column; }
+            .crystal-structure { grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); }
+            .ion { width: 40px; height: 40px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚛️ Atomic and Molecular Masses</h1>
+            <p>Interactive Learning Tool for Class 11 Chemistry</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showTab('atomic-mass')">Atomic Mass</button>
+            <button class="tab-btn" onclick="showTab('isotopes')">Average Atomic Mass</button>
+            <button class="tab-btn" onclick="showTab('molecular')">Molecular Mass</button>
+            <button class="tab-btn" onclick="showTab('formula')">Formula Mass</button>
+            <button class="tab-btn" onclick="showTab('calculator')">Mass Calculator</button>
+            <button class="tab-btn" onclick="showTab('quiz')">Knowledge Check</button>
+        </div>
+
+        <!-- Atomic Mass -->
+        <div id="atomic-mass" class="content-section active">
+            <h2 class="law-title">1. Atomic Mass</h2>
+            
+            <div class="concept-info">
+                <h3>🔬 Atomic Mass Standard</h3>
+                <p>Based on Carbon-12 (¹²C) = exactly 12 amu</p>
+                <p>1 amu = 1.66056 × 10⁻²⁴ g</p>
+            </div>
+
+            <p><strong>Definition:</strong> Atomic mass is the mass of an atom expressed in atomic mass units (amu), where 1 amu equals 1/12th the mass of a carbon-12 atom.</p>
+
+            <div class="interactive-demo">
+                <h3>Atomic Structure Visualization</h3>
+                
+                <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;">
+                    <div class="atom-model">
+                        <div class="electron-orbit orbit1">
+                            <div class="electron"></div>
+                        </div>
+                        <div class="electron-orbit orbit2">
+                            <div class="electron"></div>
+                        </div>
+                        <div class="nucleus">H</div>
+                        <div style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-weight: bold;">
+                            Hydrogen<br>1.008 amu
+                        </div>
+                    </div>
+
+                    <div class="atom-model">
+                        <div class="electron-orbit orbit1">
+                            <div class="electron"></div>
+                        </div>
+                        <div class="electron-orbit orbit2">
+                            <div class="electron"></div>
+                        </div>
+                        <div class="nucleus" style="background: radial-gradient(circle, #45b7d1 0%, #2980b9 100%);">C</div>
+                        <div style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-weight: bold;">
+                            Carbon-12<br>12.000 amu
+                        </div>
+                    </div>
+
+                    <div class="atom-model">
+                        <div class="electron-orbit orbit1">
+                            <div class="electron"></div>
+                        </div>
+                        <div class="electron-orbit orbit2">
+                            <div class="electron"></div>
+                        </div>
+                        <div class="nucleus" style="background: radial-gradient(circle, #4ecdc4 0%, #16a085 100%);">O</div>
+                        <div style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-weight: bold;">
+                            Oxygen-16<br>15.995 amu
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculation-box">
+                    <strong>Mass Calculation Example:</strong><br>
+                    Mass of hydrogen atom = 1.6736 × 10⁻²⁴ g<br>
+                    In amu: 1.6736 × 10⁻²⁴ g ÷ 1.66056 × 10⁻²⁴ g = 1.008 amu
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Atomic Mass -->
+        <div id="isotopes" class="content-section">
+            <h2 class="law-title">2. Average Atomic Mass & Isotopes</h2>
+            
+            <div class="concept-info">
+                <h3>🧬 Isotopes of Carbon</h3>
+                <p>Different forms of the same element with different masses</p>
+            </div>
+
+            <p><strong>Average Atomic Mass:</strong> Calculated considering the relative abundance of all naturally occurring isotopes of an element.</p>
+
+            <div class="interactive-demo">
+                <h3>Carbon Isotopes Visualization</h3>
+                
+                <div class="isotope-container">
+                    <div class="isotope-card">
+                        <div class="nucleus" style="background: radial-gradient(circle, #45b7d1 0%, #2980b9 100%); margin: 0 auto 15px;">¹²C</div>
+                        <h4>Carbon-12</h4>
+                        <p><strong>Abundance:</strong> 98.892%</p>
+                        <p><strong>Mass:</strong> 12.000 amu</p>
+                        <p style="color: #4facfe; font-weight: bold;">Most Common</p>
+                    </div>
+
+                    <div class="isotope-card">
+                        <div class="nucleus" style="background: radial-gradient(circle, #f39c12 0%, #e67e22 100%); margin: 0 auto 15px;">¹³C</div>
+                        <h4>Carbon-13</h4>
+                        <p><strong>Abundance:</strong> 1.108%</p>
+                        <p><strong>Mass:</strong> 13.003 amu</p>
+                        <p style="color: #f39c12; font-weight: bold;">Stable Isotope</p>
+                    </div>
+
+                    <div class="isotope-card">
+                        <div class="nucleus" style="background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%); margin: 0 auto 15px;">¹⁴C</div>
+                        <h4>Carbon-14</h4>
+                        <p><strong>Abundance:</strong> 2×10⁻¹⁰%</p>
+                        <p><strong>Mass:</strong> 14.003 amu</p>
+                        <p style="color: #e74c3c; font-weight: bold;">Radioactive</p>
+                    </div>
+                </div>
+
+                <div class="calculation-box">
+                    <strong>Average Atomic Mass Calculation:</strong><br>
+                    = (0.98892 × 12.000) + (0.01108 × 13.003) + (2×10⁻¹² × 14.003)<br>
+                    = 11.867 + 0.144 + 0.000<br>
+                    = <span style="color: #4facfe; font-size: 1.2em;">12.011 amu</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Molecular Mass -->
+        <div id="molecular" class="content-section">
+            <h2 class="law-title">3. Molecular Mass</h2>
+            
+            <div class="concept-info">
+                <h3>🧪 Molecular Mass</h3>
+                <p>Sum of atomic masses of all atoms in a molecule</p>
+            </div>
+
+            <p><strong>Definition:</strong> Molecular mass is obtained by multiplying the atomic mass of each element by the number of its atoms and adding them together.</p>
+
+            <div class="interactive-demo">
+                <h3>Molecular Mass Examples</h3>
+                
+                <div class="molecular-builder">
+                    <h4>Methane (CH₄)</h4>
+                    <div class="molecule-display">
+                        <div class="atom-element carbon">C</div>
+                        <div class="bond-line"></div>
+                        <div class="atom-element hydrogen">H</div>
+                        <div class="bond-line"></div>
+                        <div class="atom-element hydrogen">H</div>
+                        <div class="bond-line"></div>
+                        <div class="atom-element hydrogen">H</div>
+                        <div class="bond-line"></div>
+                        <div class="atom-element hydrogen">H</div>
+                    </div>
+                    <div class="calculation-box">
+                        <strong>Calculation:</strong><br>
+                        = 1 × 12.011 + 4 × 1.008<br>
+                        = 12.011 + 4.032<br>
+                        = <span style="color: #4facfe; font-size: 1.2em;">16.043 amu</span>
+                    </div>
+                </div>
+
+                <div class="molecular-builder">
+                    <h4>Water (H₂O)</h4>
+                    <div class="molecule-display">
+                        <div class="atom-element hydrogen">H</div>
+                        <div class="bond-line"></div>
+                        <div class="atom-element oxygen">O</div>
+                        <div class="bond-line"></div>
+                        <div class="atom-element hydrogen">H</div>
+                    </div>
+                    <div class="calculation-box">
+                        <strong>Calculation:</strong><br>
+                        = 2 × 1.008 + 1 × 16.00<br>
+                        = 2.016 + 16.00<br>
+                        = <span style="color: #4facfe; font-size: 1.2em;">18.016 amu</span>
+                    </div>
+                </div>
+
+                <div class="molecular-builder">
+                    <h4>Glucose (C₆H₁₂O₆)</h4>
+                    <div class="molecule-display" style="font-size: 14px;">
+                        <span>6×</span><div class="atom-element carbon">C</div>
+                        <span>+</span>
+                        <span>12×</span><div class="atom-element hydrogen">H</div>
+                        <span>+</span>
+                        <span>6×</span><div class="atom-element oxygen">O</div>
+                    </div>
+                    <div class="calculation-box">
+                        <strong>Calculation:</strong><br>
+                        = 6 × 12.011 + 12 × 1.008 + 6 × 16.00<br>
+                        = 72.066 + 12.096 + 96.00<br>
+                        = <span style="color: #4facfe; font-size: 1.2em;">180.162 amu</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formula Mass -->
+        <div id="formula" class="content-section">
+            <h2 class="law-title">4. Formula Mass</h2>
+            
+            <div class="concept-info">
+                <h3>🧂 Ionic Compounds</h3>
+                <p>Formula mass for compounds that exist as ionic crystals, not discrete molecules</p>
+            </div>
+
+            <p><strong>Formula Mass:</strong> Used for ionic compounds like NaCl that don't exist as discrete molecules but as crystal lattices.</p>
+
+            <div class="interactive-demo">
+                <h3>Sodium Chloride (NaCl) Crystal Structure</h3>
+                
+                <div class="crystal-structure">
+                    <div class="ion sodium">Na⁺</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion sodium">Na⁺</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion sodium">Na⁺</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion sodium">Na⁺</div>
+                    <div class="ion sodium">Na⁺</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion sodium">Na⁺</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion sodium">Na⁺</div>
+                    <div class="ion chloride">Cl⁻</div>
+                    <div class="ion sodium">Na⁺</div>
+                </div>
+
+                <div class="calculation-box">
+                    <strong>Formula Mass of NaCl:</strong><br>
+                    = Atomic mass of Na + Atomic mass of Cl<br>
+                    = 23.0 + 35.5<br>
+                    = <span style="color: #4facfe; font-size: 1.2em;">58.5 amu</span>
+                </div>
+
+                <p style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 10px;">
+                    <strong>Note:</strong> Each Na⁺ ion is surrounded by 6 Cl⁻ ions and vice versa in the crystal lattice.
+                </p>
+            </div>
+        </div>
+
+        <!-- Calculator -->
+        <div id="calculator" class="content-section">
+            <h2 class="law-title">5. Interactive Mass Calculator</h2>
+            
+            <div class="calculator-section">
+                <h3>Molecular/Formula Mass Calculator</h3>
+                
+                <div class="input-group">
+                    <label>Compound:</label>
+                    <select id="compound-select" onchange="updateCompound()">
+                        <option value="custom">Custom Entry</option>
+                        <option value="H2O">Water (H₂O)</option>
+                        <option value="CH4">Methane (CH₄)</option>
+                        <option value="C6H12O6">Glucose (C₆H₁₂O₆)</option>
+                        <option value="NaCl">Sodium Chloride (NaCl)</option>
+                        <option value="CaCO3">Calcium Carbonate (CaCO₃)</option>
+                        <option value="H2SO4">Sulfuric Acid (H₂SO₄)</option>
+                    </select>
+                </div>
+
+                <div id="custom-input" class="input-group">
+                    <label>Formula:</label>
+                    <input type="text" id="formula-input" placeholder="e.g., H2O, CH4, NaCl" />
+                </div>
+
+                <button class="calculate-btn" onclick="calculateMass()">Calculate Mass</button>
+
+                <div id="mass-result" class="result-display" style="display: none;">
+                    <div id="calculation-steps"></div>
+                    <div id="final-result"></div>
+                </div>
+
+                <div class="molecular-builder" style="margin-top: 30px;">
+                    <h4>Quick Reference - Atomic Masses</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 15px 0;">
+                        <div style="background: #ff6b6b; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>H</strong><br>1.008 amu
+                        </div>
+                        <div style="background: #45b7d1; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>C</strong><br>12.011 amu
+                        </div>
+                        <div style="background: #4ecdc4; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>O</strong><br>16.000 amu
+                        </div>
+                        <div style="background: #f39c12; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>Na</strong><br>23.0 amu
+                        </div>
+                        <div style="background: #2ecc71; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>Cl</strong><br>35.5 amu
+                        </div>
+                        <div style="background: #9b59b6; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>Ca</strong><br>40.1 amu
+                        </div>
+                        <div style="background: #e67e22; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>S</strong><br>32.1 amu
+                        </div>
+                        <div style="background: #34495e; color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                            <strong>N</strong><br>14.0 amu
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="content-section">
+            <h2 class="law-title">🧠 Knowledge Check</h2>
+            
+            <div class="quiz-section">
+                <div class="quiz-question">1. What is the current standard for atomic mass measurements?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="1" data-answer="a">a) Hydrogen-1 atom</div>
+                    <div class="quiz-option" data-question="1" data-answer="b">b) Carbon-12 atom</div>
+                    <div class="quiz-option" data-question="1" data-answer="c">c) Oxygen-16 atom</div>
+                    <div class="quiz-option" data-question="1" data-answer="d">d) Uranium-238 atom</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">2. What is 1 amu equal to in grams?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="2" data-answer="a">a) 1.66056 × 10⁻²⁴ g</div>
+                    <div class="quiz-option" data-question="2" data-answer="b">b) 1.66056 × 10⁻²³ g</div>
+                    <div class="quiz-option" data-question="2" data-answer="c">c) 1.66056 × 10⁻²⁵ g</div>
+                    <div class="quiz-option" data-question="2" data-answer="d">d) 1.66056 × 10⁻²² g</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">3. The molecular mass of water (H₂O) is approximately:</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="3" data-answer="a">a) 16.0 amu</div>
+                    <div class="quiz-option" data-question="3" data-answer="b">b) 17.0 amu</div>
+                    <div class="quiz-option" data-question="3" data-answer="c">c) 18.0 amu</div>
+                    <div class="quiz-option" data-question="3" data-answer="d">d) 19.0 amu</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">4. Why do we use formula mass instead of molecular mass for NaCl?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="4" data-answer="a">a) NaCl has a very high molecular mass</div>
+                    <div class="quiz-option" data-question="4" data-answer="b">b) NaCl exists as a crystal lattice, not discrete molecules</div>
+                    <div class="quiz-option" data-question="4" data-answer="c">c) NaCl is an organic compound</div>
+                    <div class="quiz-option" data-question="4" data-answer="d">d) NaCl contains radioactive isotopes</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">5. The average atomic mass of carbon is 12.011 amu because:</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="5" data-answer="a">a) All carbon atoms have this exact mass</div>
+                    <div class="quiz-option" data-question="5" data-answer="b">b) It's the weighted average of all carbon isotopes</div>
+                    <div class="quiz-option" data-question="5" data-answer="c">c) Carbon-12 is not exactly 12 amu</div>
+                    <div class="quiz-option" data-question="5" data-answer="d">d) There's an error in measurement</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="calculate-btn" onclick="checkAnswers()">Check Answers</button>
+                <button class="calculate-btn" onclick="resetQuiz()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">Reset Quiz</button>
+            </div>
+
+            <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Atomic masses database
+        const atomicMasses = {
+            'H': 1.008, 'C': 12.011, 'N': 14.007, 'O': 16.000,
+            'Na': 22.990, 'Mg': 24.305, 'Al': 26.982, 'Si': 28.085,
+            'P': 30.974, 'S': 32.065, 'Cl': 35.453, 'K': 39.098,
+            'Ca': 40.078, 'Fe': 55.845, 'Cu': 63.546, 'Zn': 65.380,
+            'Br': 79.904, 'I': 126.904
+        };
+
+        // Quiz answers
+        const correctAnswers = {
+            1: 'b', 2: 'a', 3: 'c', 4: 'b', 5: 'b'
+        };
+
+        let selectedAnswers = {};
+
+        function showTab(tabName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Remove active from all tabs
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function updateCompound() {
+            const select = document.getElementById('compound-select');
+            const input = document.getElementById('formula-input');
+            const customDiv = document.getElementById('custom-input');
+            
+            if (select.value === 'custom') {
+                customDiv.style.display = 'flex';
+                input.value = '';
+            } else {
+                customDiv.style.display = 'none';
+                input.value = select.value;
+            }
+        }
+
+        function parseFormula(formula) {
+            // Simple formula parser for common compounds
+            const elements = {};
+            const regex = /([A-Z][a-z]?)(\d*)/g;
+            let match;
+            
+            while ((match = regex.exec(formula)) !== null) {
+                const element = match[1];
+                const count = match[2] ? parseInt(match[2]) : 1;
+                elements[element] = (elements[element] || 0) + count;
+            }
+            
+            return elements;
+        }
+
+        function calculateMass() {
+            const formula = document.getElementById('formula-input').value.trim();
+            if (!formula) {
+                alert('Please enter a chemical formula!');
+                return;
+            }
+
+            try {
+                const elements = parseFormula(formula);
+                let totalMass = 0;
+                let steps = [];
+                let hasUnknownElement = false;
+
+                for (const [element, count] of Object.entries(elements)) {
+                    if (atomicMasses[element]) {
+                        const elementMass = atomicMasses[element] * count;
+                        totalMass += elementMass;
+                        steps.push(`${count > 1 ? count + ' × ' : ''}${element}: ${count > 1 ? count + ' × ' : ''}${atomicMasses[element]} = ${elementMass.toFixed(3)} amu`);
+                    } else {
+                        hasUnknownElement = true;
+                        steps.push(`${element}: Unknown element`);
+                    }
+                }
+
+                const resultDiv = document.getElementById('mass-result');
+                const stepsDiv = document.getElementById('calculation-steps');
+                const finalDiv = document.getElementById('final-result');
+
+                if (hasUnknownElement) {
+                    stepsDiv.innerHTML = `<p style="color: #e74c3c;">⚠️ Unknown element(s) found. Please check your formula.</p>`;
+                    finalDiv.innerHTML = '';
+                } else {
+                    stepsDiv.innerHTML = `
+                        <h4>Calculation Steps for ${formula}:</h4>
+                        ${steps.map(step => `<p>• ${step}</p>`).join('')}
+                    `;
+                    finalDiv.innerHTML = `
+                        <h3 style="color: #4facfe;">Total Mass = ${totalMass.toFixed(3)} amu</h3>
+                    `;
+                }
+
+                resultDiv.style.display = 'block';
+                
+                // Animate result appearance
+                resultDiv.style.opacity = '0';
+                resultDiv.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    resultDiv.style.transition = 'all 0.5s ease';
+                    resultDiv.style.opacity = '1';
+                    resultDiv.style.transform = 'translateY(0)';
+                }, 100);
+
+            } catch (error) {
+                alert('Error parsing formula. Please check your input!');
+            }
+        }
+
+        // Quiz functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quiz-option')) {
+                const question = e.target.dataset.question;
+                const answer = e.target.dataset.answer;
+                
+                // Remove selection from other options in the same question
+                const sameQuestionOptions = document.querySelectorAll(`[data-question="${question}"]`);
+                sameQuestionOptions.forEach(option => {
+                    option.classList.remove('selected');
+                });
+                
+                // Select clicked option
+                e.target.classList.add('selected');
+                selectedAnswers[question] = answer;
+            }
+        });
+
+        function checkAnswers() {
+            let score = 0;
+            let totalQuestions = Object.keys(correctAnswers).length;
+            
+            // Check each answer
+            for (let question in correctAnswers) {
+                const options = document.querySelectorAll(`[data-question="${question}"]`);
+                const correctAnswer = correctAnswers[question];
+                const userAnswer = selectedAnswers[question];
+                
+                options.forEach(option => {
+                    option.classList.remove('selected', 'incorrect');
+                    if (option.dataset.answer === correctAnswer) {
+                        option.classList.add('selected'); // Show correct answer
+                    } else if (option.dataset.answer === userAnswer && userAnswer !== correctAnswer) {
+                        option.classList.add('incorrect'); // Show wrong selection
+                    }
+                });
+                
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+            }
+            
+            // Show feedback
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.style.display = 'block';
+            
+            if (score === totalQuestions) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `🎉 Perfect! You got ${score}/${totalQuestions} correct!<br>You have mastered Atomic and Molecular Masses!`;
+            } else if (score >= totalQuestions * 0.7) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `👍 Great job! You got ${score}/${totalQuestions} correct!<br>Review the concepts you missed and try again.`;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `📚 You got ${score}/${totalQuestions} correct.<br>Study the concepts again and retake the quiz!`;
+            }
+        }
+
+        function resetQuiz() {
+            selectedAnswers = {};
+            
+            // Clear all selections
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.classList.remove('selected', 'incorrect');
+            });
+            
+            // Hide feedback
+            document.getElementById('quiz-feedback').style.display = 'none';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('⚛️ Atomic and Molecular Masses Tool Loaded Successfully!');
+            
+            // Set default compound
+            document.getElementById('formula-input').value = 'H2O';
+            
+            // Add some startup animations
+            setTimeout(() => {
+                const atoms = document.querySelectorAll('.atom-element');
+                atoms.forEach((atom, index) => {
+                    setTimeout(() => {
+                        atom.style.transform = 'scale(1.3)';
+                        setTimeout(() => {
+                            atom.style.transform = 'scale(1)';
+                        }, 300);
+                    }, index * 150);
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

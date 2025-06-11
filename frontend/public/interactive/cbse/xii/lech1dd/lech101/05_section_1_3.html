@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solubility & Henry's Law Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2c5282, #2d3748);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4299e1;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 5px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            margin: 5px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background: #4299e1;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #4299e1;
+        }
+        
+        .beaker {
+            width: 200px;
+            height: 250px;
+            margin: 20px auto;
+            border: 3px solid #4299e1;
+            border-radius: 0 0 100px 100px;
+            border-top: none;
+            position: relative;
+            background: rgba(66, 153, 225, 0.2);
+        }
+        
+        .solution {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(66, 153, 225, 0.6);
+            border-radius: 0 0 97px 97px;
+            transition: all 0.5s ease;
+            height: 30%;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="range"], select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: 1px solid #4299e1;
+        }
+        
+        .value-display {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-family: monospace;
+            color: #4299e1;
+        }
+        
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #3182ce;
+        }
+        
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .quiz-option.selected {
+            border-color: #4299e1;
+            background: rgba(66, 153, 225, 0.2);
+        }
+        
+        .quiz-option.correct {
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.2);
+        }
+        
+        .quiz-option.incorrect {
+            border-color: #f56565;
+            background: rgba(245, 101, 101, 0.2);
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.15), rgba(102, 126, 234, 0.1));
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            border-left: 5px solid #4299e1;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border-left-color: #63b3ed;
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.25), rgba(102, 126, 234, 0.15));
+        }
+
+        .info-card h3 {
+            color: #63b3ed;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card h3::before {
+            content: "🔬";
+            font-size: 1.2em;
+        }
+
+        .info-card:nth-child(2) h3::before { content: "⚖️"; }
+        .info-card:nth-child(3) h3::before { content: "📊"; }
+        .info-card:nth-child(4) h3::before { content: "🌡️"; }
+        .info-card:nth-child(5) h3::before { content: "🌍"; }
+
+        .info-card p {
+            line-height: 1.6;
+            margin-bottom: 12px;
+            color: #e2e8f0;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-card li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #cbd5e0;
+            transition: color 0.2s ease;
+        }
+
+        .info-card li::before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #4299e1;
+            font-size: 0.8em;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .info-card li:hover {
+            color: #e2e8f0;
+        }
+
+        .info-card li strong {
+            color: #90cdf4;
+            font-weight: 600;
+        }
+        
+        .formula-box {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(45, 55, 72, 0.4));
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            border: 2px solid #4299e1;
+            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .formula-box::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #4299e1, #667eea, #9f7aea);
+            border-radius: 12px;
+            z-index: -1;
+            animation: borderGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .formula-box strong {
+            color: #90cdf4;
+            font-size: 1.1em;
+        }
+
+        #theory {
+            background: linear-gradient(135deg, rgba(45, 55, 72, 0.3), rgba(66, 153, 225, 0.1));
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        #theory h2 {
+            text-align: center;
+            color: #63b3ed;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 0 0 20px rgba(99, 179, 237, 0.5);
+            animation: titlePulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes titlePulse {
+            0% { text-shadow: 0 0 20px rgba(99, 179, 237, 0.5); }
+            100% { text-shadow: 0 0 30px rgba(99, 179, 237, 0.8); }
+        }
+
+        .theory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Solubility & Henry's Law</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('solid')">Solid Solubility</button>
+            <button class="tab" onclick="showTab('gas')">Gas Solubility</button>
+            <button class="tab" onclick="showTab('henry')">Henry's Law</button>
+            <button class="tab" onclick="showTab('quiz')">Quiz</button>
+            <button class="tab" onclick="showTab('theory')">Theory</button>
+        </div>
+
+        <div id="solid" class="tab-content active">
+            <div class="grid">
+                <div class="panel">
+                    <h2>Solid Dissolution</h2>
+                    <div class="beaker">
+                        <div class="solution" id="solidSolution"></div>
+                    </div>
+                    <div class="value-display" id="solidDisplay">Solubility: 0 g/100g</div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Controls</h2>
+                    
+                    <div class="control-group">
+                        <label>Solute:</label>
+                        <select id="solute">
+                            <option value="nacl">NaCl (polar)</option>
+                            <option value="sugar">Sugar (polar)</option>
+                            <option value="naphthalene">Naphthalene (nonpolar)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Solvent:</label>
+                        <select id="solvent">
+                            <option value="water">Water (polar)</option>
+                            <option value="benzene">Benzene (nonpolar)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Temperature: <span id="tempValue">25°C</span></label>
+                        <input type="range" id="temperature" min="0" max="100" value="25">
+                    </div>
+                    
+                    <button onclick="updateSolid()">Update</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gas" class="tab-content">
+            <div class="grid">
+                <div class="panel">
+                    <h2>Gas Solubility</h2>
+                    <div class="beaker">
+                        <div class="solution" id="gasSolution"></div>
+                    </div>
+                    <div class="value-display" id="gasDisplay">Solubility: 0 mmol/L</div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Controls</h2>
+                    
+                    <div class="control-group">
+                        <label>Gas:</label>
+                        <select id="gasType">
+                            <option value="76.48">N₂ (KH = 76.48 kbar)</option>
+                            <option value="34.86">O₂ (KH = 34.86 kbar)</option>
+                            <option value="1.67">CO₂ (KH = 1.67 kbar)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Pressure: <span id="pressureValue">1.0 bar</span></label>
+                        <input type="range" id="pressure" min="0.1" max="5" step="0.1" value="1">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Temperature: <span id="gasTempValue">293 K</span></label>
+                        <input type="range" id="gasTemp" min="273" max="323" value="293">
+                    </div>
+                    
+                    <button onclick="updateGas()">Update</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="henry" class="tab-content">
+            <div class="panel">
+                <h2>Henry's Law Calculator</h2>
+                
+                <div class="formula-box">
+                    <strong>Henry's Law:</strong> p = KH × x<br>
+                    Where: p = pressure, KH = Henry's constant, x = mole fraction
+                </div>
+                
+                <div class="control-group">
+                    <label>Gas:</label>
+                    <select id="henryGas">
+                        <option value="76.48">N₂ (KH = 76.48 kbar)</option>
+                        <option value="34.86">O₂ (KH = 34.86 kbar)</option>
+                        <option value="1.67">CO₂ (KH = 1.67 kbar)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Pressure (bar):</label>
+                    <input type="number" id="henryPressure" value="0.987" step="0.001">
+                </div>
+                
+                <button onclick="calculateHenry()">Calculate</button>
+                
+                <div id="henryResults">
+                    <div class="value-display">Mole Fraction: <span id="moleFraction">0</span></div>
+                    <div class="value-display">Moles in 1L: <span id="molesResult">0</span> mol</div>
+                    <div class="value-display">Millimoles: <span id="mmolResult">0</span> mmol</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz" class="tab-content">
+            <div class="panel">
+                <h2>Quiz</h2>
+                <div id="question">Loading...</div>
+                <div id="options"></div>
+                <button onclick="checkAnswer()" id="checkBtn">Check Answer</button>
+                <button onclick="nextQuestion()" id="nextBtn" style="display:none;">Next</button>
+                <div id="feedback"></div>
+            </div>
+        </div>
+
+        <div id="theory" class="tab-content">
+            <h2>📚 Theory & Principles</h2>
+            
+            <div class="theory-grid">
+                <div class="info-card">
+                    <h3>Solubility Definition</h3>
+                    <p>Maximum amount of solute that can dissolve in a given amount of solvent at specific temperature and pressure.</p>
+                    <ul>
+                        <li><strong>Saturated solution:</strong> No more solute can dissolve</li>
+                        <li><strong>Unsaturated solution:</strong> More solute can still dissolve</li>
+                        <li><strong>Dynamic equilibrium:</strong> Dissolution ⇌ Crystallization</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>"Like Dissolves Like" Rule</h3>
+                    <p>Polar solutes dissolve in polar solvents, nonpolar solutes dissolve in nonpolar solvents.</p>
+                    <ul>
+                        <li><strong>NaCl (polar):</strong> Dissolves in water (polar)</li>
+                        <li><strong>Naphthalene (nonpolar):</strong> Dissolves in benzene (nonpolar)</li>
+                        <li><strong>Sugar (polar):</strong> Highly soluble in water</li>
+                        <li><strong>Oil (nonpolar):</strong> Insoluble in water</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Henry's Law</h3>
+                    <p>At constant temperature, gas solubility is directly proportional to partial pressure.</p>
+                    <div class="formula-box">
+                        <strong>p = K<sub>H</sub> × x</strong><br>
+                        Where: p = partial pressure, K<sub>H</sub> = Henry's constant, x = mole fraction
+                    </div>
+                    <p><strong>Higher K<sub>H</sub> = Lower solubility</strong></p>
+                    <ul>
+                        <li><strong>CO₂:</strong> K<sub>H</sub> = 1.67 kbar (highly soluble)</li>
+                        <li><strong>O₂:</strong> K<sub>H</sub> = 34.86 kbar (moderately soluble)</li>
+                        <li><strong>N₂:</strong> K<sub>H</sub> = 76.48 kbar (less soluble)</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Temperature Effects</h3>
+                    <p>Temperature significantly affects solubility patterns:</p>
+                    <ul>
+                        <li><strong>Most solids:</strong> Solubility increases with temperature ↑</li>
+                        <li><strong>All gases:</strong> Solubility decreases with temperature ↑</li>
+                        <li><strong>Endothermic dissolution:</strong> Solubility ↑ with T ↑</li>
+                        <li><strong>Exothermic dissolution:</strong> Solubility ↓ with T ↑</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Real-World Applications</h3>
+                    <p>Solubility principles impact daily life and industry:</p>
+                    <ul>
+                        <li><strong>Carbonated drinks:</strong> High pressure increases CO₂ solubility</li>
+                        <li><strong>Scuba diving:</strong> Nitrogen "bends" from rapid decompression</li>
+                        <li><strong>High altitude:</strong> Low oxygen partial pressure causes anoxia</li>
+                        <li><strong>Aquatic life:</strong> Cold water holds more dissolved oxygen</li>
+                        <li><strong>Medical IV fluids:</strong> Must match blood plasma concentration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedAnswer = -1;
+        let currentQ = 0;
+        let score = 0;
+
+        const questions = [
+            {
+                q: "Which dissolves best in water?",
+                options: ["Naphthalene", "NaCl", "Benzene", "Oil"],
+                correct: 1,
+                exp: "NaCl is polar like water, so it dissolves well."
+            },
+            {
+                q: "Henry's Law relates gas solubility to:",
+                options: ["Temperature", "Pressure", "Volume", "Mass"],
+                correct: 1,
+                exp: "Henry's Law: gas solubility ∝ partial pressure"
+            },
+            {
+                q: "Gas solubility decreases with temperature because:",
+                options: ["Gases expand", "Dissolution is exothermic", "Pressure drops", "Gases decompose"],
+                correct: 1,
+                exp: "Gas dissolution releases heat, so higher temperature favors gas phase."
+            },
+            {
+                q: "Which gas is most soluble in water?",
+                options: ["He (KH=144.97)", "N₂ (KH=76.48)", "O₂ (KH=34.86)", "CO₂ (KH=1.67)"],
+                correct: 3,
+                exp: "Lower KH means higher solubility. CO₂ has lowest KH."
+            },
+            {
+                q: "Scuba diving 'bends' are caused by:",
+                options: ["Oxygen toxicity", "Nitrogen bubbles", "CO₂ buildup", "Pressure change"],
+                correct: 1,
+                exp: "Rapid decompression causes dissolved nitrogen to form bubbles."
+            }
+        ];
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function updateSolid() {
+            const solute = document.getElementById('solute').value;
+            const solvent = document.getElementById('solvent').value;
+            const temp = document.getElementById('temperature').value;
+            
+            document.getElementById('tempValue').textContent = temp + '°C';
+            
+            let solubility = 0;
+            let compatible = false;
+            
+            // Simple compatibility check
+            if ((solute === 'nacl' || solute === 'sugar') && solvent === 'water') {
+                compatible = true;
+                solubility = solute === 'nacl' ? 35 + temp * 0.02 : 60 + temp * 0.5;
+            } else if (solute === 'naphthalene' && solvent === 'benzene') {
+                compatible = true;
+                solubility = 20 + temp * 0.1;
+            }
+            
+            const solution = document.getElementById('solidSolution');
+            if (compatible) {
+                solution.style.height = Math.min(80, 20 + solubility) + '%';
+                solution.style.background = solvent === 'water' ? 
+                    'rgba(66, 153, 225, 0.8)' : 'rgba(255, 193, 7, 0.8)';
+            } else {
+                solution.style.height = '5%';
+                solution.style.background = 'rgba(100, 100, 100, 0.5)';
+                solubility = 0;
+            }
+            
+            document.getElementById('solidDisplay').textContent = 
+                `Solubility: ${solubility.toFixed(1)} g/100g`;
+        }
+
+        function updateGas() {
+            const kh = parseFloat(document.getElementById('gasType').value);
+            const pressure = parseFloat(document.getElementById('pressure').value);
+            const temp = document.getElementById('gasTemp').value;
+            
+            document.getElementById('pressureValue').textContent = pressure.toFixed(1) + ' bar';
+            document.getElementById('gasTempValue').textContent = temp + ' K';
+            
+            // Henry's Law calculation
+            const moleFraction = pressure / (kh * 1000); // Convert kbar to bar
+            const molesWater = 55.5; // mol/L
+            const molesGas = moleFraction * molesWater;
+            const solubility = molesGas * 1000; // mmol/L
+            
+            const solution = document.getElementById('gasSolution');
+            solution.style.height = Math.min(80, 10 + solubility * 10) + '%';
+            solution.style.background = `rgba(66, 153, 225, ${0.3 + Math.min(0.5, solubility/10)})`;
+            
+            document.getElementById('gasDisplay').textContent = 
+                `Solubility: ${solubility.toFixed(3)} mmol/L`;
+        }
+
+        function calculateHenry() {
+            const kh = parseFloat(document.getElementById('henryGas').value);
+            const pressure = parseFloat(document.getElementById('henryPressure').value);
+            
+            const moleFraction = pressure / (kh * 1000);
+            const molesWater = 55.5;
+            const molesGas = moleFraction * molesWater;
+            const mmol = molesGas * 1000;
+            
+            document.getElementById('moleFraction').textContent = moleFraction.toExponential(3);
+            document.getElementById('molesResult').textContent = molesGas.toExponential(3);
+            document.getElementById('mmolResult').textContent = mmol.toFixed(3);
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQ];
+            document.getElementById('question').textContent = 
+                `Question ${currentQ + 1}/${questions.length}: ${q.q}`;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((option, i) => {
+                const div = document.createElement('div');
+                div.className = 'quiz-option';
+                div.textContent = option;
+                div.onclick = () => selectOption(i);
+                optionsDiv.appendChild(div);
+            });
+            
+            selectedAnswer = -1;
+            document.getElementById('checkBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('feedback').innerHTML = '';
+        }
+
+        function selectOption(index) {
+            selectedAnswer = index;
+            document.querySelectorAll('.quiz-option').forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === index) opt.classList.add('selected');
+            });
+        }
+
+        function checkAnswer() {
+            if (selectedAnswer === -1) return;
+            
+            const q = questions[currentQ];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            if (selectedAnswer === q.correct) score++;
+            
+            options.forEach((opt, i) => {
+                if (i === q.correct) opt.classList.add('correct');
+                else if (i === selectedAnswer) opt.classList.add('incorrect');
+            });
+            
+            document.getElementById('feedback').innerHTML = 
+                `<p style="color: ${selectedAnswer === q.correct ? '#48bb78' : '#f56565'}">
+                ${selectedAnswer === q.correct ? 'Correct!' : 'Incorrect.'}</p>
+                <p>${q.exp}</p>`;
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            if (currentQ < questions.length - 1) {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                setTimeout(() => {
+                    alert(`Quiz Complete! Score: ${score}/${questions.length}`);
+                }, 1000);
+            }
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ < questions.length) loadQuestion();
+        }
+
+        // Event listeners
+        document.getElementById('temperature').addEventListener('input', updateSolid);
+        document.getElementById('pressure').addEventListener('input', updateGas);
+        document.getElementById('gasTemp').addEventListener('input', updateGas);
+
+        // Initialize
+        updateSolid();
+        updateGas();
+        calculateHenry();
+        loadQuestion();
+    </script>
+</body>
+</html>

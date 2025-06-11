@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section 1.4: Operations on Real Numbers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-left: 6px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .interactive-tool {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input, select, button {
+            padding: 12px 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .canvas-container {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin: 20px 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            border: 1px solid #cbd5e0;
+            cursor: crosshair;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .calculator-item {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+        }
+
+        .calculator-item h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .formula-display {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .practice-problem {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+
+        .practice-input {
+            background: white;
+            color: #333;
+            width: 150px;
+            text-align: center;
+            margin: 0 10px;
+        }
+
+        .feedback {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .correct { background-color: #10b981 !important; }
+        .incorrect { background-color: #ef4444 !important; }
+
+        .steps-container {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #fdcb6e;
+        }
+
+        .identity-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .identity-card {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .identity-card:hover {
+            transform: scale(1.05);
+        }
+
+        .animated {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 Section 1.4: Operations on Real Numbers</h1>
+
+        <!-- Geometric Square Root Construction -->
+        <div class="section">
+            <h2>📏 Geometric Square Root Construction</h2>
+            <p>Visualize how to construct √x geometrically using compass and straightedge!</p>
+            
+            <div class="interactive-tool">
+                <div class="input-group">
+                    <label>Value of x:</label>
+                    <input type="number" id="sqrtValue" value="3.5" min="0.1" max="10" step="0.1">
+                    <button onclick="constructSquareRoot()">Construct √x</button>
+                    <button onclick="animateConstruction()">Animate Construction</button>
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="geometryCanvas" width="600" height="400"></canvas>
+                </div>
+                
+                <div id="constructionSteps" class="steps-container">
+                    <h3>Construction Steps:</h3>
+                    <div id="stepsContent">
+                        <div class="step">1. Mark point A on a line</div>
+                        <div class="step">2. Mark point B such that AB = x units</div>
+                        <div class="step">3. Mark point C such that BC = 1 unit</div>
+                        <div class="step">4. Find midpoint O of AC</div>
+                        <div class="step">5. Draw semicircle with center O and radius OC</div>
+                        <div class="step">6. Draw perpendicular at B to intersect semicircle at D</div>
+                        <div class="step">7. BD = √x</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Surd Operations Calculator -->
+        <div class="section">
+            <h2>🧮 Surd Operations Calculator</h2>
+            <p>Practice operations with square roots and see step-by-step solutions!</p>
+            
+            <div class="calculator-grid">
+                <!-- Addition/Subtraction -->
+                <div class="calculator-item">
+                    <h3>Addition & Subtraction</h3>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <div class="input-group" style="flex-direction: column; gap: 10px;">
+                            <input type="number" id="addA1" placeholder="a₁" value="2">√
+                            <input type="number" id="addB1" placeholder="b₁" value="2"> ±
+                            <input type="number" id="addA2" placeholder="a₂" value="5">√
+                            <input type="number" id="addB2" placeholder="b₂" value="3">
+                            <select id="addOp">
+                                <option value="+">+</option>
+                                <option value="-">-</option>
+                            </select>
+                            <button onclick="calculateSurdAddition()">Calculate</button>
+                        </div>
+                    </div>
+                    <div id="addResult" class="feedback">Enter values above</div>
+                </div>
+
+                <!-- Multiplication -->
+                <div class="calculator-item">
+                    <h3>Multiplication</h3>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <div class="input-group" style="flex-direction: column; gap: 10px;">
+                            <input type="number" id="mulA1" placeholder="a₁" value="6">√
+                            <input type="number" id="mulB1" placeholder="b₁" value="5"> ×
+                            <input type="number" id="mulA2" placeholder="a₂" value="2">√
+                            <input type="number" id="mulB2" placeholder="b₂" value="5">
+                            <button onclick="calculateSurdMultiplication()">Calculate</button>
+                        </div>
+                    </div>
+                    <div id="mulResult" class="feedback">Enter values above</div>
+                </div>
+
+                <!-- Division -->
+                <div class="calculator-item">
+                    <h3>Division</h3>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <div class="input-group" style="flex-direction: column; gap: 10px;">
+                            <input type="number" id="divA1" placeholder="a₁" value="8">√
+                            <input type="number" id="divB1" placeholder="b₁" value="15"> ÷
+                            <input type="number" id="divA2" placeholder="a₂" value="2">√
+                            <input type="number" id="divB2" placeholder="b₂" value="3">
+                            <button onclick="calculateSurdDivision()">Calculate</button>
+                        </div>
+                    </div>
+                    <div id="divResult" class="feedback">Enter values above</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rationalization Tool -->
+        <div class="section">
+            <h2>🔄 Rationalization Tool</h2>
+            <p>Learn to rationalize denominators step by step!</p>
+            
+            <div class="interactive-tool">
+                <div class="input-group">
+                    <label>Choose expression type:</label>
+                    <select id="rationalizeType">
+                        <option value="simple">1/√a</option>
+                        <option value="binomial">1/(a + √b)</option>
+                        <option value="surd_diff">1/(√a - √b)</option>
+                    </select>
+                    <button onclick="generateRationalizationProblem()">Generate Problem</button>
+                </div>
+                
+                <div id="rationalizeProblem" class="formula-display">
+                    Click "Generate Problem" to start!
+                </div>
+                
+                <div class="input-group">
+                    <label>Your answer:</label>
+                    <input type="text" id="rationalizeAnswer" placeholder="Enter rationalized form">
+                    <button onclick="checkRationalization()">Check Answer</button>
+                    <button onclick="showRationalizationSteps()">Show Steps</button>
+                </div>
+                
+                <div id="rationalizeResult" class="result-box">
+                    Enter your answer above!
+                </div>
+                
+                <div id="rationalizeSteps" class="steps-container" style="display: none;">
+                    <h3>Solution Steps:</h3>
+                    <div id="rationalizeStepsContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Identity Showcase -->
+        <div class="section">
+            <h2>⚡ Square Root Identities</h2>
+            <p>Explore and practice with important square root identities!</p>
+            
+            <div class="identity-showcase">
+                <div class="identity-card" onclick="demonstrateIdentity(1)">
+                    <h4>Identity 1</h4>
+                    <div class="formula-display">√(ab) = √a × √b</div>
+                </div>
+                
+                <div class="identity-card" onclick="demonstrateIdentity(2)">
+                    <h4>Identity 2</h4>
+                    <div class="formula-display">√(a/b) = √a / √b</div>
+                </div>
+                
+                <div class="identity-card" onclick="demonstrateIdentity(3)">
+                    <h4>Identity 3</h4>
+                    <div class="formula-display">(√a + √b)(√a - √b) = a - b</div>
+                </div>
+                
+                <div class="identity-card" onclick="demonstrateIdentity(4)">
+                    <h4>Identity 4</h4>
+                    <div class="formula-display">(a + √b)(a - √b) = a² - b</div>
+                </div>
+                
+                <div class="identity-card" onclick="demonstrateIdentity(5)">
+                    <h4>Identity 5</h4>
+                    <div class="formula-display">(√a + √b)² = a + 2√(ab) + b</div>
+                </div>
+                
+                <div class="identity-card" onclick="demonstrateIdentity(6)">
+                    <h4>Identity 6</h4>
+                    <div class="formula-display">(√a + √b)(√c + √d) = √(ac) + √(ad) + √(bc) + √(bd)</div>
+                </div>
+            </div>
+            
+            <div id="identityDemo" class="result-box" style="display: none;">
+                Click on an identity card to see a demonstration!
+            </div>
+        </div>
+
+        <!-- Practice Problems -->
+        <div class="section">
+            <h2>🎯 Practice Problems</h2>
+            <p>Test your understanding with these interactive problems!</p>
+            
+            <div class="practice-problem">
+                <h3>Problem 1: Simplify (5 + √7)(2 + √5)</h3>
+                <div class="input-group">
+                    <label>Answer:</label>
+                    <input type="text" class="practice-input" id="prob1Answer" placeholder="Enter answer">
+                    <button onclick="checkProblem(1, '10 + 5√5 + 2√7 + √35')">Check</button>
+                </div>
+                <div id="prob1Feedback" class="feedback">Enter your answer above</div>
+            </div>
+            
+            <div class="practice-problem">
+                <h3>Problem 2: Simplify (5 + √5)(5 - √5)</h3>
+                <div class="input-group">
+                    <label>Answer:</label>
+                    <input type="text" class="practice-input" id="prob2Answer" placeholder="Enter answer">
+                    <button onclick="checkProblem(2, '20')">Check</button>
+                </div>
+                <div id="prob2Feedback" class="feedback">Enter your answer above</div>
+            </div>
+            
+            <div class="practice-problem">
+                <h3>Problem 3: Rationalize 1/(2 + √3)</h3>
+                <div class="input-group">
+                    <label>Answer:</label>
+                    <input type="text" class="practice-input" id="prob3Answer" placeholder="Enter answer">
+                    <button onclick="checkProblem(3, '2 - √3')">Check</button>
+                </div>
+                <div id="prob3Feedback" class="feedback">Enter your answer above</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRationalizeProblem = {};
+        
+        function constructSquareRoot() {
+            const x = parseFloat(document.getElementById('sqrtValue').value);
+            const canvas = document.getElementById('geometryCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set up coordinates
+            const scale = 40; // pixels per unit
+            const originX = 100;
+            const originY = 300;
+            
+            // Draw coordinate system
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, originY);
+            ctx.lineTo(canvas.width, originY);
+            ctx.stroke();
+            
+            // Points
+            const A = {x: originX, y: originY};
+            const B = {x: originX + x * scale, y: originY};
+            const C = {x: originX + (x + 1) * scale, y: originY};
+            const O = {x: originX + (x + 1) * scale / 2, y: originY};
+            
+            // Calculate D (intersection of perpendicular with semicircle)
+            const radius = (x + 1) * scale / 2;
+            const BD_length = Math.sqrt(x) * scale;
+            const D = {x: B.x, y: originY - BD_length};
+            
+            // Draw construction
+            ctx.strokeStyle = '#4facfe';
+            ctx.lineWidth = 2;
+            
+            // Draw AB
+            ctx.beginPath();
+            ctx.moveTo(A.x, A.y);
+            ctx.lineTo(B.x, B.y);
+            ctx.stroke();
+            
+            // Draw BC
+            ctx.strokeStyle = '#fa709a';
+            ctx.beginPath();
+            ctx.moveTo(B.x, B.y);
+            ctx.lineTo(C.x, C.y);
+            ctx.stroke();
+            
+            // Draw semicircle
+            ctx.strokeStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(O.x, O.y, radius, Math.PI, 0);
+            ctx.stroke();
+            
+            // Draw perpendicular BD
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(B.x, B.y);
+            ctx.lineTo(D.x, D.y);
+            ctx.stroke();
+            
+            // Draw points
+            const points = [
+                {point: A, label: 'A'},
+                {point: B, label: 'B'},
+                {point: C, label: 'C'},
+                {point: O, label: 'O'},
+                {point: D, label: 'D'}
+            ];
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            points.forEach(({point, label}) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillText(label, point.x + 8, point.y - 8);
+            });
+            
+            // Add measurements
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText(`x = ${x}`, (A.x + B.x) / 2, originY + 25);
+            ctx.fillText('1', (B.x + C.x) / 2, originY + 25);
+            ctx.fillStyle = '#10b981';
+            ctx.fillText(`√${x} = ${Math.sqrt(x).toFixed(3)}`, B.x - 40, (B.y + D.y) / 2);
+        }
+        
+        function animateConstruction() {
+            const x = parseFloat(document.getElementById('sqrtValue').value);
+            const canvas = document.getElementById('geometryCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set up coordinates
+            const scale = 40;
+            const originX = 100;
+            const originY = 300;
+            
+            // Points
+            const A = {x: originX, y: originY};
+            const B = {x: originX + x * scale, y: originY};
+            const C = {x: originX + (x + 1) * scale, y: originY};
+            const O = {x: originX + (x + 1) * scale / 2, y: originY};
+            const radius = (x + 1) * scale / 2;
+            const BD_length = Math.sqrt(x) * scale;
+            const D = {x: B.x, y: originY - BD_length};
+            
+            let currentStep = 0;
+            
+            function animateStep() {
+                const steps = document.querySelectorAll('#stepsContent .step');
+                
+                // Remove previous highlights
+                steps.forEach(step => step.classList.remove('animated'));
+                
+                // Highlight current step
+                if (steps[currentStep]) {
+                    steps[currentStep].classList.add('animated');
+                }
+                
+                ctx.strokeStyle = '#4facfe';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = '#333';
+                ctx.font = '14px Arial';
+                
+                switch(currentStep) {
+                    case 0: // Draw coordinate line
+                        ctx.strokeStyle = '#e2e8f0';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(0, originY);
+                        ctx.lineTo(canvas.width, originY);
+                        ctx.stroke();
+                        
+                        // Draw point A
+                        ctx.fillStyle = '#333';
+                        ctx.beginPath();
+                        ctx.arc(A.x, A.y, 4, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.fillText('A', A.x + 8, A.y - 8);
+                        break;
+                        
+                    case 1: // Draw AB = x
+                        ctx.strokeStyle = '#4facfe';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(A.x, A.y);
+                        ctx.lineTo(B.x, B.y);
+                        ctx.stroke();
+                        
+                        // Draw point B
+                        ctx.fillStyle = '#333';
+                        ctx.beginPath();
+                        ctx.arc(B.x, B.y, 4, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.fillText('B', B.x + 8, B.y - 8);
+                        
+                        // Add measurement
+                        ctx.fillStyle = '#667eea';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillText(`x = ${x}`, (A.x + B.x) / 2, originY + 25);
+                        break;
+                        
+                    case 2: // Draw BC = 1
+                        ctx.strokeStyle = '#fa709a';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(B.x, B.y);
+                        ctx.lineTo(C.x, C.y);
+                        ctx.stroke();
+                        
+                        // Draw point C
+                        ctx.fillStyle = '#333';
+                        ctx.beginPath();
+                        ctx.arc(C.x, C.y, 4, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.fillText('C', C.x + 8, C.y - 8);
+                        
+                        // Add measurement
+                        ctx.fillStyle = '#fa709a';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillText('1', (B.x + C.x) / 2, originY + 25);
+                        break;
+                        
+                    case 3: // Find midpoint O
+                        // Draw point O
+                        ctx.fillStyle = '#ff6b35';
+                        ctx.beginPath();
+                        ctx.arc(O.x, O.y, 6, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.fillStyle = '#333';
+                        ctx.fillText('O (midpoint)', O.x + 8, O.y - 8);
+                        
+                        // Draw dashed lines to show midpoint
+                        ctx.strokeStyle = '#ff6b35';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 5]);
+                        ctx.beginPath();
+                        ctx.moveTo(A.x, A.y - 10);
+                        ctx.lineTo(O.x, O.y - 10);
+                        ctx.moveTo(O.x, O.y - 10);
+                        ctx.lineTo(C.x, C.y - 10);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        break;
+                        
+                    case 4: // Draw semicircle
+                        ctx.strokeStyle = '#667eea';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(O.x, O.y, radius, Math.PI, 0);
+                        ctx.stroke();
+                        
+                        // Add radius indicator
+                        ctx.strokeStyle = '#667eea';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([3, 3]);
+                        ctx.beginPath();
+                        ctx.moveTo(O.x, O.y);
+                        ctx.lineTo(C.x, C.y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = '#667eea';
+                        ctx.font = '10px Arial';
+                        ctx.fillText('radius', (O.x + C.x) / 2, (O.y + C.y) / 2 - 5);
+                        break;
+                        
+                    case 5: // Draw perpendicular BD
+                        ctx.strokeStyle = '#10b981';
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.moveTo(B.x, B.y);
+                        ctx.lineTo(D.x, D.y);
+                        ctx.stroke();
+                        
+                        // Draw point D
+                        ctx.fillStyle = '#10b981';
+                        ctx.beginPath();
+                        ctx.arc(D.x, D.y, 6, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.fillStyle = '#333';
+                        ctx.fillText('D', D.x + 8, D.y - 8);
+                        
+                        // Show right angle indicator
+                        ctx.strokeStyle = '#10b981';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(B.x - 10, B.y);
+                        ctx.lineTo(B.x - 10, B.y - 10);
+                        ctx.lineTo(B.x, B.y - 10);
+                        ctx.stroke();
+                        break;
+                        
+                    case 6: // Show final result
+                        ctx.fillStyle = '#10b981';
+                        ctx.font = 'bold 16px Arial';
+                        ctx.fillText(`BD = √${x} = ${Math.sqrt(x).toFixed(3)}`, B.x - 60, (B.y + D.y) / 2);
+                        
+                        // Add celebration effect
+                        ctx.strokeStyle = '#ffd700';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(D.x, D.y, 15, 0, 2 * Math.PI);
+                        ctx.stroke();
+                        break;
+                }
+                
+                currentStep++;
+                
+                if (currentStep <= 6) {
+                    setTimeout(animateStep, 1500); // 1.5 second delay between steps
+                } else {
+                    // Animation complete, remove highlights
+                    setTimeout(() => {
+                        steps.forEach(step => step.classList.remove('animated'));
+                    }, 2000);
+                }
+            }
+            
+            // Start animation
+            animateStep();
+        }
+        
+        function calculateSurdAddition() {
+            const a1 = parseFloat(document.getElementById('addA1').value) || 0;
+            const b1 = parseFloat(document.getElementById('addB1').value) || 0;
+            const a2 = parseFloat(document.getElementById('addA2').value) || 0;
+            const b2 = parseFloat(document.getElementById('addB2').value) || 0;
+            const op = document.getElementById('addOp').value;
+            
+            let result = "";
+            if (b1 === b2) {
+                const coefficient = op === '+' ? a1 + a2 : a1 - a2;
+                result = `${coefficient}√${b1}`;
+            } else {
+                result = `${a1}√${b1} ${op} ${a2}√${b2}`;
+            }
+            
+            document.getElementById('addResult').innerHTML = 
+                `${a1}√${b1} ${op} ${a2}√${b2} = <span class="highlight">${result}</span>`;
+        }
+        
+        function calculateSurdMultiplication() {
+            const a1 = parseFloat(document.getElementById('mulA1').value) || 0;
+            const b1 = parseFloat(document.getElementById('mulB1').value) || 0;
+            const a2 = parseFloat(document.getElementById('mulA2').value) || 0;
+            const b2 = parseFloat(document.getElementById('mulB2').value) || 0;
+            
+            const coefficient = a1 * a2;
+            const radical = b1 * b2;
+            
+            // Simplify if possible
+            let simplified = "";
+            const sqrt = Math.sqrt(radical);
+            if (Number.isInteger(sqrt)) {
+                simplified = `${coefficient * sqrt}`;
+            } else {
+                simplified = `${coefficient}√${radical}`;
+            }
+            
+            document.getElementById('mulResult').innerHTML = 
+                `${a1}√${b1} × ${a2}√${b2} = <span class="highlight">${simplified}</span>`;
+        }
+        
+        function calculateSurdDivision() {
+            const a1 = parseFloat(document.getElementById('divA1').value) || 0;
+            const b1 = parseFloat(document.getElementById('divB1').value) || 0;
+            const a2 = parseFloat(document.getElementById('divA2').value) || 0;
+            const b2 = parseFloat(document.getElementById('divB2').value) || 0;
+            
+            if (a2 === 0) {
+                document.getElementById('divResult').innerHTML = "Error: Division by zero!";
+                return;
+            }
+            
+            const coefficient = a1 / a2;
+            
+            // Example: 8√15 ÷ 2√3 = 4√5
+            if (b1 % b2 === 0) {
+                const radical = b1 / b2;
+                const sqrt = Math.sqrt(radical);
+                if (Number.isInteger(sqrt)) {
+                    document.getElementById('divResult').innerHTML = 
+                        `${a1}√${b1} ÷ ${a2}√${b2} = <span class="highlight">${coefficient * sqrt}</span>`;
+                } else {
+                    document.getElementById('divResult').innerHTML = 
+                        `${a1}√${b1} ÷ ${a2}√${b2} = <span class="highlight">${coefficient}√${radical}</span>`;
+                }
+            } else {
+                document.getElementById('divResult').innerHTML = 
+                    `${a1}√${b1} ÷ ${a2}√${b2} = <span class="highlight">${coefficient}√${b1}/${b2}</span>`;
+            }
+        }
+        
+        function generateRationalizationProblem() {
+            const type = document.getElementById('rationalizeType').value;
+            let problem = "";
+            let answer = "";
+            let steps = [];
+            
+            switch(type) {
+                case 'simple':
+                    const a = Math.floor(Math.random() * 5) + 2;
+                    problem = `1/√${a}`;
+                    answer = `√${a}/${a}`;
+                    steps = [
+                        `Problem: 1/√${a}`,
+                        `Multiply by √${a}/√${a}:`,
+                        `(1/√${a}) × (√${a}/√${a}) = √${a}/${a}`
+                    ];
+                    break;
+                    
+                case 'binomial':
+                    const x = Math.floor(Math.random() * 3) + 2;
+                    const y = Math.floor(Math.random() * 5) + 2;
+                    problem = `1/(${x} + √${y})`;
+                    answer = `(${x} - √${y})/(${x*x} - ${y})`;
+                    steps = [
+                        `Problem: 1/(${x} + √${y})`,
+                        `Multiply by (${x} - √${y})/(${x} - √${y}):`,
+                        `[1/(${x} + √${y})] × [(${x} - √${y})/(${x} - √${y})]`,
+                        `= (${x} - √${y})/[(${x})² - (√${y})²]`,
+                        `= (${x} - √${y})/(${x*x} - ${y})`
+                    ];
+                    break;
+                    
+                case 'surd_diff':
+                    const p = Math.floor(Math.random() * 3) + 3;
+                    const q = Math.floor(Math.random() * 3) + 5;
+                    problem = `1/(√${p} - √${q})`;
+                    answer = `-(√${p} + √${q})/(${p} - ${q})`;
+                    steps = [
+                        `Problem: 1/(√${p} - √${q})`,
+                        `Multiply by (√${p} + √${q})/(√${p} + √${q}):`,
+                        `[1/(√${p} - √${q})] × [(√${p} + √${q})/(√${p} + √${q})]`,
+                        `= (√${p} + √${q})/(${p} - ${q})`
+                    ];
+                    break;
+            }
+            
+            currentRationalizeProblem = {problem, answer, steps};
+            document.getElementById('rationalizeProblem').innerHTML = problem;
+            document.getElementById('rationalizeAnswer').value = '';
+            document.getElementById('rationalizeResult').innerHTML = 'Enter your answer above!';
+            document.getElementById('rationalizeSteps').style.display = 'none';
+        }
+        
+        function checkRationalization() {
+            const userAnswer = document.getElementById('rationalizeAnswer').value.trim();
+            const correctAnswer = currentRationalizeProblem.answer;
+            
+            if (!userAnswer) {
+                document.getElementById('rationalizeResult').innerHTML = 'Please enter an answer!';
+                return;
+            }
+            
+            // Simple string comparison (in a real app, we'd need more sophisticated parsing)
+            const isCorrect = userAnswer.replace(/\s/g, '') === correctAnswer.replace(/\s/g, '');
+            
+            if (isCorrect) {
+                document.getElementById('rationalizeResult').innerHTML = 
+                    `<span class="highlight">✓ Correct!</span> The answer is ${correctAnswer}`;
+                document.getElementById('rationalizeResult').classList.add('correct');
+            } else {
+                document.getElementById('rationalizeResult').innerHTML = 
+                    `✗ Incorrect. The correct answer is ${correctAnswer}`;
+                document.getElementById('rationalizeResult').classList.add('incorrect');
+            }
+        }
+        
+        function showRationalizationSteps() {
+            if (currentRationalizeProblem.steps) {
+                document.getElementById('rationalizeStepsContent').innerHTML = 
+                    currentRationalizeProblem.steps.map(step => `<div class="step">${step}</div>`).join('');
+                document.getElementById('rationalizeSteps').style.display = 'block';
+            }
+        }
+        
+        function demonstrateIdentity(identityNum) {
+            const demos = {
+                1: "Example: √(4×9) = √36 = 6, and √4 × √9 = 2 × 3 = 6 ✓",
+                2: "Example: √(16/4) = √4 = 2, and √16 / √4 = 4 / 2 = 2 ✓",
+                3: "Example: (√5 + √3)(√5 - √3) = 5 - 3 = 2 ✓",
+                4: "Example: (3 + √2)(3 - √2) = 9 - 2 = 7 ✓",
+                5: "Example: (√2 + √3)² = 2 + 2√6 + 3 = 5 + 2√6 ✓",
+                6: "Example: (√2 + √3)(√5 + √7) = √10 + √14 + √15 + √21 ✓"
+            };
+            
+            document.getElementById('identityDemo').innerHTML = demos[identityNum];
+            document.getElementById('identityDemo').style.display = 'flex';
+        }
+        
+        function checkProblem(problemNum, correctAnswer) {
+            const userAnswer = document.getElementById(`prob${problemNum}Answer`).value.trim();
+            const feedback = document.getElementById(`prob${problemNum}Feedback`);
+            
+            if (!userAnswer) {
+                feedback.innerHTML = 'Please enter an answer!';
+                return;
+            }
+            
+            // Simple comparison (would need more sophisticated parsing in real app)
+            const normalized = userAnswer.replace(/\s/g, '').toLowerCase();
+            const correct = correctAnswer.replace(/\s/g, '').toLowerCase();
+            
+            if (normalized === correct || 
+                normalized === correct.replace(/\+/g, '') ||
+                normalized.includes(correct.split('+')[0]) && normalized.includes(correct.split('+')[1])) {
+                feedback.innerHTML = '✓ Correct! Well done!';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.innerHTML = `✗ Incorrect. The answer is: ${correctAnswer}`;
+                feedback.className = 'feedback incorrect';
+            }
+        }
+        
+        // Initialize with default construction
+        window.onload = function() {
+            constructSquareRoot();
+            generateRationalizationProblem();
+        };
+    </script>
+</body>
+</html>

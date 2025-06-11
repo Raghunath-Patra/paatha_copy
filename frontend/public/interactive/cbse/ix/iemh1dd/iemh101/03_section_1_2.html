@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.2 Irrational Numbers - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #0891b2;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .construction-area {
+            background: #f0fdfa;
+            border: 2px solid #10b981;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .construction-area h3 {
+            color: #10b981;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .interactive-area {
+            background: #f0fdfa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #a7f3d0;
+        }
+
+        .interactive-area h3 {
+            color: #0891b2;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .calc-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .calc-input:focus {
+            border-color: #0891b2;
+            outline: none;
+        }
+
+        .calc-result {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #0891b2, #06b6d4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #64748b, #475569);
+        }
+
+        .quiz-area {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .quiz-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: #edf2f7;
+            border-color: #0891b2;
+            transform: translateY(-1px);
+        }
+
+        .quiz-option.selected {
+            background: #0891b2;
+            color: white;
+            border-color: #0891b2;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .input-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .decimal-display {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 16px;
+            text-align: center;
+            word-break: break-all;
+            overflow-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .step-by-step {
+            background: #e9ecef;
+            border-left: 4px solid #0891b2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .info-box {
+            background: #f0fdfa;
+            border-left: 4px solid #0891b2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .info-box::before {
+            content: "💡 Paaṭha AI Explains";
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #0891b2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .paatha-tip {
+            background: linear-gradient(135deg, #ecfeff, #f0fdfa);
+            border: 2px solid #22d3ee;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .paatha-tip::before {
+            content: "🤖 Paaṭha AI Smart Tip";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(45deg, #0891b2, #22d3ee);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .construction-steps {
+            background: #ecfeff;
+            border: 1px solid #67e8f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .brand-watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .achievement-badge {
+            background: linear-gradient(45deg, #dc2626, #fbbf24);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 5px;
+            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .construction-steps ol {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .input-row {
+                flex-direction: column;
+            }
+            
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            .decimal-display {
+                font-size: 14px;
+                padding: 12px;
+                word-break: break-all;
+                overflow-wrap: break-word;
+            }
+            
+            .calc-result {
+                font-size: 14px;
+                text-align: left;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="height: 48px; width: 48px;"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Mathematics Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">∞ 1.2 Irrational Numbers</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Discover the mysterious numbers that cannot be expressed as fractions!</p>
+        </div>
+
+        <div class="section">
+            <h2>Historical Discovery</h2>
+            
+            <div class="paatha-tip">
+                <strong>🎯 Historical Discovery:</strong> Around 400 BC, the Pythagoreans in Greece discovered numbers that could not be written as fractions. This revolutionary discovery challenged their entire mathematical worldview and led to one of the greatest advances in mathematical thinking!
+            </div>
+
+            <div class="info-box" style="padding-top: 25px;">
+                <h4>📋 Definition</h4>
+                <p><strong>A number 's' is called irrational if it cannot be written in the form p/q, where p and q are integers and q ≠ 0.</strong></p>
+                <p>Examples: √2, √3, √15, π, e, 0.101001000100001...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Geometric Construction of √2</h2>
+            
+            <div class="construction-area">
+                <h3>🏗️ How the Greeks Discovered √2</h3>
+                <p>Watch the step-by-step construction that shows √2 exists and can be located on the number line!</p>
+                
+                <div class="canvas-container">
+                    <canvas id="sqrt2Canvas" width="500" height="350"></canvas>
+                </div>
+                
+                <div class="input-row">
+                    <button class="btn" onclick="animateSqrt2Construction()">▶️ Animate Construction</button>
+                    <button class="btn secondary" onclick="clearCanvas('sqrt2Canvas')">🗑️ Clear Canvas</button>
+                </div>
+
+                <div class="construction-steps">
+                    <h4>Construction Steps:</h4>
+                    <ol>
+                        <li>Draw a unit square OABC (each side = 1 unit)</li>
+                        <li>Draw the diagonal OB using Pythagoras theorem: OB = √(1² + 1²) = √2</li>
+                        <li>Use a compass with center O and radius OB</li>
+                        <li>Draw an arc that intersects the number line at point P</li>
+                        <li>Point P represents √2 on the number line!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Construct Other Square Roots</h2>
+            
+            <div class="construction-area">
+                <h3>🔨 Construct √n for any positive integer n</h3>
+                <p>Once you have √2, you can construct √3, √4, √5, and so on!</p>
+                
+                <div class="input-row">
+                    <label>Construct √</label>
+                    <input type="number" id="sqrtConstructInput" class="calc-input" placeholder="Enter n" min="2" max="20" value="3" style="width: 100px;">
+                    <button class="btn" onclick="constructSqrtN()">🏗️ Construct</button>
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="constructionCanvas" width="500" height="300"></canvas>
+                </div>
+
+                <div id="constructionExplanation" class="step-by-step">
+                    Enter a number above to see its square root construction!
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Create Your Own Irrational Numbers</h2>
+            
+            <div class="interactive-area">
+                <h3>🎨 Irrational Number Generator</h3>
+                <p>Create irrational numbers with custom patterns that never repeat!</p>
+                
+                <div class="input-row">
+                    <label>Pattern Base:</label>
+                    <input type="text" id="irrationalPattern" placeholder="e.g., 01, 123, abc" class="calc-input" value="01">
+                    <button class="btn" onclick="generateIrrational()">🎲 Generate Irrational</button>
+                </div>
+                
+                <div id="irrationalResult" class="decimal-display">
+                    Your custom irrational number will appear here!
+                </div>
+                
+                <div id="irrationalExplanation" class="step-by-step">
+                    <strong>How it works:</strong> We create a non-repeating, non-terminating decimal by using your pattern with increasing group sizes: 1 digit, then 2 digits, then 3 digits, etc. This ensures the pattern never exactly repeats!
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Square Root Calculator & Classifier</h2>
+            
+            <div class="interactive-area">
+                <h3>🧮 Explore Square Roots</h3>
+                <p>Calculate square roots and discover which ones are rational vs irrational!</p>
+                
+                <div class="input-row">
+                    <label>Find √</label>
+                    <input type="number" id="sqrtInput" class="calc-input" placeholder="Enter number" min="0" step="0.1" value="2">
+                    <button class="btn" onclick="calculateSquareRoot()">🔍 Calculate & Classify</button>
+                </div>
+                
+                <div id="sqrtResult" class="calc-result">
+                    Enter a number to find its square root!
+                </div>
+
+                <div id="sqrtExplanation" class="info-box" style="display: none; padding-top: 25px;">
+                    <h4>🎯 Perfect Squares vs Non-Perfect Squares</h4>
+                    <p><strong>Perfect Squares:</strong> 1, 4, 9, 16, 25, 36, 49, 64, 81, 100...</p>
+                    <p><strong>√(Perfect Square) = Rational Number</strong></p>
+                    <p><strong>√(Non-Perfect Square) = Irrational Number</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Famous Irrational Numbers</h2>
+            
+            <div class="interactive-area">
+                <h3>🌟 Meet the Famous Irrationals</h3>
+                
+                <div class="input-row">
+                    <button class="btn" onclick="showFamousIrrational('sqrt2')">√2</button>
+                    <button class="btn" onclick="showFamousIrrational('sqrt3')">√3</button>
+                    <button class="btn" onclick="showFamousIrrational('pi')">π (Pi)</button>
+                    <button class="btn" onclick="showFamousIrrational('e')">e</button>
+                    <button class="btn" onclick="showFamousIrrational('golden')">φ (Golden Ratio)</button>
+                </div>
+                
+                <div id="famousIrrationalDisplay" class="calc-result">
+                    Click on any button above to explore famous irrational numbers!
+                </div>
+                
+                <div id="famousIrrationalInfo" class="info-box" style="display: none; padding-top: 25px;">
+                    Additional information will appear here!
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Between Rational Numbers</h2>
+            
+            <div class="interactive-area">
+                <h3>🔍 Find Irrational Numbers Between Rationals</h3>
+                <p>Example from textbook: Find an irrational number between 1/7 and 2/7</p>
+                
+                <div class="input-row">
+                    <input type="text" id="rational1" class="calc-input" placeholder="First rational (e.g., 1/7)" value="1/7">
+                    <span>and</span>
+                    <input type="text" id="rational2" class="calc-input" placeholder="Second rational (e.g., 2/7)" value="2/7">
+                </div>
+                
+                <div class="input-row">
+                    <button class="btn" onclick="findIrrationalBetween()">🎯 Find Irrational Between Them</button>
+                </div>
+                
+                <div id="betweenResult" class="calc-result">
+                    Click the button to find an irrational number between the given rationals!
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Knowledge Check</h2>
+            
+            <div class="quiz-area">
+                <div class="quiz-question">📝 Test Your Understanding</div>
+                
+                <div id="question1">
+                    <p><strong>Question 1:</strong> Which of the following is an irrational number?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">22/7</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'correct', this)">√2</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">0.333...</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">-5</div>
+                    </div>
+                    <div id="feedback1"></div>
+                </div>
+                
+                <div id="question2" style="margin-top: 20px;">
+                    <p><strong>Question 2:</strong> What type of decimal expansion do irrational numbers have?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Terminating</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Non-terminating recurring</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'correct', this)">Non-terminating non-recurring</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">All of the above</div>
+                    </div>
+                    <div id="feedback2"></div>
+                </div>
+                
+                <div id="question3" style="margin-top: 20px;">
+                    <p><strong>Question 3:</strong> Who first discovered irrational numbers?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(3, 'correct', this)">The Pythagoreans</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">Archimedes</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">Euclid</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">Newton</div>
+                    </div>
+                    <div id="feedback3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function animateSqrt2Construction() {
+            const canvas = document.getElementById('sqrt2Canvas');
+            const ctx = canvas.getContext('2d');
+            let step = 0;
+            
+            function drawStep() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = '#333';
+                ctx.font = '14px Arial';
+                
+                // Base coordinates
+                const originX = 100;
+                const originY = 200;
+                const unit = 80;
+                
+                if (step >= 0) {
+                    // Draw coordinate system
+                    ctx.strokeStyle = '#ccc';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(50, originY);
+                    ctx.lineTo(450, originY);
+                    ctx.stroke();
+                    
+                    // Mark origin
+                    ctx.fillStyle = '#333';
+                    ctx.fillText('O(0,0)', originX - 15, originY + 20);
+                }
+                
+                if (step >= 1) {
+                    // Draw unit square OABC
+                    ctx.strokeStyle = '#4ecdc4';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(originX, originY - unit, unit, unit);
+                    
+                    // Label square vertices
+                    ctx.fillStyle = '#4ecdc4';
+                    ctx.fillText('A(1,0)', originX + unit + 5, originY + 15);
+                    ctx.fillText('B(1,1)', originX + unit + 5, originY - unit - 5);
+                    ctx.fillText('C(0,1)', originX - 25, originY - unit - 5);
+                    
+                    // Label sides
+                    ctx.fillText('1', originX + unit/2 - 5, originY + 15);
+                    ctx.fillText('1', originX - 15, originY - unit/2);
+                }
+                
+                if (step >= 2) {
+                    // Draw diagonal OB
+                    ctx.strokeStyle = '#ff6b6b';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(originX + unit, originY - unit);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.fillText('√2', originX + unit/2 - 10, originY - unit/2 + 5);
+                }
+                
+                if (step >= 3) {
+                    // Show calculation
+                    ctx.fillStyle = '#333';
+                    ctx.fillText('By Pythagoras Theorem:', originX + 150, originY - 80);
+                    ctx.fillText('OB² = 1² + 1² = 2', originX + 150, originY - 60);
+                    ctx.fillText('Therefore, OB = √2', originX + 150, originY - 40);
+                }
+                
+                if (step >= 4) {
+                    // Draw number line
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(50, originY + 80);
+                    ctx.lineTo(400, originY + 80);
+                    ctx.stroke();
+                    
+                    // Mark integer points on number line
+                    for (let i = 0; i <= 3; i++) {
+                        const x = 50 + i * unit;
+                        ctx.beginPath();
+                        ctx.moveTo(x, originY + 70);
+                        ctx.lineTo(x, originY + 90);
+                        ctx.stroke();
+                        ctx.fillStyle = '#333';
+                        ctx.fillText(i, x - 5, originY + 105);
+                    }
+                }
+                
+                if (step >= 5) {
+                    // Draw arc to show √2 on number line
+                    const sqrt2Value = Math.sqrt(2);
+                    const sqrt2Pos = 50 + sqrt2Value * unit;
+                    
+                    // Draw arc
+                    ctx.strokeStyle = '#0891b2';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(originX, originY, unit * sqrt2Value, 0, Math.PI/2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Mark √2 on number line
+                    ctx.beginPath();
+                    ctx.moveTo(sqrt2Pos, originY + 70);
+                    ctx.lineTo(sqrt2Pos, originY + 90);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#0891b2';
+                    ctx.fillText('√2', sqrt2Pos - 8, originY + 105);
+                    ctx.fillText('≈ 1.414', sqrt2Pos - 15, originY + 120);
+                }
+                
+                step++;
+                if (step <= 5) {
+                    setTimeout(drawStep, 2000);
+                }
+            }
+            
+            drawStep();
+        }
+
+        function clearCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function constructSqrtN() {
+            const n = parseInt(document.getElementById('sqrtConstructInput').value);
+            const canvas = document.getElementById('constructionCanvas');
+            const ctx = canvas.getContext('2d');
+            const explanation = document.getElementById('constructionExplanation');
+            
+            if (!n || n < 2) {
+                explanation.innerHTML = 'Please enter a valid number ≥ 2!';
+                return;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw construction
+            const originX = 100;
+            const originY = 200;
+            const unit = 60;
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            
+            // Draw base line (number line)
+            ctx.beginPath();
+            ctx.moveTo(50, originY);
+            ctx.lineTo(450, originY);
+            ctx.stroke();
+            
+            // Mark points
+            for (let i = 0; i <= Math.ceil(Math.sqrt(n)) + 1; i++) {
+                const x = originX + i * unit;
+                if (x <= 450) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, originY - 5);
+                    ctx.lineTo(x, originY + 5);
+                    ctx.stroke();
+                    ctx.fillText(i, x - 3, originY + 18);
+                }
+            }
+            
+            // Draw construction lines
+            let currentPoint = {x: originX, y: originY};
+            
+            for (let i = 2; i <= n; i++) {
+                if (i === 2) {
+                    // First construction for √2
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(currentPoint.x, currentPoint.y - unit, unit, unit);
+                    ctx.strokeStyle = '#0891b2';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(currentPoint.x, currentPoint.y);
+                    ctx.lineTo(currentPoint.x + unit, currentPoint.y - unit);
+                    ctx.stroke();
+                    currentPoint = {x: currentPoint.x + unit, y: currentPoint.y - unit};
+                } else {
+                    // Subsequent constructions
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 2;
+                    
+                    // Draw perpendicular of length 1
+                    ctx.beginPath();
+                    ctx.moveTo(currentPoint.x, currentPoint.y);
+                    ctx.lineTo(currentPoint.x, currentPoint.y - unit);
+                    ctx.stroke();
+                    
+                    // Draw hypotenuse
+                    ctx.strokeStyle = '#0891b2';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(currentPoint.x, currentPoint.y - unit);
+                    ctx.stroke();
+                    
+                    currentPoint = {x: currentPoint.x, y: currentPoint.y - unit};
+                }
+            }
+            
+            // Mark final result on number line
+            const sqrtN = Math.sqrt(n);
+            const finalPos = originX + sqrtN * unit;
+            
+            if (finalPos <= 450) {
+                ctx.strokeStyle = '#0891b2';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(originX, originY, sqrtN * unit, 0, Math.PI/2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.beginPath();
+                ctx.moveTo(finalPos, originY - 5);
+                ctx.lineTo(finalPos, originY + 5);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#0891b2';
+                ctx.fillText(`√${n}`, finalPos - 8, originY + 30);
+                ctx.fillText(`≈ ${sqrtN.toFixed(3)}`, finalPos - 15, originY + 45);
+            }
+            
+            explanation.innerHTML = `
+                <strong>Construction of √${n}:</strong><br>
+                • Start with √2 (from unit square)<br>
+                • For each step, draw a perpendicular of length 1<br>
+                • Use Pythagoras theorem: √${n} = √((√${n-1})² + 1²)<br>
+                • Final result: √${n} ≈ ${sqrtN.toFixed(6)}
+            `;
+        }
+
+        function generateIrrational() {
+            const pattern = document.getElementById('irrationalPattern').value;
+            const result = document.getElementById('irrationalResult');
+            
+            if (!pattern) {
+                result.innerHTML = 'Please enter a pattern!';
+                return;
+            }
+            
+            // Create an irrational number based on pattern
+            let irrationalNumber = '0.1';
+            let currentGroup = '';
+            let groupSize = 1;
+            let usedDigits = 0;
+            
+            for (let iteration = 0; iteration < 10 && usedDigits < 50; iteration++) {
+                currentGroup = '';
+                for (let i = 0; i < groupSize && usedDigits < 50; i++) {
+                    currentGroup += pattern[i % pattern.length];
+                    usedDigits++;
+                }
+                irrationalNumber += currentGroup;
+                groupSize++;
+            }
+            
+            irrationalNumber += '...';
+            
+            result.innerHTML = irrationalNumber;
+        }
+
+        function calculateSquareRoot() {
+            const input = document.getElementById('sqrtInput').value;
+            const result = document.getElementById('sqrtResult');
+            const explanation = document.getElementById('sqrtExplanation');
+            
+            if (!input || input < 0) {
+                result.innerHTML = 'Please enter a non-negative number!';
+                explanation.style.display = 'none';
+                return;
+            }
+            
+            const num = parseFloat(input);
+            const sqrt = Math.sqrt(num);
+            const isExact = Number.isInteger(sqrt);
+            
+            let output = `<strong>√${num} = ${sqrt.toFixed(8)}</strong><br><br>`;
+            
+            if (isExact) {
+                output += `🎯 <span style="color: #10b981;">This is RATIONAL!</span><br>`;
+                output += `${num} is a perfect square because ${sqrt} × ${sqrt} = ${num}`;
+            } else {
+                output += `∞ <span style="color: #dc2626;">This is IRRATIONAL!</span><br>`;
+                output += `${num} is not a perfect square, so √${num} cannot be expressed as p/q`;
+            }
+            
+            result.innerHTML = output;
+            explanation.style.display = 'block';
+        }
+
+        function showFamousIrrational(type) {
+            const display = document.getElementById('famousIrrationalDisplay');
+            const info = document.getElementById('famousIrrationalInfo');
+            
+            const famous = {
+                sqrt2: {
+                    value: Math.sqrt(2).toFixed(15),
+                    name: '√2 (Square root of 2)',
+                    description: 'The first irrational number discovered by the Pythagoreans',
+                    uses: 'Diagonal of unit square, music intervals, paper sizes (A4, A3, etc.)'
+                },
+                sqrt3: {
+                    value: Math.sqrt(3).toFixed(15),
+                    name: '√3 (Square root of 3)',
+                    description: 'Height of equilateral triangle with side 2',
+                    uses: 'Geometry, trigonometry (60° angles), hexagonal patterns'
+                },
+                pi: {
+                    value: Math.PI.toFixed(15),
+                    name: 'π (Pi)',
+                    description: 'Ratio of circumference to diameter of any circle',
+                    uses: 'Circles, spheres, waves, probability, and countless areas of mathematics'
+                },
+                e: {
+                    value: Math.E.toFixed(15),
+                    name: 'e (Euler\'s number)',
+                    description: 'Base of natural logarithm, appears in exponential growth',
+                    uses: 'Calculus, compound interest, population growth, radioactive decay'
+                },
+                golden: {
+                    value: ((1 + Math.sqrt(5)) / 2).toFixed(15),
+                    name: 'φ (Golden Ratio)',
+                    description: 'The most aesthetically pleasing ratio in nature and art',
+                    uses: 'Art, architecture, Fibonacci sequence, spiral patterns in nature'
+                }
+            };
+            
+            const selected = famous[type];
+            display.innerHTML = `
+                <strong>${selected.name}</strong><br>
+                <div style="font-family: 'Courier New', monospace; font-size: 18px; margin: 10px 0;">
+                    ${selected.value}...
+                </div>
+                <div style="margin-top: 10px;">
+                    ${selected.description}
+                </div>
+            `;
+            
+            info.innerHTML = `
+                <strong>🎯 Applications:</strong><br>
+                ${selected.uses}
+            `;
+            info.style.display = 'block';
+        }
+
+        function findIrrationalBetween() {
+            const rational1Str = document.getElementById('rational1').value;
+            const rational2Str = document.getElementById('rational2').value;
+            const result = document.getElementById('betweenResult');
+            
+            // Parse fractions or decimals
+            function parseRational(str) {
+                if (str.includes('/')) {
+                    const parts = str.split('/');
+                    return parseFloat(parts[0]) / parseFloat(parts[1]);
+                }
+                return parseFloat(str);
+            }
+            
+            try {
+                const r1 = parseRational(rational1Str);
+                const r2 = parseRational(rational2Str);
+                
+                if (isNaN(r1) || isNaN(r2)) {
+                    result.innerHTML = 'Please enter valid rational numbers!';
+                    return;
+                }
+                
+                const min = Math.min(r1, r2);
+                const max = Math.max(r1, r2);
+                
+                // Create an irrational number between them
+                // Example: 0.150150015000150000... (from textbook)
+                let irrational = min.toString();
+                if (!irrational.includes('.')) irrational += '.';
+                
+                // Add a non-repeating pattern
+                let pattern = '150';
+                let currentLength = 3;
+                for (let i = 0; i < 5; i++) {
+                    irrational += pattern + '0'.repeat(i);
+                }
+                irrational += '...';
+                
+                // Verify it's between the rationals
+                const testValue = parseFloat(irrational.replace('...', ''));
+                if (testValue <= min || testValue >= max) {
+                    // Adjust to ensure it's between
+                    const middle = (min + max) / 2;
+                    irrational = middle.toFixed(3) + '10110111011110...';
+                }
+                
+                result.innerHTML = `
+                    <div style="text-align: left; line-height: 1.6;">
+                        <strong>🎯 Irrational number between ${rational1Str} and ${rational2Str}:</strong><br><br>
+                        <div style="font-family: 'Courier New', monospace; font-size: 16px; background: #f0fdfa; padding: 10px; border-radius: 5px; word-break: break-all; overflow-wrap: break-word;">
+                            ${irrational}
+                        </div><br>
+                        <strong>Why it's irrational:</strong><br>
+                        • The decimal expansion is non-terminating and non-recurring!<br><br>
+                        <strong>Verification:</strong><br>
+                        • ${rational1Str} = ${r1.toFixed(6)}...<br>
+                        • Our number ≈ ${parseFloat(irrational.replace('...', '')).toFixed(6)}...<br>
+                        • ${rational2Str} = ${r2.toFixed(6)}...
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = 'Error parsing the rational numbers. Please use format like 1/7 or 0.142857';
+            }
+        }
+
+        function answerQuiz(questionNum, answer, element) {
+            // Remove previous selections
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Select current option
+            element.classList.add('selected');
+            
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            const correctAnswers = {
+                1: 'correct', // √2 is irrational
+                2: 'correct', // Non-terminating non-recurring
+                3: 'correct'  // The Pythagoreans
+            };
+            
+            const isCorrect = answer === correctAnswers[questionNum];
+            
+            const explanations = {
+                1: '√2 cannot be expressed as p/q where p, q are integers. 22/7 is just an approximation of π, 0.333... = 1/3, and -5 is an integer.',
+                2: 'Irrational numbers have decimal expansions that never terminate and never repeat in a pattern.',
+                3: 'The Pythagoreans in ancient Greece (around 400 BC) were the first to discover that some numbers cannot be expressed as ratios of integers.'
+            };
+            
+            if (isCorrect) {
+                feedback.innerHTML = `<div class="feedback success">✅ Excellent! <span class="achievement-badge">🏆 Irrational Explorer</span><br>${explanations[questionNum]}</div>`;
+            } else {
+                feedback.innerHTML = `<div class="feedback error">❌ Keep exploring! ${explanations[questionNum]}</div>`;
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show √2 by default
+            showFamousIrrational('sqrt2');
+        });
+    </script>
+
+    <!-- Brand Watermark -->
+    <div class="brand-watermark">
+        <svg width="120" height="120" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <g transform="rotate(-45, 256, 256)">
+                <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                    c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                    c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                    c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                    c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                    c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                    c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                    c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                    c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                    c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                    c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                    c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                    c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                    c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                    c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                    c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                    c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                    c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                    c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                    c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                    c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                    c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                    c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                    c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                    c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                    c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                    c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                    c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                    fill="#0891b2">
+                </path>
+                <circle cx="385" cy="256" r="48" fill="#dc2626"></circle>
+            </g>
+        </svg>
+    </div>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.2);">
+        <div style="color: white; opacity: 0.9;">
+            <p style="margin: 5px 0; font-size: 16px; font-weight: 600;">Powered by Paaṭha AI</p>
+            <p style="margin: 5px 0; font-size: 14px;">Interactive Mathematics Learning Platform</p>
+            <p style="margin: 5px 0; font-size: 12px; opacity: 0.7;">© 2024 Paaṭha AI. Transforming Education with AI.</p>
+        </div>
+    </footer>
+</body>
+</html>

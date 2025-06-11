@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Set Theory - Examples & Exercises</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        
+        .navigation {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-buttons { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        
+        .nav-button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white; border: none; padding: 15px 25px; border-radius: 10px;
+            cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s;
+        }
+        
+        .nav-button:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4); }
+        .nav-button.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        
+        .section {
+            background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1); display: none;
+        }
+        
+        .section.active { display: block; }
+        
+        .section h2 {
+            color: #4a5568; margin-bottom: 20px; font-size: 1.8em;
+            border-bottom: 3px solid #667eea; padding-bottom: 10px;
+        }
+        
+        .example-container {
+            background: #f7fafc; padding: 20px; border-radius: 10px;
+            margin: 15px 0; border-left: 5px solid #667eea;
+        }
+        
+        .controls { display: flex; flex-wrap: wrap; gap: 15px; margin: 20px 0; align-items: flex-end; }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .control-group label { font-weight: bold; color: #4a5568; }
+        
+        input[type="text"] {
+            padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px;
+            font-size: 14px; min-width: 200px; font-family: 'Courier New', monospace;
+        }
+        
+        input[type="text"]:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+            border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: bold; transition: transform 0.2s;
+        }
+        
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        
+        .results {
+            background: #f0fff4; padding: 20px; border-radius: 10px;
+            margin: 15px 0; border: 2px solid #68d391;
+        }
+        
+        .result-item {
+            margin: 10px 0; padding: 15px; background: white;
+            border-radius: 8px; border-left: 4px solid #38a169;
+        }
+        
+        .set-display {
+            display: inline-block; background: #edf2f7; padding: 8px 12px;
+            border-radius: 6px; border: 1px solid #cbd5e0;
+            font-family: 'Courier New', monospace; font-weight: bold; color: #2d3748;
+        }
+        
+        .venn-container { display: flex; justify-content: center; margin: 20px 0; }
+        
+        .venn-diagram {
+            width: 400px; height: 300px; position: relative;
+            background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 10px;
+        }
+        
+        .set-a {
+            width: 200px; height: 200px; background: rgba(255, 99, 132, 0.3);
+            border: 3px solid #ff6384; border-radius: 50%;
+            position: absolute; top: 50px; left: 100px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.2em; color: #e53e3e;
+        }
+        
+        .complement-area {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(54, 162, 235, 0.2); border-radius: 8px; z-index: -1;
+        }
+        
+        .label { position: absolute; font-weight: bold; font-size: 1.1em; }
+        .label-u { top: 10px; left: 15px; color: #2d3748; }
+        .label-a { top: 130px; left: 180px; color: #e53e3e; }
+        .label-complement { top: 20px; right: 20px; color: #3182ce; }
+        
+        .laws-section {
+            background: #e6fffa; padding: 20px; border-radius: 8px;
+            border: 2px solid #38b2ac; margin: 20px 0;
+        }
+        
+        .law-item {
+            margin: 10px 0; padding: 10px; background: white;
+            border-radius: 6px; border-left: 4px solid #38b2ac;
+        }
+        
+        .quiz-question {
+            background: #f0f4f8; padding: 15px; border-radius: 8px;
+            margin: 15px 0; border-left: 4px solid #38a169;
+        }
+        
+        .quiz-option {
+            padding: 12px; background: #fff; border: 2px solid #e2e8f0;
+            border-radius: 6px; cursor: pointer; margin: 10px 0; transition: all 0.2s;
+        }
+        
+        .quiz-option:hover { border-color: #667eea; background: #f7fafc; }
+        .quiz-option.correct { background: #c6f6d5; border-color: #38a169; }
+        .quiz-option.incorrect { background: #fed7d7; border-color: #e53e3e; }
+        
+        .feedback {
+            margin-top: 10px; padding: 10px; border-radius: 6px;
+            font-weight: bold; display: none;
+        }
+        
+        .feedback.correct { background: #c6f6d5; color: #22543d; }
+        .feedback.incorrect { background: #fed7d7; color: #742a2a; }
+        
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .nav-buttons { flex-direction: column; }
+            .venn-diagram { width: 320px; height: 240px; }
+            .set-a { width: 150px; height: 150px; left: 85px; top: 45px; }
+            .controls { flex-direction: column; align-items: stretch; }
+            input[type="text"] { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Complete Set Theory Guide</h1>
+            <p>Interactive Learning Tool for Class 11 Mathematics</p>
+        </div>
+
+        <div class="navigation">
+            <div class="nav-buttons">
+                <button class="nav-button active" onclick="showSection('complement')">Complement of Sets</button>
+                <button class="nav-button" onclick="showSection('examples')">Worked Examples</button>
+                <button class="nav-button" onclick="showSection('exercises')">Practice Exercises</button>
+                <button class="nav-button" onclick="showSection('quiz')">Knowledge Check</button>
+            </div>
+        </div>
+
+        <!-- Complement Section -->
+        <div id="complement" class="section active">
+            <h2>📊 Complement of a Set</h2>
+            
+            <div class="example-container">
+                <p><strong>Definition:</strong> Let U be the universal set and A a subset of U. Then the complement of A is the set of all elements of U which are not the elements of A.</p>
+                <p><strong>Notation:</strong> A' = {x : x ∈ U and x ∉ A} = U - A</p>
+            </div>
+            
+            <div class="venn-container">
+                <div class="venn-diagram">
+                    <div class="complement-area"></div>
+                    <div class="set-a">A</div>
+                    <div class="label label-u">U</div>
+                    <div class="label label-complement">A'</div>
+                </div>
+            </div>
+            
+            <div class="example-container">
+                <h3>🔧 Interactive Set Explorer</h3>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="universalSet">Universal Set U:</label>
+                        <input type="text" id="universalSet" placeholder="e.g., 1,2,3,4,5,6,7,8,9,10" value="">
+                    </div>
+                    <div class="control-group">
+                        <label for="setA">Set A:</label>
+                        <input type="text" id="setA" placeholder="e.g., 1,3,5,7,9" value="">
+                    </div>
+                    <button onclick="calculateComplement()">Calculate A'</button>
+                    <button onclick="loadExample()">Load Example</button>
+                </div>
+
+                <div class="results" id="results" style="display: none;">
+                    <div class="result-item">
+                        <strong>Universal Set (U):</strong> <span id="displayU" class="set-display"></span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Set A:</strong> <span id="displayA" class="set-display"></span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Complement A':</strong> <span id="displayComplement" class="set-display"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="laws-section">
+                <h3>📜 Properties of Complement Sets</h3>
+                <div class="law-item">
+                    <strong>1. Complement Laws:</strong>
+                    <br>• A ∪ A' = U
+                    <br>• A ∩ A' = ∅
+                </div>
+                <div class="law-item">
+                    <strong>2. De Morgan's Laws:</strong>
+                    <br>• (A ∪ B)' = A' ∩ B'
+                    <br>• (A ∩ B)' = A' ∪ B'
+                </div>
+                <div class="law-item">
+                    <strong>3. Double Complementation:</strong>
+                    <br>• (A')' = A
+                </div>
+                <div class="law-item">
+                    <strong>4. Universal and Empty Set Laws:</strong>
+                    <br>• ∅' = U
+                    <br>• U' = ∅
+                </div>
+            </div>
+        </div>
+
+        <!-- Examples Section -->
+        <div id="examples" class="section">
+            <h2>📝 Worked Examples</h2>
+            
+            <div class="example-container">
+                <h3>Example 23: Set Equality from Words</h3>
+                <p><strong>Problem:</strong> Show that the set of letters needed to spell "CATARACT" and "TRACT" are equal.</p>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="word1">First Word:</label>
+                        <input type="text" id="word1" placeholder="Enter first word">
+                    </div>
+                    <div class="control-group">
+                        <label for="word2">Second Word:</label>
+                        <input type="text" id="word2" placeholder="Enter second word">
+                    </div>
+                    <button onclick="compareWords()">Compare Sets</button>
+                    <button onclick="loadWordExample()">Load Example</button>
+                </div>
+
+                <div class="results" id="wordResults" style="display: none;">
+                    <div class="result-item">
+                        <strong>Set X (from first word):</strong> <span id="setX" class="set-display"></span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Set Y (from second word):</strong> <span id="setY" class="set-display"></span>
+                    </div>
+                    <div class="result-item" id="equalityResult">
+                        <strong>Conclusion:</strong> <span id="equalityText"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercises Section -->
+        <div id="exercises" class="section">
+            <h2>💪 Practice Exercises</h2>
+            
+            <div class="example-container">
+                <h3>Exercise 1: Subset Relationships</h3>
+                <p><strong>Problem:</strong> Determine which sets are subsets of one another:</p>
+                <p>A = {x : x ∈ ℝ and x² - 8x + 12 = 0}, B = {2, 4, 6}, C = {2, 4, 6, 8, 10, ...}, D = {6}</p>
+                
+                <button onclick="solveQuadratic()">Solve & Find Relationships</button>
+                
+                <div class="results" id="exerciseResults" style="display: none;">
+                    <div class="result-item">
+                        <strong>Set A (solving x² - 8x + 12 = 0):</strong>
+                        <p>So A = <span class="set-display">{2, 6}</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="section">
+            <h2>🧠 Knowledge Check</h2>
+            
+            <div class="quiz-question">
+                <h4>Question 1: How many subsets does the set {a, b, c, d} have?</h4>
+                <div class="quiz-option" onclick="checkAnswer(this, false, 1)">8 subsets</div>
+                <div class="quiz-option" onclick="checkAnswer(this, false, 1)">12 subsets</div>
+                <div class="quiz-option" onclick="checkAnswer(this, true, 1)">16 subsets</div>
+                <div class="quiz-option" onclick="checkAnswer(this, false, 1)">20 subsets</div>
+                <div class="feedback" id="feedback1"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Question 2: According to De Morgan's Law, (A ∪ B)' equals:</h4>
+                <div class="quiz-option" onclick="checkAnswer(this, false, 2)">A' ∪ B'</div>
+                <div class="quiz-option" onclick="checkAnswer(this, true, 2)">A' ∩ B'</div>
+                <div class="quiz-option" onclick="checkAnswer(this, false, 2)">A ∩ B</div>
+                <div class="quiz-option" onclick="checkAnswer(this, false, 2)">A ∪ B</div>
+                <div class="feedback" id="feedback2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function parseSet(str) {
+            if (!str || str.trim() === '') return [];
+            return str.split(',').map(s => s.trim()).filter(s => s !== '');
+        }
+
+        function formatSet(arr) {
+            if (arr.length === 0) return '∅';
+            return `{${arr.join(', ')}}`;
+        }
+
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.querySelectorAll('.nav-button').forEach(button => button.classList.remove('active'));
+            
+            document.getElementById(sectionName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function calculateComplement() {
+            const universalInput = document.getElementById('universalSet').value.trim();
+            const setAInput = document.getElementById('setA').value.trim();
+            
+            if (!universalInput || !setAInput) {
+                alert('Please enter both Universal Set and Set A');
+                return;
+            }
+
+            const U = parseSet(universalInput);
+            const A = parseSet(setAInput);
+            
+            const isSubset = A.every(element => U.includes(element));
+            if (!isSubset) {
+                alert('Set A must be a subset of Universal Set U');
+                return;
+            }
+
+            const complement = U.filter(element => !A.includes(element));
+            
+            document.getElementById('displayU').textContent = formatSet(U);
+            document.getElementById('displayA').textContent = formatSet(A);
+            document.getElementById('displayComplement').textContent = formatSet(complement);
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function loadExample() {
+            document.getElementById('universalSet').value = '1,2,3,4,5,6,7,8,9,10';
+            document.getElementById('setA').value = '1,3,5,7,9';
+            calculateComplement();
+        }
+
+        function getUniqueLetters(word) {
+            return [...new Set(word.toUpperCase().split('').filter(char => /[A-Z]/.test(char)))].sort();
+        }
+
+        function compareWords() {
+            const word1 = document.getElementById('word1').value.trim();
+            const word2 = document.getElementById('word2').value.trim();
+            
+            if (!word1 || !word2) {
+                alert('Please enter both words');
+                return;
+            }
+
+            const letters1 = getUniqueLetters(word1);
+            const letters2 = getUniqueLetters(word2);
+            
+            const areEqual = letters1.length === letters2.length && letters1.every(letter => letters2.includes(letter));
+
+            document.getElementById('setX').textContent = formatSet(letters1);
+            document.getElementById('setY').textContent = formatSet(letters2);
+            
+            const equalityResult = document.getElementById('equalityResult');
+            const equalityText = document.getElementById('equalityText');
+            
+            if (areEqual) {
+                equalityText.textContent = 'X = Y (The sets are equal)';
+                equalityResult.style.background = '#c6f6d5';
+            } else {
+                equalityText.textContent = 'X ≠ Y (The sets are not equal)';
+                equalityResult.style.background = '#fed7d7';
+            }
+            
+            document.getElementById('wordResults').style.display = 'block';
+        }
+
+        function loadWordExample() {
+            document.getElementById('word1').value = 'CATARACT';
+            document.getElementById('word2').value = 'TRACT';
+            compareWords();
+        }
+
+        function solveQuadratic() {
+            document.getElementById('exerciseResults').style.display = 'block';
+        }
+
+        function checkAnswer(optionElement, isCorrect, questionNumber) {
+            const parentQuestion = optionElement.parentElement;
+            const options = parentQuestion.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('feedback' + questionNumber);
+            
+            options.forEach(opt => {
+                opt.classList.remove('correct', 'incorrect');
+                opt.style.pointerEvents = 'none';
+            });
+            
+            if (isCorrect) {
+                optionElement.classList.add('correct');
+                feedback.textContent = questionNumber === 1 ? 
+                    '✅ Correct! For n elements, there are 2ⁿ subsets. So 2⁴ = 16 subsets.' :
+                    '✅ Correct! According to De Morgan\'s law: (A ∪ B)\' = A\' ∩ B\'.';
+                feedback.className = 'feedback correct';
+            } else {
+                optionElement.classList.add('incorrect');
+                options.forEach(opt => {
+                    if (opt.onclick.toString().includes('true')) {
+                        opt.classList.add('correct');
+                    }
+                });
+                feedback.textContent = questionNumber === 1 ? 
+                    '❌ Incorrect. Use the formula 2ⁿ where n = 4, so 2⁴ = 16.' :
+                    '❌ Incorrect. De Morgan\'s law: (A ∪ B)\' = A\' ∩ B\', not A\' ∪ B\'.';
+                feedback.className = 'feedback incorrect';
+            }
+            
+            feedback.style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Set Theory Tool loaded successfully');
+        });
+    </script>
+</body>
+</html>

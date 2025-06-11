@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sowing - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="seedPattern" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse"><circle cx="7.5" cy="7.5" r="2" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100" height="100" fill="url(%23seedPattern)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 15px;
+            background: #dbeafe;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .section h2 {
+            color: #1e40af;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .seed-test-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .water-container {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.3));
+            border: 3px solid #3b82f6;
+            border-radius: 15px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .water-surface {
+            position: absolute;
+            top: 20%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+            animation: ripple 2s ease-in-out infinite;
+        }
+
+        @keyframes ripple {
+            0%, 100% { opacity: 0.5; transform: scaleX(1); }
+            50% { opacity: 1; transform: scaleX(1.1); }
+        }
+
+        .seed {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #d97706;
+            border-radius: 50%;
+            transition: all 2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .seed.good {
+            background: #059669;
+        }
+
+        .seed.floating {
+            top: 15%;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .seed.sinking {
+            top: 80%;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .tools-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .tool-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            text-align: center;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #3b82f6;
+        }
+
+        .tool-card.active {
+            border-color: #059669;
+            background: #f0fdf4;
+        }
+
+        .tool-image {
+            width: 100%;
+            height: 150px;
+            background: #f8fafc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .spacing-game {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            max-width: 400px;
+            margin: 20px auto;
+            background: #92400e;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .field-cell {
+            width: 40px;
+            height: 40px;
+            background: #a16207;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .field-cell:hover {
+            background: #d97706;
+            transform: scale(1.1);
+        }
+
+        .field-cell.planted {
+            background: #22c55e;
+        }
+
+        .field-cell.overcrowded {
+            background: #ef4444;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .quiz-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #374151;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option {
+            padding: 15px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            background: #f3f4f6;
+            border-color: #3b82f6;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score {
+            background: linear-gradient(135deg, #1e40af, #1e3a8a);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .feedback.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+
+        .feedback.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .nursery-demo {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .nursery-tray {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 20px auto;
+            background: #374151;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .seedling-pot {
+            width: 40px;
+            height: 50px;
+            background: #92400e;
+            border-radius: 5px 5px 15px 15px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .seedling-pot:hover {
+            transform: scale(1.1);
+        }
+
+        .seedling {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+
+        .seedling-pot.growing .seedling {
+            opacity: 1;
+            top: -10px;
+        }
+
+        .growth-stages {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .growth-stage {
+            text-align: center;
+            margin: 10px;
+            padding: 15px;
+            background: #f0fdf4;
+            border-radius: 10px;
+            border: 2px solid #22c55e;
+            min-width: 100px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: #3b82f6;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        @media (max-width: 768px) {
+            .tools-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .field-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <svg 
+                        viewBox="0 0 512 512" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        style="height: 48px; width: 48px;"
+                        aria-label="Paaṭha AI Logo"
+                    >
+                        <defs>
+                            <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#dc2626" />
+                                <stop offset="33%" stop-color="#dc2626" />
+                                <stop offset="66%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#ecfdf5" />
+                            </linearGradient>
+                        </defs>
+                        <g transform="rotate(-45, 256, 256)">
+                            <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                                c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                                c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                                c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                                c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                                c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                                c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                                c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                                c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                                c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                                c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                                c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                                c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                                c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                                c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                                c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                                c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                                c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                                c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                                c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                                c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                                c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                                c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                                c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                                c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                                c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                                c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                                c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                                fill="url(#brandGradient)"
+                                opacity="0.9">
+                            </path>
+                            <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                        </g>
+                    </svg>
+                    <div>
+                        <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                        <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Agriculture Learning</p>
+                    </div>
+                </div>
+                <h2 style="font-size: 1.8em; margin-bottom: 10px;">🌱 1.4 Sowing</h2>
+                <p style="font-size: 1.2em; opacity: 0.9;">Master seed selection, sowing techniques, and learn the importance of proper plant spacing!</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Seed Selection Activity -->
+            <div class="section">
+                <h2>🧪 Seed Selection - Float Test Activity</h2>
+                <p>Learn to identify healthy seeds using the water float test from Activity 1.1!</p>
+                
+                <div class="seed-test-container">
+                    <h3>Water Container - Observe Which Seeds Float!</h3>
+                    <div class="water-container" id="water-container">
+                        <div class="water-surface"></div>
+                        <!-- Seeds will be added dynamically -->
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="startSeedTest()">🌰 Add Seeds to Water</button>
+                        <button class="btn" onclick="resetSeedTest()">🔄 Reset Test</button>
+                    </div>
+
+                    <div id="seed-test-results" class="feedback" style="display: none;"></div>
+
+                    <div style="margin-top: 20px; text-align: left; background: #f0fdf4; padding: 15px; border-radius: 10px;">
+                        <h4>🎯 Why Do Some Seeds Float?</h4>
+                        <ul>
+                            <li><strong>Healthy seeds:</strong> Dense and heavy - they sink to the bottom</li>
+                            <li><strong>Damaged seeds:</strong> Hollow inside - they float on water surface</li>
+                            <li><strong>Application:</strong> Farmers use this simple method to select good seeds</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sowing Tools Comparison -->
+            <div class="section">
+                <h2>🛠️ Sowing Tools - Traditional vs Modern</h2>
+                <p>Compare different tools used for sowing seeds!</p>
+                
+                <div class="tools-comparison">
+                    <div class="tool-card" onclick="showToolDetails('traditional')">
+                        <div class="tool-image">⚒️</div>
+                        <h3>Traditional Tool</h3>
+                        <p>Funnel-shaped tool with pipes</p>
+                        <small>Used with bullocks</small>
+                    </div>
+
+                    <div class="tool-card" onclick="showToolDetails('seed-drill')">
+                        <div class="tool-image">🚜</div>
+                        <h3>Seed Drill</h3>
+                        <p>Modern tractor-driven tool</p>
+                        <small>Uniform and efficient</small>
+                    </div>
+                </div>
+
+                <div id="tool-details" class="quiz-container" style="display: none;">
+                    <!-- Tool details will be shown here -->
+                </div>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Traditional Tool</th>
+                            <th>Seed Drill</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Power Source</strong></td>
+                            <td>Bullocks/Animals</td>
+                            <td>Tractor</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Seed Placement</strong></td>
+                            <td>Manual control</td>
+                            <td>Uniform depth & distance</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Speed</strong></td>
+                            <td>Slower</td>
+                            <td>Much faster</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Seed Coverage</strong></td>
+                            <td>May need manual covering</td>
+                            <td>Automatic soil covering</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bird Protection</strong></td>
+                            <td>Limited protection</td>
+                            <td>Better protection</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Seed Spacing Game -->
+            <div class="section">
+                <h2>🎯 Seed Spacing Game</h2>
+                <p>Plant seeds with proper spacing to avoid overcrowding!</p>
+                
+                <div class="spacing-game">
+                    <h3>🌾 Virtual Field - Click to Plant Seeds</h3>
+                    <p>Rule: Maintain at least 1 empty cell between each seed to avoid overcrowding</p>
+                    
+                    <div class="field-grid" id="field-grid">
+                        <!-- Grid cells will be generated dynamically -->
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="checkSpacing()">✅ Check Spacing</button>
+                        <button class="btn" onclick="clearField()">🗑️ Clear Field</button>
+                        <button class="btn" onclick="autoSpace()">🤖 Show Correct Spacing</button>
+                    </div>
+
+                    <div id="spacing-feedback" class="feedback" style="display: none;"></div>
+                    <div id="spacing-score" class="score">Seeds Planted: 0 | Properly Spaced: 0</div>
+                </div>
+            </div>
+
+            <!-- Nursery vs Direct Sowing -->
+            <div class="section">
+                <h2>🌱 Nursery vs Direct Sowing</h2>
+                <p>Experience the difference between nursery cultivation and direct field sowing!</p>
+                
+                <div class="nursery-demo">
+                    <h3>👶 Nursery Demonstration</h3>
+                    <p>Click on the pots to see seedlings grow!</p>
+                    
+                    <div class="nursery-tray" id="nursery-tray">
+                        <!-- Nursery pots will be generated -->
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="startNursery()">🌱 Start Growing</button>
+                        <button class="btn" onclick="transplantSeedlings()">🚚 Transplant to Field</button>
+                        <button class="btn" onclick="resetNursery()">🔄 Reset Nursery</button>
+                    </div>
+
+                    <div class="growth-stages">
+                        <div class="growth-stage">
+                            <div style="font-size: 2rem;">🌰</div>
+                            <p>Seeds</p>
+                        </div>
+                        <div class="growth-stage">
+                            <div style="font-size: 2rem;">🌱</div>
+                            <p>Seedlings</p>
+                        </div>
+                        <div class="growth-stage">
+                            <div style="font-size: 2rem;">🌾</div>
+                            <p>Transplanted</p>
+                        </div>
+                    </div>
+
+                    <div style="text-align: left; background: #fffbeb; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <h4>🌟 Why Use Nurseries?</h4>
+                        <ul>
+                            <li><strong>Better Care:</strong> Young plants get individual attention</li>
+                            <li><strong>Protection:</strong> Safe from pests and harsh weather</li>
+                            <li><strong>Space Efficient:</strong> Grow many plants in small area</li>
+                            <li><strong>Examples:</strong> Paddy, forest plants, flowering plants</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge Quiz -->
+            <div class="section">
+                <h2>🧠 Sowing Knowledge Quiz</h2>
+                <div class="quiz-container">
+                    <div id="quiz-question" class="question">Loading question...</div>
+                    <div id="quiz-options" class="options"></div>
+                    <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="nextQuestion()">Next Question</button>
+                    <div id="quiz-score" class="score">Score: 0/0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Questions
+        const quizQuestions = [
+            {
+                question: "Why do damaged seeds float on water?",
+                options: ["They are waterproof", "They become hollow and lighter", "They absorb water", "They are oily"],
+                correct: 1
+            },
+            {
+                question: "What is the main advantage of using a seed drill?",
+                options: ["It's cheaper", "It sows seeds uniformly", "It uses less seeds", "It works without fuel"],
+                correct: 1
+            },
+            {
+                question: "Why is proper spacing between seeds important?",
+                options: ["To save seeds", "To avoid overcrowding", "To make harvesting easier", "To prevent pests"],
+                correct: 1
+            },
+            {
+                question: "Which crops are typically grown in nurseries first?",
+                options: ["Wheat", "Paddy", "Maize", "Cotton"],
+                correct: 1
+            },
+            {
+                question: "What protects seeds sown by seed drill from birds?",
+                options: ["Chemical coating", "Soil covering", "Plastic sheets", "Scarecrows"],
+                correct: 1
+            }
+        ];
+
+        // Tool Details
+        const toolDetails = {
+            traditional: {
+                name: "⚒️ Traditional Sowing Tool",
+                description: "Shaped like a funnel with 2-3 pipes having sharp ends that pierce the soil.",
+                advantages: ["Low cost", "Simple to use", "No fuel required", "Easy maintenance"],
+                disadvantages: ["Slower process", "Uneven seed placement", "Requires animals", "Limited efficiency"]
+            },
+            "seed-drill": {
+                name: "🚜 Seed Drill",
+                description: "Modern tractor-driven tool that sows seeds uniformly at equal distance and depth.",
+                advantages: ["Uniform spacing", "Automatic soil covering", "Fast operation", "Saves labor"],
+                disadvantages: ["Higher cost", "Requires fuel", "Needs maintenance", "May need training"]
+            }
+        };
+
+        // Global Variables
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+        let plantedSeeds = [];
+        let spacingScore = 0;
+
+        // Seed Test Functions
+        function startSeedTest() {
+            const container = document.getElementById('water-container');
+            container.innerHTML = '<div class="water-surface"></div>';
+            
+            // Add various seeds
+            const seeds = [
+                { id: 1, type: 'good', left: '20%' },
+                { id: 2, type: 'damaged', left: '35%' },
+                { id: 3, type: 'good', left: '50%' },
+                { id: 4, type: 'damaged', left: '65%' },
+                { id: 5, type: 'good', left: '80%' },
+                { id: 6, type: 'damaged', left: '25%' },
+                { id: 7, type: 'good', left: '70%' }
+            ];
+
+            seeds.forEach((seedData, index) => {
+                setTimeout(() => {
+                    const seed = document.createElement('div');
+                    seed.className = `seed ${seedData.type}`;
+                    seed.style.left = seedData.left;
+                    seed.style.top = '50%'; // Start in middle
+                    seed.style.position = 'absolute';
+                    seed.onclick = () => identifySeed(seed, seedData.type);
+                    container.appendChild(seed);
+
+                    // Animate float or sink after a delay
+                    setTimeout(() => {
+                        if (seedData.type === 'damaged') {
+                            // Float to surface
+                            seed.style.top = '25%';
+                            seed.classList.add('floating');
+                        } else {
+                            // Sink to bottom
+                            seed.style.top = '85%';
+                            seed.classList.add('sinking');
+                        }
+                    }, 800);
+                }, index * 400);
+            });
+
+            setTimeout(() => {
+                showSeedTestResults();
+            }, 4000);
+        }
+
+        function identifySeed(seed, type) {
+            const isCorrect = (type === 'damaged' && seed.classList.contains('floating')) ||
+                            (type === 'good' && seed.classList.contains('sinking'));
+            
+            if (isCorrect) {
+                seed.style.border = '3px solid #22c55e';
+                seed.style.transform = 'scale(1.2)';
+            } else {
+                seed.style.border = '3px solid #ef4444';
+                seed.style.animation = 'shake 0.5s ease-in-out';
+            }
+        }
+
+        function showSeedTestResults() {
+            const results = document.getElementById('seed-test-results');
+            results.innerHTML = `
+                <div class="feedback success">
+                    <strong>🎯 Test Results:</strong><br>
+                    • <span style="color: #059669;">Green seeds (healthy):</span> Sink to bottom - dense and viable<br>
+                    • <span style="color: #d97706;">Brown seeds (damaged):</span> Float on surface - hollow and unusable<br>
+                    • Farmers select only the sinking seeds for sowing!
+                </div>
+            `;
+            results.style.display = 'block';
+        }
+
+        function resetSeedTest() {
+            const container = document.getElementById('water-container');
+            container.innerHTML = '<div class="water-surface"></div>';
+            document.getElementById('seed-test-results').style.display = 'none';
+        }
+
+        // Tool Details Functions
+        function showToolDetails(tool) {
+            const toolData = toolDetails[tool];
+            const detailsContainer = document.getElementById('tool-details');
+            
+            // Mark active tool
+            document.querySelectorAll('.tool-card').forEach(card => card.classList.remove('active'));
+            event.target.closest('.tool-card').classList.add('active');
+
+            detailsContainer.innerHTML = `
+                <h3>${toolData.name}</h3>
+                <p style="margin: 15px 0; font-size: 1.1rem;">${toolData.description}</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4 style="color: #059669;">✅ Advantages:</h4>
+                        <ul style="margin-left: 20px;">
+                            ${toolData.advantages.map(adv => `<li>${adv}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: #dc2626;">❌ Disadvantages:</h4>
+                        <ul style="margin-left: 20px;">
+                            ${toolData.disadvantages.map(dis => `<li>${dis}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            detailsContainer.style.display = 'block';
+        }
+
+        // Spacing Game Functions
+        function initializeField() {
+            const grid = document.getElementById('field-grid');
+            grid.innerHTML = '';
+            plantedSeeds = [];
+
+            for (let i = 0; i < 64; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'field-cell';
+                cell.dataset.index = i;
+                cell.onclick = () => toggleSeed(i, cell);
+                grid.appendChild(cell);
+            }
+            updateSpacingScore();
+        }
+
+        function toggleSeed(index, cell) {
+            if (plantedSeeds.includes(index)) {
+                // Remove seed
+                plantedSeeds = plantedSeeds.filter(i => i !== index);
+                cell.classList.remove('planted');
+                cell.textContent = '';
+            } else {
+                // Plant seed
+                plantedSeeds.push(index);
+                cell.classList.add('planted');
+                cell.textContent = '🌱';
+            }
+            updateSpacingScore();
+        }
+
+        function checkSpacing() {
+            const cells = document.querySelectorAll('.field-cell');
+            cells.forEach(cell => cell.classList.remove('overcrowded'));
+
+            let properlySpaced = 0;
+            let overcrowded = 0;
+
+            plantedSeeds.forEach(index => {
+                const row = Math.floor(index / 8);
+                const col = index % 8;
+                let hasAdjacent = false;
+
+                // Check all 8 adjacent cells
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        const newRow = row + dr;
+                        const newCol = col + dc;
+                        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                            const adjacentIndex = newRow * 8 + newCol;
+                            if (plantedSeeds.includes(adjacentIndex)) {
+                                hasAdjacent = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (hasAdjacent) break;
+                }
+
+                if (hasAdjacent) {
+                    overcrowded++;
+                    cells[index].classList.add('overcrowded');
+                } else {
+                    properlySpaced++;
+                }
+            });
+
+            const feedback = document.getElementById('spacing-feedback');
+            if (overcrowded === 0 && plantedSeeds.length > 0) {
+                feedback.textContent = '🎉 Perfect spacing! All plants have enough space to grow healthy!';
+                feedback.className = 'feedback success';
+            } else if (overcrowded > 0) {
+                feedback.textContent = `⚠️ ${overcrowded} seeds are overcrowded! They will compete for nutrients, water, and sunlight.`;
+                feedback.className = 'feedback error';
+            } else {
+                feedback.textContent = 'Plant some seeds first!';
+                feedback.className = 'feedback error';
+            }
+            feedback.style.display = 'block';
+        }
+
+        function clearField() {
+            plantedSeeds = [];
+            const cells = document.querySelectorAll('.field-cell');
+            cells.forEach(cell => {
+                cell.classList.remove('planted', 'overcrowded');
+                cell.textContent = '';
+            });
+            document.getElementById('spacing-feedback').style.display = 'none';
+            updateSpacingScore();
+        }
+
+        function autoSpace() {
+            clearField();
+            // Plant seeds with proper spacing (every 3rd cell in a pattern)
+            const optimalPositions = [2, 5, 10, 13, 18, 21, 26, 29, 34, 37, 42, 45, 50, 53, 58, 61];
+            optimalPositions.forEach(index => {
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                toggleSeed(index, cell);
+            });
+        }
+
+        function updateSpacingScore() {
+            document.getElementById('spacing-score').textContent = 
+                `Seeds Planted: ${plantedSeeds.length} | Click "Check Spacing" to verify`;
+        }
+
+        // Nursery Functions
+        function initializeNursery() {
+            const tray = document.getElementById('nursery-tray');
+            tray.innerHTML = '';
+
+            for (let i = 0; i < 24; i++) {
+                const pot = document.createElement('div');
+                pot.className = 'seedling-pot';
+                pot.innerHTML = '<div class="seedling">🌱</div>';
+                pot.onclick = () => growSeedling(pot);
+                tray.appendChild(pot);
+            }
+        }
+
+        function growSeedling(pot) {
+            pot.classList.add('growing');
+        }
+
+        function startNursery() {
+            const pots = document.querySelectorAll('.seedling-pot');
+            pots.forEach((pot, index) => {
+                setTimeout(() => {
+                    pot.classList.add('growing');
+                }, index * 100);
+            });
+        }
+
+        function transplantSeedlings() {
+            const pots = document.querySelectorAll('.seedling-pot.growing');
+            if (pots.length === 0) {
+                alert('Start growing seedlings first!');
+                return;
+            }
+
+            pots.forEach((pot, index) => {
+                setTimeout(() => {
+                    const seedling = pot.querySelector('.seedling');
+                    seedling.textContent = '🌾';
+                    seedling.style.fontSize = '2rem';
+                    pot.style.background = '#22c55e';
+                }, index * 50);
+            });
+
+            setTimeout(() => {
+                const feedback = document.createElement('div');
+                feedback.className = 'feedback success';
+                feedback.textContent = '🚚 Seedlings successfully transplanted to the field! They will grow into healthy crops.';
+                document.querySelector('.nursery-demo').appendChild(feedback);
+            }, 1000);
+        }
+
+        function resetNursery() {
+            initializeNursery();
+            const existingFeedback = document.querySelector('.nursery-demo .feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+        }
+
+        // Quiz Functions
+        function loadQuestion() {
+            if (currentQuizIndex >= quizQuestions.length) {
+                document.getElementById('quiz-question').textContent = `Quiz Complete! Final Score: ${quizScore}/${quizQuestions.length}`;
+                document.getElementById('quiz-options').innerHTML = '<p style="text-align: center; font-size: 1.2rem; color: #1e40af;">🎉 Excellent! You\'ve mastered sowing techniques!</p>';
+                return;
+            }
+
+            const question = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-question').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(optionElement);
+            });
+
+            document.getElementById('quiz-feedback').style.display = 'none';
+            quizAnswered = false;
+            updateQuizScore();
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (quizAnswered) return;
+
+            const question = quizQuestions[currentQuizIndex];
+            const options = document.querySelectorAll('#quiz-options .option');
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && selectedIndex !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            const feedback = document.getElementById('quiz-feedback');
+            if (selectedIndex === question.correct) {
+                quizScore++;
+                feedback.textContent = '✅ Correct! Well done!';
+                feedback.className = 'feedback success';
+            } else {
+                feedback.textContent = `❌ Incorrect. The correct answer is: ${question.options[question.correct]}`;
+                feedback.className = 'feedback error';
+            }
+            
+            feedback.style.display = 'block';
+            quizAnswered = true;
+            updateQuizScore();
+        }
+
+        function nextQuestion() {
+            currentQuizIndex++;
+            loadQuestion();
+        }
+
+        function updateQuizScore() {
+            document.getElementById('quiz-score').textContent = `Score: ${quizScore}/${Math.min(currentQuizIndex + 1, quizQuestions.length)}`;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuestion();
+            initializeField();
+            initializeNursery();
+        });
+    </script>
+</body>
+</html>

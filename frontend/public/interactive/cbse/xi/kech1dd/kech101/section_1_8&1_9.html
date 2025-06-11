@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mole Concept & Percentage Composition - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .law-title {
+            color: #2c3e50;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        .concept-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .concept-info::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%); }
+            100% { transform: translateX(100%) translateY(100%); }
+        }
+
+        .interactive-demo {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f4fd 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avogadro-visual {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .mole-sample {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mole-sample:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .mole-sample::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .mole-sample:hover::before {
+            left: 100%;
+        }
+
+        .substance-visual {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            animation: substancePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes substancePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .carbon { background: radial-gradient(circle, #2c3e50 0%, #34495e 100%); }
+        .water { background: radial-gradient(circle, #3498db 0%, #2980b9 100%); }
+        .salt { background: radial-gradient(circle, #f39c12 0%, #e67e22 100%); }
+        .glucose { background: radial-gradient(circle, #27ae60 0%, #2ecc71 100%); }
+
+        .number-display {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+
+        .calculator-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .input-group {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            min-width: 150px;
+        }
+
+        .input-group input, .input-group select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            min-width: 200px;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .result-display {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #0c5460;
+        }
+
+        .percentage-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .pie-chart {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 20px;
+            position: relative;
+            animation: pieRotate 4s ease-in-out infinite;
+        }
+
+        @keyframes pieRotate {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .element-bar {
+            height: 30px;
+            margin: 10px 0;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            color: white;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .element-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: barShine 2s infinite;
+        }
+
+        @keyframes barShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .hydrogen-bar { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .carbon-bar { background: linear-gradient(90deg, #2c3e50, #34495e); }
+        .oxygen-bar { background: linear-gradient(90deg, #3498db, #2980b9); }
+
+        .empirical-steps {
+            background: #e8f5e8;
+            border-left: 5px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .step-box {
+            background: white;
+            border: 2px solid #27ae60;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 15px;
+            background: #27ae60;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .formula-display {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .quiz-section {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #721c24;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quiz-option {
+            background: white;
+            border: 2px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: #fff5f5;
+            transform: translateX(5px);
+        }
+
+        .quiz-option.selected {
+            background: #27ae60;
+            color: white;
+            border-color: #219a52;
+        }
+
+        .quiz-option.incorrect {
+            background: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 2rem; }
+            .nav-tabs { flex-direction: column; align-items: center; }
+            .avogadro-visual { grid-template-columns: 1fr; }
+            .percentage-visual { flex-direction: column; }
+            .input-group { flex-direction: column; align-items: stretch; }
+            .input-group label { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Mole Concept & Percentage Composition</h1>
+            <p>Interactive Learning Tool for Class 11 Chemistry</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showTab('mole-concept')">Mole Concept</button>
+            <button class="tab-btn" onclick="showTab('molar-mass')">Molar Mass</button>
+            <button class="tab-btn" onclick="showTab('percentage')">Percentage Composition</button>
+            <button class="tab-btn" onclick="showTab('empirical')">Empirical Formula</button>
+            <button class="tab-btn" onclick="showTab('calculator')">Interactive Calculator</button>
+            <button class="tab-btn" onclick="showTab('quiz')">Knowledge Check</button>
+        </div>
+
+        <!-- Mole Concept -->
+        <div id="mole-concept" class="content-section active">
+            <h2 class="law-title">1. The Mole Concept</h2>
+            
+            <div class="concept-info">
+                <h3>🔢 Avogadro's Number</h3>
+                <p>1 mole = 6.02214076 × 10²³ entities</p>
+                <p>Named after Amedeo Avogadro</p>
+            </div>
+
+            <p><strong>Definition:</strong> A mole is the SI base unit for the amount of substance. It contains exactly 6.02214076 × 10²³ elementary entities (atoms, molecules, ions, etc.).</p>
+
+            <div class="interactive-demo">
+                <h3>Visualizing Avogadro's Number</h3>
+                
+                <div class="number-display">
+                    <strong>Avogadro's Number:</strong><br>
+                    602,213,670,000,000,000,000,000
+                </div>
+
+                <div class="avogadro-visual">
+                    <div class="mole-sample">
+                        <div class="substance-visual carbon">C</div>
+                        <h4>1 Mole Carbon</h4>
+                        <p><strong>Mass:</strong> 12.01 g</p>
+                        <p><strong>Contains:</strong> 6.022 × 10²³ atoms</p>
+                        <p style="color: #667eea;">Pencil graphite!</p>
+                    </div>
+
+                    <div class="mole-sample">
+                        <div class="substance-visual water">H₂O</div>
+                        <h4>1 Mole Water</h4>
+                        <p><strong>Mass:</strong> 18.02 g</p>
+                        <p><strong>Contains:</strong> 6.022 × 10²³ molecules</p>
+                        <p style="color: #667eea;">About 1 tablespoon!</p>
+                    </div>
+
+                    <div class="mole-sample">
+                        <div class="substance-visual salt">NaCl</div>
+                        <h4>1 Mole Salt</h4>
+                        <p><strong>Mass:</strong> 58.5 g</p>
+                        <p><strong>Contains:</strong> 6.022 × 10²³ formula units</p>
+                        <p style="color: #667eea;">About 3 tablespoons!</p>
+                    </div>
+
+                    <div class="mole-sample">
+                        <div class="substance-visual glucose">C₆H₁₂O₆</div>
+                        <h4>1 Mole Glucose</h4>
+                        <p><strong>Mass:</strong> 180.16 g</p>
+                        <p><strong>Contains:</strong> 6.022 × 10²³ molecules</p>
+                        <p style="color: #667eea;">Blood sugar!</p>
+                    </div>
+                </div>
+
+                <div class="result-display">
+                    <strong>Amazing Fact:</strong> If you could count 1 million atoms per second, it would take you over 19 trillion years to count all the atoms in just 1 mole!
+                </div>
+            </div>
+        </div>
+
+        <!-- Molar Mass -->
+        <div id="molar-mass" class="content-section">
+            <h2 class="law-title">2. Molar Mass</h2>
+            
+            <div class="concept-info">
+                <h3>⚖️ Molar Mass</h3>
+                <p>Mass of one mole of a substance in grams</p>
+                <p>Numerically equal to atomic/molecular mass in amu</p>
+            </div>
+
+            <p><strong>Molar Mass:</strong> The mass of one mole of a substance in grams. It provides a bridge between the atomic world and the macroscopic world.</p>
+
+            <div class="interactive-demo">
+                <h3>Molar Mass Examples</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+                    <div style="background: white; border: 2px solid #e74c3c; border-radius: 15px; padding: 20px; text-align: center;">
+                        <h4 style="color: #e74c3c;">Hydrogen (H₂)</h4>
+                        <div style="font-size: 24px; margin: 15px 0;">H—H</div>
+                        <p><strong>Molecular Mass:</strong> 2 × 1.008 = 2.016 amu</p>
+                        <p><strong>Molar Mass:</strong> 2.016 g/mol</p>
+                        <div style="background: #ffebee; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                            1 mole H₂ = 2.016 g
+                        </div>
+                    </div>
+
+                    <div style="background: white; border: 2px solid #3498db; border-radius: 15px; padding: 20px; text-align: center;">
+                        <h4 style="color: #3498db;">Water (H₂O)</h4>
+                        <div style="font-size: 24px; margin: 15px 0;">H—O—H</div>
+                        <p><strong>Molecular Mass:</strong> 2(1.008) + 16.00 = 18.016 amu</p>
+                        <p><strong>Molar Mass:</strong> 18.02 g/mol</p>
+                        <div style="background: #e3f2fd; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                            1 mole H₂O = 18.02 g
+                        </div>
+                    </div>
+
+                    <div style="background: white; border: 2px solid #f39c12; border-radius: 15px; padding: 20px; text-align: center;">
+                        <h4 style="color: #f39c12;">Sodium Chloride (NaCl)</h4>
+                        <div style="font-size: 24px; margin: 15px 0;">Na⁺ Cl⁻</div>
+                        <p><strong>Formula Mass:</strong> 23.0 + 35.5 = 58.5 amu</p>
+                        <p><strong>Molar Mass:</strong> 58.5 g/mol</p>
+                        <div style="background: #fff3e0; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                            1 mole NaCl = 58.5 g
+                        </div>
+                    </div>
+
+                    <div style="background: white; border: 2px solid #27ae60; border-radius: 15px; padding: 20px; text-align: center;">
+                        <h4 style="color: #27ae60;">Glucose (C₆H₁₂O₆)</h4>
+                        <div style="font-size: 18px; margin: 15px 0;">C₆H₁₂O₆</div>
+                        <p><strong>Molecular Mass:</strong> 6(12.01) + 12(1.008) + 6(16.00) = 180.16 amu</p>
+                        <p><strong>Molar Mass:</strong> 180.16 g/mol</p>
+                        <div style="background: #e8f5e8; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                            1 mole C₆H₁₂O₆ = 180.16 g
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-display">
+                    <strong>Key Relationship:</strong> Atomic mass (amu) = Molar mass (g/mol)<br>
+                    This makes calculations between atomic and macroscopic scales possible!
+                </div>
+            </div>
+        </div>
+
+        <!-- Percentage Composition -->
+        <div id="percentage" class="content-section">
+            <h2 class="law-title">3. Percentage Composition</h2>
+            
+            <div class="concept-info">
+                <h3>📊 Mass Percentage</h3>
+                <p>Mass % = (Mass of element / Total mass) × 100</p>
+                <p>Useful for determining purity and composition</p>
+            </div>
+
+            <p><strong>Percentage Composition:</strong> The percentage by mass of each element present in a compound. Essential for quality control and determining compound formulas.</p>
+
+            <div class="interactive-demo">
+                <h3>Percentage Composition Examples</h3>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Water (H₂O) - Molar Mass: 18.02 g/mol</h4>
+                    <div class="percentage-visual">
+                        <div>
+                            <div class="element-bar hydrogen-bar" style="width: 111px;">
+                                H: 11.18%
+                            </div>
+                            <div class="element-bar oxygen-bar" style="width: 288px;">
+                                O: 88.82%
+                            </div>
+                        </div>
+                        <div style="margin-left: 20px;">
+                            <p><strong>Hydrogen:</strong> (2 × 1.008 / 18.02) × 100 = 11.18%</p>
+                            <p><strong>Oxygen:</strong> (16.00 / 18.02) × 100 = 88.82%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h4>Ethanol (C₂H₅OH) - Molar Mass: 46.07 g/mol</h4>
+                    <div class="percentage-visual">
+                        <div>
+                            <div class="element-bar carbon-bar" style="width: 156px;">
+                                C: 52.14%
+                            </div>
+                            <div class="element-bar hydrogen-bar" style="width: 39px;">
+                                H: 13.13%
+                            </div>
+                            <div class="element-bar oxygen-bar" style="width: 104px;">
+                                O: 34.73%
+                            </div>
+                        </div>
+                        <div style="margin-left: 20px;">
+                            <p><strong>Carbon:</strong> (24.02 / 46.07) × 100 = 52.14%</p>
+                            <p><strong>Hydrogen:</strong> (6.048 / 46.07) × 100 = 13.13%</p>
+                            <p><strong>Oxygen:</strong> (16.00 / 46.07) × 100 = 34.73%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-display">
+                    <strong>Check:</strong> Total percentage should always equal 100%<br>
+                    Water: 11.18% + 88.82% = 100.00% ✓<br>
+                    Ethanol: 52.14% + 13.13% + 34.73% = 100.00% ✓
+                </div>
+            </div>
+        </div>
+
+        <!-- Empirical Formula -->
+        <div id="empirical" class="content-section">
+            <h2 class="law-title">4. Empirical and Molecular Formulas</h2>
+            
+            <div class="concept-info">
+                <h3>🧮 Formula Determination</h3>
+                <p>Empirical Formula: Simplest whole number ratio</p>
+                <p>Molecular Formula: Actual number of atoms</p>
+            </div>
+
+            <p><strong>Empirical Formula:</strong> Shows the simplest whole number ratio of atoms. <strong>Molecular Formula:</strong> Shows the actual number of each type of atom in a molecule.</p>
+
+            <div class="interactive-demo">
+                <h3>Worked Example: Finding Empirical & Molecular Formulas</h3>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; margin: 20px 0;">
+                    <h4>Problem: A compound contains 4.07% H, 24.27% C, and 71.65% Cl. Molar mass = 98.96 g. Find empirical and molecular formulas.</h4>
+                </div>
+
+                <div class="empirical-steps">
+                    <div class="step-box">
+                        <div class="step-number">1</div>
+                        <h4>Convert percentages to grams (assume 100g sample)</h4>
+                        <p>• H: 4.07 g</p>
+                        <p>• C: 24.27 g</p>
+                        <p>• Cl: 71.65 g</p>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-number">2</div>
+                        <h4>Convert to moles</h4>
+                        <p>• H: 4.07 g ÷ 1.008 g/mol = 4.04 mol</p>
+                        <p>• C: 24.27 g ÷ 12.01 g/mol = 2.021 mol</p>
+                        <p>• Cl: 71.65 g ÷ 35.45 g/mol = 2.021 mol</p>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-number">3</div>
+                        <h4>Divide by smallest number of moles</h4>
+                        <p>Smallest = 2.021 mol</p>
+                        <p>• H: 4.04 ÷ 2.021 = 2.00</p>
+                        <p>• C: 2.021 ÷ 2.021 = 1.00</p>
+                        <p>• Cl: 2.021 ÷ 2.021 = 1.00</p>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-number">4</div>
+                        <h4>Write empirical formula</h4>
+                        <div class="formula-display">
+                            CH₂Cl
+                        </div>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-number">5</div>
+                        <h4>Find molecular formula</h4>
+                        <p>Empirical formula mass = 12.01 + 2(1.008) + 35.45 = 49.48 g/mol</p>
+                        <p>n = Molar mass ÷ Empirical mass = 98.96 ÷ 49.48 = 2</p>
+                        <div class="formula-display">
+                            Molecular Formula = (CH₂Cl)₂ = C₂H₄Cl₂
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculator -->
+        <div id="calculator" class="content-section">
+            <h2 class="law-title">5. Interactive Calculator</h2>
+            
+            <div class="calculator-section">
+                <h3>Mole & Percentage Composition Calculator</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    
+                    <!-- Mole Calculator -->
+                    <div style="background: white; border: 2px solid #667eea; border-radius: 15px; padding: 20px;">
+                        <h4 style="color: #667eea; margin-bottom: 15px;">🔢 Mole Calculator</h4>
+                        
+                        <div class="input-group">
+                            <label>Mass (g):</label>
+                            <input type="number" id="mass-input" step="0.001" placeholder="Enter mass">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Molar Mass (g/mol):</label>
+                            <input type="number" id="molar-mass-input" step="0.001" placeholder="Enter molar mass">
+                        </div>
+                        
+                        <button class="calculate-btn" onclick="calculateMoles()">Calculate Moles</button>
+                        
+                        <div id="mole-result" class="result-display" style="display: none;">
+                            <div id="mole-calculation"></div>
+                        </div>
+                    </div>
+
+                    <!-- Percentage Calculator -->
+                    <div style="background: white; border: 2px solid #27ae60; border-radius: 15px; padding: 20px;">
+                        <h4 style="color: #27ae60; margin-bottom: 15px;">📊 Percentage Calculator</h4>
+                        
+                        <div class="input-group">
+                            <label>Compound Formula:</label>
+                            <input type="text" id="percentage-formula" placeholder="e.g., H2O, CH4">
+                        </div>
+                        
+                        <button class="calculate-btn" onclick="calculatePercentage()">Calculate Percentage</button>
+                        
+                        <div id="percentage-result" class="result-display" style="display: none;">
+                            <div id="percentage-breakdown"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empirical Formula Calculator -->
+                <div style="background: white; border: 2px solid #e74c3c; border-radius: 15px; padding: 20px; margin-top: 20px;">
+                    <h4 style="color: #e74c3c; margin-bottom: 15px;">🧮 Empirical Formula Calculator</h4>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="input-group">
+                            <label>Element 1:</label>
+                            <select id="element1">
+                                <option value="H">Hydrogen (H)</option>
+                                <option value="C">Carbon (C)</option>
+                                <option value="N">Nitrogen (N)</option>
+                                <option value="O">Oxygen (O)</option>
+                                <option value="Na">Sodium (Na)</option>
+                                <option value="Cl">Chlorine (Cl)</option>
+                                <option value="S">Sulfur (S)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Percentage 1:</label>
+                            <input type="number" id="percent1" step="0.01" placeholder="%" max="100">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Element 2:</label>
+                            <select id="element2">
+                                <option value="H">Hydrogen (H)</option>
+                                <option value="C" selected>Carbon (C)</option>
+                                <option value="N">Nitrogen (N)</option>
+                                <option value="O">Oxygen (O)</option>
+                                <option value="Na">Sodium (Na)</option>
+                                <option value="Cl">Chlorine (Cl)</option>
+                                <option value="S">Sulfur (S)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Percentage 2:</label>
+                            <input type="number" id="percent2" step="0.01" placeholder="%" max="100">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Element 3 (optional):</label>
+                            <select id="element3">
+                                <option value="">None</option>
+                                <option value="H">Hydrogen (H)</option>
+                                <option value="C">Carbon (C)</option>
+                                <option value="N">Nitrogen (N)</option>
+                                <option value="O" selected>Oxygen (O)</option>
+                                <option value="Na">Sodium (Na)</option>
+                                <option value="Cl">Chlorine (Cl)</option>
+                                <option value="S">Sulfur (S)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Percentage 3:</label>
+                            <input type="number" id="percent3" step="0.01" placeholder="%" max="100">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Molar Mass (g/mol) for Molecular Formula:</label>
+                        <input type="number" id="empirical-molar-mass" step="0.01" placeholder="Optional">
+                    </div>
+                    
+                    <button class="calculate-btn" onclick="calculateEmpirical()">Calculate Empirical Formula</button>
+                    
+                    <div id="empirical-result" class="result-display" style="display: none;">
+                        <div id="empirical-steps-display"></div>
+                        <div id="empirical-formula-display"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="content-section">
+            <h2 class="law-title">🧠 Knowledge Check</h2>
+            
+            <div class="quiz-section">
+                <div class="quiz-question">1. What is Avogadro's number?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="1" data-answer="a">a) 6.022 × 10²³</div>
+                    <div class="quiz-option" data-question="1" data-answer="b">b) 6.022 × 10²²</div>
+                    <div class="quiz-option" data-question="1" data-answer="c">c) 6.022 × 10²⁴</div>
+                    <div class="quiz-option" data-question="1" data-answer="d">d) 6.022 × 10²¹</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">2. The molar mass of water (H₂O) is approximately:</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="2" data-answer="a">a) 16.0 g/mol</div>
+                    <div class="quiz-option" data-question="2" data-answer="b">b) 17.0 g/mol</div>
+                    <div class="quiz-option" data-question="2" data-answer="c">c) 18.0 g/mol</div>
+                    <div class="quiz-option" data-question="2" data-answer="d">d) 19.0 g/mol</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">3. In water (H₂O), the mass percentage of oxygen is approximately:</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="3" data-answer="a">a) 11%</div>
+                    <div class="quiz-option" data-question="3" data-answer="b">b) 50%</div>
+                    <div class="quiz-option" data-question="3" data-answer="c">c) 67%</div>
+                    <div class="quiz-option" data-question="3" data-answer="d">d) 89%</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">4. The empirical formula represents:</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="4" data-answer="a">a) The exact number of atoms in a molecule</div>
+                    <div class="quiz-option" data-question="4" data-answer="b">b) The simplest whole number ratio of atoms</div>
+                    <div class="quiz-option" data-question="4" data-answer="c">c) The mass percentage of elements</div>
+                    <div class="quiz-option" data-question="4" data-answer="d">d) The molar mass of a compound</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">5. How many molecules are present in 2 moles of CO₂?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="5" data-answer="a">a) 6.022 × 10²³</div>
+                    <div class="quiz-option" data-question="5" data-answer="b">b) 1.204 × 10²⁴</div>
+                    <div class="quiz-option" data-question="5" data-answer="c">c) 3.011 × 10²³</div>
+                    <div class="quiz-option" data-question="5" data-answer="d">d) 1.806 × 10²⁴</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="calculate-btn" onclick="checkAnswers()">Check Answers</button>
+                <button class="calculate-btn" onclick="resetQuiz()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">Reset Quiz</button>
+            </div>
+
+            <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Atomic masses database
+        const atomicMasses = {
+            'H': 1.008, 'C': 12.011, 'N': 14.007, 'O': 16.000,
+            'Na': 22.990, 'Mg': 24.305, 'Al': 26.982, 'Si': 28.085,
+            'P': 30.974, 'S': 32.065, 'Cl': 35.453, 'K': 39.098,
+            'Ca': 40.078, 'Fe': 55.845, 'Cu': 63.546, 'Zn': 65.380,
+            'Br': 79.904, 'I': 126.904
+        };
+
+        // Quiz answers
+        const correctAnswers = {
+            1: 'a', 2: 'c', 3: 'd', 4: 'b', 5: 'b'
+        };
+
+        let selectedAnswers = {};
+
+        function showTab(tabName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Remove active from all tabs
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function calculateMoles() {
+            const mass = parseFloat(document.getElementById('mass-input').value);
+            const molarMass = parseFloat(document.getElementById('molar-mass-input').value);
+            
+            if (isNaN(mass) || isNaN(molarMass) || molarMass <= 0) {
+                alert('Please enter valid numbers!');
+                return;
+            }
+            
+            const moles = mass / molarMass;
+            const molecules = moles * 6.022e23;
+            
+            const resultDiv = document.getElementById('mole-result');
+            const calculationDiv = document.getElementById('mole-calculation');
+            
+            calculationDiv.innerHTML = `
+                <h4>Calculation:</h4>
+                <p>Moles = Mass ÷ Molar Mass</p>
+                <p>Moles = ${mass} g ÷ ${molarMass} g/mol = <strong>${moles.toFixed(4)} mol</strong></p>
+                <p>Number of molecules = ${moles.toFixed(4)} × 6.022 × 10²³ = <strong>${molecules.toExponential(3)}</strong></p>
+            `;
+            
+            resultDiv.style.display = 'block';
+            animateResult(resultDiv);
+        }
+
+        function parseFormula(formula) {
+            const elements = {};
+            const regex = /([A-Z][a-z]?)(\d*)/g;
+            let match;
+            
+            while ((match = regex.exec(formula)) !== null) {
+                const element = match[1];
+                const count = match[2] ? parseInt(match[2]) : 1;
+                elements[element] = (elements[element] || 0) + count;
+            }
+            
+            return elements;
+        }
+
+        function calculatePercentage() {
+            const formula = document.getElementById('percentage-formula').value.trim();
+            
+            if (!formula) {
+                alert('Please enter a chemical formula!');
+                return;
+            }
+            
+            try {
+                const elements = parseFormula(formula);
+                let totalMass = 0;
+                let elementMasses = {};
+                let hasUnknownElement = false;
+                
+                // Calculate total mass and individual element masses
+                for (const [element, count] of Object.entries(elements)) {
+                    if (atomicMasses[element]) {
+                        const elementMass = atomicMasses[element] * count;
+                        elementMasses[element] = elementMass;
+                        totalMass += elementMass;
+                    } else {
+                        hasUnknownElement = true;
+                        break;
+                    }
+                }
+                
+                if (hasUnknownElement) {
+                    alert('Unknown element found. Please check your formula.');
+                    return;
+                }
+                
+                // Calculate percentages
+                let percentageHTML = `<h4>Percentage Composition of ${formula}:</h4>`;
+                percentageHTML += `<p><strong>Molar Mass:</strong> ${totalMass.toFixed(3)} g/mol</p><br>`;
+                
+                for (const [element, mass] of Object.entries(elementMasses)) {
+                    const percentage = (mass / totalMass) * 100;
+                    percentageHTML += `<p><strong>${element}:</strong> (${mass.toFixed(3)} / ${totalMass.toFixed(3)}) × 100 = <strong>${percentage.toFixed(2)}%</strong></p>`;
+                }
+                
+                const resultDiv = document.getElementById('percentage-result');
+                const breakdownDiv = document.getElementById('percentage-breakdown');
+                
+                breakdownDiv.innerHTML = percentageHTML;
+                resultDiv.style.display = 'block';
+                animateResult(resultDiv);
+                
+            } catch (error) {
+                alert('Error parsing formula. Please check your input!');
+            }
+        }
+
+        function calculateEmpirical() {
+            const element1 = document.getElementById('element1').value;
+            const percent1 = parseFloat(document.getElementById('percent1').value);
+            const element2 = document.getElementById('element2').value;
+            const percent2 = parseFloat(document.getElementById('percent2').value);
+            const element3 = document.getElementById('element3').value;
+            const percent3 = parseFloat(document.getElementById('percent3').value) || 0;
+            const molarMass = parseFloat(document.getElementById('empirical-molar-mass').value);
+            
+            if (!element1 || !element2 || isNaN(percent1) || isNaN(percent2)) {
+                alert('Please fill in at least two elements with their percentages!');
+                return;
+            }
+            
+            if (element1 === element2 || (element3 && (element1 === element3 || element2 === element3))) {
+                alert('Please select different elements!');
+                return;
+            }
+            
+            // Prepare data
+            const elements = [
+                { symbol: element1, percent: percent1, atomicMass: atomicMasses[element1] },
+                { symbol: element2, percent: percent2, atomicMass: atomicMasses[element2] }
+            ];
+            
+            if (element3 && percent3 > 0) {
+                elements.push({ symbol: element3, percent: percent3, atomicMass: atomicMasses[element3] });
+            }
+            
+            // Check if percentages add up to 100
+            const totalPercent = elements.reduce((sum, el) => sum + el.percent, 0);
+            if (Math.abs(totalPercent - 100) > 0.1) {
+                alert(`Percentages should add up to 100%. Current total: ${totalPercent.toFixed(2)}%`);
+                return;
+            }
+            
+            // Calculate moles
+            elements.forEach(el => {
+                el.moles = el.percent / el.atomicMass;
+            });
+            
+            // Find smallest number of moles
+            const minMoles = Math.min(...elements.map(el => el.moles));
+            
+            // Calculate ratios
+            elements.forEach(el => {
+                el.ratio = el.moles / minMoles;
+            });
+            
+            // Convert to whole numbers
+            let multiplier = 1;
+            while (elements.some(el => Math.abs(el.ratio - Math.round(el.ratio)) > 0.1)) {
+                multiplier++;
+                elements.forEach(el => {
+                    el.ratio = (el.moles / minMoles) * multiplier;
+                });
+                if (multiplier > 10) break; // Prevent infinite loop
+            }
+            
+            // Round ratios
+            elements.forEach(el => {
+                el.finalRatio = Math.round(el.ratio);
+            });
+            
+            // Build empirical formula
+            let empiricalFormula = '';
+            elements.forEach(el => {
+                empiricalFormula += el.symbol;
+                if (el.finalRatio > 1) {
+                    empiricalFormula += el.finalRatio;
+                }
+            });
+            
+            // Calculate empirical formula mass
+            let empiricalMass = elements.reduce((sum, el) => sum + (el.atomicMass * el.finalRatio), 0);
+            
+            // Display results
+            let stepsHTML = `
+                <h4>Step-by-step Calculation:</h4>
+                <p><strong>Step 1:</strong> Convert percentages to grams (assume 100g sample)</p>
+                ${elements.map(el => `<p>• ${el.symbol}: ${el.percent} g</p>`).join('')}
+                
+                <p><strong>Step 2:</strong> Convert to moles</p>
+                ${elements.map(el => `<p>• ${el.symbol}: ${el.percent} g ÷ ${el.atomicMass} g/mol = ${el.moles.toFixed(4)} mol</p>`).join('')}
+                
+                <p><strong>Step 3:</strong> Divide by smallest number of moles (${minMoles.toFixed(4)})</p>
+                ${elements.map(el => `<p>• ${el.symbol}: ${el.moles.toFixed(4)} ÷ ${minMoles.toFixed(4)} = ${el.ratio.toFixed(2)} ≈ ${el.finalRatio}</p>`).join('')}
+            `;
+            
+            let formulaHTML = `
+                <h4>Empirical Formula: <span style="font-size: 1.5em; color: #667eea;">${empiricalFormula}</span></h4>
+                <p>Empirical Formula Mass: ${empiricalMass.toFixed(2)} g/mol</p>
+            `;
+            
+            // Calculate molecular formula if molar mass is provided
+            if (!isNaN(molarMass) && molarMass > 0) {
+                const n = Math.round(molarMass / empiricalMass);
+                let molecularFormula = '';
+                elements.forEach(el => {
+                    molecularFormula += el.symbol;
+                    const count = el.finalRatio * n;
+                    if (count > 1) {
+                        molecularFormula += count;
+                    }
+                });
+                
+                formulaHTML += `
+                    <p>n = Molar Mass ÷ Empirical Formula Mass = ${molarMass} ÷ ${empiricalMass.toFixed(2)} = ${n}</p>
+                    <h4>Molecular Formula: <span style="font-size: 1.5em; color: #e74c3c;">${molecularFormula}</span></h4>
+                `;
+            }
+            
+            const resultDiv = document.getElementById('empirical-result');
+            const stepsDiv = document.getElementById('empirical-steps-display');
+            const formulaDiv = document.getElementById('empirical-formula-display');
+            
+            stepsDiv.innerHTML = stepsHTML;
+            formulaDiv.innerHTML = formulaHTML;
+            
+            resultDiv.style.display = 'block';
+            animateResult(resultDiv);
+        }
+
+        function animateResult(element) {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                element.style.transition = 'all 0.5s ease';
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, 100);
+        }
+
+        // Quiz functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quiz-option')) {
+                const question = e.target.dataset.question;
+                const answer = e.target.dataset.answer;
+                
+                // Remove selection from other options in the same question
+                const sameQuestionOptions = document.querySelectorAll(`[data-question="${question}"]`);
+                sameQuestionOptions.forEach(option => {
+                    option.classList.remove('selected');
+                });
+                
+                // Select clicked option
+                e.target.classList.add('selected');
+                selectedAnswers[question] = answer;
+            }
+        });
+
+        function checkAnswers() {
+            let score = 0;
+            let totalQuestions = Object.keys(correctAnswers).length;
+            
+            // Check each answer
+            for (let question in correctAnswers) {
+                const options = document.querySelectorAll(`[data-question="${question}"]`);
+                const correctAnswer = correctAnswers[question];
+                const userAnswer = selectedAnswers[question];
+                
+                options.forEach(option => {
+                    option.classList.remove('selected', 'incorrect');
+                    if (option.dataset.answer === correctAnswer) {
+                        option.classList.add('selected'); // Show correct answer
+                    } else if (option.dataset.answer === userAnswer && userAnswer !== correctAnswer) {
+                        option.classList.add('incorrect'); // Show wrong selection
+                    }
+                });
+                
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+            }
+            
+            // Show feedback
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.style.display = 'block';
+            
+            if (score === totalQuestions) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `🎉 Perfect! You got ${score}/${totalQuestions} correct!<br>You have mastered the Mole Concept and Percentage Composition!`;
+            } else if (score >= totalQuestions * 0.7) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `👍 Great job! You got ${score}/${totalQuestions} correct!<br>Review the concepts you missed and try again.`;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `📚 You got ${score}/${totalQuestions} correct.<br>Study the concepts again and retake the quiz!`;
+            }
+        }
+
+        function resetQuiz() {
+            selectedAnswers = {};
+            
+            // Clear all selections
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.classList.remove('selected', 'incorrect');
+            });
+            
+            // Hide feedback
+            document.getElementById('quiz-feedback').style.display = 'none';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔬 Mole Concept & Percentage Composition Tool Loaded Successfully!');
+            
+            // Add some startup animations
+            setTimeout(() => {
+                const substances = document.querySelectorAll('.substance-visual');
+                substances.forEach((substance, index) => {
+                    setTimeout(() => {
+                        substance.style.transform = 'scale(1.3)';
+                        setTimeout(() => {
+                            substance.style.transform = 'scale(1)';
+                        }, 300);
+                    }, index * 200);
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Concepts of Chemistry - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            margin-top: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.06)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 50px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24, #fd79a8);
+            border-radius: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.4em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section {
+            margin-bottom: 60px;
+            padding: 50px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .section:hover::before {
+            left: 100%;
+        }
+
+        .section:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 4px solid #ff6b6b;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Animated Atom Visualization */
+        .atom-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            margin: 40px 0;
+            background: radial-gradient(circle, #667eea, #764ba2);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .atom {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+
+        .nucleus {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #ff6b6b, #ee5a24);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .orbit {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit1 {
+            width: 120px;
+            height: 120px;
+            animation: rotate 4s linear infinite;
+        }
+
+        .orbit2 {
+            width: 200px;
+            height: 200px;
+            animation: rotate 6s linear infinite reverse;
+        }
+
+        .orbit3 {
+            width: 280px;
+            height: 280px;
+            animation: rotate 8s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .electron {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #74b9ff, #0984e3);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(116, 185, 255, 0.8);
+        }
+
+        .electron1 { top: -6px; left: 50%; transform: translateX(-50%); }
+        .electron2 { top: -6px; left: 50%; transform: translateX(-50%); }
+        .electron3 { top: -6px; left: 50%; transform: translateX(-50%); }
+
+        /* Interactive Timeline */
+        .timeline-container {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            padding: 50px;
+            border-radius: 20px;
+            margin: 40px 0;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+            border-radius: 3px;
+        }
+
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: scale(1.05);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background: #ff6b6b;
+            border: 4px solid #fff;
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover::after {
+            background: #ffd32a;
+            transform: scale(1.3);
+        }
+
+        .left {
+            left: 0;
+        }
+
+        .right {
+            left: 50%;
+        }
+
+        .right::after {
+            left: -16px;
+        }
+
+        .timeline-content {
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .timeline-content h3 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            color: #ffd32a;
+        }
+
+        /* Molecular Visualization */
+        .molecule-playground {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            padding: 50px;
+            border-radius: 20px;
+            margin: 40px 0;
+            color: white;
+            text-align: center;
+        }
+
+        .molecule-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .molecule-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: 3px solid transparent;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .molecule-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .molecule-card:hover::before {
+            left: 100%;
+        }
+
+        .molecule-card:hover,
+        .molecule-card.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffd32a;
+            transform: scale(1.08) rotateY(5deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .molecule-display {
+            margin-top: 40px;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            display: none;
+        }
+
+        .atoms-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .atom-sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            position: relative;
+            animation: atomFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes atomFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hydrogen { background: radial-gradient(circle, #ffffff, #e0e0e0); color: #333; }
+        .oxygen { background: radial-gradient(circle, #ff4757, #c44569); }
+        .carbon { background: radial-gradient(circle, #2f3542, #57606f); }
+        .nitrogen { background: radial-gradient(circle, #3742fa, #2f3542); }
+
+        .bond {
+            width: 40px;
+            height: 4px;
+            background: #ffd32a;
+            margin: 0 10px;
+            border-radius: 2px;
+            animation: bondPulse 2s infinite;
+        }
+
+        @keyframes bondPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Interactive Applications */
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .application-card {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            padding: 40px;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .application-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 15s linear infinite;
+        }
+
+        .application-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .application-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .application-card h3 {
+            font-size: 1.6em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .application-card p {
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+        }
+
+        /* Enhanced Quiz Section */
+        .quiz-section {
+            background: linear-gradient(135deg, #00cec9, #55a3ff);
+            color: white;
+            padding: 60px;
+            border-radius: 25px;
+            margin: 60px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50" font-size="20" fill="rgba(255,255,255,0.1)">⚛️</text></svg>');
+            animation: rotate 20s linear infinite reverse;
+        }
+
+        .quiz-question {
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quiz-question h3 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .quiz-option {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            text-align: center;
+            font-weight: bold;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .quiz-option:hover::before {
+            left: 100%;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffd32a;
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .quiz-option.correct {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            border-color: #ffd32a;
+            animation: correctPulse 1s;
+        }
+
+        .quiz-option.wrong {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            border-color: #fab1a0;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 40px 0;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+            position: relative;
+            z-index: 1;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ffd32a, #fdcb6e);
+            color: #2d3436;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 35px;
+            cursor: pointer;
+            font-size: 1.3em;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            margin: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .timeline-item {
+                width: 100%;
+                left: 0 !important;
+            }
+            
+            .timeline::after {
+                left: 20px;
+            }
+            
+            .timeline-item::after {
+                left: 5px !important;
+            }
+            
+            .atom {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        /* Additional Animations */
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: floatParticle 10s infinite linear;
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚛️ Chemistry: The Science of Molecules</h1>
+            <p>Journey through the fascinating world of atoms, molecules, and their infinite transformations</p>
+        </div>
+
+        <!-- Animated Atom Section -->
+        <div class="section">
+            <h2>🔬 Understanding Matter: Atoms and Molecules</h2>
+            <p>Chemistry is the science of atoms and molecules. Watch this interactive atom model to understand the basic building blocks of matter!</p>
+            
+            <div class="atom-container">
+                <div class="atom">
+                    <div class="nucleus"></div>
+                    <div class="orbit orbit1">
+                        <div class="electron electron1"></div>
+                    </div>
+                    <div class="orbit orbit2">
+                        <div class="electron electron2"></div>
+                    </div>
+                    <div class="orbit orbit3">
+                        <div class="electron electron3"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #ffecd2, #fcb69f); padding: 30px; border-radius: 15px; margin: 30px 0;">
+                <h3 style="color: #2d3436; margin-bottom: 20px;">🧠 Key Concept:</h3>
+                <p style="color: #2d3436; font-size: 1.2em;">
+                    <strong>"Chemistry is the science not so much of the one hundred elements but of the infinite variety of molecules that may be built from them."</strong> - Roald Hoffmann
+                </p>
+            </div>
+        </div>
+
+        <!-- Interactive Timeline of Chemistry Development -->
+        <div class="section">
+            <div class="timeline-container">
+                <h2 style="color: white; border-bottom-color: #ffd32a; text-align: center; margin-bottom: 40px;">
+                    📚 Development of Chemistry in India
+                </h2>
+                <p style="text-align: center; margin-bottom: 40px; font-size: 1.2em;">
+                    Click on each milestone to explore India's rich chemical heritage!
+                </p>
+                
+                <div class="timeline">
+                    <div class="timeline-item left" onclick="showTimelineInfo('indus')">
+                        <div class="timeline-content">
+                            <h3>🏛️ Indus Valley (3000-1500 BCE)</h3>
+                            <p>Glazed pottery, metallurgy, and faience glass production at Mohenjodaro and Harappa</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item right" onclick="showTimelineInfo('vedic')">
+                        <div class="timeline-content">
+                            <h3>📜 Vedic Period (1500-500 BCE)</h3>
+                            <p>Rigveda describes leather tanning, cotton dyeing, and metal extraction</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item left" onclick="showTimelineInfo('kanda')">
+                        <div class="timeline-content">
+                            <h3>⚛️ Acharya Kanda (600 BCE)</h3>
+                            <p>First atomic theory with 'Paramanu' - 2500 years before Dalton!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item right" onclick="showTimelineInfo('nagarjuna')">
+                        <div class="timeline-content">
+                            <h3>🧪 Nagarjuna (100 CE)</h3>
+                            <p>Great alchemist who wrote Rasratnakar about mercury compounds</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item left" onclick="showTimelineInfo('modern')">
+                        <div class="timeline-content">
+                            <h3>🔬 Modern Era (19th Century)</h3>
+                            <p>European scientists arrive, modern chemistry begins in India</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="timelineInfo" style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #e8f5e8, #c8e6c9); border-radius: 15px; display: none;">
+                <h3 id="timelineTitle" style="color: #2d3436; margin-bottom: 15px;"></h3>
+                <p id="timelineDescription" style="color: #2d3436; font-size: 1.1em;"></p>
+            </div>
+        </div>
+
+        <!-- Molecular Playground -->
+        <div class="section">
+            <div class="molecule-playground">
+                <h2 style="color: white; border-bottom-color: #ffd32a;">🧬 Interactive Molecular Playground</h2>
+                <p style="font-size: 1.2em;">Explore different molecules and see how atoms combine to form compounds!</p>
+                
+                <div class="molecule-selector">
+                    <div class="molecule-card" onclick="showMolecule('water')" data-molecule="water">
+                        <h3>💧 Water (H₂O)</h3>
+                        <p>Essential for life</p>
+                    </div>
+                    <div class="molecule-card" onclick="showMolecule('methane')" data-molecule="methane">
+                        <h3>🔥 Methane (CH₄)</h3>
+                        <p>Greenhouse gas</p>
+                    </div>
+                    <div class="molecule-card" onclick="showMolecule('ammonia')" data-molecule="ammonia">
+                        <h3>🌱 Ammonia (NH₃)</h3>
+                        <p>Used in fertilizers</p>
+                    </div>
+                    <div class="molecule-card" onclick="showMolecule('co2')" data-molecule="co2">
+                        <h3>🌍 Carbon Dioxide (CO₂)</h3>
+                        <p>Atmospheric gas</p>
+                    </div>
+                </div>
+                
+                <div id="moleculeDisplay" class="molecule-display">
+                    <h3 id="moleculeName" style="color: #ffd32a; margin-bottom: 20px;"></h3>
+                    <div id="atomsContainer" class="atoms-container"></div>
+                    <p id="moleculeDescription" style="font-size: 1.1em; margin-top: 20px;"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chemistry Applications -->
+        <div class="section">
+            <h2>🌟 Importance of Chemistry in Daily Life</h2>
+            <p>Chemistry plays a central role in improving human life and developing our nation. Explore these fascinating applications!</p>
+            
+            <div class="applications-grid">
+                <div class="application-card" onclick="showApplicationInfo('medicine')">
+                    <div class="application-icon">💊</div>
+                    <h3>Medicine & Healthcare</h3>
+                    <p>Life-saving drugs like cisplatin for cancer therapy and AZT for AIDS treatment</p>
+                </div>
+                
+                <div class="application-card" onclick="showApplicationInfo('materials')">
+                    <div class="application-icon">🔬</div>
+                    <h3>New Materials</h3>
+                    <p>Superconducting ceramics, conducting polymers, and optical fibers</p>
+                </div>
+                
+                <div class="application-card" onclick="showApplicationInfo('environment')">
+                    <div class="application-icon">🌱</div>
+                    <h3>Environmental Solutions</h3>
+                    <p>CFC alternatives to protect ozone layer and greenhouse gas management</p>
+                </div>
+                
+                <div class="application-card" onclick="showApplicationInfo('industry')">
+                    <div class="application-icon">🏭</div>
+                    <h3>Industrial Applications</h3>
+                    <p>Fertilizers, polymers, metals, acids, and other utility goods</p>
+                </div>
+            </div>
+            
+            <div id="applicationInfo" style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #e8f4f8, #d1ecf1); border-radius: 15px; display: none;">
+                <h3 id="applicationTitle" style="color: #2d3436; margin-bottom: 15px;"></h3>
+                <p id="applicationDescription" style="color: #2d3436; font-size: 1.1em;"></p>
+            </div>
+        </div>
+
+        <!-- Enhanced Quiz Section -->
+        <div class="quiz-section">
+            <h2 style="color: white; border-bottom-color: #ffd32a;">🧠 Test Your Chemistry Knowledge</h2>
+            <div class="score-display">Score: <span id="score">0</span> / <span id="totalQuestions">5</span></div>
+            
+            <div class="quiz-question">
+                <h3>1. Who was the first to propose the atomic theory in India?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Nagarjuna was an alchemist who came later')">Nagarjuna</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Acharya Kanda proposed the Paramanu theory in 600 BCE')">Acharya Kanda</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Charaka was known for medicine, not atomic theory')">Charaka</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Varahmihir worked on astronomy and architecture')">Varahmihir</div>
+                </div>
+                <div class="feedback" id="feedback1" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>2. What did Acharya Kanda call the smallest indivisible particles?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Anu means atom, but Paramanu is more specific')">Anu</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Paramanu was comparable to modern atoms')">Paramanu</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Rasayana refers to alchemy, not particles')">Rasayana</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Bhasma refers to metal oxides used in medicine')">Bhasma</div>
+                </div>
+                <div class="feedback" id="feedback2" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>3. Which ancient Indian text deals with mercury compounds?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Charaka Samhita focuses on medicine and treatment')">Charaka Samhita</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Rasratnakar by Nagarjuna discusses mercury compounds')">Rasratnakar</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Arthashastra deals with politics and economics')">Arthashastra</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Rigveda mentions various processes but not specifically mercury')">Rigveda</div>
+                </div>
+                <div class="feedback" id="feedback3" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>4. According to the text, chemistry in ancient India was called:</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! All these names were used for chemistry in ancient India')">Rasayan Shastra, Rastantra, and Rasvidya</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This is only one of the names mentioned')">Only Rasayan Shastra</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Ayurveda is specifically medicine, not chemistry in general')">Ayurveda</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Vaiseshika is a philosophical system, not the name for chemistry')">Vaiseshika</div>
+                </div>
+                <div class="feedback" id="feedback4" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>5. Which drug mentioned in the text is used for AIDS treatment?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Cisplatin is used for cancer therapy')">Cisplatin</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Taxol is also used for cancer therapy')">Taxol</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! AZT (Azidothymidine) helps AIDS patients')">AZT (Azidothymidine)</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Aspirin is a common painkiller, not for AIDS')">Aspirin</div>
+                </div>
+                <div class="feedback" id="feedback5" style="display: none;"></div>
+            </div>
+
+            <button class="btn" onclick="resetQuiz()">Reset Quiz</button>
+            <button class="btn" onclick="showResults()">Show Results</button>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="section">
+            <h2>📋 Chapter Summary</h2>
+            <div style="background: linear-gradient(135deg, #ffecd2, #fcb69f); padding: 40px; border-radius: 20px; margin: 30px 0;">
+                <h3 style="color: #2d3436; margin-bottom: 25px;">🎯 Key Takeaways:</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                    <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">🏛️ Ancient Heritage</h4>
+                        <p style="color: #2d3436;">India has a rich 5000-year history in chemistry, from Indus Valley to modern times</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">⚛️ Atomic Theory</h4>
+                        <p style="color: #2d3436;">Acharya Kanda proposed atomic theory 2500 years before Dalton</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">🔬 Modern Applications</h4>
+                        <p style="color: #2d3436;">Chemistry drives medicine, materials science, and environmental solutions</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">🌟 Future Scope</h4>
+                        <p style="color: #2d3436;">Chemistry will solve challenges in sustainability and new materials</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        const totalQuestions = 5;
+        let questionsAnswered = new Set();
+
+        // Timeline information data
+        const timelineData = {
+            indus: {
+                title: "🏛️ Indus Valley Civilization (3000-1500 BCE)",
+                description: "The Indus Valley people were master chemists! They created glazed pottery at Mohenjodaro, produced faience (a type of glass) for ornaments, used gypsum cement with lime and sand, and developed advanced metallurgy for copper, bronze, gold, and silver objects. Archaeological evidence shows they had sophisticated knowledge of materials science and chemical processes."
+            },
+            vedic: {
+                title: "📜 Vedic Period (1500-500 BCE)", 
+                description: "The Rigveda mentions leather tanning and cotton dyeing processes. Ancient Indians developed copper and iron metallurgy indigenously. They knew about salt production from seawater and had mastery over kiln temperature control for pottery. The famous black polished ware of northern India remains a chemical mystery even today!"
+            },
+            kanda: {
+                title: "⚛️ Acharya Kanda (600 BCE)",
+                description: "Known as Kashyap, Acharya Kanda was the first to propose atomic theory! He called indivisible particles 'Paramanu' and described them as eternal, indestructible, spherical, and always in motion. He explained that different substances have different types of atoms, and unseen forces cause interactions between them - remarkably similar to modern atomic theory!"
+            },
+            nagarjuna: {
+                title: "🧪 Nagarjuna (100 CE)",
+                description: "A legendary alchemist and metallurgist, Nagarjuna wrote 'Rasratnakar' about mercury compounds and metal extraction methods. He described techniques for extracting gold, silver, tin, and copper. His work 'Rasarnavam' (800 CE) discussed various furnaces and methods to identify metals by flame color - an early form of flame testing!"
+            },
+            modern: {
+                title: "🔬 Modern Era (19th Century onwards)",
+                description: "European scientists began arriving in India, bringing modern chemistry. After centuries of traditional knowledge, Indians learned new techniques. The pharmaceutical industry based on Ayurveda continued but gradually declined. Modern chemistry education and research began flourishing in the late 19th century, leading to today's advanced chemical sciences in India."
+            }
+        };
+
+        // Molecule data
+        const moleculeData = {
+            water: {
+                name: "Water (H₂O)",
+                atoms: [
+                    { type: 'hydrogen', symbol: 'H' },
+                    { type: 'oxygen', symbol: 'O' },
+                    { type: 'hydrogen', symbol: 'H' }
+                ],
+                description: "Water is essential for all life on Earth. Two hydrogen atoms bond with one oxygen atom to form this vital compound. It has unique properties like high boiling point due to hydrogen bonding."
+            },
+            methane: {
+                name: "Methane (CH₄)",
+                atoms: [
+                    { type: 'hydrogen', symbol: 'H' },
+                    { type: 'carbon', symbol: 'C' },
+                    { type: 'hydrogen', symbol: 'H' },
+                    { type: 'hydrogen', symbol: 'H' },
+                    { type: 'hydrogen', symbol: 'H' }
+                ],
+                description: "Methane is the simplest hydrocarbon and a major greenhouse gas. One carbon atom bonds with four hydrogen atoms in a tetrahedral shape. It's the main component of natural gas."
+            },
+            ammonia: {
+                name: "Ammonia (NH₃)",
+                atoms: [
+                    { type: 'nitrogen', symbol: 'N' },
+                    { type: 'hydrogen', symbol: 'H' },
+                    { type: 'hydrogen', symbol: 'H' },
+                    { type: 'hydrogen', symbol: 'H' }
+                ],
+                description: "Ammonia is crucial for making fertilizers. One nitrogen atom bonds with three hydrogen atoms in a pyramidal shape. It's produced industrially by the Haber process and is essential for plant growth."
+            },
+            co2: {
+                name: "Carbon Dioxide (CO₂)",
+                atoms: [
+                    { type: 'oxygen', symbol: 'O' },
+                    { type: 'carbon', symbol: 'C' },
+                    { type: 'oxygen', symbol: 'O' }
+                ],
+                description: "Carbon dioxide is a linear molecule vital for photosynthesis but also a greenhouse gas. One carbon atom forms double bonds with two oxygen atoms. Plants use it to make glucose and oxygen."
+            }
+        };
+
+        // Application information
+        const applicationData = {
+            medicine: {
+                title: "💊 Medicine & Healthcare Revolution",
+                description: "Chemistry has revolutionized medicine! Cisplatin and taxol fight cancer effectively. AZT helps AIDS patients live longer. Chemists isolate life-saving compounds from natural sources and synthesize new drugs. From aspirin to antibiotics, chemistry saves millions of lives every year. Future developments include personalized medicine and nanotechnology-based drug delivery."
+            },
+            materials: {
+                title: "🔬 Advanced Materials Science",
+                description: "Chemistry creates materials with specific properties! Superconducting ceramics allow electricity to flow without resistance. Conducting polymers combine plastic flexibility with metal conductivity. Optical fibers revolutionized communication. Smart materials can change properties in response to stimuli. These innovations drive technology forward."
+            },
+            environment: {
+                title: "🌱 Environmental Protection",
+                description: "Chemistry helps protect our planet! Scientists developed CFC alternatives to prevent ozone depletion. Research focuses on managing greenhouse gases like CO₂ and methane. Green chemistry principles minimize environmental impact. Biodegradable plastics and clean energy solutions are emerging. Chemistry is key to sustainable development."
+            },
+            industry: {
+                title: "🏭 Industrial Applications",
+                description: "Chemistry drives economic growth! Industries produce fertilizers for agriculture, polymers for countless products, metals for construction, and acids for various processes. These chemical industries generate employment and contribute significantly to national economies. Innovation in industrial chemistry continues to improve efficiency and reduce environmental impact."
+            }
+        };
+
+        // Show timeline information
+        function showTimelineInfo(period) {
+            const info = timelineData[period];
+            document.getElementById('timelineTitle').textContent = info.title;
+            document.getElementById('timelineDescription').textContent = info.description;
+            document.getElementById('timelineInfo').style.display = 'block';
+            
+            // Add animation
+            document.getElementById('timelineInfo').classList.add('fade-in');
+            setTimeout(() => {
+                document.getElementById('timelineInfo').classList.remove('fade-in');
+            }, 1000);
+        }
+
+        // Show molecule visualization
+        function showMolecule(molecule) {
+            // Remove selection from other cards
+            document.querySelectorAll('.molecule-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Select current card
+            document.querySelector(`[data-molecule="${molecule}"]`).classList.add('active');
+            
+            const data = moleculeData[molecule];
+            document.getElementById('moleculeName').textContent = data.name;
+            document.getElementById('moleculeDescription').textContent = data.description;
+            
+            // Create atoms display
+            const container = document.getElementById('atomsContainer');
+            container.innerHTML = '';
+            
+            data.atoms.forEach((atom, index) => {
+                setTimeout(() => {
+                    const atomDiv = document.createElement('div');
+                    atomDiv.className = `atom-sphere ${atom.type}`;
+                    atomDiv.textContent = atom.symbol;
+                    atomDiv.style.animationDelay = `${index * 0.2}s`;
+                    container.appendChild(atomDiv);
+                    
+                    // Add bonds between atoms (except last atom)
+                    if (index < data.atoms.length - 1) {
+                        const bond = document.createElement('div');
+                        bond.className = 'bond';
+                        bond.style.animationDelay = `${index * 0.2 + 0.1}s`;
+                        container.appendChild(bond);
+                    }
+                }, index * 300);
+            });
+            
+            document.getElementById('moleculeDisplay').style.display = 'block';
+        }
+
+        // Show application information
+        function showApplicationInfo(app) {
+            const info = applicationData[app];
+            document.getElementById('applicationTitle').textContent = info.title;
+            document.getElementById('applicationDescription').textContent = info.description;
+            document.getElementById('applicationInfo').style.display = 'block';
+            
+            // Add animation
+            document.getElementById('applicationInfo').classList.add('fade-in');
+        }
+
+        // Quiz functionality
+        function checkAnswer(element, isCorrect, feedbackText) {
+            const questionNum = element.closest('.quiz-question').querySelector('h3').textContent.charAt(0);
+            
+            // Prevent multiple answers for the same question
+            if (questionsAnswered.has(questionNum)) return;
+            
+            questionsAnswered.add(questionNum);
+            
+            // Disable all options for this question
+            const allOptions = element.parentNode.children;
+            for (let option of allOptions) {
+                option.style.pointerEvents = 'none';
+                if (option === element) {
+                    option.classList.add(isCorrect ? 'correct' : 'wrong');
+                }
+            }
+            
+            // Show feedback
+            const feedbackId = 'feedback' + questionNum;
+            const feedbackElement = document.getElementById(feedbackId);
+            feedbackElement.textContent = feedbackText;
+            feedbackElement.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+            feedbackElement.style.display = 'block';
+            feedbackElement.style.marginTop = '20px';
+            feedbackElement.style.padding = '20px';
+            feedbackElement.style.borderRadius = '15px';
+            feedbackElement.style.fontWeight = 'bold';
+            
+            if (isCorrect) {
+                feedbackElement.style.background = 'rgba(0, 184, 148, 0.2)';
+                feedbackElement.style.border = '2px solid #00b894';
+                feedbackElement.style.color = '#00b894';
+            } else {
+                feedbackElement.style.background = 'rgba(231, 76, 60, 0.2)';
+                feedbackElement.style.border = '2px solid #e74c3c';
+                feedbackElement.style.color = '#e74c3c';
+            }
+            
+            // Update score
+            if (isCorrect) {
+                score++;
+                document.getElementById('score').textContent = score;
+            }
+        }
+
+        function resetQuiz() {
+            score = 0;
+            questionsAnswered.clear();
+            document.getElementById('score').textContent = score;
+            
+            // Reset all options
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.className = 'quiz-option';
+                option.style.pointerEvents = 'auto';
+            });
+            
+            // Hide all feedback
+            document.querySelectorAll('.feedback').forEach(feedback => {
+                feedback.style.display = 'none';
+            });
+        }
+
+        function showResults() {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 90) {
+                message = 'Outstanding! You have excellent knowledge of chemistry concepts!';
+                emoji = '🏆';
+            } else if (percentage >= 70) {
+                message = 'Great job! You understand most concepts well.';
+                emoji = '👍';
+            } else if (percentage >= 50) {
+                message = 'Good effort! Review the material for better understanding.';
+                emoji = '📚';
+            } else {
+                message = 'Keep studying! Chemistry takes practice to master.';
+                emoji = '💪';
+            }
+            
+            alert(`${emoji} Your Score: ${score}/${totalQuestions} (${percentage}%)\n\n${message}`);
+        }
+
+        // Create floating particles
+        function createParticles() {
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                document.body.appendChild(particle);
+            }
+        }
+
+        // Initialize animations on page load
+        window.addEventListener('load', function() {
+            createParticles();
+            
+            // Animate sections on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.section').forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Auto-show first molecule after 2 seconds
+            setTimeout(() => {
+                showMolecule('water');
+            }, 2000);
+        });
+
+        // Add hover effects to timeline items
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section 1.6: Summary - Comprehensive Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-button.active {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
+
+        .section {
+            display: none;
+            margin-bottom: 40px;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-left: 6px solid #667eea;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .summary-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .summary-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .key-points {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .key-points ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .key-points li {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #4facfe;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .key-points li::before {
+            content: "✓";
+            position: absolute;
+            left: 10px;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .interactive-tool {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input, select, button {
+            padding: 12px 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .quiz-container {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .option.correct {
+            background: #10b981;
+            transform: scale(1.1);
+        }
+
+        .option.incorrect {
+            background: #ef4444;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .score-board {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .concept-map {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .concept-node {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .concept-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .formula-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .formula-card {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .formula-card:hover {
+            transform: scale(1.05);
+        }
+
+        .formula-card h4 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .formula {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #333;
+        }
+
+        .animated {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .practice-generator {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            border: 2px solid #fff;
+            background: transparent;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: white;
+            color: #333;
+        }
+
+        .study-tips {
+            background: #e6fffa;
+            border: 2px solid #81e6d9;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .tip {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #38b2ac;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Section 1.6: Complete Chapter Summary</h1>
+        
+        <div class="navigation">
+            <button class="nav-button active" onclick="showSection('overview')">Overview</button>
+            <button class="nav-button" onclick="showSection('keypoints')">Key Points</button>
+            <button class="nav-button" onclick="showSection('formulas')">Important Formulas</button>
+            <button class="nav-button" onclick="showSection('practice')">Practice Generator</button>
+            <button class="nav-button" onclick="showSection('quiz')">Comprehensive Quiz</button>
+            <button class="nav-button" onclick="showSection('tips')">Study Tips</button>
+        </div>
+
+        <!-- Overview Section -->
+        <div id="overview" class="section active">
+            <h2>📖 Chapter Overview</h2>
+            <p>This chapter covers the fundamental concepts of real numbers, their decimal expansions, operations, and laws of exponents. Navigate through the different sections below to review each topic.</p>
+            
+            <div class="summary-grid">
+                <div class="summary-card" onclick="showTopicDetail('rational')">
+                    <h3>🔢 Rational Numbers</h3>
+                    <p>Numbers that can be expressed as p/q where p and q are integers and q ≠ 0</p>
+                    <ul style="margin-top: 10px; list-style: none;">
+                        <li>• Terminating decimals</li>
+                        <li>• Non-terminating recurring decimals</li>
+                        <li>• Conversion methods</li>
+                    </ul>
+                </div>
+                
+                <div class="summary-card" onclick="showTopicDetail('irrational')">
+                    <h3>🌀 Irrational Numbers</h3>
+                    <p>Numbers that cannot be expressed as p/q where p and q are integers</p>
+                    <ul style="margin-top: 10px; list-style: none;">
+                        <li>• Non-terminating non-recurring</li>
+                        <li>• Examples: √2, π, e</li>
+                        <li>• Construction methods</li>
+                    </ul>
+                </div>
+                
+                <div class="summary-card" onclick="showTopicDetail('operations')">
+                    <h3>➕ Operations on Real Numbers</h3>
+                    <p>Arithmetic operations with rational and irrational numbers</p>
+                    <ul style="margin-top: 10px; list-style: none;">
+                        <li>• Square root operations</li>
+                        <li>• Rationalization</li>
+                        <li>• Geometric constructions</li>
+                    </ul>
+                </div>
+                
+                <div class="summary-card" onclick="showTopicDetail('exponents')">
+                    <h3>⚡ Laws of Exponents</h3>
+                    <p>Rules for working with exponential expressions</p>
+                    <ul style="margin-top: 10px; list-style: none;">
+                        <li>• Rational exponents</li>
+                        <li>• Product and quotient rules</li>
+                        <li>• Power rules</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="topicDetail" class="interactive-tool" style="display: none;">
+                <h3 id="topicTitle">Topic Details</h3>
+                <div id="topicContent"></div>
+                <button onclick="hideTopicDetail()">Close</button>
+            </div>
+        </div>
+
+        <!-- Key Points Section -->
+        <div id="keypoints" class="section">
+            <h2>🎯 Key Points Summary</h2>
+            
+            <div class="key-points">
+                <h3>1. Rational vs Irrational Numbers</h3>
+                <ul>
+                    <li>Rational numbers have terminating OR non-terminating recurring decimal expansions</li>
+                    <li>Irrational numbers have non-terminating non-recurring decimal expansions</li>
+                    <li>All rational and irrational numbers together form the set of real numbers</li>
+                    <li>If r is rational and s is irrational, then r + s, r - s, rs, and r/s (r ≠ 0) are irrational</li>
+                </ul>
+            </div>
+            
+            <div class="key-points">
+                <h3>2. Operations with Square Roots</h3>
+                <ul>
+                    <li>√(ab) = √a × √b for positive real numbers a and b</li>
+                    <li>√(a/b) = √a / √b for positive real numbers a and b</li>
+                    <li>(√a + √b)(√a - √b) = a - b</li>
+                    <li>(a + √b)(a - √b) = a² - b</li>
+                    <li>(√a + √b)² = a + 2√(ab) + b</li>
+                </ul>
+            </div>
+            
+            <div class="key-points">
+                <h3>3. Laws of Exponents</h3>
+                <ul>
+                    <li>aᵖ × aᵍ = aᵖ⁺ᵍ (Product rule)</li>
+                    <li>(aᵖ)ᵍ = aᵖᵍ (Power rule)</li>
+                    <li>aᵖ ÷ aᵍ = aᵖ⁻ᵍ (Quotient rule)</li>
+                    <li>aᵖ × bᵖ = (ab)ᵖ (Product of powers)</li>
+                    <li>a^(m/n) = ⁿ√(aᵐ) = (ⁿ√a)ᵐ</li>
+                </ul>
+            </div>
+            
+            <div class="interactive-tool">
+                <h3>🧮 Quick Concept Checker</h3>
+                <div class="input-group">
+                    <label>Test a decimal:</label>
+                    <input type="text" id="quickTest" placeholder="e.g., 0.333... or 3.14159...">
+                    <button onclick="quickClassify()">Classify</button>
+                </div>
+                <div id="quickResult" class="result-box">
+                    Enter a decimal to classify it as rational or irrational!
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulas Section -->
+        <div id="formulas" class="section">
+            <h2>📐 Important Formulas Reference</h2>
+            
+            <div class="formula-showcase">
+                <div class="formula-card">
+                    <h4>Square Root Identities</h4>
+                    <div class="formula">
+                        √(ab) = √a √b<br>
+                        √(a/b) = √a / √b<br>
+                        (√a ± √b)² = a ± 2√(ab) + b
+                    </div>
+                </div>
+                
+                <div class="formula-card">
+                    <h4>Rationalization</h4>
+                    <div class="formula">
+                        1/√a = √a/a<br>
+                        1/(a + √b) = (a - √b)/(a² - b)<br>
+                        1/(√a + √b) = (√a - √b)/(a - b)
+                    </div>
+                </div>
+                
+                <div class="formula-card">
+                    <h4>Exponent Laws</h4>
+                    <div class="formula">
+                        aᵖ × aᵍ = aᵖ⁺ᵍ<br>
+                        (aᵖ)ᵍ = aᵖᵍ<br>
+                        aᵖ ÷ aᵍ = aᵖ⁻ᵍ<br>
+                        aᵖbᵖ = (ab)ᵖ
+                    </div>
+                </div>
+                
+                <div class="formula-card">
+                    <h4>Radical-Exponential</h4>
+                    <div class="formula">
+                        ⁿ√a = a^(1/n)<br>
+                        ⁿ√(aᵐ) = a^(m/n)<br>
+                        (ⁿ√a)ᵐ = a^(m/n)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="interactive-tool">
+                <h3>🔍 Formula Practice</h3>
+                <div class="input-group">
+                    <label>Choose formula type:</label>
+                    <select id="formulaType">
+                        <option value="sqrt">Square Root Identity</option>
+                        <option value="rational">Rationalization</option>
+                        <option value="exponent">Exponent Law</option>
+                        <option value="radical">Radical-Exponential</option>
+                    </select>
+                    <button onclick="generateFormulaProblem()">Generate Problem</button>
+                </div>
+                
+                <div id="formulaProblem" class="result-box">
+                    Select a formula type and click Generate!
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="formulaAnswer" placeholder="Your answer">
+                    <button onclick="checkFormulaAnswer()">Check Answer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Generator Section -->
+        <div id="practice" class="section">
+            <h2>🎲 Adaptive Practice Generator</h2>
+            
+            <div class="practice-generator">
+                <h3>📝 Customized Practice Problems</h3>
+                
+                <div class="difficulty-selector">
+                    <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
+                </div>
+                
+                <div class="input-group">
+                    <label>Problem Type:</label>
+                    <select id="practiceType">
+                        <option value="classification">Number Classification</option>
+                        <option value="conversion">Decimal ↔ Fraction</option>
+                        <option value="simplification">Simplification</option>
+                        <option value="rationalization">Rationalization</option>
+                        <option value="exponents">Exponent Operations</option>
+                    </select>
+                    <button onclick="generatePracticeProblem()">Generate New Problem</button>
+                </div>
+                
+                <div id="practiceProblem" class="result-box">
+                    Choose settings and generate a problem!
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="practiceAnswer" placeholder="Your answer">
+                    <button onclick="checkPracticeAnswer()">Submit Answer</button>
+                    <button onclick="showPracticeHint()">Hint</button>
+                    <button onclick="showPracticeSolution()">Show Solution</button>
+                </div>
+                
+                <div class="score-board">
+                    <h4>📊 Your Progress</h4>
+                    <div>Correct: <span id="correctCount">0</span> | Incorrect: <span id="incorrectCount">0</span> | Accuracy: <span id="accuracy">0%</span></div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comprehensive Quiz Section -->
+        <div id="quiz" class="section">
+            <h2>🏆 Comprehensive Chapter Quiz</h2>
+            
+            <div class="quiz-container">
+                <h3>Test Your Complete Understanding</h3>
+                <div class="progress-bar">
+                    <div id="quizProgress" class="progress-fill" style="width: 0%"></div>
+                </div>
+                
+                <div id="quizArea">
+                    <div class="quiz-question">
+                        <h4 id="questionText">Click "Start Quiz" to begin!</h4>
+                        <div id="optionsArea" class="options"></div>
+                        <div style="margin-top: 20px;">
+                            <button id="startQuizBtn" onclick="startQuiz()">Start Quiz</button>
+                            <button id="nextQuestionBtn" onclick="nextQuestion()" style="display: none;">Next Question</button>
+                            <button id="finishQuizBtn" onclick="finishQuiz()" style="display: none;">Finish Quiz</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="quizResults" style="display: none;">
+                    <h3>🎉 Quiz Complete!</h3>
+                    <div id="finalScore" class="score-board"></div>
+                    <button onclick="restartQuiz()">Take Quiz Again</button>
+                    <button onclick="showQuizReview()">Review Answers</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Tips Section -->
+        <div id="tips" class="section">
+            <h2>💡 Study Tips & Memory Aids</h2>
+            
+            <div class="study-tips">
+                <h3>🧠 Memory Techniques</h3>
+                <div class="tip">
+                    <strong>Rational vs Irrational:</strong> Remember "Rational = Repeating or Terminating" - both start with R and T!
+                </div>
+                <div class="tip">
+                    <strong>Square Root Laws:</strong> Think of √ as a "box" - when you multiply boxes, you can combine their contents: √a × √b = √(ab)
+                </div>
+                <div class="tip">
+                    <strong>Exponent Laws:</strong> Use the mnemonic "PAPA" - Product (add), Power (multiply), Add (subtract), Power again (distribute)
+                </div>
+                <div class="tip">
+                    <strong>Rationalization:</strong> Always multiply by the "conjugate" - if you see (a + √b), multiply by (a - √b)
+                </div>
+            </div>
+            
+            <div class="study-tips">
+                <h3>📚 Study Strategies</h3>
+                <div class="tip">
+                    <strong>Practice Regularly:</strong> Spend 15-20 minutes daily working through different types of problems
+                </div>
+                <div class="tip">
+                    <strong>Connect Concepts:</strong> Always ask "How does this relate to what I learned before?"
+                </div>
+                <div class="tip">
+                    <strong>Visual Learning:</strong> Draw number lines, construct geometric representations of square roots
+                </div>
+                <div class="tip">
+                    <strong>Explain to Others:</strong> Try teaching these concepts to a friend or family member
+                </div>
+            </div>
+            
+            <div class="concept-map">
+                <h3>🗺️ Concept Connections</h3>
+                <p>Click on each concept to see how it connects to others:</p>
+                <div class="concept-node" onclick="showConnections('numbers')">Real Numbers</div>
+                <div class="concept-node" onclick="showConnections('decimals')">Decimal Expansions</div>
+                <div class="concept-node" onclick="showConnections('operations')">Operations</div>
+                <div class="concept-node" onclick="showConnections('exponents')">Exponents</div>
+                
+                <div id="connectionDetails" class="result-box" style="display: none; margin-top: 20px;">
+                    Select a concept to see its connections!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentDifficulty = 'easy';
+        let practiceStats = {correct: 0, incorrect: 0};
+        let currentPracticeProblem = {};
+        let quizData = [];
+        let currentQuestionIndex = 0;
+        let quizAnswers = [];
+        let currentFormulaProblem = {};
+
+        // Navigation functions
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Highlight active button
+            event.target.classList.add('active');
+        }
+
+        // Topic detail functions
+        function showTopicDetail(topic) {
+            const details = {
+                rational: {
+                    title: "Rational Numbers in Detail",
+                    content: `
+                        <h4>Definition:</h4>
+                        <p>A rational number can be expressed as p/q where p and q are integers and q ≠ 0.</p>
+                        
+                        <h4>Decimal Characteristics:</h4>
+                        <ul>
+                            <li><strong>Terminating:</strong> 1/2 = 0.5, 3/4 = 0.75</li>
+                            <li><strong>Non-terminating recurring:</strong> 1/3 = 0.333..., 22/7 = 3.142857142857...</li>
+                        </ul>
+                        
+                        <h4>Key Point:</h4>
+                        <p>Every terminating or recurring decimal can be converted back to a fraction!</p>
+                    `
+                },
+                irrational: {
+                    title: "Irrational Numbers in Detail",
+                    content: `
+                        <h4>Definition:</h4>
+                        <p>Numbers that cannot be expressed as p/q where p and q are integers.</p>
+                        
+                        <h4>Characteristics:</h4>
+                        <ul>
+                            <li><strong>Non-terminating non-recurring decimals</strong></li>
+                            <li><strong>Examples:</strong> √2 = 1.4142135..., π = 3.14159265...</li>
+                            <li><strong>Cannot be written as fractions</strong></li>
+                        </ul>
+                        
+                        <h4>How to Create:</h4>
+                        <p>0.101001000100001... (increasing gaps between 1s)</p>
+                    `
+                },
+                operations: {
+                    title: "Operations on Real Numbers",
+                    content: `
+                        <h4>Key Rules:</h4>
+                        <ul>
+                            <li><strong>Rational + Irrational = Irrational</strong></li>
+                            <li><strong>Rational × Irrational = Irrational</strong> (if rational ≠ 0)</li>
+                            <li><strong>Irrational + Irrational = ?</strong> (Could be either!)</li>
+                        </ul>
+                        
+                        <h4>Square Root Identities:</h4>
+                        <ul>
+                            <li>√(ab) = √a × √b</li>
+                            <li>(√a + √b)(√a - √b) = a - b</li>
+                            <li>(√a + √b)² = a + 2√(ab) + b</li>
+                        </ul>
+                    `
+                },
+                exponents: {
+                    title: "Laws of Exponents",
+                    content: `
+                        <h4>Four Main Laws:</h4>
+                        <ul>
+                            <li><strong>Product:</strong> aᵖ × aᵍ = aᵖ⁺ᵍ</li>
+                            <li><strong>Power:</strong> (aᵖ)ᵍ = aᵖᵍ</li>
+                            <li><strong>Quotient:</strong> aᵖ ÷ aᵍ = aᵖ⁻ᵍ</li>
+                            <li><strong>Distribution:</strong> aᵖ × bᵖ = (ab)ᵖ</li>
+                        </ul>
+                        
+                        <h4>Rational Exponents:</h4>
+                        <p>a^(m/n) = ⁿ√(aᵐ) = (ⁿ√a)ᵐ</p>
+                        
+                        <h4>Example:</h4>
+                        <p>4^(3/2) = (√4)³ = 2³ = 8</p>
+                    `
+                }
+            };
+            
+            document.getElementById('topicTitle').innerHTML = details[topic].title;
+            document.getElementById('topicContent').innerHTML = details[topic].content;
+            document.getElementById('topicDetail').style.display = 'block';
+        }
+
+        function hideTopicDetail() {
+            document.getElementById('topicDetail').style.display = 'none';
+        }
+
+        // Quick classification function
+        function quickClassify() {
+            const input = document.getElementById('quickTest').value.trim();
+            let result = "";
+            
+            if (!input) {
+                result = "Please enter a decimal!";
+            } else if (input.includes('...')) {
+                if (/(\d)\1{2,}/.test(input.replace('...', ''))) {
+                    result = `<span class="highlight">RATIONAL</span><br>Non-terminating recurring → Can be expressed as a fraction`;
+                } else {
+                    result = `<span class="highlight">IRRATIONAL</span><br>Non-terminating non-recurring → Cannot be expressed as a fraction`;
+                }
+            } else if (!isNaN(parseFloat(input))) {
+                result = `<span class="highlight">RATIONAL</span><br>Terminating decimal → Can be expressed as a fraction`;
+            } else {
+                result = "Invalid input - please enter a valid decimal";
+            }
+            
+            document.getElementById('quickResult').innerHTML = result;
+        }
+
+        // Formula practice functions
+        function generateFormulaProblem() {
+            const type = document.getElementById('formulaType').value;
+            let problem = "";
+            let answer = "";
+            
+            switch(type) {
+                case 'sqrt':
+                    const problems = [
+                        {q: "√8 × √2", a: "√16 = 4"},
+                        {q: "(√5 + √3)(√5 - √3)", a: "5 - 3 = 2"},
+                        {q: "(√7 + √2)²", a: "7 + 2√14 + 2 = 9 + 2√14"}
+                    ];
+                    const selected = problems[Math.floor(Math.random() * problems.length)];
+                    problem = selected.q;
+                    answer = selected.a;
+                    break;
+                    
+                case 'rational':
+                    const ratProblems = [
+                        {q: "Rationalize: 1/√5", a: "√5/5"},
+                        {q: "Rationalize: 1/(3 + √2)", a: "(3 - √2)/7"},
+                        {q: "Rationalize: 5/(√7 - √3)", a: "5(√7 + √3)/4"}
+                    ];
+                    const ratSelected = ratProblems[Math.floor(Math.random() * ratProblems.length)];
+                    problem = ratSelected.q;
+                    answer = ratSelected.a;
+                    break;
+                    
+                case 'exponent':
+                    const expProblems = [
+                        {q: "2³ × 2²", a: "2⁵ = 32"},
+                        {q: "(3²)³", a: "3⁶ = 729"},
+                        {q: "5⁴ ÷ 5²", a: "5² = 25"}
+                    ];
+                    const expSelected = expProblems[Math.floor(Math.random() * expProblems.length)];
+                    problem = expSelected.q;
+                    answer = expSelected.a;
+                    break;
+                    
+                case 'radical':
+                    const radProblems = [
+                        {q: "Convert to exponential: ∛8", a: "8^(1/3)"},
+                        {q: "Simplify: 16^(3/4)", a: "(⁴√16)³ = 2³ = 8"},
+                        {q: "Convert to radical: 27^(2/3)", a: "(∛27)² = 3² = 9"}
+                    ];
+                    const radSelected = radProblems[Math.floor(Math.random() * radProblems.length)];
+                    problem = radSelected.q;
+                    answer = radSelected.a;
+                    break;
+            }
+            
+            currentFormulaProblem = {problem, answer};
+            document.getElementById('formulaProblem').innerHTML = problem;
+            document.getElementById('formulaAnswer').value = '';
+        }
+
+        function checkFormulaAnswer() {
+            const userAnswer = document.getElementById('formulaAnswer').value.trim();
+            const correct = currentFormulaProblem.answer;
+            
+            if (!userAnswer) {
+                alert('Please enter an answer!');
+                return;
+            }
+            
+            // Simple comparison (would need more sophisticated parsing in real app)
+            if (userAnswer.toLowerCase().includes(correct.split('=')[0].toLowerCase()) || 
+                userAnswer.toLowerCase().includes(correct.toLowerCase())) {
+                document.getElementById('formulaProblem').innerHTML = 
+                    `✓ Correct! ${currentFormulaProblem.problem} = ${correct}`;
+            } else {
+                document.getElementById('formulaProblem').innerHTML = 
+                    `✗ Incorrect. ${currentFormulaProblem.problem} = ${correct}`;
+            }
+        }
+
+        // Practice generator functions
+        function setDifficulty(level) {
+            currentDifficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function generatePracticeProblem() {
+            const type = document.getElementById('practiceType').value;
+            let problem = {};
+            
+            switch(type) {
+                case 'classification':
+                    const numbers = currentDifficulty === 'easy' ? 
+                        ['0.5', '0.333...', '3.14159...'] :
+                        currentDifficulty === 'medium' ?
+                        ['0.142857...', '2.236067...', '1.272727...'] :
+                        ['0.101001000...', '√2', 'π'];
+                    const selected = numbers[Math.floor(Math.random() * numbers.length)];
+                    problem = {
+                        question: `Classify: ${selected}`,
+                        answer: selected.includes('...') && !/(\d)\1{2,}/.test(selected) ? 'irrational' : 'rational',
+                        type: 'classification'
+                    };
+                    break;
+                    
+                case 'conversion':
+                    if (currentDifficulty === 'easy') {
+                        problem = {
+                            question: 'Convert 0.75 to a fraction',
+                            answer: '3/4',
+                            type: 'conversion'
+                        };
+                    } else {
+                        problem = {
+                            question: 'Convert 0.454545... to a fraction',
+                            answer: '5/11',
+                            type: 'conversion'
+                        };
+                    }
+                    break;
+                    
+                case 'simplification':
+                    const simplifyProblems = {
+                        easy: ['√16', '√25', '√36'],
+                        medium: ['√8 × √2', '√50', '(√3)²'],
+                        hard: ['√12 × √27', '(√5 + √3)(√5 - √3)', '(√2 + 1)²']
+                    };
+                    const simplifySelected = simplifyProblems[currentDifficulty][Math.floor(Math.random() * simplifyProblems[currentDifficulty].length)];
+                    problem = {
+                        question: `Simplify: ${simplifySelected}`,
+                        answer: 'varies',
+                        type: 'simplification'
+                    };
+                    break;
+                    
+                case 'rationalization':
+                    const rationalizeProblems = {
+                        easy: ['1/√2', '1/√3', '1/√5'],
+                        medium: ['3/√7', '2/√11', '5/√13'],
+                        hard: ['1/(2+√3)', '1/(√5-√2)', '3/(√7+√2)']
+                    };
+                    const rationalizeSelected = rationalizeProblems[currentDifficulty][Math.floor(Math.random() * rationalizeProblems[currentDifficulty].length)];
+                    problem = {
+                        question: `Rationalize: ${rationalizeSelected}`,
+                        answer: 'varies',
+                        type: 'rationalization'
+                    };
+                    break;
+                    
+                case 'exponents':
+                    const exponentProblems = {
+                        easy: ['2² × 2³', '3⁴ ÷ 3²', '(2²)³'],
+                        medium: ['4^(1/2)', '8^(2/3)', '16^(3/4)'],
+                        hard: ['2^(2/3) × 2^(1/3)', '(27^(1/3))²', '5^(1/2) ÷ 5^(1/4)']
+                    };
+                    const exponentSelected = exponentProblems[currentDifficulty][Math.floor(Math.random() * exponentProblems[currentDifficulty].length)];
+                    problem = {
+                        question: `Simplify: ${exponentSelected}`,
+                        answer: 'varies',
+                        type: 'exponents'
+                    };
+                    break;
+            }
+            
+            currentPracticeProblem = problem;
+            document.getElementById('practiceProblem').innerHTML = problem.question;
+            document.getElementById('practiceAnswer').value = '';
+        }
+
+        function checkPracticeAnswer() {
+            const userAnswer = document.getElementById('practiceAnswer').value.trim().toLowerCase();
+            let isCorrect = false;
+            
+            // This is a simplified check - in a real app, you'd need more sophisticated answer checking
+            switch(currentPracticeProblem.type) {
+                case 'classification':
+                    isCorrect = userAnswer === currentPracticeProblem.answer;
+                    break;
+                case 'conversion':
+                    isCorrect = userAnswer.includes(currentPracticeProblem.answer) || userAnswer === currentPracticeProblem.answer;
+                    break;
+                default:
+                    // For other types, accept any reasonable answer
+                    isCorrect = userAnswer.length > 0;
+                    break;
+            }
+            
+            if (isCorrect) {
+                practiceStats.correct++;
+                document.getElementById('practiceProblem').innerHTML = 
+                    `✓ Correct! ${currentPracticeProblem.question}`;
+            } else {
+                practiceStats.incorrect++;
+                document.getElementById('practiceProblem').innerHTML = 
+                    `✗ Try again. ${currentPracticeProblem.question}`;
+            }
+            
+            updatePracticeStats();
+        }
+
+        function updatePracticeStats() {
+            const total = practiceStats.correct + practiceStats.incorrect;
+            const accuracy = total > 0 ? Math.round((practiceStats.correct / total) * 100) : 0;
+            
+            document.getElementById('correctCount').textContent = practiceStats.correct;
+            document.getElementById('incorrectCount').textContent = practiceStats.incorrect;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('progressFill').style.width = Math.min(accuracy, 100) + '%';
+        }
+
+        function showPracticeHint() {
+            alert('Hint: Review the relevant section in your textbook or use the formula reference!');
+        }
+
+        function showPracticeSolution() {
+            alert('Solution: Check the worked examples in sections 1.3-1.5 for similar problems!');
+        }
+
+        // Quiz functions
+        function initializeQuiz() {
+            quizData = [
+                {
+                    question: "What type of decimal expansion does 1/3 have?",
+                    options: ["Terminating", "Non-terminating recurring", "Non-terminating non-recurring", "Undefined"],
+                    correct: 1
+                },
+                {
+                    question: "Which of these is an irrational number?",
+                    options: ["0.25", "0.333...", "0.101001000...", "22/7"],
+                    correct: 2
+                },
+                {
+                    question: "What is √9 × √4?",
+                    options: ["6", "√13", "√36", "36"],
+                    correct: 0
+                },
+                {
+                    question: "What is (√5 + √3)(√5 - √3)?",
+                    options: ["2", "8", "2√15", "√8"],
+                    correct: 0
+                },
+                {
+                    question: "What is 2³ × 2²?",
+                    options: ["2⁵", "2⁶", "4⁵", "4⁶"],
+                    correct: 0
+                },
+                {
+                    question: "What is 8^(2/3)?",
+                    options: ["4", "6", "∛64", "Both A and C"],
+                    correct: 3
+                },
+                {
+                    question: "To rationalize 1/(2+√3), multiply by:",
+                    options: ["(2+√3)/(2+√3)", "(2-√3)/(2-√3)", "√3/√3", "2/2"],
+                    correct: 1
+                },
+                {
+                    question: "If r is rational and s is irrational, then r + s is:",
+                    options: ["Always rational", "Always irrational", "Sometimes rational", "Undefined"],
+                    correct: 1
+                }
+            ];
+        }
+
+        function startQuiz() {
+            initializeQuiz();
+            currentQuestionIndex = 0;
+            quizAnswers = [];
+            
+            document.getElementById('startQuizBtn').style.display = 'none';
+            document.getElementById('nextQuestionBtn').style.display = 'inline-block';
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex < quizData.length) {
+                const question = quizData[currentQuestionIndex];
+                document.getElementById('questionText').innerHTML = 
+                    `Question ${currentQuestionIndex + 1}: ${question.question}`;
+                
+                const optionsHTML = question.options.map((option, index) => 
+                    `<div class="option" onclick="selectOption(${index})">${option}</div>`
+                ).join('');
+                
+                document.getElementById('optionsArea').innerHTML = optionsHTML;
+                
+                // Update progress
+                const progress = ((currentQuestionIndex + 1) / quizData.length) * 100;
+                document.getElementById('quizProgress').style.width = progress + '%';
+                
+                if (currentQuestionIndex === quizData.length - 1) {
+                    document.getElementById('nextQuestionBtn').style.display = 'none';
+                    document.getElementById('finishQuizBtn').style.display = 'inline-block';
+                }
+            }
+        }
+
+        function selectOption(optionIndex) {
+            quizAnswers[currentQuestionIndex] = optionIndex;
+            
+            // Highlight selected option
+            document.querySelectorAll('.option').forEach((opt, idx) => {
+                opt.style.background = idx === optionIndex ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.3)';
+            });
+        }
+
+        function nextQuestion() {
+            if (quizAnswers[currentQuestionIndex] !== undefined) {
+                currentQuestionIndex++;
+                showQuestion();
+            } else {
+                alert('Please select an answer before continuing!');
+            }
+        }
+
+        function finishQuiz() {
+            if (quizAnswers[currentQuestionIndex] !== undefined) {
+                calculateQuizResults();
+            } else {
+                alert('Please select an answer for the final question!');
+            }
+        }
+
+        function calculateQuizResults() {
+            let correct = 0;
+            for (let i = 0; i < quizData.length; i++) {
+                if (quizAnswers[i] === quizData[i].correct) {
+                    correct++;
+                }
+            }
+            
+            const percentage = Math.round((correct / quizData.length) * 100);
+            
+            document.getElementById('quizArea').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            
+            let grade = '';
+            if (percentage >= 90) grade = 'A+ Outstanding!';
+            else if (percentage >= 80) grade = 'A Good work!';
+            else if (percentage >= 70) grade = 'B Keep practicing!';
+            else if (percentage >= 60) grade = 'C Need more review!';
+            else grade = 'D Please review the chapter!';
+            
+            document.getElementById('finalScore').innerHTML = `
+                <h3>Your Score: ${correct}/${quizData.length} (${percentage}%)</h3>
+                <h4>Grade: ${grade}</h4>
+                <p>Questions correct: ${correct}</p>
+                <p>Questions incorrect: ${quizData.length - correct}</p>
+            `;
+        }
+
+        function restartQuiz() {
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizArea').style.display = 'block';
+            document.getElementById('startQuizBtn').style.display = 'inline-block';
+            document.getElementById('nextQuestionBtn').style.display = 'none';
+            document.getElementById('finishQuizBtn').style.display = 'none';
+            
+            document.getElementById('questionText').innerHTML = "Click 'Start Quiz' to begin!";
+            document.getElementById('optionsArea').innerHTML = '';
+            document.getElementById('quizProgress').style.width = '0%';
+        }
+
+        function showQuizReview() {
+            alert('Quiz review feature would show detailed explanations for each question!');
+        }
+
+        // Study tips functions
+        function showConnections(concept) {
+            const connections = {
+                numbers: "Real Numbers include both Rational and Irrational numbers. They can be represented on a number line and have decimal expansions.",
+                decimals: "Decimal Expansions help us classify numbers: terminating/recurring → rational, non-terminating non-recurring → irrational.",
+                operations: "Operations on Real Numbers follow specific rules. Rational + Irrational = Irrational. Square roots have special identities.",
+                exponents: "Exponents extend to rational numbers. a^(m/n) = nth root of a^m. Laws of exponents apply to all real number bases."
+            };
+            
+            document.getElementById('connectionDetails').innerHTML = connections[concept];
+            document.getElementById('connectionDetails').style.display = 'flex';
+        }
+
+        // Initialize the page
+        window.onload = function() {
+            // Set up initial values
+            updatePracticeStats();
+            generateFormulaProblem();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,2901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Electrostatic Forces - Ultra Interactive Visualization</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 25%, #16213e 50%, #0f4c75 75%, #3282b8 100%);
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: auto;
+            animation: backgroundPulse 10s ease-in-out infinite alternate;
+        }
+        
+        @keyframes backgroundPulse {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(52, 152, 219, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(155, 89, 182, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, rgba(231, 76, 60, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            animation: floatingOrbs 15s ease-in-out infinite;
+        }
+        
+        @keyframes floatingOrbs {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db, #9b59b6, #e74c3c);
+            color: white;
+            padding: 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="electricGrid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.2)"/><path d="M 0 10 L 20 10 M 10 0 L 10 20" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23electricGrid)"/></svg>');
+            opacity: 0.3;
+            animation: electricFlow 5s linear infinite;
+        }
+        
+        @keyframes electricFlow {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(20px) translateY(20px); }
+        }
+        
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(52,152,219,0.3);
+            position: relative;
+            z-index: 1;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(52,152,219,0.3); }
+            100% { text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(52,152,219,0.6); }
+        }
+        
+        .header p {
+            font-size: 1.4em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 0.95; transform: translateY(0); }
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 500px;
+            gap: 30px;
+            padding: 40px;
+        }
+        
+        .canvas-section {
+            background: linear-gradient(145deg, rgba(15, 15, 35, 0.9), rgba(25, 25, 50, 0.8));
+            border-radius: 25px;
+            padding: 30px;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        .canvas-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(52, 152, 219, 0.1) 0%, transparent 70%);
+            animation: canvasPulse 4s ease-in-out infinite alternate;
+        }
+        
+        @keyframes canvasPulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+        
+        .canvas-container {
+            position: relative;
+            background: radial-gradient(circle at center, #000814, #001d3d, #003566);
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+        }
+        
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #3498db, #9b59b6, #e74c3c, #f39c12, #3498db);
+            border-radius: 20px;
+            z-index: -1;
+            background-size: 400% 400%;
+            animation: borderGlow 6s linear infinite;
+        }
+        
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        #chargeCanvas {
+            display: block;
+            cursor: crosshair;
+            border-radius: 17px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .canvas-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            pointer-events: none;
+            border-radius: 17px;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(52, 152, 219, 0.05) 100%);
+            animation: overlayShimmer 8s ease-in-out infinite;
+        }
+        
+        @keyframes overlayShimmer {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+        
+        .controls {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border-radius: 25px;
+            padding: 35px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .controls::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.05), rgba(155, 89, 182, 0.05));
+            animation: controlsGlow 6s ease-in-out infinite alternate;
+        }
+        
+        @keyframes controlsGlow {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+        
+        .control-section {
+            margin-bottom: 35px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .control-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(52, 152, 219, 0.2);
+            border-color: rgba(52, 152, 219, 0.4);
+        }
+        
+        .control-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+            opacity: 0.7;
+        }
+        
+        .control-section h3 {
+            color: #ffffff;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .control-section h3::before {
+            content: '⚡';
+            font-size: 1.3em;
+            animation: iconSpin 3s linear infinite;
+        }
+        
+        @keyframes iconSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .slider-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slider-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .slider-group label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 1.2em;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .slider {
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 25%, #f1c40f 50%, #27ae60 75%, #3498db 100%);
+            outline: none;
+            -webkit-appearance: none;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff, #e0e0e0);
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.8), 0 5px 15px rgba(0,0,0,0.3);
+            border: 3px solid #3498db;
+            transition: all 0.2s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(52, 152, 219, 1), 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .value-display {
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: #ffffff;
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-top: 15px;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            font-size: 1.3em;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 2px solid rgba(52, 152, 219, 0.5);
+            animation: valueGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes valueGlow {
+            0% { box-shadow: 0 8px 25px rgba(0,0,0,0.3), 0 0 20px rgba(52, 152, 219, 0.3); }
+            100% { box-shadow: 0 8px 25px rgba(0,0,0,0.3), 0 0 40px rgba(52, 152, 219, 0.6); }
+        }
+        
+        .visualization-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .toggle-btn {
+            padding: 15px 20px;
+            border: 2px solid rgba(52, 152, 219, 0.5);
+            background: rgba(52, 152, 219, 0.1);
+            color: #ffffff;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .toggle-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .toggle-btn:hover::before {
+            left: 100%;
+        }
+        
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-color: #3498db;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .toggle-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(52, 152, 219, 0.3);
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .btn {
+            padding: 18px 25px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .example-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(52, 152, 219, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+        }
+        
+        .legend-item:hover {
+            background: rgba(52, 152, 219, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .legend-item span {
+            color: #ffffff;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .instructions {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(230, 126, 34, 0.2));
+            border: 2px solid rgba(243, 156, 18, 0.5);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .instructions::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f39c12, #e67e22, #d35400);
+            animation: instructionGlow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes instructionGlow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .instructions h4 {
+            color: #f39c12;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+        
+        .instructions h4::before {
+            content: '💡';
+            animation: bulbFlicker 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes bulbFlicker {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .instructions p {
+            color: #f39c12;
+            font-size: 15px;
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .instructions p::before {
+            content: '▶';
+            position: absolute;
+            left: 8px;
+            color: #e67e22;
+            font-weight: bold;
+            animation: arrow-pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes arrow-pulse {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+        
+        .calculations {
+            background: linear-gradient(145deg, rgba(44, 62, 80, 0.9), rgba(52, 73, 94, 0.9));
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .calculations::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+            animation: calculationGlow 4s linear infinite;
+        }
+        
+        @keyframes calculationGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .calculations h4 {
+            color: #3498db;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+        
+        .calculations h4::before {
+            content: '📊';
+            animation: chartBounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes chartBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .force-info {
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-panel {
+            background: linear-gradient(145deg, rgba(39, 174, 96, 0.2), rgba(46, 204, 113, 0.2));
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid rgba(39, 174, 96, 0.4);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: statusPulse 3s infinite;
+        }
+        
+        @keyframes statusPulse {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .status-info {
+            font-size: 15px;
+            color: #ffffff;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .mini-graph {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        
+        .quiz-panel, .challenges-panel {
+            background: linear-gradient(145deg, rgba(39, 174, 96, 0.1), rgba(46, 204, 113, 0.1));
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 2px solid rgba(39, 174, 96, 0.3);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quiz-panel::before, .challenges-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #27ae60, #2ecc71, #58d68d);
+            animation: quizGlow 4s linear infinite;
+        }
+        
+        @keyframes quizGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .quiz-panel h4, .challenges-panel h4 {
+            color: #2ecc71;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+        
+        .quiz-progress {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 10%;
+        }
+        
+        .question-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+        
+        .answer-options {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .answer-option {
+            padding: 15px 20px;
+            background: rgba(52, 152, 219, 0.1);
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .answer-option:hover {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: rgba(52, 152, 219, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .answer-option.selected {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+        }
+        
+        .answer-option.correct {
+            background: rgba(39, 174, 96, 0.3);
+            border-color: #27ae60;
+        }
+        
+        .answer-option.incorrect {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+        
+        .quiz-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+        }
+        
+        .quiz-score {
+            background: rgba(39, 174, 96, 0.2);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 2px solid rgba(39, 174, 96, 0.4);
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .challenge-item {
+            background: rgba(155, 89, 182, 0.1);
+            border: 2px solid rgba(155, 89, 182, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .challenge-item:hover {
+            background: rgba(155, 89, 182, 0.2);
+            border-color: rgba(155, 89, 182, 0.5);
+            transform: translateY(-3px);
+        }
+        
+        .challenge-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #bb86fc;
+        }
+        
+        .challenge-description {
+            color: #ffffff;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .challenge-difficulty {
+            display: inline-block;
+            padding: 5px 12px;
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #ff6b6b;
+        }
+        
+        .challenge-difficulty.easy {
+            background: rgba(39, 174, 96, 0.2);
+            border-color: #27ae60;
+            color: #2ecc71;
+        }
+        
+        .challenge-difficulty.medium {
+            background: rgba(243, 156, 18, 0.2);
+            border-color: #f39c12;
+            color: #f1c40f;
+        }
+        
+        .explanation {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 1600px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            
+            .legend {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .visualization-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .legend {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ ELECTROSTATIC FORCE LABORATORY ⚡</h1>
+            <p>🔬 Advanced Multi-Dimensional Visualization of Electric Fields & Forces 🔬</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="canvas-section">
+                <div class="instructions">
+                    <h4>🎮 Interactive Control Guide:</h4>
+                    <p>Left-click anywhere to place electric charges</p>
+                    <p>Right-click or double-click to select target charge</p>
+                    <p>Ctrl+drag to move charges with precision</p>
+                    <p>Shift+click to remove individual charges</p>
+                    <p>Mouse wheel to zoom in/out (coming soon)</p>
+                    <p>Space bar to pause/resume animations</p>
+                    <p>Toggle visualization modes for different insights</p>
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="chargeCanvas" width="1000" height="750"></canvas>
+                    <div class="canvas-overlay"></div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: radial-gradient(circle, #ff6b6b, #e74c3c); box-shadow: 0 0 20px #ff6b6b;"></div>
+                        <span><strong>⊕ Positive Charge</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: radial-gradient(circle, #4dabf7, #3498db); box-shadow: 0 0 20px #4dabf7;"></div>
+                        <span><strong>⊖ Negative Charge</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: radial-gradient(circle, #69db7c, #27ae60); border: 4px solid #2d3748; box-shadow: 0 0 25px #69db7c;"></div>
+                        <span><strong>🎯 Target Charge</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 40px; height: 5px; background: linear-gradient(90deg, #e74c3c, #c0392b); border-radius: 3px; box-shadow: 0 0 10px #e74c3c;"></div>
+                        <span><strong>→ Individual Forces</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 40px; height: 7px; background: linear-gradient(90deg, #2c3e50, #34495e); border-radius: 4px; box-shadow: 0 0 15px #2c3e50;"></div>
+                        <span><strong>⟹ Net Resultant</strong></span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 40px; height: 3px; background: linear-gradient(90deg, #f39c12, #e67e22); border-radius: 2px; box-shadow: 0 0 8px #f39c12;"></div>
+                        <span><strong>⟨⟨ Field Lines</strong></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-section">
+                    <h3>⚡ Charge Configuration</h3>
+                    <div class="slider-group">
+                        <label for="chargeValue">🔋 Charge Magnitude (μC):</label>
+                        <input type="range" id="chargeValue" class="slider" min="-20" max="20" value="10" step="0.5">
+                        <div class="value-display" id="chargeDisplay">+10.0 μC</div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🎨 Visualization Modes</h3>
+                    <div class="visualization-controls">
+                        <button class="toggle-btn active" id="vectorToggle" onclick="toggleVectors()">Force Vectors</button>
+                        <button class="toggle-btn" id="fieldToggle" onclick="toggleFieldLines()">Field Lines</button>
+                        <button class="toggle-btn" id="potentialToggle" onclick="togglePotential()">Equipotential</button>
+                        <button class="toggle-btn" id="strengthToggle" onclick="toggleFieldStrength()">Field Map</button>
+                        <button class="toggle-btn" id="particleToggle" onclick="toggleParticles()">Test Particles</button>
+                        <button class="toggle-btn" id="gridToggle" onclick="toggleGrid()">Precision Grid</button>
+                        <button class="toggle-btn" id="animationToggle" onclick="toggleAnimations()">Animations</button>
+                        <button class="toggle-btn" id="3dToggle" onclick="toggle3DEffect()">3D Effect</button>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-danger" onclick="clearCharges()">🗑️ CLEAR ALL</button>
+                        <button class="btn btn-success" onclick="toggleCalculations()">📊 MATH VIEW</button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>📚 Physics Examples</h3>
+                    <div class="example-buttons">
+                        <button class="btn btn-primary" onclick="loadExample1()">📐 Triangle Centroid (Ex 1.5)</button>
+                        <button class="btn btn-primary" onclick="loadExample2()">🔺 Mixed Triangle (Ex 1.6)</button>
+                        <button class="btn btn-primary" onclick="loadLinearExample()">📏 Linear Array</button>
+                        <button class="btn btn-primary" onclick="loadSquareExample()">⬜ Square Grid</button>
+                        <button class="btn btn-primary" onclick="loadDipoleExample()">🧲 Electric Dipole</button>
+                        <button class="btn btn-primary" onclick="loadQuadrupoleExample()">✨ Quadrupole</button>
+                        <button class="btn btn-primary" onclick="loadOctupoleExample()">🌟 Octupole</button>
+                        <button class="btn btn-primary" onclick="loadRandomExample()">🎲 Random Config</button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🧠 Test Your Knowledge</h3>
+                    <div class="button-group">
+                        <button class="btn btn-success" onclick="startQuiz()">📝 Start Quiz</button>
+                        <button class="btn btn-primary" onclick="showChallenges()">🎯 Challenges</button>
+                    </div>
+                </div>
+                
+                <div class="status-panel">
+                    <div class="status-info" id="statusInfo">
+                        🚀 Laboratory initialized. Ready for charge placement and analysis.
+                    </div>
+                </div>
+                
+                <div class="calculations" id="calculationsPanel" style="display: none;">
+                    <h4>🧮 Advanced Force Analysis</h4>
+                    <div class="force-info" id="forceInfo">
+                        Select a target charge to see detailed mathematical analysis...
+                    </div>
+                    <canvas class="mini-graph" id="forceGraph"></canvas>
+                </div>
+                
+                <div class="quiz-panel" id="quizPanel" style="display: none;">
+                    <h4>🧠 Physics Knowledge Test</h4>
+                    <div class="quiz-content" id="quizContent">
+                        <div class="quiz-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <span id="questionCounter">Question 1 of 10</span>
+                        </div>
+                        <div class="question-container" id="questionContainer">
+                            <!-- Quiz questions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="challenges-panel" id="challengesPanel" style="display: none;">
+                    <h4>🎯 Interactive Challenges</h4>
+                    <div class="challenge-content" id="challengeContent">
+                        <!-- Challenges will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('chargeCanvas');
+        const ctx = canvas.getContext('2d');
+        const graphCanvas = document.getElementById('forceGraph');
+        const graphCtx = graphCanvas?.getContext('2d');
+        
+        let charges = [];
+        let targetChargeIndex = -1;
+        let showVectors = true;
+        let showFieldLines = false;
+        let showPotential = false;
+        let showGrid = false;
+        let showParticles = false;
+        let showFieldStrength = false;
+        let showCalculations = false;
+        let showAnimations = true;
+        let show3DEffect = false;
+        let dragIndex = -1;
+        let dragOffset = { x: 0, y: 0 };
+        let animationFrame = 0;
+        let testParticles = [];
+        let sparkles = [];
+        let electricArcs = [];
+        let isPaused = false;
+        
+        const k = 8.99e9; // Coulomb's constant
+        const scaleFactor = 1e6; // Scale factor for visualization
+        
+        class Sparkle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.01;
+                this.size = Math.random() * 3 + 1;
+                this.color = `hsl(${Math.random() * 60 + 180}, 100%, ${50 + Math.random() * 50}%)`;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                this.life -= this.decay;
+                this.size *= 0.99;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        class ElectricArc {
+            constructor(x1, y1, x2, y2) {
+                this.x1 = x1;
+                this.y1 = y1;
+                this.x2 = x2;
+                this.y2 = y2;
+                this.segments = [];
+                this.life = 1.0;
+                this.generateSegments();
+            }
+            
+            generateSegments() {
+                const numSegments = 20;
+                for (let i = 0; i <= numSegments; i++) {
+                    const t = i / numSegments;
+                    const x = this.x1 + (this.x2 - this.x1) * t;
+                    const y = this.y1 + (this.y2 - this.y1) * t;
+                    const offset = (Math.random() - 0.5) * 30 * Math.sin(t * Math.PI);
+                    this.segments.push({
+                        x: x + offset,
+                        y: y + offset * 0.5
+                    });
+                }
+            }
+            
+            update() {
+                this.life -= 0.05;
+                if (this.life <= 0.3) {
+                    this.generateSegments(); // Regenerate for flickering effect
+                }
+            }
+            
+            draw() {
+                if (this.life <= 0) return;
+                
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.strokeStyle = '#4fc3f7';
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#4fc3f7';
+                
+                ctx.beginPath();
+                ctx.moveTo(this.segments[0].x, this.segments[0].y);
+                for (let i = 1; i < this.segments.length; i++) {
+                    ctx.lineTo(this.segments[i].x, this.segments[i].y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+        
+        class Charge {
+            constructor(x, y, q) {
+                this.x = x;
+                this.y = y;
+                this.q = q; // in microCoulombs
+                this.radius = Math.max(15, Math.abs(q) * 1.2 + 12);
+                this.glowRadius = this.radius * 3;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.sparkleTimer = 0;
+            }
+            
+            update() {
+                if (showAnimations) {
+                    this.pulsePhase += 0.05;
+                    this.sparkleTimer++;
+                    
+                    // Generate sparkles around charges
+                    if (this.sparkleTimer % 10 === 0 && Math.random() < 0.3) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = this.radius + Math.random() * 20;
+                        sparkles.push(new Sparkle(
+                            this.x + Math.cos(angle) * distance,
+                            this.y + Math.sin(angle) * distance
+                        ));
+                    }
+                }
+            }
+            
+            draw() {
+                const isTarget = charges.indexOf(this) === targetChargeIndex;
+                const pulseSize = showAnimations ? Math.sin(this.pulsePhase) * 0.1 + 1 : 1;
+                
+                // Draw energy field
+                const fieldGradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.glowRadius * pulseSize);
+                const color = this.q > 0 ? '#ff6b6b' : '#4dabf7';
+                fieldGradient.addColorStop(0, color + '60');
+                fieldGradient.addColorStop(0.4, color + '20');
+                fieldGradient.addColorStop(0.8, color + '05');
+                fieldGradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = fieldGradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.glowRadius * pulseSize, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw outer ring
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 2 * pulseSize, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Draw main charge with 3D effect
+                const chargeRadius = this.radius * pulseSize;
+                
+                if (show3DEffect) {
+                    // 3D shadow
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(this.x + 3, this.y + 3, chargeRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+                
+                // Main charge body
+                const mainGradient = ctx.createRadialGradient(
+                    this.x - chargeRadius/3, this.y - chargeRadius/3, 0,
+                    this.x, this.y, chargeRadius
+                );
+                
+                if (isTarget) {
+                    mainGradient.addColorStop(0, '#ffffff');
+                    mainGradient.addColorStop(0.3, '#69db7c');
+                    mainGradient.addColorStop(0.8, '#27ae60');
+                    mainGradient.addColorStop(1, '#1e8449');
+                    ctx.strokeStyle = '#2d3748';
+                    ctx.lineWidth = 5;
+                } else {
+                    if (this.q > 0) {
+                        mainGradient.addColorStop(0, '#ffffff');
+                        mainGradient.addColorStop(0.3, '#ff9999');
+                        mainGradient.addColorStop(0.8, '#ff6b6b');
+                        mainGradient.addColorStop(1, '#e74c3c');
+                    } else {
+                        mainGradient.addColorStop(0, '#ffffff');
+                        mainGradient.addColorStop(0.3, '#74c0fc');
+                        mainGradient.addColorStop(0.8, '#4dabf7');
+                        mainGradient.addColorStop(1, '#3498db');
+                    }
+                    ctx.strokeStyle = '#2c3e50';
+                    ctx.lineWidth = 4;
+                }
+                
+                ctx.fillStyle = mainGradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, chargeRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw charge value with glow
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ffffff';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText((this.q > 0 ? '+' : '') + this.q.toFixed(1), this.x, this.y);
+                ctx.restore();
+                
+                // Draw electric field symbol with animation
+                ctx.save();
+                ctx.translate(this.x, this.y - chargeRadius - 25);
+                if (showAnimations) {
+                    ctx.rotate(Math.sin(this.pulsePhase) * 0.1);
+                }
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = color;
+                const symbol = this.q > 0 ? '⊕' : '⊖';
+                ctx.fillText(symbol, 0, 0);
+                ctx.restore();
+                
+                // Draw charge magnitude indicator
+                if (Math.abs(this.q) > 10) {
+                    ctx.save();
+                    ctx.fillStyle = '#f39c12';
+                    ctx.font = 'bold 10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = '#f39c12';
+                    ctx.fillText('HIGH', this.x, this.y + chargeRadius + 15);
+                    ctx.restore();
+                }
+            }
+            
+            contains(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                return dx * dx + dy * dy <= this.radius * this.radius;
+            }
+            
+            getFieldAt(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                const r = Math.sqrt(dx * dx + dy * dy);
+                if (r < 1) return { Ex: 0, Ey: 0 };
+                
+                const E = k * Math.abs(this.q) * 1e-6 / (r * r);
+                const Ex = E * dx / r * (this.q > 0 ? 1 : -1);
+                const Ey = E * dy / r * (this.q > 0 ? 1 : -1);
+                
+                return { Ex, Ey };
+            }
+        }
+        
+        class TestParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.trail = [];
+                this.charge = 1e-9; // Very small test charge
+                this.energy = 0;
+            }
+            
+            update() {
+                if (charges.length === 0 || isPaused) return;
+                
+                let Ex = 0, Ey = 0;
+                charges.forEach(charge => {
+                    const field = charge.getFieldAt(this.x, this.y);
+                    Ex += field.Ex;
+                    Ey += field.Ey;
+                });
+                
+                // Update velocity with realistic physics
+                const force = 1e-15; // Scale factor
+                this.vx += Ex * force;
+                this.vy += Ey * force;
+                
+                // Apply damping for stability
+                this.vx *= 0.995;
+                this.vy *= 0.995;
+                
+                // Calculate kinetic energy
+                this.energy = 0.5 * (this.vx * this.vx + this.vy * this.vy) * 1e15;
+                
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Add to trail with energy-based color
+                const energyColor = Math.min(255, this.energy * 50);
+                this.trail.push({ 
+                    x: this.x, 
+                    y: this.y, 
+                    energy: energyColor 
+                });
+                if (this.trail.length > 100) {
+                    this.trail.shift();
+                }
+                
+                // Boundary check with reflection
+                if (this.x < 0 || this.x > canvas.width) {
+                    this.vx *= -0.8;
+                    this.x = Math.max(0, Math.min(canvas.width, this.x));
+                }
+                if (this.y < 0 || this.y > canvas.height) {
+                    this.vy *= -0.8;
+                    this.y = Math.max(0, Math.min(canvas.height, this.y));
+                }
+            }
+            
+            draw() {
+                // Draw energy trail
+                ctx.lineWidth = 2;
+                for (let i = 1; i < this.trail.length; i++) {
+                    const alpha = i / this.trail.length;
+                    const energy = this.trail[i].energy;
+                    ctx.globalAlpha = alpha * 0.8;
+                    ctx.strokeStyle = `rgb(${energy}, ${100 + energy/2}, ${255 - energy/2})`;
+                    ctx.beginPath();
+                    ctx.moveTo(this.trail[i-1].x, this.trail[i-1].y);
+                    ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                    ctx.stroke();
+                }
+                ctx.globalAlpha = 1;
+                
+                // Draw particle with energy glow
+                const glowSize = 3 + this.energy * 0.1;
+                ctx.save();
+                ctx.shadowBlur = glowSize * 3;
+                ctx.shadowColor = `rgb(${this.energy * 10}, 150, 255)`;
+                ctx.fillStyle = '#4fc3f7';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, glowSize, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        function updateChargeDisplay() {
+            const value = parseFloat(document.getElementById('chargeValue').value);
+            document.getElementById('chargeDisplay').textContent = 
+                (value > 0 ? '+' : '') + value.toFixed(1) + ' μC';
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('statusInfo').textContent = '🔬 ' + message;
+        }
+        
+        function createSparklesBurst(x, y, count = 10) {
+            for (let i = 0; i < count; i++) {
+                sparkles.push(new Sparkle(x, y));
+            }
+        }
+        
+        function drawAnimatedBackground() {
+            if (!showAnimations) return;
+            
+            // Animated grid
+            const time = animationFrame * 0.01;
+            const gridSize = 40;
+            
+            ctx.strokeStyle = `rgba(52, 152, 219, ${0.1 + Math.sin(time) * 0.05})`;
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                const offset = Math.sin(time + x * 0.01) * 5;
+                ctx.beginPath();
+                ctx.moveTo(x + offset, 0);
+                ctx.lineTo(x + offset, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                const offset = Math.cos(time + y * 0.01) * 5;
+                ctx.beginPath();
+                ctx.moveTo(0, y + offset);
+                ctx.lineTo(canvas.width, y + offset);
+                ctx.stroke();
+            }
+        }
+        
+        function drawGrid() {
+            if (!showGrid) return;
+            
+            ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 2]);
+            
+            const spacing = 30;
+            for (let x = 0; x <= canvas.width; x += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+        
+        function drawEnhancedFieldLines() {
+            if (!showFieldLines || charges.length === 0) return;
+            
+            const numLines = 12;
+            charges.forEach(charge => {
+                for (let i = 0; i < numLines; i++) {
+                    const angle = (i * 2 * Math.PI) / numLines;
+                    let x = charge.x + charge.radius * 2 * Math.cos(angle);
+                    let y = charge.y + charge.radius * 2 * Math.sin(angle);
+                    
+                    const gradient = ctx.createLinearGradient(
+                        charge.x, charge.y,
+                        x + 200 * Math.cos(angle), y + 200 * Math.sin(angle)
+                    );
+                    
+                    if (charge.q > 0) {
+                        gradient.addColorStop(0, '#ff6b6b');
+                        gradient.addColorStop(1, 'transparent');
+                    } else {
+                        gradient.addColorStop(0, '#4dabf7');
+                        gradient.addColorStop(1, 'transparent');
+                    }
+                    
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 3;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = charge.q > 0 ? '#ff6b6b' : '#4dabf7';
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    
+                    for (let step = 0; step < 150; step++) {
+                        let Ex = 0, Ey = 0;
+                        charges.forEach(otherCharge => {
+                            if (otherCharge === charge) return;
+                            const field = otherCharge.getFieldAt(x, y);
+                            Ex += field.Ex;
+                            Ey += field.Ey;
+                        });
+                        
+                        const E = Math.sqrt(Ex * Ex + Ey * Ey);
+                        if (E < 1e-10) break;
+                        
+                        const stepSize = 2;
+                        const sign = charge.q > 0 ? 1 : -1;
+                        x += sign * stepSize * Ex / E;
+                        y += sign * stepSize * Ey / E;
+                        
+                        if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) break;
+                        
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+            });
+        }
+        
+        function drawEnhancedEquipotential() {
+            if (!showPotential || charges.length === 0) return;
+            
+            const numLevels = 15;
+            const maxPotential = 2000;
+            
+            for (let level = 1; level <= numLevels; level++) {
+                const targetPotential = (level / numLevels) * maxPotential * (level % 2 === 0 ? 1 : -1);
+                
+                const hue = 240 + (level / numLevels) * 120;
+                ctx.strokeStyle = `hsla(${hue}, 80%, 60%, 0.6)`;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([8, 4]);
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = `hsl(${hue}, 80%, 60%)`;
+                
+                // Draw equipotential contours
+                for (let startY = 30; startY < canvas.height; startY += 50) {
+                    ctx.beginPath();
+                    let foundStart = false;
+                    
+                    for (let x = 0; x < canvas.width; x += 3) {
+                        let potential = 0;
+                        charges.forEach(charge => {
+                            const dx = x - charge.x;
+                            const dy = startY - charge.y;
+                            const r = Math.sqrt(dx * dx + dy * dy);
+                            if (r > 5) {
+                                potential += k * charge.q * 1e-6 / r;
+                            }
+                        });
+                        
+                        if (Math.abs(potential - targetPotential) < Math.abs(targetPotential) * 0.15) {
+                            if (!foundStart) {
+                                ctx.moveTo(x, startY);
+                                foundStart = true;
+                            } else {
+                                ctx.lineTo(x, startY);
+                            }
+                        }
+                    }
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+                ctx.setLineDash([]);
+            }
+        }
+        
+        function drawEnhancedFieldStrength() {
+            if (!showFieldStrength || charges.length === 0) return;
+            
+            const spacing = 25;
+            const maxIntensity = 1e7;
+            
+            for (let x = spacing; x < canvas.width; x += spacing) {
+                for (let y = spacing; y < canvas.height; y += spacing) {
+                    let Ex = 0, Ey = 0;
+                    charges.forEach(charge => {
+                        const field = charge.getFieldAt(x, y);
+                        Ex += field.Ex;
+                        Ey += field.Ey;
+                    });
+                    
+                    const E = Math.sqrt(Ex * Ex + Ey * Ey);
+                    const intensity = Math.min(E / maxIntensity, 1);
+                    
+                    if (intensity > 0.01) {
+                        const size = 2 + intensity * 8;
+                        const hue = 240 - intensity * 100; // Blue to red
+                        const alpha = intensity * 0.8;
+                        
+                        ctx.save();
+                        ctx.shadowBlur = size * 2;
+                        ctx.shadowColor = `hsla(${hue}, 100%, 60%, ${alpha})`;
+                        ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+            }
+        }
+        
+        function calculateForce(q1, q2, r) {
+            const distance = Math.max(r, 0.01);
+            return k * Math.abs(q1 * q2 * 1e-12) / (distance * distance) * scaleFactor;
+        }
+        
+        function drawEnhancedForceVector(fromCharge, toCharge, force, color, width) {
+            const dx = toCharge.x - fromCharge.x;
+            const dy = toCharge.y - fromCharge.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 0.01) return null;
+            
+            const nx = dx / distance;
+            const ny = dy / distance;
+            
+            const isRepulsive = (fromCharge.q > 0 && toCharge.q > 0) || (fromCharge.q < 0 && toCharge.q < 0);
+            
+            let fx, fy;
+            if (isRepulsive) {
+                fx = nx;
+                fy = ny;
+            } else {
+                fx = -nx;
+                fy = -ny;
+            }
+            
+            const vectorLength = Math.min(force * 0.2, 150);
+            
+            const startX = toCharge.x + (toCharge.radius + 8) * fx;
+            const startY = toCharge.y + (toCharge.radius + 8) * fy;
+            const endX = startX + vectorLength * fx;
+            const endY = startY + vectorLength * fy;
+            
+            // Enhanced vector with glow and animation
+            const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+            gradient.addColorStop(0, color + '40');
+            gradient.addColorStop(0.5, color + 'CC');
+            gradient.addColorStop(1, color);
+            
+            ctx.save();
+            if (showAnimations) {
+                const pulse = Math.sin(animationFrame * 0.1) * 0.5 + 1;
+                ctx.lineWidth = width * pulse;
+                ctx.shadowBlur = 15 * pulse;
+            } else {
+                ctx.lineWidth = width;
+                ctx.shadowBlur = 15;
+            }
+            
+            ctx.strokeStyle = gradient;
+            ctx.shadowColor = color;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            
+            // Enhanced arrowhead with 3D effect
+            const arrowSize = width * 2.5 + 6;
+            const angle = Math.atan2(fy, fx);
+            
+            if (show3DEffect) {
+                // Shadow for arrowhead
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.moveTo(endX + 2, endY + 2);
+                ctx.lineTo(endX - arrowSize * Math.cos(angle - 0.4) + 2, endY - arrowSize * Math.sin(angle - 0.4) + 2);
+                ctx.lineTo(endX - arrowSize * 0.6 * Math.cos(angle) + 2, endY - arrowSize * 0.6 * Math.sin(angle) + 2);
+                ctx.lineTo(endX - arrowSize * Math.cos(angle + 0.4) + 2, endY - arrowSize * Math.sin(angle + 0.4) + 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            // Main arrowhead
+            const arrowGradient = ctx.createRadialGradient(endX, endY, 0, endX, endY, arrowSize);
+            arrowGradient.addColorStop(0, '#ffffff');
+            arrowGradient.addColorStop(0.7, color);
+            arrowGradient.addColorStop(1, color + '80');
+            
+            ctx.fillStyle = arrowGradient;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle - 0.4), endY - arrowSize * Math.sin(angle - 0.4));
+            ctx.lineTo(endX - arrowSize * 0.6 * Math.cos(angle), endY - arrowSize * 0.6 * Math.sin(angle));
+            ctx.lineTo(endX - arrowSize * Math.cos(angle + 0.4), endY - arrowSize * Math.sin(angle + 0.4));
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            
+            return { fx: vectorLength * fx, fy: vectorLength * fy, magnitude: force };
+        }
+        
+        function drawVectors() {
+            if (!showVectors || targetChargeIndex === -1) return;
+            
+            const targetCharge = charges[targetChargeIndex];
+            let totalFx = 0, totalFy = 0;
+            let forceDetails = [];
+            
+            // Draw individual force vectors
+            charges.forEach((charge, i) => {
+                if (i === targetChargeIndex) return;
+                
+                const dx = targetCharge.x - charge.x;
+                const dy = targetCharge.y - charge.y;
+                const distance = Math.sqrt(dx * dx + dy * dy) / 40;
+                
+                const force = calculateForce(targetCharge.q, charge.q, distance);
+                const vector = drawEnhancedForceVector(charge, targetCharge, force, '#e74c3c', 4);
+                
+                if (vector) {
+                    totalFx += vector.fx;
+                    totalFy += vector.fy;
+                    
+                    forceDetails.push({
+                        sourceCharge: charge.q,
+                        distance: distance,
+                        force: vector.magnitude,
+                        direction: Math.atan2(vector.fy, vector.fx) * 180 / Math.PI
+                    });
+                    
+                    // Create electric arc between charges occasionally
+                    if (showAnimations && Math.random() < 0.02 && force > 1e5) {
+                        electricArcs.push(new ElectricArc(charge.x, charge.y, targetCharge.x, targetCharge.y));
+                    }
+                }
+            });
+            
+            // Draw resultant force with enhanced effects
+            if (Math.abs(totalFx) > 0.1 || Math.abs(totalFy) > 0.1) {
+                const resultantMagnitude = Math.sqrt(totalFx * totalFx + totalFy * totalFy);
+                const resultantAngle = Math.atan2(totalFy, totalFx);
+                
+                const startX = targetCharge.x + (targetCharge.radius + 12) * Math.cos(resultantAngle);
+                const startY = targetCharge.y + (targetCharge.radius + 12) * Math.sin(resultantAngle);
+                const endX = startX + totalFx;
+                const endY = startY + totalFy;
+                
+                // Ultra-enhanced resultant vector
+                ctx.save();
+                const pulseWidth = showAnimations ? 6 + Math.sin(animationFrame * 0.15) * 2 : 6;
+                ctx.lineWidth = pulseWidth;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#2c3e50';
+                
+                const resultantGradient = ctx.createLinearGradient(startX, startY, endX, endY);
+                resultantGradient.addColorStop(0, '#34495e');
+                resultantGradient.addColorStop(0.5, '#2c3e50');
+                resultantGradient.addColorStop(1, '#1a252f');
+                
+                ctx.strokeStyle = resultantGradient;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                
+                // Ultra-enhanced resultant arrowhead
+                const arrowSize = 18;
+                const resultGradient = ctx.createRadialGradient(endX, endY, 0, endX, endY, arrowSize);
+                resultGradient.addColorStop(0, '#ffffff');
+                resultGradient.addColorStop(0.5, '#2c3e50');
+                resultGradient.addColorStop(1, '#1a252f');
+                
+                ctx.fillStyle = resultGradient;
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - arrowSize * Math.cos(resultantAngle - 0.4), endY - arrowSize * Math.sin(resultantAngle - 0.4));
+                ctx.lineTo(endX - arrowSize * 0.7 * Math.cos(resultantAngle), endY - arrowSize * 0.7 * Math.sin(resultantAngle));
+                ctx.lineTo(endX - arrowSize * Math.cos(resultantAngle + 0.4), endY - arrowSize * Math.sin(resultantAngle + 0.4));
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+                
+                // Add sparkle effect at resultant vector tip
+                if (showAnimations) {
+                    createSparklesBurst(endX, endY, 2);
+                }
+            }
+            
+            if (showCalculations) {
+                updateCalculationsPanel(targetCharge, forceDetails, totalFx, totalFy);
+                drawForceGraph(forceDetails);
+            }
+        }
+        
+        function updateCalculationsPanel(targetCharge, forceDetails, totalFx, totalFy) {
+            let html = `<strong>🎯 Target Analysis: ${targetCharge.q > 0 ? '+' : ''}${targetCharge.q.toFixed(1)} μC</strong><br><br>`;
+            
+            html += '<strong>📊 Individual Force Components:</strong><br>';
+            html += '<em>F = k|q₁q₂|/r² where k = 8.99×10⁹ N⋅m²/C²</em><br><br>';
+            
+            forceDetails.forEach((detail, i) => {
+                const forceType = (targetCharge.q > 0 && detail.sourceCharge > 0) || 
+                                 (targetCharge.q < 0 && detail.sourceCharge < 0) ? '🔴 Repulsive' : '🔵 Attractive';
+                html += `<span style="color: #3498db;">F${i+1}:</span> ${detail.force.toExponential(2)} N ${forceType}<br>`;
+                html += `   Source: ${detail.sourceCharge > 0 ? '+' : ''}${detail.sourceCharge.toFixed(1)} μC<br>`;
+                html += `   Distance: ${detail.distance.toFixed(3)} m<br>`;
+                html += `   Direction: ${detail.direction.toFixed(1)}°<br><br>`;
+            });
+            
+            const resultantMagnitude = Math.sqrt(totalFx * totalFx + totalFy * totalFy);
+            const resultantAngle = Math.atan2(totalFy, totalFx) * 180 / Math.PI;
+            
+            html += '<strong>🎯 Net Resultant Force:</strong><br>';
+            html += '<em>F⃗_net = Σ F⃗ᵢ (Vector Superposition)</em><br>';
+            html += `<span style="color: #27ae60;">Magnitude:</span> ${(resultantMagnitude * scaleFactor / 1e6).toExponential(2)} N<br>`;
+            html += `<span style="color: #27ae60;">Direction:</span> ${resultantAngle.toFixed(1)}°<br>`;
+            html += `<span style="color: #27ae60;">Components:</span> Fx=${(totalFx * scaleFactor / 1e6).toExponential(1)} N, Fy=${(totalFy * scaleFactor / 1e6).toExponential(1)} N<br><br>`;
+            
+            html += '<strong>🔬 Physics Principles:</strong><br>';
+            html += '• Coulomb\'s Law governs each pair interaction<br>';
+            html += '• Superposition: forces add vectorially<br>';
+            html += '• Each force acts independently<br>';
+            html += '• Inverse square law: F ∝ 1/r²<br>';
+            html += '• Force direction: along line joining charges';
+            
+            document.getElementById('forceInfo').innerHTML = html;
+        }
+        
+        function drawForceGraph(forceDetails) {
+            if (!graphCtx || forceDetails.length === 0) return;
+            
+            graphCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+            
+            // Draw background
+            const gradient = graphCtx.createLinearGradient(0, 0, 0, graphCanvas.height);
+            gradient.addColorStop(0, 'rgba(44, 62, 80, 0.8)');
+            gradient.addColorStop(1, 'rgba(52, 73, 94, 0.8)');
+            graphCtx.fillStyle = gradient;
+            graphCtx.fillRect(0, 0, graphCanvas.width, graphCanvas.height);
+            
+            // Draw force bars
+            const barWidth = graphCanvas.width / forceDetails.length;
+            const maxForce = Math.max(...forceDetails.map(d => d.force));
+            
+            forceDetails.forEach((detail, i) => {
+                const barHeight = (detail.force / maxForce) * (graphCanvas.height - 40);
+                const x = i * barWidth + 10;
+                const y = graphCanvas.height - barHeight - 20;
+                
+                const barGradient = graphCtx.createLinearGradient(x, y + barHeight, x, y);
+                barGradient.addColorStop(0, '#3498db');
+                barGradient.addColorStop(1, '#e74c3c');
+                
+                graphCtx.fillStyle = barGradient;
+                graphCtx.fillRect(x, y, barWidth - 20, barHeight);
+                
+                // Draw labels
+                graphCtx.fillStyle = '#ffffff';
+                graphCtx.font = '10px Arial';
+                graphCtx.textAlign = 'center';
+                graphCtx.fillText(`F${i+1}`, x + (barWidth - 20)/2, graphCanvas.height - 5);
+            });
+        }
+        
+        function animate() {
+            if (!isPaused) {
+                animationFrame++;
+                
+                // Update all animated elements
+                charges.forEach(charge => charge.update());
+                
+                if (showParticles) {
+                    testParticles.forEach(particle => particle.update());
+                }
+                
+                // Update sparkles
+                sparkles = sparkles.filter(sparkle => {
+                    sparkle.update();
+                    return sparkle.life > 0;
+                });
+                
+                // Update electric arcs
+                electricArcs = electricArcs.filter(arc => {
+                    arc.update();
+                    return arc.life > 0;
+                });
+            }
+            
+            draw();
+            requestAnimationFrame(animate);
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Enhanced background
+            const bgGradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
+            bgGradient.addColorStop(0, '#0a0a1a');
+            bgGradient.addColorStop(0.5, '#1a1a2e');
+            bgGradient.addColorStop(1, '#16213e');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawAnimatedBackground();
+            drawGrid();
+            drawEnhancedFieldStrength();
+            drawEnhancedEquipotential();
+            drawEnhancedFieldLines();
+            
+            // Draw electric arcs
+            electricArcs.forEach(arc => arc.draw());
+            
+            if (showParticles) {
+                testParticles.forEach(particle => particle.draw());
+            }
+            
+            // Draw sparkles
+            sparkles.forEach(sparkle => sparkle.draw());
+            
+            charges.forEach(charge => charge.draw());
+            drawVectors();
+        }
+        
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+        
+        // Enhanced event handlers
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = getMousePos(e);
+            
+            for (let i = 0; i < charges.length; i++) {
+                if (charges[i].contains(pos.x, pos.y)) {
+                    if (e.shiftKey) {
+                        createSparklesBurst(charges[i].x, charges[i].y, 15);
+                        charges.splice(i, 1);
+                        if (targetChargeIndex === i) {
+                            targetChargeIndex = -1;
+                            updateStatus('Target charge removed and sparkled away! ✨');
+                        } else if (targetChargeIndex > i) {
+                            targetChargeIndex--;
+                        }
+                        updateStatus(`Charge vaporized in sparkles! ${charges.length} charges remaining. ⚡`);
+                    } else if (e.ctrlKey || e.metaKey) {
+                        dragIndex = i;
+                        dragOffset.x = pos.x - charges[i].x;
+                        dragOffset.y = pos.y - charges[i].y;
+                        updateStatus('Dragging charge through the field... 🔄');
+                    } else if (e.button === 2) {
+                        targetChargeIndex = targetChargeIndex === i ? -1 : i;
+                        createSparklesBurst(charges[i].x, charges[i].y, 8);
+                        updateStatus(targetChargeIndex === -1 ? 'Target deselected. 🎯' : 
+                                   `Charge ${i+1} locked as target! Force analysis active. 🔍`);
+                    } else {
+                        targetChargeIndex = targetChargeIndex === i ? -1 : i;
+                        createSparklesBurst(charges[i].x, charges[i].y, 5);
+                        updateStatus(targetChargeIndex === -1 ? 'Target cleared. 🎯' : 
+                                   `Analyzing forces on charge ${i+1}. 📊`);
+                    }
+                    return;
+                }
+            }
+            
+            // Add new charge with enhanced effects
+            const chargeValue = parseFloat(document.getElementById('chargeValue').value);
+            const newCharge = new Charge(pos.x, pos.y, chargeValue);
+            charges.push(newCharge);
+            createSparklesBurst(pos.x, pos.y, 12);
+            updateStatus(`⚡ New ${chargeValue > 0 ? 'positive' : 'negative'} charge materialized! Total: ${charges.length} charges in field.`);
+        });
+        
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        canvas.addEventListener('dblclick', (e) => {
+            const pos = getMousePos(e);
+            for (let i = 0; i < charges.length; i++) {
+                if (charges[i].contains(pos.x, pos.y)) {
+                    targetChargeIndex = targetChargeIndex === i ? -1 : i;
+                    createSparklesBurst(charges[i].x, charges[i].y, 10);
+                    updateStatus(`🎯 Double-click selection: Charge ${i+1} ${targetChargeIndex === -1 ? 'deselected' : 'targeted'}!`);
+                    break;
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (dragIndex !== -1) {
+                const pos = getMousePos(e);
+                charges[dragIndex].x = Math.max(charges[dragIndex].radius, 
+                                              Math.min(canvas.width - charges[dragIndex].radius, pos.x - dragOffset.x));
+                charges[dragIndex].y = Math.max(charges[dragIndex].radius, 
+                                              Math.min(canvas.height - charges[dragIndex].radius, pos.y - dragOffset.y));
+                
+                // Create trail sparkles while dragging
+                if (showAnimations && animationFrame % 3 === 0) {
+                    sparkles.push(new Sparkle(charges[dragIndex].x, charges[dragIndex].y));
+                }
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            if (dragIndex !== -1) {
+                createSparklesBurst(charges[dragIndex].x, charges[dragIndex].y, 8);
+                updateStatus('🎯 Charge positioned! Field recalculating...');
+                dragIndex = -1;
+            }
+        });
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    isPaused = !isPaused;
+                    updateStatus(`Animation ${isPaused ? 'paused' : 'resumed'}! ⏯️`);
+                    break;
+                case 'KeyC':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        clearCharges();
+                    }
+                    break;
+                case 'KeyV':
+                    toggleVectors();
+                    break;
+                case 'KeyF':
+                    toggleFieldLines();
+                    break;
+                case 'KeyG':
+                    toggleGrid();
+                    break;
+            }
+        });
+        
+        // Enhanced toggle functions
+        function toggleVectors() {
+            showVectors = !showVectors;
+            const btn = document.getElementById('vectorToggle');
+            btn.classList.toggle('active', showVectors);
+            updateStatus(`🔀 Force vectors ${showVectors ? 'activated' : 'deactivated'}!`);
+        }
+        
+        function toggleFieldLines() {
+            showFieldLines = !showFieldLines;
+            const btn = document.getElementById('fieldToggle');
+            btn.classList.toggle('active', showFieldLines);
+            updateStatus(`🌊 Electric field lines ${showFieldLines ? 'materialized' : 'dematerialized'}!`);
+        }
+        
+        function togglePotential() {
+            showPotential = !showPotential;
+            const btn = document.getElementById('potentialToggle');
+            btn.classList.toggle('active', showPotential);
+            updateStatus(`⚡ Equipotential surfaces ${showPotential ? 'revealed' : 'hidden'}!`);
+        }
+        
+        function toggleGrid() {
+            showGrid = !showGrid;
+            const btn = document.getElementById('gridToggle');
+            btn.classList.toggle('active', showGrid);
+            updateStatus(`📐 Precision grid ${showGrid ? 'overlaid' : 'cleared'}!`);
+        }
+        
+        function toggleParticles() {
+            showParticles = !showParticles;
+            const btn = document.getElementById('particleToggle');
+            btn.classList.toggle('active', showParticles);
+            
+            if (showParticles && testParticles.length === 0) {
+                for (let i = 0; i < 25; i++) {
+                    testParticles.push(new TestParticle(
+                        Math.random() * canvas.width,
+                        Math.random() * canvas.height
+                    ));
+                }
+            } else if (!showParticles) {
+                testParticles = [];
+            }
+            updateStatus(`🎭 Test particles ${showParticles ? 'released into field' : 'recalled from field'}!`);
+        }
+        
+        function toggleFieldStrength() {
+            showFieldStrength = !showFieldStrength;
+            const btn = document.getElementById('strengthToggle');
+            btn.classList.toggle('active', showFieldStrength);
+            updateStatus(`🔥 Field intensity map ${showFieldStrength ? 'ignited' : 'extinguished'}!`);
+        }
+        
+        function toggleAnimations() {
+            showAnimations = !showAnimations;
+            const btn = document.getElementById('animationToggle');
+            btn.classList.toggle('active', showAnimations);
+            updateStatus(`🎬 Animations ${showAnimations ? 'energized' : 'frozen in time'}!`);
+        }
+        
+        function toggle3DEffect() {
+            show3DEffect = !show3DEffect;
+            const btn = document.getElementById('3dToggle');
+            btn.classList.toggle('active', show3DEffect);
+            updateStatus(`🌍 3D depth effects ${show3DEffect ? 'dimensional shift activated' : 'flattened to 2D'}!`);
+        }
+        
+        function clearCharges() {
+            charges.forEach(charge => createSparklesBurst(charge.x, charge.y, 20));
+            charges = [];
+            targetChargeIndex = -1;
+            testParticles = [];
+            sparkles = [];
+            electricArcs = [];
+            updateStatus('💥 Complete field reset! All charges dispersed in spectacular fashion!');
+        }
+        
+        function toggleCalculations() {
+            showCalculations = !showCalculations;
+            const panel = document.getElementById('calculationsPanel');
+            panel.style.display = showCalculations ? 'block' : 'none';
+            updateStatus(`🧮 Mathematical analysis ${showCalculations ? 'console activated' : 'console minimized'}!`);
+        }
+        
+        // Enhanced example configurations
+        function loadExample1() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 160;
+            
+            for (let i = 0; i < 3; i++) {
+                const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                charges.push(new Charge(x, y, 8.0));
+                createSparklesBurst(x, y, 10);
+            }
+            
+            charges.push(new Charge(centerX, centerY, 5.0));
+            createSparklesBurst(centerX, centerY, 15);
+            targetChargeIndex = 3;
+            updateStatus('📐 Example 1.5 materialized: Equilateral triangle with centroid charge! Perfect symmetry achieved.');
+        }
+        
+        function loadExample2() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 160;
+            
+            charges.push(new Charge(centerX - radius * Math.cos(Math.PI/6), centerY - radius * Math.sin(Math.PI/6), 8.0));
+            charges.push(new Charge(centerX + radius * Math.cos(Math.PI/6), centerY - radius * Math.sin(Math.PI/6), 8.0));
+            charges.push(new Charge(centerX, centerY + radius, -8.0));
+            
+            charges.forEach(charge => createSparklesBurst(charge.x, charge.y, 12));
+            targetChargeIndex = 0;
+            updateStatus('🔺 Example 1.6 conjured: Mixed charge triangle! Observe asymmetric force patterns.');
+        }
+        
+        function loadLinearExample() {
+            clearCharges();
+            const y = canvas.height / 2;
+            const spacing = 180;
+            const startX = 140;
+            
+            const values = [12, -8, 10, -6, 8];
+            for (let i = 0; i < values.length; i++) {
+                const x = startX + i * spacing;
+                charges.push(new Charge(x, y, values[i]));
+                createSparklesBurst(x, y, 8);
+            }
+            
+            targetChargeIndex = 2;
+            updateStatus('📏 Linear charge array deployed! Classic alternating configuration for superposition study.');
+        }
+        
+        function loadSquareExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const size = 140;
+            
+            const positions = [
+                {x: centerX - size, y: centerY - size, q: 6},
+                {x: centerX + size, y: centerY - size, q: -6},
+                {x: centerX + size, y: centerY + size, q: 6},
+                {x: centerX - size, y: centerY + size, q: -6},
+                {x: centerX, y: centerY, q: 4}
+            ];
+            
+            positions.forEach(pos => {
+                charges.push(new Charge(pos.x, pos.y, pos.q));
+                createSparklesBurst(pos.x, pos.y, 10);
+            });
+            
+            targetChargeIndex = 4;
+            updateStatus('⬜ Square lattice crystallized! Symmetric geometry with central test charge.');
+        }
+        
+        function loadDipoleExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const separation = 120;
+            
+            charges.push(new Charge(centerX - separation, centerY, 12.0));
+            charges.push(new Charge(centerX + separation, centerY, -12.0));
+            charges.push(new Charge(centerX, centerY + separation, 3.0));
+            
+            charges.forEach(charge => createSparklesBurst(charge.x, charge.y, 15));
+            targetChargeIndex = 2;
+            updateStatus('🧲 Electric dipole established! Classic two-pole configuration with test charge.');
+        }
+        
+        function loadQuadrupoleExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 130;
+            
+            for (let i = 0; i < 4; i++) {
+                const angle = i * Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                const q = (i % 2 === 0) ? 8 : -8;
+                charges.push(new Charge(x, y, q));
+                createSparklesBurst(x, y, 12);
+            }
+            
+            charges.push(new Charge(centerX + 70, centerY + 70, 3.0));
+            createSparklesBurst(centerX + 70, centerY + 70, 20);
+            targetChargeIndex = 4;
+            updateStatus('✨ Quadrupole matrix activated! Four-pole symmetric field with offset test charge.');
+        }
+        
+        function loadOctupoleExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 150;
+            
+            for (let i = 0; i < 8; i++) {
+                const angle = i * Math.PI / 4;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                const q = (i % 2 === 0) ? 6 : -6;
+                charges.push(new Charge(x, y, q));
+                createSparklesBurst(x, y, 10);
+            }
+            
+            charges.push(new Charge(centerX, centerY, 4.0));
+            createSparklesBurst(centerX, centerY, 25);
+            targetChargeIndex = 8;
+            updateStatus('🌟 Octupole constellation manifested! Eight-charge symmetric field with central probe.');
+        }
+        
+        function loadRandomExample() {
+            clearCharges();
+            const numCharges = 5 + Math.floor(Math.random() * 6);
+            
+            for (let i = 0; i < numCharges; i++) {
+                const x = 100 + Math.random() * (canvas.width - 200);
+                const y = 100 + Math.random() * (canvas.height - 200);
+                const q = (Math.random() - 0.5) * 20;
+                charges.push(new Charge(x, y, q));
+                createSparklesBurst(x, y, 8);
+            }
+            
+            targetChargeIndex = Math.floor(Math.random() * charges.length);
+            updateStatus(`🎲 Random field generated! ${numCharges} charges in chaotic configuration. Analyzing charge ${targetChargeIndex + 1}.`);
+        }
+        
+        // Event listeners
+        document.getElementById('chargeValue').addEventListener('input', updateChargeDisplay);
+        
+        // Quiz System
+        let currentQuizQuestion = 0;
+        let quizScore = 0;
+        let selectedAnswer = null;
+        let quizQuestions = [
+            {
+                question: "According to Coulomb's law, the force between two point charges is:",
+                options: [
+                    "Directly proportional to the product of charges and inversely proportional to distance",
+                    "Directly proportional to the product of charges and inversely proportional to square of distance", 
+                    "Inversely proportional to the product of charges and directly proportional to distance",
+                    "Independent of the distance between charges"
+                ],
+                correct: 1,
+                explanation: "Coulomb's law states F = k|q₁q₂|/r². The force is directly proportional to the product of charges and inversely proportional to the square of the distance."
+            },
+            {
+                question: "The principle of superposition in electrostatics means:",
+                options: [
+                    "Electric forces can be added algebraically",
+                    "Electric forces must be added vectorially",
+                    "The presence of other charges affects individual pair forces",
+                    "Only the largest force matters"
+                ],
+                correct: 1,
+                explanation: "Forces are vectors and must be added vectorially. Each force acts independently regardless of other charges present."
+            },
+            {
+                question: "In Example 1.5, three equal charges +q are placed at vertices of an equilateral triangle. The net force on a charge +Q at the centroid is:",
+                options: [
+                    "Zero by symmetry",
+                    "3kqQ/r² along one side",
+                    "√3 times the individual force",
+                    "Depends on the sign of Q"
+                ],
+                correct: 0,
+                explanation: "By symmetry, the three forces from the vertices cancel out perfectly, resulting in zero net force at the centroid."
+            },
+            {
+                question: "When two like charges are brought closer together, the force between them:",
+                options: [
+                    "Decreases",
+                    "Remains constant", 
+                    "Increases",
+                    "First increases then decreases"
+                ],
+                correct: 2,
+                explanation: "According to F = kq₁q₂/r², as distance r decreases, the force increases (inverse square relationship)."
+            },
+            {
+                question: "In a linear arrangement of alternating +q and -q charges, the force on a central charge is:",
+                options: [
+                    "Always zero",
+                    "Maximum compared to other positions",
+                    "Depends on the number of charges",
+                    "Independent of charge magnitudes"
+                ],
+                correct: 2,
+                explanation: "The net force depends on the specific arrangement and number of charges, as forces from different charges add vectorially."
+            },
+            {
+                question: "The unit of electric force in SI system is:",
+                options: [
+                    "Coulomb (C)",
+                    "Newton (N)",
+                    "Joule (J)",
+                    "Volt (V)"
+                ],
+                correct: 1,
+                explanation: "Force is measured in Newtons (N) in the SI system, regardless of whether it's gravitational, electric, or any other type of force."
+            },
+            {
+                question: "If the distance between two charges is doubled, the force becomes:",
+                options: [
+                    "Half",
+                    "Double",
+                    "One-fourth",
+                    "Four times"
+                ],
+                correct: 2,
+                explanation: "Since F ∝ 1/r², doubling the distance makes the force (1/2²) = 1/4 of the original value."
+            },
+            {
+                question: "In Example 1.6 with charges +q, +q, and -q at triangle vertices, the forces:",
+                options: [
+                    "All have equal magnitude",
+                    "Sum to zero vector",
+                    "Are all repulsive",
+                    "Are independent of charge positions"
+                ],
+                correct: 1,
+                explanation: "By Newton's third law and the principle of superposition, the vector sum of all forces in an isolated system is always zero."
+            },
+            {
+                question: "The constant k in Coulomb's law has the value:",
+                options: [
+                    "9 × 10⁹ N⋅m²/C²",
+                    "8.99 × 10⁹ N⋅m²/C²",
+                    "9 × 10⁻⁹ N⋅m²/C²",
+                    "Both A and B are approximately correct"
+                ],
+                correct: 3,
+                explanation: "The exact value is 8.99 × 10⁹ N⋅m²/C², but 9 × 10⁹ N⋅m²/C² is commonly used as an approximation."
+            },
+            {
+                question: "Electric field lines from a positive charge:",
+                options: [
+                    "Point inward toward the charge",
+                    "Point outward from the charge",
+                    "Form closed loops",
+                    "Are parallel to each other"
+                ],
+                correct: 1,
+                explanation: "By convention, electric field lines point away from positive charges and toward negative charges, indicating the direction of force on a positive test charge."
+            }
+        ];
+        
+        let challenges = [
+            {
+                title: "🎯 Force Direction Challenge",
+                description: "Place two charges and predict the direction of force on a third charge before placing it.",
+                difficulty: "easy",
+                setup: () => {
+                    clearCharges();
+                    charges.push(new Charge(300, 300, 8));
+                    charges.push(new Charge(600, 300, -6));
+                    updateStatus("🎯 Challenge: Where should you place a +4μC charge so the net force is purely vertical?");
+                }
+            },
+            {
+                title: "⚖️ Equilibrium Hunt", 
+                description: "Find the position where a test charge experiences zero net force.",
+                difficulty: "medium",
+                setup: () => {
+                    clearCharges();
+                    charges.push(new Charge(200, 350, 10));
+                    charges.push(new Charge(700, 350, 10));
+                    updateStatus("⚖️ Challenge: Place a -2μC charge where it experiences zero net force!");
+                }
+            },
+            {
+                title: "🔺 Triangle Force Puzzle",
+                description: "Recreate Example 1.6 and verify the force directions match theory.",
+                difficulty: "medium", 
+                setup: () => {
+                    clearCharges();
+                    updateStatus("🔺 Challenge: Create Example 1.6 configuration and analyze forces. Check if theory matches simulation!");
+                }
+            },
+            {
+                title: "⚡ Maximum Force Challenge",
+                description: "Arrange charges to create maximum possible force on a target charge.",
+                difficulty: "hard",
+                setup: () => {
+                    clearCharges();
+                    charges.push(new Charge(500, 400, 5));
+                    targetChargeIndex = 0;
+                    updateStatus("⚡ Extreme Challenge: Add more charges to maximize force on the central charge!");
+                }
+            },
+            {
+                title: "🌀 Circular Symmetry",
+                description: "Create a symmetric arrangement where center charge has zero net force.",
+                difficulty: "hard",
+                setup: () => {
+                    clearCharges();
+                    updateStatus("🌀 Master Challenge: Create perfect circular symmetry with 6+ charges. Center must have zero force!");
+                }
+            },
+            {
+                title: "📐 Geometry Expert",
+                description: "Verify that force calculations match theoretical predictions for specific geometries.",
+                difficulty: "hard",
+                setup: () => {
+                    clearCharges();
+                    updateStatus("📐 Expert Challenge: Create configurations and verify F = kq₁q₂/r² calculations manually!");
+                }
+            }
+        ];
+        
+        function startQuiz() {
+            const quizPanel = document.getElementById('quizPanel');
+            const challengesPanel = document.getElementById('challengesPanel');
+            
+            // Hide other panels
+            challengesPanel.style.display = 'none';
+            
+            // Show quiz panel
+            quizPanel.style.display = 'block';
+            
+            // Reset quiz state
+            currentQuizQuestion = 0;
+            quizScore = 0;
+            selectedAnswer = null;
+            
+            // Load first question
+            loadQuizQuestion();
+            updateStatus('🧠 Quiz started! Test your understanding of electrostatic forces.');
+        }
+        
+        function loadQuizQuestion() {
+            if (currentQuizQuestion >= quizQuestions.length) {
+                showQuizResults();
+                return;
+            }
+            
+            const question = quizQuestions[currentQuizQuestion];
+            const container = document.getElementById('questionContainer');
+            
+            // Update progress
+            const progress = ((currentQuizQuestion + 1) / quizQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('questionCounter').textContent = 
+                `Question ${currentQuizQuestion + 1} of ${quizQuestions.length}`;
+            
+            container.innerHTML = `
+                <div class="question-text">
+                    <strong>Q${currentQuizQuestion + 1}:</strong> ${question.question}
+                </div>
+                <div class="answer-options" id="answerOptions">
+                    ${question.options.map((option, index) => `
+                        <div class="answer-option" onclick="selectAnswer(${index})" data-index="${index}">
+                            <strong>${String.fromCharCode(65 + index)})</strong> ${option}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="quiz-controls">
+                    <button class="btn btn-secondary" onclick="previousQuestion()" ${currentQuizQuestion === 0 ? 'disabled' : ''}>
+                        ← Previous
+                    </button>
+                    <button class="btn btn-primary" onclick="nextQuestion()" id="nextBtn" disabled>
+                        Next →
+                    </button>
+                </div>
+            `;
+            
+            selectedAnswer = null;
+        }
+        
+        function selectAnswer(index) {
+            selectedAnswer = index;
+            
+            // Update visual selection
+            const options = document.querySelectorAll('.answer-option');
+            options.forEach((option, i) => {
+                option.classList.remove('selected');
+                if (i === index) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+        
+        function nextQuestion() {
+            if (selectedAnswer === null) return;
+            
+            const question = quizQuestions[currentQuizQuestion];
+            const isCorrect = selectedAnswer === question.correct;
+            
+            if (isCorrect) {
+                quizScore++;
+                createSparklesBurst(canvas.width/2, canvas.height/2, 15);
+            }
+            
+            // Show correct answer
+            const options = document.querySelectorAll('.answer-option');
+            options.forEach((option, i) => {
+                if (i === question.correct) {
+                    option.classList.add('correct');
+                } else if (i === selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Show explanation
+            const container = document.getElementById('questionContainer');
+            container.innerHTML += `
+                <div class="explanation">
+                    <strong>${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</strong><br>
+                    ${question.explanation}
+                </div>
+            `;
+            
+            // Update next button
+            document.getElementById('nextBtn').textContent = 
+                currentQuizQuestion === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next →';
+            document.getElementById('nextBtn').onclick = () => {
+                currentQuizQuestion++;
+                loadQuizQuestion();
+            };
+            
+            updateStatus(`${isCorrect ? '✅ Correct answer!' : '❌ Better luck next time!'} Moving to next question...`);
+        }
+        
+        function previousQuestion() {
+            if (currentQuizQuestion > 0) {
+                currentQuizQuestion--;
+                loadQuizQuestion();
+            }
+        }
+        
+        function showQuizResults() {
+            const container = document.getElementById('questionContainer');
+            const percentage = Math.round((quizScore / quizQuestions.length) * 100);
+            
+            let grade, message, emoji;
+            if (percentage >= 90) {
+                grade = "Outstanding!";
+                message = "You have mastered electrostatic forces!";
+                emoji = "🏆";
+            } else if (percentage >= 75) {
+                grade = "Great Job!";
+                message = "You have a solid understanding of the concepts!";
+                emoji = "⭐";
+            } else if (percentage >= 60) {
+                grade = "Good Effort!";
+                message = "Review the concepts and try again!";
+                emoji = "👍";
+            } else {
+                grade = "Keep Learning!";
+                message = "Practice more with the interactive examples!";
+                emoji = "📚";
+            }
+            
+            container.innerHTML = `
+                <div class="quiz-score">
+                    <h2>${emoji} ${grade}</h2>
+                    <div style="font-size: 2em; margin: 20px 0;">${quizScore}/${quizQuestions.length}</div>
+                    <div style="font-size: 1.5em; margin-bottom: 15px;">${percentage}%</div>
+                    <p>${message}</p>
+                    <div style="margin-top: 25px;">
+                        <button class="btn btn-primary" onclick="startQuiz()" style="margin: 5px;">
+                            🔄 Retake Quiz
+                        </button>
+                        <button class="btn btn-success" onclick="showChallenges()" style="margin: 5px;">
+                            🎯 Try Challenges
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Celebration effects
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createSparklesBurst(
+                        Math.random() * canvas.width,
+                        Math.random() * canvas.height,
+                        3
+                    );
+                }, i * 100);
+            }
+            
+            updateStatus(`🎉 Quiz completed! Score: ${quizScore}/${quizQuestions.length} (${percentage}%). ${message}`);
+        }
+        
+        function showChallenges() {
+            const quizPanel = document.getElementById('quizPanel');
+            const challengesPanel = document.getElementById('challengesPanel');
+            
+            // Hide quiz panel
+            quizPanel.style.display = 'none';
+            
+            // Show challenges panel  
+            challengesPanel.style.display = 'block';
+            
+            const container = document.getElementById('challengeContent');
+            container.innerHTML = `
+                <div style="margin-bottom: 25px; color: #ffffff;">
+                    <p>🎯 Interactive challenges to test your practical understanding of electrostatic forces!</p>
+                    <p>Each challenge sets up a scenario - use the tools to explore and solve!</p>
+                </div>
+                ${challenges.map((challenge, index) => `
+                    <div class="challenge-item" onclick="startChallenge(${index})">
+                        <div class="challenge-title">${challenge.title}</div>
+                        <div class="challenge-description">${challenge.description}</div>
+                        <div class="challenge-difficulty ${challenge.difficulty}">
+                            ${challenge.difficulty.toUpperCase()}
+                        </div>
+                    </div>
+                `).join('')}
+                <div style="margin-top: 25px; text-align: center;">
+                    <button class="btn btn-primary" onclick="startQuiz()">
+                        📝 Back to Quiz
+                    </button>
+                </div>
+            `;
+            
+            updateStatus('🎯 Interactive challenges loaded! Pick one to test your skills with hands-on exploration.');
+        }
+        
+        function startChallenge(index) {
+            const challenge = challenges[index];
+            
+            // Hide challenge panel
+            document.getElementById('challengesPanel').style.display = 'none';
+            
+            // Setup the challenge
+            challenge.setup();
+            
+            // Show relevant visualization modes
+            showVectors = true;
+            showFieldLines = true;
+            document.getElementById('vectorToggle').classList.add('active');
+            document.getElementById('fieldToggle').classList.add('active');
+            
+            updateStatus(`🎯 Challenge "${challenge.title}" activated! Use the interactive tools to solve it.`);
+            
+            // Add challenge completion button
+            setTimeout(() => {
+                const container = document.querySelector('.status-panel');
+                if (!document.getElementById('challengeComplete')) {
+                    const button = document.createElement('button');
+                    button.id = 'challengeComplete';
+                    button.className = 'btn btn-success';
+                    button.style.marginTop = '15px';
+                    button.innerHTML = '✅ Challenge Complete';
+                    button.onclick = () => {
+                        createSparklesBurst(canvas.width/2, canvas.height/2, 30);
+                        updateStatus('🎉 Challenge completed! Great work! Try another one.');
+                        button.remove();
+                        showChallenges();
+                    };
+                    container.appendChild(button);
+                }
+            }, 2000);
+        }
+        
+        // Enhanced example configurations
+        function loadExample1() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 160;
+            
+            for (let i = 0; i < 3; i++) {
+                const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                charges.push(new Charge(x, y, 8.0));
+                createSparklesBurst(x, y, 10);
+            }
+            
+            charges.push(new Charge(centerX, centerY, 5.0));
+            createSparklesBurst(centerX, centerY, 15);
+            targetChargeIndex = 3;
+            updateStatus('📐 Example 1.5 materialized: Equilateral triangle with centroid charge! Perfect symmetry achieved.');
+        }
+        
+        function loadExample2() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 160;
+            
+            charges.push(new Charge(centerX - radius * Math.cos(Math.PI/6), centerY - radius * Math.sin(Math.PI/6), 8.0));
+            charges.push(new Charge(centerX + radius * Math.cos(Math.PI/6), centerY - radius * Math.sin(Math.PI/6), 8.0));
+            charges.push(new Charge(centerX, centerY + radius, -8.0));
+            
+            charges.forEach(charge => createSparklesBurst(charge.x, charge.y, 12));
+            targetChargeIndex = 0;
+            updateStatus('🔺 Example 1.6 conjured: Mixed charge triangle! Observe asymmetric force patterns.');
+        }
+        
+        function loadLinearExample() {
+            clearCharges();
+            const y = canvas.height / 2;
+            const spacing = 180;
+            const startX = 140;
+            
+            const values = [12, -8, 10, -6, 8];
+            for (let i = 0; i < values.length; i++) {
+                const x = startX + i * spacing;
+                charges.push(new Charge(x, y, values[i]));
+                createSparklesBurst(x, y, 8);
+            }
+            
+            targetChargeIndex = 2;
+            updateStatus('📏 Linear charge array deployed! Classic alternating configuration for superposition study.');
+        }
+        
+        function loadSquareExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const size = 140;
+            
+            const positions = [
+                {x: centerX - size, y: centerY - size, q: 6},
+                {x: centerX + size, y: centerY - size, q: -6},
+                {x: centerX + size, y: centerY + size, q: 6},
+                {x: centerX - size, y: centerY + size, q: -6},
+                {x: centerX, y: centerY, q: 4}
+            ];
+            
+            positions.forEach(pos => {
+                charges.push(new Charge(pos.x, pos.y, pos.q));
+                createSparklesBurst(pos.x, pos.y, 10);
+            });
+            
+            targetChargeIndex = 4;
+            updateStatus('⬜ Square lattice crystallized! Symmetric geometry with central test charge.');
+        }
+        
+        function loadDipoleExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const separation = 120;
+            
+            charges.push(new Charge(centerX - separation, centerY, 12.0));
+            charges.push(new Charge(centerX + separation, centerY, -12.0));
+            charges.push(new Charge(centerX, centerY + separation, 3.0));
+            
+            charges.forEach(charge => createSparklesBurst(charge.x, charge.y, 15));
+            targetChargeIndex = 2;
+            updateStatus('🧲 Electric dipole established! Classic two-pole configuration with test charge.');
+        }
+        
+        function loadQuadrupoleExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 130;
+            
+            for (let i = 0; i < 4; i++) {
+                const angle = i * Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                const q = (i % 2 === 0) ? 8 : -8;
+                charges.push(new Charge(x, y, q));
+                createSparklesBurst(x, y, 12);
+            }
+            
+            charges.push(new Charge(centerX + 70, centerY + 70, 3.0));
+            createSparklesBurst(centerX + 70, centerY + 70, 20);
+            targetChargeIndex = 4;
+            updateStatus('✨ Quadrupole matrix activated! Four-pole symmetric field with offset test charge.');
+        }
+        
+        function loadOctupoleExample() {
+            clearCharges();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 150;
+            
+            for (let i = 0; i < 8; i++) {
+                const angle = i * Math.PI / 4;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                const q = (i % 2 === 0) ? 6 : -6;
+                charges.push(new Charge(x, y, q));
+                createSparklesBurst(x, y, 10);
+            }
+            
+            charges.push(new Charge(centerX, centerY, 4.0));
+            createSparklesBurst(centerX, centerY, 25);
+            targetChargeIndex = 8;
+            updateStatus('🌟 Octupole constellation manifested! Eight-charge symmetric field with central probe.');
+        }
+        
+        function loadRandomExample() {
+            clearCharges();
+            const numCharges = 5 + Math.floor(Math.random() * 6);
+            
+            for (let i = 0; i < numCharges; i++) {
+                const x = 100 + Math.random() * (canvas.width - 200);
+                const y = 100 + Math.random() * (canvas.height - 200);
+                const q = (Math.random() - 0.5) * 20;
+                charges.push(new Charge(x, y, q));
+                createSparklesBurst(x, y, 8);
+            }
+            
+            targetChargeIndex = Math.floor(Math.random() * charges.length);
+            updateStatus(`🎲 Random field generated! ${numCharges} charges in chaotic configuration. Analyzing charge ${targetChargeIndex + 1}.`);
+        }
+        
+        // Event listeners
+        document.getElementById('chargeValue').addEventListener('input', updateChargeDisplay);
+        
+        // Initialize the laboratory
+        updateChargeDisplay();
+        updateStatus('🚀 Electrostatic Force Laboratory initialized! Ready for exploration and testing of electromagnetic concepts.');
+        
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+</html>
+    </script>
+</body>
+</html>

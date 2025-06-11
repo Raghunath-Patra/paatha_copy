@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties of Electric Charge - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.2rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            background: #4299e1;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Additivity Styles */
+        .charge-calculator {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #cbd5e0;
+        }
+
+        .charge-input-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .charge-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .charge-input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .charge-input.positive {
+            border-color: #e53e3e;
+            background: #fed7d7;
+        }
+
+        .charge-input.negative {
+            border-color: #3182ce;
+            background: #bee3f8;
+        }
+
+        .charge-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .calculation-display {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #4299e1;
+        }
+
+        .calculation-step {
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .total-charge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        /* Conservation Styles */
+        .conservation-demo {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .object-container {
+            flex: 1;
+            min-width: 200px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 3px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .object-container.charged {
+            border-color: #4299e1;
+            background: linear-gradient(135deg, #bee3f8, #90cdf4);
+        }
+
+        .object-visual {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .glass-rod {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
+        }
+
+        .silk-cloth {
+            background: linear-gradient(45deg, #4ecdc4, #45b7b8);
+        }
+
+        .charge-particles {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .particle {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            transition: all 0.5s ease;
+        }
+
+        .electron {
+            background: #3182ce;
+        }
+
+        .proton {
+            background: #e53e3e;
+        }
+
+        .transfer-arrow {
+            font-size: 2rem;
+            color: #4299e1;
+            align-self: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* Quantization Styles */
+        .quantization-demo {
+            background: linear-gradient(135deg, #2d3748, #4a5568);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .electron-counter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .counter-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .counter-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .counter-btn:hover {
+            background: #3182ce;
+            transform: scale(1.1);
+        }
+
+        .electron-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 15px 0;
+            min-height: 60px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .quantized-electron {
+            width: 12px;
+            height: 12px;
+            background: #3182ce;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            animation: electronGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes electronGlow {
+            0%, 100% { box-shadow: 0 0 5px #3182ce; }
+            50% { box-shadow: 0 0 15px #3182ce; }
+        }
+
+        .charge-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #63b3ed;
+        }
+
+        /* Conductor vs Insulator Styles */
+        .material-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .material-demo {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid #cbd5e0;
+            text-align: center;
+        }
+
+        .material-demo.conductor {
+            border-color: #38a169;
+        }
+
+        .material-demo.insulator {
+            border-color: #e53e3e;
+        }
+
+        .material-visual {
+            width: 150px;
+            height: 100px;
+            margin: 0 auto 15px;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .conductor-visual {
+            background: linear-gradient(45deg, #a0aec0, #718096);
+        }
+
+        .insulator-visual {
+            background: linear-gradient(45deg, #f6ad55, #ed8936);
+        }
+
+        .charge-flow {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #3182ce;
+            border-radius: 50%;
+            transition: all 1s ease;
+        }
+
+        .material-property {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        /* Example Problems Styles */
+        .example-problem {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .problem-statement {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .solution-steps {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .interactive-calculator {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .calc-input {
+            width: 100px;
+            padding: 8px;
+            border: 2px solid #cbd5e0;
+            border-radius: 5px;
+            margin: 0 5px;
+        }
+
+        .calc-result {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+
+        .btn.reset {
+            background: #e53e3e;
+        }
+
+        .btn.reset:hover {
+            background: #c53030;
+        }
+
+        .concept-highlight {
+            background: linear-gradient(45deg, #ed8936, #f6ad55);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .formula-box {
+            background: #2d3748;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.2rem;
+        }
+
+        .responsive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .material-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .conservation-demo {
+                flex-direction: column;
+            }
+            
+            .charge-input-section {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚛️ Properties of Electric Charge</h1>
+            <p>Explore additivity, conservation, quantization, and material properties!</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('additivity')">➕ Additivity</button>
+            <button class="nav-tab" onclick="showTab('conservation')">⚖️ Conservation</button>
+            <button class="nav-tab" onclick="showTab('quantization')">🔢 Quantization</button>
+            <button class="nav-tab" onclick="showTab('materials')">🔌 Conductors vs Insulators</button>
+            <button class="nav-tab" onclick="showTab('examples')">📚 Example Problems</button>
+        </div>
+
+        <!-- Additivity Tab -->
+        <div id="additivity" class="tab-content active">
+            <h2>➕ Additivity of Electric Charge</h2>
+            <p>Charges add algebraically like scalars. Enter different charges to see how they combine:</p>
+            
+            <div class="charge-calculator">
+                <h3>Interactive Charge Calculator</h3>
+                <div class="charge-input-section">
+                    <div class="charge-input-group">
+                        <label class="charge-label">Charge 1 (μC)</label>
+                        <input type="number" class="charge-input positive" id="charge1" value="5" oninput="calculateTotal()">
+                    </div>
+                    <span style="font-size: 2rem; color: #4299e1;">+</span>
+                    
+                    <div class="charge-input-group">
+                        <label class="charge-label">Charge 2 (μC)</label>
+                        <input type="number" class="charge-input negative" id="charge2" value="-3" oninput="calculateTotal()">
+                    </div>
+                    <span style="font-size: 2rem; color: #4299e1;">+</span>
+                    
+                    <div class="charge-input-group">
+                        <label class="charge-label">Charge 3 (μC)</label>
+                        <input type="number" class="charge-input positive" id="charge3" value="2" oninput="calculateTotal()">
+                    </div>
+                    <span style="font-size: 2rem; color: #4299e1;">+</span>
+                    
+                    <div class="charge-input-group">
+                        <label class="charge-label">Charge 4 (μC)</label>
+                        <input type="number" class="charge-input negative" id="charge4" value="-1" oninput="calculateTotal()">
+                    </div>
+                    <span style="font-size: 2rem; color: #4299e1;">=</span>
+                </div>
+                
+                <div class="calculation-display" id="calculationSteps">
+                    <div class="calculation-step">Step 1: Q₁ + Q₂ + Q₃ + Q₄</div>
+                    <div class="calculation-step">Step 2: (+5) + (-3) + (+2) + (-1)</div>
+                    <div class="calculation-step">Step 3: 5 - 3 + 2 - 1 = 3</div>
+                </div>
+                
+                <div class="total-charge" id="totalCharge">
+                    Total Charge = +3 μC
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn" onclick="addRandomCharges()">🎲 Random Charges</button>
+                <button class="btn" onclick="resetCharges()">🔄 Reset</button>
+                <button class="btn" onclick="showTextbookExample()">📖 Textbook Example</button>
+            </div>
+
+            <div class="concept-highlight">
+                💡 Key Point: Charges are scalars and add algebraically. Always include the sign (+ or -) when adding!
+            </div>
+        </div>
+
+        <!-- Conservation Tab -->
+        <div id="conservation" class="tab-content">
+            <h2>⚖️ Conservation of Electric Charge</h2>
+            <p>Charge cannot be created or destroyed, only transferred between objects.</p>
+            
+            <div class="conservation-demo">
+                <div class="object-container" id="glassContainer">
+                    <h3>Glass Rod</h3>
+                    <div class="object-visual glass-rod" id="glassVisual">🔬</div>
+                    <div class="charge-particles" id="glassCharges">
+                        <!-- Particles will be added by JavaScript -->
+                    </div>
+                    <div class="charge-value" id="glassCharge">Charge: 0</div>
+                </div>
+                
+                <div class="transfer-arrow" id="transferArrow">⚡</div>
+                
+                <div class="object-container" id="silkContainer">
+                    <h3>Silk Cloth</h3>
+                    <div class="object-visual silk-cloth" id="silkVisual">🧵</div>
+                    <div class="charge-particles" id="silkCharges">
+                        <!-- Particles will be added by JavaScript -->
+                    </div>
+                    <div class="charge-value" id="silkCharge">Charge: 0</div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <button class="btn" onclick="simulateRubbing()">🔄 Rub Glass with Silk</button>
+                <button class="btn" onclick="resetConservation()">↺ Reset to Neutral</button>
+                <button class="btn" onclick="showConservationMath()">🧮 Show Mathematics</button>
+            </div>
+            
+            <div class="formula-box" id="conservationFormula">
+                Q_initial = Q_final<br>
+                Q_glass_initial + Q_silk_initial = Q_glass_final + Q_silk_final<br>
+                0 + 0 = (+3e) + (-3e) = 0 ✓
+            </div>
+
+            <div class="concept-highlight">
+                🔒 Conservation Law: In any isolated system, the total electric charge remains constant!
+            </div>
+        </div>
+
+        <!-- Quantization Tab -->
+        <div id="quantization" class="tab-content">
+            <h2>🔢 Quantization of Electric Charge</h2>
+            <p>All charges are integral multiples of the elementary charge e = 1.602 × 10⁻¹⁹ C</p>
+            
+            <div class="quantization-demo">
+                <h3>Interactive Electron Counter</h3>
+                <p>Add or remove electrons to see quantized charge:</p>
+                
+                <div class="electron-counter">
+                    <div class="counter-controls">
+                        <button class="counter-btn" onclick="changeElectrons(-1)">-</button>
+                        <span style="margin: 0 15px; font-size: 1.2rem;">Electrons: <span id="electronCount">0</span></span>
+                        <button class="counter-btn" onclick="changeElectrons(1)">+</button>
+                    </div>
+                    <div class="charge-value">
+                        Charge: <span id="quantizedCharge">0</span> e
+                    </div>
+                </div>
+                
+                <div class="electron-display" id="electronDisplay">
+                    <!-- Electrons will be displayed here -->
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    <div>Charge in Coulombs: <span id="chargeInCoulombs">0</span> C</div>
+                    <div>Scientific Notation: <span id="scientificNotation">0</span> C</div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn" onclick="setElectrons(10)">Set 10e</button>
+                <button class="btn" onclick="setElectrons(100)">Set 100e</button>
+                <button class="btn" onclick="setElectrons(1000)">Set 1000e</button>
+                <button class="btn reset" onclick="setElectrons(0)">Reset</button>
+            </div>
+
+            <div class="formula-box">
+                q = ne<br>
+                where n = integer, e = 1.602 × 10⁻¹⁹ C
+            </div>
+
+            <div class="concept-highlight">
+                🔢 Quantization: Charge always comes in discrete packets of e. You can't have 2.5 electrons!
+            </div>
+        </div>
+
+        <!-- Materials Tab -->
+        <div id="materials" class="tab-content">
+            <h2>🔌 Conductors vs Insulators</h2>
+            <p>Materials behave differently when charge is applied to them.</p>
+            
+            <div class="material-comparison">
+                <div class="material-demo conductor" id="conductorDemo">
+                    <h3>Conductor (Metal)</h3>
+                    <div class="material-visual conductor-visual" id="conductorVisual">
+                        <!-- Charge particles will be added here -->
+                    </div>
+                    <div class="material-property">
+                        <strong>Free electrons</strong> can move easily
+                    </div>
+                    <div class="material-property">
+                        Charge <strong>spreads instantly</strong> over entire surface
+                    </div>
+                    <div class="material-property">
+                        Examples: Copper, aluminum, human body
+                    </div>
+                </div>
+                
+                <div class="material-demo insulator" id="insulatorDemo">
+                    <h3>Insulator (Plastic)</h3>
+                    <div class="material-visual insulator-visual" id="insulatorVisual">
+                        <!-- Charge particles will be added here -->
+                    </div>
+                    <div class="material-property">
+                        Electrons are <strong>tightly bound</strong>
+                    </div>
+                    <div class="material-property">
+                        Charge <strong>stays localized</strong> where placed
+                    </div>
+                    <div class="material-property">
+                        Examples: Glass, rubber, wood, plastic
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <button class="btn" onclick="addChargeToMaterials()">⚡ Add Charge</button>
+                <button class="btn" onclick="animateChargeFlow()">🌊 Show Charge Flow</button>
+                <button class="btn reset" onclick="resetMaterials()">🔄 Reset</button>
+            </div>
+
+            <div class="concept-highlight">
+                🔑 Key Difference: Conductors allow charge to move freely, insulators keep charge fixed in place!
+            </div>
+        </div>
+
+        <!-- Examples Tab -->
+        <div id="examples" class="tab-content">
+            <h2>📚 Example Problems</h2>
+            
+            <div class="example-problem">
+                <h3>Example 1: Electron Transfer Rate</h3>
+                <div class="problem-statement">
+                    <strong>Problem:</strong> If 10⁹ electrons move out of a body every second, how much time is required to get a total charge of 1 C?
+                </div>
+                
+                <div class="interactive-calculator">
+                    <label>Electrons per second: </label>
+                    <input type="number" class="calc-input" id="electronsPerSec" value="1000000000" oninput="calculateTransferTime()">
+                    <br><br>
+                    <label>Target charge (C): </label>
+                    <input type="number" class="calc-input" id="targetCharge" value="1" oninput="calculateTransferTime()">
+                    
+                    <div class="calc-result" id="transferResult">
+                        Time required: 198 years
+                    </div>
+                </div>
+                
+                <div class="solution-steps">
+                    <div class="step">Step 1: Charge per second = 10⁹ × 1.6 × 10⁻¹⁹ C = 1.6 × 10⁻¹⁰ C/s</div>
+                    <div class="step">Step 2: Time = Total charge ÷ Charge per second</div>
+                    <div class="step">Step 3: Time = 1 C ÷ (1.6 × 10⁻¹⁰ C/s) = 6.25 × 10⁹ s ≈ 198 years</div>
+                </div>
+            </div>
+
+            <div class="example-problem">
+                <h3>Example 2: Charge in a Cup of Water</h3>
+                <div class="problem-statement">
+                    <strong>Problem:</strong> How much positive and negative charge is there in a cup of water (250g)?
+                </div>
+                
+                <div class="interactive-calculator">
+                    <label>Mass of water (g): </label>
+                    <input type="number" class="calc-input" id="waterMass" value="250" oninput="calculateWaterCharge()">
+                    
+                    <div class="calc-result" id="waterResult">
+                        Total positive charge = Total negative charge = 1.34 × 10⁷ C
+                    </div>
+                </div>
+                
+                <div class="solution-steps">
+                    <div class="step">Step 1: Moles of water = 250g ÷ 18g/mol = 13.89 mol</div>
+                    <div class="step">Step 2: Number of molecules = 13.89 × 6.02 × 10²³ = 8.36 × 10²⁴</div>
+                    <div class="step">Step 3: Each H₂O has 10 protons and 10 electrons</div>
+                    <div class="step">Step 4: Total charge = 8.36 × 10²⁴ × 10 × 1.6 × 10⁻¹⁹ C = 1.34 × 10⁷ C</div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn" onclick="resetCalculators()">🔄 Reset Calculators</button>
+                <button class="btn" onclick="showMoreExamples()">📖 More Examples</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'additivity';
+        let electronCount = 0;
+        const ELEMENTARY_CHARGE = 1.602e-19; // Coulombs
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Initialize tab-specific content
+            switch(tabName) {
+                case 'conservation':
+                    initializeConservation();
+                    break;
+                case 'quantization':
+                    updateQuantizationDisplay();
+                    break;
+                case 'materials':
+                    initializeMaterials();
+                    break;
+            }
+        }
+
+        // Additivity functions
+        function calculateTotal() {
+            const q1 = parseFloat(document.getElementById('charge1').value) || 0;
+            const q2 = parseFloat(document.getElementById('charge2').value) || 0;
+            const q3 = parseFloat(document.getElementById('charge3').value) || 0;
+            const q4 = parseFloat(document.getElementById('charge4').value) || 0;
+            
+            const total = q1 + q2 + q3 + q4;
+            
+            // Update calculation steps
+            const stepsDiv = document.getElementById('calculationSteps');
+            stepsDiv.innerHTML = `
+                <div class="calculation-step">Step 1: Q₁ + Q₂ + Q₃ + Q₄</div>
+                <div class="calculation-step">Step 2: (${q1 >= 0 ? '+' : ''}${q1}) + (${q2 >= 0 ? '+' : ''}${q2}) + (${q3 >= 0 ? '+' : ''}${q3}) + (${q4 >= 0 ? '+' : ''}${q4})</div>
+                <div class="calculation-step">Step 3: ${q1} ${q2 >= 0 ? '+' : ''} ${q2} ${q3 >= 0 ? '+' : ''} ${q3} ${q4 >= 0 ? '+' : ''} ${q4} = ${total}</div>
+            `;
+            
+            // Update total charge display
+            const totalDiv = document.getElementById('totalCharge');
+            totalDiv.textContent = `Total Charge = ${total >= 0 ? '+' : ''}${total} μC`;
+            totalDiv.style.background = total > 0 ? 'linear-gradient(45deg, #e53e3e, #ff6b6b)' : 
+                                       total < 0 ? 'linear-gradient(45deg, #3182ce, #4299e1)' : 
+                                       'linear-gradient(45deg, #667eea, #764ba2)';
+            
+            // Update input colors
+            updateInputColors();
+        }
+
+        function updateInputColors() {
+            ['charge1', 'charge2', 'charge3', 'charge4'].forEach(id => {
+                const input = document.getElementById(id);
+                const value = parseFloat(input.value) || 0;
+                input.className = value >= 0 ? 'charge-input positive' : 'charge-input negative';
+            });
+        }
+
+        function addRandomCharges() {
+            document.getElementById('charge1').value = (Math.random() * 20 - 10).toFixed(1);
+            document.getElementById('charge2').value = (Math.random() * 20 - 10).toFixed(1);
+            document.getElementById('charge3').value = (Math.random() * 20 - 10).toFixed(1);
+            document.getElementById('charge4').value = (Math.random() * 20 - 10).toFixed(1);
+            calculateTotal();
+        }
+
+        function resetCharges() {
+            document.getElementById('charge1').value = 5;
+            document.getElementById('charge2').value = -3;
+            document.getElementById('charge3').value = 2;
+            document.getElementById('charge4').value = -1;
+            calculateTotal();
+        }
+
+        function showTextbookExample() {
+            document.getElementById('charge1').value = 1;
+            document.getElementById('charge2').value = 2;
+            document.getElementById('charge3').value = -3;
+            document.getElementById('charge4').value = 4;
+            
+            // Add fifth charge input temporarily
+            setTimeout(() => {
+                document.getElementById('charge4').value = -5;
+                calculateTotal();
+            }, 500);
+        }
+
+        // Conservation functions
+        function initializeConservation() {
+            createParticles('glassCharges', 5, 5);
+            createParticles('silkCharges', 5, 5);
+            updateChargeDisplay('glassCharge', 0);
+            updateChargeDisplay('silkCharge', 0);
+        }
+
+        function createParticles(containerId, protons, electrons) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            // Add protons
+            for (let i = 0; i < protons; i++) {
+                const proton = document.createElement('div');
+                proton.className = 'particle proton';
+                proton.textContent = '+';
+                container.appendChild(proton);
+            }
+            
+            // Add electrons
+            for (let i = 0; i < electrons; i++) {
+                const electron = document.createElement('div');
+                electron.className = 'particle electron';
+                electron.textContent = '-';
+                container.appendChild(electron);
+            }
+        }
+
+        function simulateRubbing() {
+            // Transfer 3 electrons from glass to silk
+            createParticles('glassCharges', 5, 2); // Lost 3 electrons
+            createParticles('silkCharges', 5, 8); // Gained 3 electrons
+            
+            updateChargeDisplay('glassCharge', +3);
+            updateChargeDisplay('silkCharge', -3);
+            
+            // Visual feedback
+            document.getElementById('glassContainer').classList.add('charged');
+            document.getElementById('silkContainer').classList.add('charged');
+            
+            // Animate transfer arrow
+            const arrow = document.getElementById('transferArrow');
+            arrow.style.color = '#e53e3e';
+            arrow.textContent = '➡️';
+            
+            setTimeout(() => {
+                arrow.style.color = '#4299e1';
+                arrow.textContent = '⚡';
+            }, 2000);
+        }
+
+        function resetConservation() {
+            initializeConservation();
+            document.getElementById('glassContainer').classList.remove('charged');
+            document.getElementById('silkContainer').classList.remove('charged');
+        }
+
+        function updateChargeDisplay(elementId, charge) {
+            const element = document.getElementById(elementId);
+            element.textContent = `Charge: ${charge >= 0 ? '+' : ''}${charge}e`;
+            element.style.color = charge > 0 ? '#e53e3e' : charge < 0 ? '#3182ce' : '#4a5568';
+        }
+
+        function showConservationMath() {
+            const formula = document.getElementById('conservationFormula');
+            formula.style.display = formula.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Quantization functions
+        function changeElectrons(delta) {
+            electronCount = Math.max(0, electronCount + delta);
+            updateQuantizationDisplay();
+        }
+
+        function setElectrons(count) {
+            electronCount = Math.max(0, count);
+            updateQuantizationDisplay();
+        }
+
+        function updateQuantizationDisplay() {
+            document.getElementById('electronCount').textContent = electronCount;
+            document.getElementById('quantizedCharge').textContent = electronCount > 0 ? `-${electronCount}` : '0';
+            
+            const chargeInC = electronCount * ELEMENTARY_CHARGE;
+            document.getElementById('chargeInCoulombs').textContent = chargeInC.toFixed(2e-19);
+            document.getElementById('scientificNotation').textContent = chargeInC.toExponential(2);
+            
+            // Update electron display
+            const display = document.getElementById('electronDisplay');
+            display.innerHTML = '';
+            
+            for (let i = 0; i < Math.min(electronCount, 100); i++) {
+                const electron = document.createElement('div');
+                electron.className = 'quantized-electron';
+                display.appendChild(electron);
+            }
+            
+            if (electronCount > 100) {
+                const more = document.createElement('div');
+                more.style.color = '#63b3ed';
+                more.style.padding = '10px';
+                more.textContent = `... and ${electronCount - 100} more electrons`;
+                display.appendChild(more);
+            }
+        }
+
+        // Materials functions
+        function initializeMaterials() {
+            // Clear previous charges
+            document.getElementById('conductorVisual').innerHTML = '';
+            document.getElementById('insulatorVisual').innerHTML = '';
+        }
+
+        function addChargeToMaterials() {
+            const conductorVisual = document.getElementById('conductorVisual');
+            const insulatorVisual = document.getElementById('insulatorVisual');
+            
+            // Clear previous charges
+            conductorVisual.innerHTML = '';
+            insulatorVisual.innerHTML = '';
+            
+            // Add charges to conductor (distributed evenly)
+            for (let i = 0; i < 8; i++) {
+                const charge = document.createElement('div');
+                charge.className = 'charge-flow';
+                charge.style.left = Math.random() * 140 + 'px';
+                charge.style.top = Math.random() * 90 + 'px';
+                conductorVisual.appendChild(charge);
+            }
+            
+            // Add charges to insulator (localized)
+            for (let i = 0; i < 4; i++) {
+                const charge = document.createElement('div');
+                charge.className = 'charge-flow';
+                charge.style.left = '20px';
+                charge.style.top = 20 + i * 20 + 'px';
+                charge.style.background = '#e53e3e';
+                insulatorVisual.appendChild(charge);
+            }
+        }
+
+        function animateChargeFlow() {
+            const conductorCharges = document.querySelectorAll('#conductorVisual .charge-flow');
+            const insulatorCharges = document.querySelectorAll('#insulatorVisual .charge-flow');
+            
+            // Animate conductor charges spreading
+            conductorCharges.forEach((charge, index) => {
+                setTimeout(() => {
+                    charge.style.left = Math.random() * 140 + 'px';
+                    charge.style.top = Math.random() * 90 + 'px';
+                }, index * 100);
+            });
+            
+            // Insulator charges stay put (no animation)
+        }
+
+        function resetMaterials() {
+            initializeMaterials();
+        }
+
+        // Example problem functions
+        function calculateTransferTime() {
+            const electronsPerSec = parseFloat(document.getElementById('electronsPerSec').value) || 0;
+            const targetCharge = parseFloat(document.getElementById('targetCharge').value) || 0;
+            
+            const chargePerSec = electronsPerSec * ELEMENTARY_CHARGE;
+            const timeInSeconds = targetCharge / chargePerSec;
+            const timeInYears = timeInSeconds / (365 * 24 * 3600);
+            
+            document.getElementById('transferResult').textContent = 
+                `Time required: ${timeInYears.toFixed(0)} years (${timeInSeconds.toExponential(2)} seconds)`;
+        }
+
+        function calculateWaterCharge() {
+            const mass = parseFloat(document.getElementById('waterMass').value) || 0;
+            const molecularMass = 18; // g/mol
+            const avogadro = 6.02e23;
+            const electronsPerMolecule = 10;
+            
+            const moles = mass / molecularMass;
+            const molecules = moles * avogadro;
+            const totalElectrons = molecules * electronsPerMolecule;
+            const totalCharge = totalElectrons * ELEMENTARY_CHARGE;
+            
+            document.getElementById('waterResult').textContent = 
+                `Total positive charge = Total negative charge = ${totalCharge.toExponential(2)} C`;
+        }
+
+        function resetCalculators() {
+            document.getElementById('electronsPerSec').value = 1000000000;
+            document.getElementById('targetCharge').value = 1;
+            document.getElementById('waterMass').value = 250;
+            calculateTransferTime();
+            calculateWaterCharge();
+        }
+
+        let showingMoreExamples = false;
+
+        function showMoreExamples() {
+            showingMoreExamples = !showingMoreExamples;
+            const btn = event.target;
+            
+            if (showingMoreExamples) {
+                btn.textContent = '📖 Hide Extra Examples';
+                createAdditionalExamples();
+            } else {
+                btn.textContent = '📖 More Examples';
+                removeAdditionalExamples();
+            }
+        }
+
+        function createAdditionalExamples() {
+            const examplesTab = document.getElementById('examples');
+            
+            const additionalExamples = document.createElement('div');
+            additionalExamples.id = 'additionalExamples';
+            additionalExamples.innerHTML = `
+                <div class="example-problem">
+                    <h3>Example 3: Charge Quantization</h3>
+                    <div class="problem-statement">
+                        <strong>Problem:</strong> A metal sphere has a charge of +6.4 × 10⁻¹⁸ C. How many electrons are missing from the sphere?
+                    </div>
+                    
+                    <div class="interactive-calculator">
+                        <label>Charge on sphere (C): </label>
+                        <input type="number" class="calc-input" id="sphereCharge" value="6.4e-18" step="1e-19" oninput="calculateMissingElectrons()">
+                        
+                        <div class="calc-result" id="electronsResult">
+                            Missing electrons: 40
+                        </div>
+                    </div>
+                    
+                    <div class="solution-steps">
+                        <div class="step">Step 1: Use q = ne, where e = 1.602 × 10⁻¹⁹ C</div>
+                        <div class="step">Step 2: n = q ÷ e</div>
+                        <div class="step">Step 3: n = (6.4 × 10⁻¹⁸) ÷ (1.602 × 10⁻¹⁹) = 40 electrons</div>
+                        <div class="step">Step 4: Since charge is positive, 40 electrons are missing</div>
+                    </div>
+                </div>
+
+                <div class="example-problem">
+                    <h3>Example 4: Conservation in Lightning</h3>
+                    <div class="problem-statement">
+                        <strong>Problem:</strong> During lightning, 20 C of charge flows from cloud to ground in 0.2 s. How many electrons were transferred?
+                    </div>
+                    
+                    <div class="interactive-calculator">
+                        <label>Charge transferred (C): </label>
+                        <input type="number" class="calc-input" id="lightningCharge" value="20" oninput="calculateLightningElectrons()">
+                        <br><br>
+                        <label>Time (s): </label>
+                        <input type="number" class="calc-input" id="lightningTime" value="0.2" step="0.1" oninput="calculateLightningElectrons()">
+                        
+                        <div class="calc-result" id="lightningResult">
+                            Electrons transferred: 1.25 × 10²⁰<br>
+                            Current: 100 A
+                        </div>
+                    </div>
+                    
+                    <div class="solution-steps">
+                        <div class="step">Step 1: Number of electrons = q ÷ e</div>
+                        <div class="step">Step 2: n = 20 ÷ (1.602 × 10⁻¹⁹) = 1.25 × 10²⁰ electrons</div>
+                        <div class="step">Step 3: Current = q ÷ t = 20 ÷ 0.2 = 100 A</div>
+                        <div class="step">Step 4: Conservation: Total charge before = Total charge after</div>
+                    </div>
+                </div>
+
+                <div class="example-problem">
+                    <h3>Example 5: Charge Distribution</h3>
+                    <div class="problem-statement">
+                        <strong>Problem:</strong> Three objects have charges of +5μC, -3μC, and +2μC. If they are brought into contact and then separated, what is the final charge on each?
+                    </div>
+                    
+                    <div class="interactive-calculator">
+                        <label>Charge 1 (μC): </label>
+                        <input type="number" class="calc-input" id="distCharge1" value="5" oninput="calculateDistribution()">
+                        <br>
+                        <label>Charge 2 (μC): </label>
+                        <input type="number" class="calc-input" id="distCharge2" value="-3" oninput="calculateDistribution()">
+                        <br>
+                        <label>Charge 3 (μC): </label>
+                        <input type="number" class="calc-input" id="distCharge3" value="2" oninput="calculateDistribution()">
+                        
+                        <div class="calc-result" id="distributionResult">
+                            Final charge on each object: +1.33 μC
+                        </div>
+                    </div>
+                    
+                    <div class="solution-steps">
+                        <div class="step">Step 1: Total initial charge = (+5) + (-3) + (+2) = +4 μC</div>
+                        <div class="step">Step 2: When identical conductors touch, charge distributes equally</div>
+                        <div class="step">Step 3: Final charge per object = Total ÷ Number of objects</div>
+                        <div class="step">Step 4: Final charge = +4 ÷ 3 = +1.33 μC each</div>
+                    </div>
+                </div>
+
+                <div class="example-problem">
+                    <h3>Example 6: Millikan Oil Drop</h3>
+                    <div class="problem-statement">
+                        <strong>Problem:</strong> An oil drop in Millikan's experiment has a charge of 4.8 × 10⁻¹⁹ C. How many excess electrons does it carry?
+                    </div>
+                    
+                    <div class="interactive-calculator">
+                        <label>Oil drop charge (C): </label>
+                        <input type="number" class="calc-input" id="milliikanCharge" value="4.8e-19" step="1.6e-19" oninput="calculateMillikanElectrons()">
+                        
+                        <div class="calc-result" id="milliikanResult">
+                            Excess electrons: 3
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <strong>Millikan's Discovery:</strong> This experiment proved charge quantization!
+                        </div>
+                    </div>
+                    
+                    <div class="solution-steps">
+                        <div class="step">Step 1: Charge is quantized: q = ne</div>
+                        <div class="step">Step 2: n = q ÷ e = (4.8 × 10⁻¹⁹) ÷ (1.602 × 10⁻¹⁹)</div>
+                        <div class="step">Step 3: n = 3 electrons</div>
+                        <div class="step">Step 4: This confirms q = 3 × 1.602 × 10⁻¹⁹ C ✓</div>
+                    </div>
+                </div>
+            `;
+            
+            examplesTab.appendChild(additionalExamples);
+            
+            // Initialize calculations
+            calculateMissingElectrons();
+            calculateLightningElectrons();
+            calculateDistribution();
+            calculateMillikanElectrons();
+        }
+
+        function removeAdditionalExamples() {
+            const additionalExamples = document.getElementById('additionalExamples');
+            if (additionalExamples) {
+                additionalExamples.remove();
+            }
+        }
+
+        function calculateMissingElectrons() {
+            const charge = parseFloat(document.getElementById('sphereCharge').value) || 0;
+            const electrons = Math.abs(charge) / ELEMENTARY_CHARGE;
+            
+            const result = document.getElementById('electronsResult');
+            if (result) {
+                result.textContent = `Missing electrons: ${electrons.toFixed(0)}`;
+            }
+        }
+
+        function calculateLightningElectrons() {
+            const charge = parseFloat(document.getElementById('lightningCharge').value) || 0;
+            const time = parseFloat(document.getElementById('lightningTime').value) || 1;
+            
+            const electrons = charge / ELEMENTARY_CHARGE;
+            const current = charge / time;
+            
+            const result = document.getElementById('lightningResult');
+            if (result) {
+                result.innerHTML = `
+                    Electrons transferred: ${electrons.toExponential(2)}<br>
+                    Current: ${current.toFixed(1)} A
+                `;
+            }
+        }
+
+        function calculateDistribution() {
+            const q1 = parseFloat(document.getElementById('distCharge1').value) || 0;
+            const q2 = parseFloat(document.getElementById('distCharge2').value) || 0;
+            const q3 = parseFloat(document.getElementById('distCharge3').value) || 0;
+            
+            const total = q1 + q2 + q3;
+            const finalCharge = total / 3;
+            
+            const result = document.getElementById('distributionResult');
+            if (result) {
+                result.textContent = `Final charge on each object: ${finalCharge >= 0 ? '+' : ''}${finalCharge.toFixed(2)} μC`;
+            }
+        }
+
+        function calculateMillikanElectrons() {
+            const charge = parseFloat(document.getElementById('milliikanCharge').value) || 0;
+            const electrons = Math.abs(charge) / ELEMENTARY_CHARGE;
+            
+            const result = document.getElementById('milliikanResult');
+            if (result) {
+                result.textContent = `Excess electrons: ${electrons.toFixed(0)}`;
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateTotal();
+            initializeConservation();
+            updateQuantizationDisplay();
+            calculateTransferTime();
+            calculateWaterCharge();
+        });
+    </script>
+</body>
+</html>

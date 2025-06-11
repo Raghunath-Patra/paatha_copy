@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxonomic Categories - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-top: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 15px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .section:hover::before {
+            left: 100%;
+        }
+
+        .section:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #ff6b6b;
+            position: relative;
+        }
+
+        /* Interactive Hierarchy Pyramid */
+        .hierarchy-pyramid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 40px 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-radius: 20px;
+            color: white;
+        }
+
+        .pyramid-level {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .taxonomy-box {
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            min-width: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .taxonomy-box:hover {
+            transform: scale(1.1) rotateY(10deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .taxonomy-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .taxonomy-box:hover::before {
+            left: 100%;
+        }
+
+        .kingdom-level { width: 20%; }
+        .phylum-level { width: 30%; }
+        .class-level { width: 40%; }
+        .order-level { width: 50%; }
+        .family-level { width: 60%; }
+        .genus-level { width: 70%; }
+        .species-level { width: 80%; }
+
+        /* 3D Classification Builder */
+        .classification-builder {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            color: white;
+        }
+
+        .organism-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .organism-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            backdrop-filter: blur(10px);
+        }
+
+        .organism-card:hover, .organism-card.selected {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .organism-emoji {
+            font-size: 4em;
+            margin-bottom: 15px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .classification-display {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .classification-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .classification-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .classification-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(10px);
+        }
+
+        .classification-label {
+            font-weight: bold;
+            min-width: 100px;
+            color: #ffd32a;
+        }
+
+        .classification-value {
+            font-size: 1.2em;
+            font-style: italic;
+        }
+
+        /* Interactive Comparison Table */
+        .comparison-table {
+            margin: 40px 0;
+            overflow-x: auto;
+        }
+
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 1em;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .styled-table thead tr {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 15px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+            background: #f3f3f3;
+            cursor: pointer;
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f9f9f9;
+        }
+
+        .styled-table tbody tr:hover {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .styled-table tbody tr.active-row {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+
+        /* Drag and Drop Game */
+        .drag-drop-game {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            color: white;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .drag-items {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .drop-zones {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .drag-item {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .drag-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .drop-zone {
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px dashed rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #ffd32a;
+            background: rgba(255, 211, 42, 0.2);
+            transform: scale(1.05);
+        }
+
+        .drop-zone.correct {
+            background: rgba(0, 184, 148, 0.3);
+            border-color: #00b894;
+        }
+
+        /* Quiz Section Enhanced */
+        .quiz-section {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 50px;
+            border-radius: 25px;
+            margin: 50px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: rotate 15s linear infinite reverse;
+        }
+
+        .quiz-question {
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quiz-question h3 {
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .quiz-option {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid transparent;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-align: center;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .quiz-option:hover::before {
+            left: 100%;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .quiz-option.correct {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            border-color: #ffd32a;
+            animation: pulse 1s;
+        }
+
+        .quiz-option.wrong {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            border-color: #fab1a0;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            margin: 30px 0;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ffd32a, #fdcb6e);
+            color: #2d3436;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .hierarchy-pyramid {
+                padding: 20px;
+            }
+            
+            .taxonomy-box {
+                min-width: 120px;
+                padding: 15px 20px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ Taxonomic Categories</h1>
+            <p>Master the hierarchical classification system that organizes all life on Earth</p>
+        </div>
+
+        <!-- Interactive Hierarchy Pyramid -->
+        <div class="section">
+            <h2>🔺 Interactive Taxonomic Hierarchy</h2>
+            <p>Click on each level to learn more about taxonomic categories. Notice how the pyramid gets wider as we go down!</p>
+            
+            <div class="hierarchy-pyramid">
+                <div class="pyramid-level kingdom-level">
+                    <div class="taxonomy-box" onclick="showLevelInfo('kingdom')" data-level="kingdom">
+                        👑 KINGDOM
+                        <div style="font-size: 0.8em; margin-top: 5px;">Broadest Category</div>
+                    </div>
+                </div>
+                
+                <div class="pyramid-level phylum-level">
+                    <div class="taxonomy-box" onclick="showLevelInfo('phylum')" data-level="phylum">
+                        🏗️ PHYLUM
+                        <div style="font-size: 0.8em; margin-top: 5px;">Major Body Plans</div>
+                    </div>
+                </div>
+                
+                <div class="pyramid-level class-level">
+                    <div class="taxonomy-box" onclick="showLevelInfo('class')" data-level="class">
+                        📚 CLASS
+                        <div style="font-size: 0.8em; margin-top: 5px;">Related Orders</div>
+                    </div>
+                </div>
+                
+                <div class="pyramid-level order-level">
+                    <div class="taxonomy-box" onclick="showLevelInfo('order')" data-level="order">
+                        📋 ORDER
+                        <div style="font-size: 0.8em; margin-top: 5px;">Similar Families</div>
+                    </div>
+                </div>
+                
+                <div class="pyramid-level family-level">
+                    <div class="taxonomy-box" onclick="showLevelInfo('family')" data-level="family">
+                        👨‍👩‍👧‍👦 FAMILY
+                        <div style="font-size: 0.8em; margin-top: 5px;">Related Genera</div>
+                    </div>
+                </div>
+                
+                <div class="pyramid-level genus-level">
+                    <div class="taxonomy-box" onclick="showLevelInfo('genus')" data-level="genus">
+                        🧬 GENUS
+                        <div style="font-size: 0.8em; margin-top: 5px;">Closely Related Species</div>
+                    </div>
+                </div>
+                
+                <div class="pyramid-level species-level">
+                    <div class="taxonomy-box" onclick="showLevelInfo('species')" data-level="species">
+                        🐾 SPECIES
+                        <div style="font-size: 0.8em; margin-top: 5px;">Most Specific</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="levelInfo" style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #ffecd2, #fcb69f); border-radius: 15px; display: none;">
+                <h3 id="levelTitle" style="color: #2d3436; margin-bottom: 15px;"></h3>
+                <p id="levelDescription" style="color: #2d3436; margin-bottom: 10px;"></p>
+                <p id="levelExample" style="color: #636e72; font-style: italic;"></p>
+            </div>
+        </div>
+
+        <!-- 3D Classification Builder -->
+        <div class="section">
+            <div class="classification-builder">
+                <h2 style="color: white; border-bottom-color: #ffd32a;">🔬 Interactive Classification Builder</h2>
+                <p>Select an organism to see its complete taxonomic classification!</p>
+                
+                <div class="organism-selector">
+                    <div class="organism-card" onclick="showClassification('human')" data-organism="human">
+                        <span class="organism-emoji">👨</span>
+                        <h4>Human</h4>
+                        <p><em>Homo sapiens</em></p>
+                    </div>
+                    <div class="organism-card" onclick="showClassification('housefly')" data-organism="housefly">
+                        <span class="organism-emoji">🪰</span>
+                        <h4>Housefly</h4>
+                        <p><em>Musca domestica</em></p>
+                    </div>
+                    <div class="organism-card" onclick="showClassification('mango')" data-organism="mango">
+                        <span class="organism-emoji">🥭</span>
+                        <h4>Mango</h4>
+                        <p><em>Mangifera indica</em></p>
+                    </div>
+                    <div class="organism-card" onclick="showClassification('wheat')" data-organism="wheat">
+                        <span class="organism-emoji">🌾</span>
+                        <h4>Wheat</h4>
+                        <p><em>Triticum aestivum</em></p>
+                    </div>
+                </div>
+                
+                <div id="classificationDisplay" class="classification-display">
+                    <h3 style="color: #ffd32a; margin-bottom: 20px;">Complete Classification:</h3>
+                    <div id="classificationTree" class="classification-tree"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Comparison Table -->
+        <div class="section">
+            <h2>📊 Interactive Organism Comparison</h2>
+            <p>Click on any row to highlight it. Compare how different organisms are classified!</p>
+            
+            <div class="comparison-table">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Common Name</th>
+                            <th>Scientific Name</th>
+                            <th>Genus</th>
+                            <th>Family</th>
+                            <th>Order</th>
+                            <th>Class</th>
+                            <th>Phylum/Division</th>
+                            <th>Kingdom</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="highlightRow(this)">
+                            <td>👨 Human</td>
+                            <td><em>Homo sapiens</em></td>
+                            <td>Homo</td>
+                            <td>Hominidae</td>
+                            <td>Primata</td>
+                            <td>Mammalia</td>
+                            <td>Chordata</td>
+                            <td>Animalia</td>
+                        </tr>
+                        <tr onclick="highlightRow(this)">
+                            <td>🪰 Housefly</td>
+                            <td><em>Musca domestica</em></td>
+                            <td>Musca</td>
+                            <td>Muscidae</td>
+                            <td>Diptera</td>
+                            <td>Insecta</td>
+                            <td>Arthropoda</td>
+                            <td>Animalia</td>
+                        </tr>
+                        <tr onclick="highlightRow(this)">
+                            <td>🥭 Mango</td>
+                            <td><em>Mangifera indica</em></td>
+                            <td>Mangifera</td>
+                            <td>Anacardiaceae</td>
+                            <td>Sapindales</td>
+                            <td>Dicotyledonae</td>
+                            <td>Angiospermae</td>
+                            <td>Plantae</td>
+                        </tr>
+                        <tr onclick="highlightRow(this)">
+                            <td>🌾 Wheat</td>
+                            <td><em>Triticum aestivum</em></td>
+                            <td>Triticum</td>
+                            <td>Poaceae</td>
+                            <td>Poales</td>
+                            <td>Monocotyledonae</td>
+                            <td>Angiospermae</td>
+                            <td>Plantae</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Drag and Drop Classification Game -->
+        <div class="section">
+            <div class="drag-drop-game">
+                <h2 style="color: white; border-bottom-color: #ffd32a;">🎮 Classification Challenge Game</h2>
+                <p>Drag the taxonomic levels to their correct positions in ascending order!</p>
+                
+                <div class="game-area">
+                    <div class="drag-items">
+                        <h3 style="margin-bottom: 20px;">Taxonomic Levels (Drag these):</h3>
+                        <div class="drag-item" draggable="true" data-level="species">Species</div>
+                        <div class="drag-item" draggable="true" data-level="kingdom">Kingdom</div>
+                        <div class="drag-item" draggable="true" data-level="genus">Genus</div>
+                        <div class="drag-item" draggable="true" data-level="family">Family</div>
+                        <div class="drag-item" draggable="true" data-level="phylum">Phylum</div>
+                        <div class="drag-item" draggable="true" data-level="order">Order</div>
+                        <div class="drag-item" draggable="true" data-level="class">Class</div>
+                    </div>
+                    
+                    <div class="drop-zones">
+                        <h3 style="margin-bottom: 20px;">Correct Order (Drop here):</h3>
+                        <div class="drop-zone" data-position="1">1. Broadest Category</div>
+                        <div class="drop-zone" data-position="2">2. Major Groups</div>
+                        <div class="drop-zone" data-position="3">3. Related Orders</div>
+                        <div class="drop-zone" data-position="4">4. Similar Families</div>
+                        <div class="drop-zone" data-position="5">5. Related Genera</div>
+                        <div class="drop-zone" data-position="6">6. Closely Related Species</div>
+                        <div class="drop-zone" data-position="7">7. Most Specific</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" onclick="checkGameAnswers()">Check Answers</button>
+                    <button class="btn" onclick="resetGame()">Reset Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Quiz Section -->
+        <div class="quiz-section">
+            <h2 style="color: white; border-bottom-color: #ffd32a;">🧠 Advanced Knowledge Check</h2>
+            <div class="score-display">Score: <span id="score">0</span> / <span id="totalQuestions">6</span></div>
+            
+            <div class="quiz-question">
+                <h3>1. Which taxonomic category has the MOST similarities among its members?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Kingdom is the broadest category with least similarities')">Kingdom</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Family has fewer similarities than genus and species')">Family</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, true, 'Correct! Species members share the most characteristics')">Species</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Order is higher than species in hierarchy')">Order</div>
+                </div>
+                <div class="feedback" id="quizFeedback1" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>2. Tigers (Panthera tigris) and Lions (Panthera leo) belong to the same:</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'They are different species')">Species</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, true, 'Correct! Both belong to genus Panthera')">Genus</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'This is too broad - many animals share the same family')">Family only</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Kingdom is too broad a category')">Kingdom</div>
+                </div>
+                <div class="feedback" id="quizFeedback2" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>3. In plants, what is the equivalent of 'Phylum' in animals?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Class is a lower category than Division')">Class</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, true, 'Correct! Division is used for plants instead of Phylum')">Division</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Order is lower in hierarchy')">Order</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Family is much lower in hierarchy')">Family</div>
+                </div>
+                <div class="feedback" id="quizFeedback3" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>4. Which statement about taxonomic hierarchy is CORRECT?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'It increases as we go higher in hierarchy')">Number of similarities increases from Species to Kingdom</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, true, 'Correct! Lower taxa share more characteristics')">Lower the taxa, more characteristics members share</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'All categories have equal importance but different levels')">All categories are equally specific</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Genus is broader than Family')">Genus includes more diversity than Family</div>
+                </div>
+                <div class="feedback" id="quizFeedback4" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>5. Potato (Solanum tuberosum) and Brinjal (Solanum melongena) are:</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'They have different specific epithets')">Same species</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, true, 'Correct! Both belong to genus Solanum but different species')">Different species, same genus</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'They share the same genus Solanum')">Different genus, same family</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'They are closely related through genus')">Completely unrelated</div>
+                </div>
+                <div class="feedback" id="quizFeedback5" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>6. What makes classification complex at higher taxonomic levels?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'More characteristics make it easier to classify')">More shared characteristics</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, true, 'Correct! Fewer shared traits make relationships harder to determine')">Fewer shared characteristics and difficulty determining relationships</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Size doesn&apos;t determine classification complexity')">Larger organism size</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(this, false, 'Habitat affects ecology, not taxonomic complexity')">Similar habitats</div>
+                </div>
+                <div class="feedback" id="quizFeedback6" style="display: none;"></div>
+            </div>
+
+            <button class="btn" onclick="resetQuiz()">Reset Quiz</button>
+            <button class="btn" onclick="showQuizResults()">Show Results</button>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="section">
+            <h2>📋 Chapter Summary</h2>
+            <div style="background: linear-gradient(135deg, #ffecd2, #fcb69f); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                <h3 style="color: #2d3436; margin-bottom: 20px;">Key Takeaways:</h3>
+                <ul style="color: #2d3436; font-size: 1.1em; line-height: 1.8;">
+                    <li><strong>Taxonomic Hierarchy:</strong> Seven main levels from Kingdom (broadest) to Species (most specific)</li>
+                    <li><strong>Increasing Specificity:</strong> Lower categories share more characteristics</li>
+                    <li><strong>Universal System:</strong> Same categories used worldwide for all organisms</li>
+                    <li><strong>Plant vs Animal:</strong> Plants use 'Division' instead of 'Phylum'</li>
+                    <li><strong>Classification Complexity:</strong> Harder to determine relationships at higher levels</li>
+                    <li><strong>Practical Application:</strong> Essential for biodiversity studies and scientific communication</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let quizScore = 0;
+        const totalQuestions = 6;
+        let questionsAnswered = new Set();
+        let draggedElement = null;
+
+        // Level information data
+        const levelData = {
+            kingdom: {
+                title: "Kingdom - The Broadest Category",
+                description: "Kingdoms represent the largest groups in biological classification. All organisms are divided into major kingdoms like Animalia, Plantae, Fungi, Protista, and Monera.",
+                example: "Example: Humans and insects both belong to Kingdom Animalia, despite being very different!"
+            },
+            phylum: {
+                title: "Phylum - Major Body Plans",
+                description: "Phylum groups organisms based on fundamental body organization and structure. In plants, this level is called Division.",
+                example: "Example: All vertebrates (animals with backbones) belong to Phylum Chordata."
+            },
+            class: {
+                title: "Class - Related Orders",
+                description: "Classes group together orders that share similar characteristics and evolutionary history.",
+                example: "Example: Mammals, birds, and reptiles are all different classes within Phylum Chordata."
+            },
+            order: {
+                title: "Order - Similar Families",
+                description: "Orders contain families that have similar lifestyles, behaviors, or structural features.",
+                example: "Example: Carnivora (meat-eaters) includes cat, dog, and bear families."
+            },
+            family: {
+                title: "Family - Related Genera",
+                description: "Families group genera that share common ancestry and similar characteristics.",
+                example: "Example: Felidae family includes all cats - from house cats to tigers!"
+            },
+            genus: {
+                title: "Genus - Closely Related Species",
+                description: "Genus groups very similar species that share recent common ancestry.",
+                example: "Example: Panthera includes lions, tigers, leopards, and jaguars."
+            },
+            species: {
+                title: "Species - The Basic Unit",
+                description: "Species is the most specific category. Members can typically interbreed and produce fertile offspring.",
+                example: "Example: Homo sapiens - all modern humans belong to this single species."
+            }
+        };
+
+        // Classification data
+        const classificationData = {
+            human: {
+                name: "Human",
+                scientific: "Homo sapiens",
+                data: [
+                    { level: "Kingdom", value: "Animalia", color: "#e74c3c" },
+                    { level: "Phylum", value: "Chordata", color: "#f39c12" },
+                    { level: "Class", value: "Mammalia", color: "#f1c40f" },
+                    { level: "Order", value: "Primata", color: "#2ecc71" },
+                    { level: "Family", value: "Hominidae", color: "#3498db" },
+                    { level: "Genus", value: "Homo", color: "#9b59b6" },
+                    { level: "Species", value: "sapiens", color: "#1abc9c" }
+                ]
+            },
+            housefly: {
+                name: "Housefly",
+                scientific: "Musca domestica",
+                data: [
+                    { level: "Kingdom", value: "Animalia", color: "#e74c3c" },
+                    { level: "Phylum", value: "Arthropoda", color: "#f39c12" },
+                    { level: "Class", value: "Insecta", color: "#f1c40f" },
+                    { level: "Order", value: "Diptera", color: "#2ecc71" },
+                    { level: "Family", value: "Muscidae", color: "#3498db" },
+                    { level: "Genus", value: "Musca", color: "#9b59b6" },
+                    { level: "Species", value: "domestica", color: "#1abc9c" }
+                ]
+            },
+            mango: {
+                name: "Mango",
+                scientific: "Mangifera indica",
+                data: [
+                    { level: "Kingdom", value: "Plantae", color: "#e74c3c" },
+                    { level: "Division", value: "Angiospermae", color: "#f39c12" },
+                    { level: "Class", value: "Dicotyledonae", color: "#f1c40f" },
+                    { level: "Order", value: "Sapindales", color: "#2ecc71" },
+                    { level: "Family", value: "Anacardiaceae", color: "#3498db" },
+                    { level: "Genus", value: "Mangifera", color: "#9b59b6" },
+                    { level: "Species", value: "indica", color: "#1abc9c" }
+                ]
+            },
+            wheat: {
+                name: "Wheat",
+                scientific: "Triticum aestivum",
+                data: [
+                    { level: "Kingdom", value: "Plantae", color: "#e74c3c" },
+                    { level: "Division", value: "Angiospermae", color: "#f39c12" },
+                    { level: "Class", value: "Monocotyledonae", color: "#f1c40f" },
+                    { level: "Order", value: "Poales", color: "#2ecc71" },
+                    { level: "Family", value: "Poaceae", color: "#3498db" },
+                    { level: "Genus", value: "Triticum", color: "#9b59b6" },
+                    { level: "Species", value: "aestivum", color: "#1abc9c" }
+                ]
+            }
+        };
+
+        // Show level information
+        function showLevelInfo(level) {
+            const info = levelData[level];
+            document.getElementById('levelTitle').textContent = info.title;
+            document.getElementById('levelDescription').textContent = info.description;
+            document.getElementById('levelExample').textContent = info.example;
+            document.getElementById('levelInfo').style.display = 'block';
+            
+            // Add animation
+            document.getElementById('levelInfo').style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                document.getElementById('levelInfo').style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // Show classification
+        function showClassification(organism) {
+            // Remove selection from other cards
+            document.querySelectorAll('.organism-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select current card
+            document.querySelector(`[data-organism="${organism}"]`).classList.add('selected');
+            
+            const data = classificationData[organism];
+            const tree = document.getElementById('classificationTree');
+            tree.innerHTML = '';
+            
+            data.data.forEach((item, index) => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'classification-item';
+                    div.innerHTML = `
+                        <div class="classification-label" style="background: ${item.color}; padding: 8px 15px; border-radius: 8px; color: white;">
+                            ${item.level}
+                        </div>
+                        <div class="classification-value" style="color: white;">
+                            ${item.value}
+                        </div>
+                    `;
+                    tree.appendChild(div);
+                }, index * 200);
+            });
+            
+            document.getElementById('classificationDisplay').style.display = 'block';
+        }
+
+        // Highlight table row
+        function highlightRow(row) {
+            // Remove previous highlights
+            document.querySelectorAll('.styled-table tbody tr').forEach(r => {
+                r.classList.remove('active-row');
+            });
+            
+            // Add highlight to clicked row
+            row.classList.add('active-row');
+        }
+
+        // Drag and Drop Game
+        const correctOrder = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'];
+
+        // Add drag and drop event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add drag event listeners
+            const dragItems = document.querySelectorAll('.drag-item');
+            const dropZones = document.querySelectorAll('.drop-zone');
+
+            dragItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+            });
+        });
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            this.classList.remove('drag-over');
+            
+            if (draggedElement !== this) {
+                this.innerHTML = draggedElement.outerHTML;
+                draggedElement.style.display = 'none';
+            }
+
+            return false;
+        }
+
+        function checkGameAnswers() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            let correct = 0;
+            
+            dropZones.forEach((zone, index) => {
+                const dragItem = zone.querySelector('.drag-item');
+                if (dragItem) {
+                    const level = dragItem.getAttribute('data-level');
+                    if (level === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        correct++;
+                    } else {
+                        zone.style.background = 'rgba(231, 76, 60, 0.3)';
+                        zone.style.borderColor = '#e74c3c';
+                    }
+                }
+            });
+            
+            setTimeout(() => {
+                alert(`You got ${correct} out of 7 correct! ${correct === 7 ? 'Perfect! 🎉' : 'Keep trying! 💪'}`);
+            }, 500);
+        }
+
+        function resetGame() {
+            // Reset drop zones
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.innerHTML = zone.innerHTML.split('<div')[0]; // Keep original text
+                zone.classList.remove('correct');
+                zone.style.background = '';
+                zone.style.borderColor = '';
+            });
+            
+            // Show all drag items
+            document.querySelectorAll('.drag-item').forEach(item => {
+                item.style.display = 'block';
+            });
+        }
+
+        // Quiz functionality
+        function checkQuizAnswer(element, isCorrect, feedbackText) {
+            const questionNum = element.closest('.quiz-question').querySelector('h3').textContent.charAt(0);
+            
+            // Prevent multiple answers for the same question
+            if (questionsAnswered.has(questionNum)) return;
+            
+            questionsAnswered.add(questionNum);
+            
+            // Disable all options for this question
+            const allOptions = element.parentNode.children;
+            for (let option of allOptions) {
+                option.style.pointerEvents = 'none';
+                if (option === element) {
+                    option.classList.add(isCorrect ? 'correct' : 'wrong');
+                }
+            }
+            
+            // Show feedback
+            const feedbackId = 'quizFeedback' + questionNum;
+            const feedbackElement = document.getElementById(feedbackId);
+            if (feedbackElement) {
+                feedbackElement.textContent = feedbackText;
+                feedbackElement.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+                feedbackElement.style.display = 'block';
+                feedbackElement.style.marginTop = '15px';
+                feedbackElement.style.padding = '15px';
+                feedbackElement.style.borderRadius = '10px';
+                feedbackElement.style.fontWeight = 'bold';
+                
+                if (isCorrect) {
+                    feedbackElement.style.background = 'rgba(46, 204, 113, 0.2)';
+                    feedbackElement.style.border = '2px solid #2ecc71';
+                } else {
+                    feedbackElement.style.background = 'rgba(231, 76, 60, 0.2)';
+                    feedbackElement.style.border = '2px solid #e74c3c';
+                }
+            }
+            
+            // Update score
+            if (isCorrect) {
+                quizScore++;
+                document.getElementById('score').textContent = quizScore;
+            }
+        }
+
+        function resetQuiz() {
+            quizScore = 0;
+            questionsAnswered.clear();
+            document.getElementById('score').textContent = quizScore;
+            
+            // Reset all options
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.className = 'quiz-option';
+                option.style.pointerEvents = 'auto';
+            });
+            
+            // Hide all feedback
+            document.querySelectorAll('.feedback').forEach(feedback => {
+                feedback.style.display = 'none';
+            });
+        }
+
+        function showQuizResults() {
+            const percentage = Math.round((quizScore / totalQuestions) * 100);
+            let message = '';
+            
+            if (percentage >= 90) {
+                message = '🏆 Excellent! You have mastered taxonomic categories!';
+            } else if (percentage >= 70) {
+                message = '👍 Good job! You understand most concepts well.';
+            } else if (percentage >= 50) {
+                message = '📚 Not bad! Review the material and try again.';
+            } else {
+                message = '💪 Keep studying! Taxonomy takes practice to master.';
+            }
+            
+            alert(`Your Score: ${quizScore}/${totalQuestions} (${percentage}%)\n\n${message}`);
+        }
+
+        // Add entrance animations
+        window.addEventListener('load', function() {
+            // Animate pyramid levels
+            setTimeout(() => {
+                document.querySelectorAll('.taxonomy-box').forEach((box, index) => {
+                    setTimeout(() => {
+                        box.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            box.style.transform = 'scale(1)';
+                        }, 300);
+                    }, index * 150);
+                });
+            }, 1000);
+            
+            // Animate organism cards
+            setTimeout(() => {
+                document.querySelectorAll('.organism-card').forEach((card, index) => {
+                    setTimeout(() => {
+                        card.style.transform = 'translateY(-20px)';
+                        setTimeout(() => {
+                            card.style.transform = 'translateY(0)';
+                        }, 400);
+                    }, index * 200);
+                });
+            }, 2000);
+        });
+
+        // Add table row hover effects
+        document.querySelectorAll('.styled-table tbody tr').forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.02)';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('active-row')) {
+                    this.style.transform = 'scale(1)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

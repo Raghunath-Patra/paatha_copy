@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gauss's Law - Interactive Learning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #4776e6 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+            to { text-shadow: 0 0 40px rgba(0, 212, 255, 0.8); }
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            margin: 0 5px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .simulation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .simulation-panel {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        canvas {
+            border: 2px solid rgba(0, 212, 255, 0.5);
+            border-radius: 15px;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+            display: block;
+            margin: 0 auto;
+            box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e0f7ff;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.3), rgba(0, 212, 255, 0.6));
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+            border: 2px solid white;
+        }
+
+        .value-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 15px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            color: #00d4ff;
+        }
+
+        .formula-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .formula-box {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 5px solid #00d4ff;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .quiz-question {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+            transform: translateX(5px);
+        }
+
+        .quiz-option.selected {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .quiz-option.correct {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+            animation: correctPulse 0.6s ease;
+        }
+
+        .quiz-option.incorrect {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+            animation: incorrectShake 0.6s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        button {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border-color: rgba(0, 212, 255, 0.6);
+        }
+
+        .info-card h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .example-solver {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .example-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(0, 212, 255, 0.5);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        .result-display {
+            background: rgba(0, 212, 255, 0.2);
+            border: 2px solid #00d4ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .simulation-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Gauss's Law Interactive Explorer ⚡</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('simulation')">🎯 Simulation</button>
+            <button class="tab" onclick="showTab('examples')">📊 Examples</button>
+            <button class="tab" onclick="showTab('quiz')">🧠 Quiz</button>
+            <button class="tab" onclick="showTab('theory')">📚 Theory</button>
+        </div>
+
+        <div id="simulation" class="tab-content active">
+            <div class="simulation-grid">
+                <div class="simulation-panel">
+                    <h2>🔮 3D Gaussian Surface Visualization</h2>
+                    <canvas id="gaussCanvas" width="450" height="400"></canvas>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <div class="value-display" id="fluxDisplay">Φ = 0.00 N⋅m²/C</div>
+                        <div class="value-display" id="chargeDisplay">q_enc = 0.00 × 10⁻⁹ C</div>
+                    </div>
+                </div>
+                
+                <div class="controls-panel">
+                    <h2>🎛️ Control Panel</h2>
+                    
+                    <div class="control-group">
+                        <label for="surfaceType">Gaussian Surface Type:</label>
+                        <select id="surfaceType" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.3); color: white; border: 2px solid rgba(0,212,255,0.5);">
+                            <option value="sphere">Sphere</option>
+                            <option value="cylinder">Cylinder</option>
+                            <option value="cube">Cube</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="chargeAmount">Enclosed Charge (nC):</label>
+                        <input type="range" id="chargeAmount" min="-10" max="10" step="0.1" value="5">
+                        <div class="value-display" id="chargeValue">5.0 nC</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="surfaceSize">Surface Size:</label>
+                        <input type="range" id="surfaceSize" min="0.5" max="3" step="0.1" value="1.5">
+                        <div class="value-display" id="sizeValue">1.5 units</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="fieldVisualization">Show Field Lines:</label>
+                        <input type="checkbox" id="fieldVisualization" checked style="transform: scale(1.5); margin-left: 10px;">
+                    </div>
+                    
+                    <button onclick="addExternalCharge()">➕ Add External Charge</button>
+                    <button onclick="resetSimulation()">🔄 Reset</button>
+                    <button onclick="animateRotation()">🔄 Rotate View</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="examples" class="tab-content">
+            <div class="example-solver">
+                <h2>📊 Interactive Example Solver</h2>
+                
+                <h3>Example 1: Electric Field Through Cube</h3>
+                <p>Given: E_x = α x^(1/2), E_y = E_z = 0, where α = 800 N/C⋅m^(1/2)</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div>
+                        <label>Cube Side Length (m):</label>
+                        <input type="number" id="cubeSize" class="example-input" value="0.1" step="0.01">
+                    </div>
+                    <div>
+                        <label>Field Constant α (N/C⋅m^(1/2)):</label>
+                        <input type="number" id="fieldConstant" class="example-input" value="800" step="10">
+                    </div>
+                </div>
+                
+                <button onclick="solveCubeExample()">🧮 Calculate Flux & Charge</button>
+                
+                <div id="cubeResults" class="result-display" style="display: none;"></div>
+
+                <h3 style="margin-top: 30px;">Example 2: Cylinder in Uniform Field</h3>
+                <p>Uniform field with opposite directions on either side of y-z plane</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 20px 0;">
+                    <div>
+                        <label>Field Strength (N/C):</label>
+                        <input type="number" id="cylinderField" class="example-input" value="200" step="10">
+                    </div>
+                    <div>
+                        <label>Cylinder Length (cm):</label>
+                        <input type="number" id="cylinderLength" class="example-input" value="20" step="1">
+                    </div>
+                    <div>
+                        <label>Cylinder Radius (cm):</label>
+                        <input type="number" id="cylinderRadius" class="example-input" value="5" step="0.5">
+                    </div>
+                </div>
+                
+                <button onclick="solveCylinderExample()">🧮 Calculate Total Flux & Charge</button>
+                
+                <div id="cylinderResults" class="result-display" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div id="quiz" class="tab-content">
+            <div class="quiz-section">
+                <h2>🧠 Gauss's Law Mastery Quiz</h2>
+                <div id="quizContainer">
+                    <div class="quiz-question" id="currentQuestion">
+                        Loading question...
+                    </div>
+                    <div class="quiz-options" id="quizOptions">
+                        <!-- Options will be populated by JavaScript -->
+                    </div>
+                    <button onclick="checkAnswer()" id="checkBtn">Check Answer</button>
+                    <button onclick="nextQuestion()" id="nextBtn" style="display:none;">Next Question</button>
+                    <div id="feedback" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="theory" class="tab-content">
+            <div class="formula-section">
+                <h2>📚 Gauss's Law Theory</h2>
+                
+                <div class="formula-box">
+                    <strong>Gauss's Law:</strong><br>
+                    ∮ E · dS = q_enclosed / ε₀<br>
+                    <em>Electric flux through any closed surface = enclosed charge / ε₀</em>
+                </div>
+                
+                <div class="formula-box">
+                    <strong>Electric Flux:</strong><br>
+                    Φ = E · S = |E||S|cos(θ)<br>
+                    <em>For uniform field through flat surface</em>
+                </div>
+                
+                <div class="formula-box">
+                    <strong>For Point Charge at Center of Sphere:</strong><br>
+                    Φ = q/(4πε₀) × 4πr² × (1/r²) = q/ε₀<br>
+                    <em>Independent of radius - fundamental result!</em>
+                </div>
+                
+                <div class="formula-box">
+                    <strong>Key Constants:</strong><br>
+                    ε₀ = 8.854 × 10⁻¹² C²/(N·m²) <em>(Permittivity of free space)</em><br>
+                    1/(4πε₀) = 8.99 × 10⁹ N·m²/C² <em>(Coulomb's constant)</em>
+                </div>
+                
+                <div class="formula-box">
+                    <strong>Flux Through Different Surfaces:</strong><br>
+                    • Sphere: Φ = q/ε₀ (always)<br>
+                    • Cylinder: Φ = 0 (uniform field parallel to axis)<br>
+                    • Any closed surface: Φ = Σq_inside/ε₀
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>🔍 Key Insights</h3>
+                    <ul>
+                        <li>Flux depends only on enclosed charge</li>
+                        <li>Surface shape doesn't matter</li>
+                        <li>External charges don't affect flux</li>
+                        <li>Based on inverse square law</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>🎯 Choosing Gaussian Surfaces</h3>
+                    <ul>
+                        <li>Sphere: for point charges</li>
+                        <li>Cylinder: for line charges</li>
+                        <li>Pillbox: for sheet charges</li>
+                        <li>Use symmetry to simplify</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>⚠️ Important Notes</h3>
+                    <ul>
+                        <li>Surface can't pass through discrete charges</li>
+                        <li>Field is due to ALL charges</li>
+                        <li>Only enclosed charge in equation</li>
+                        <li>Works for any closed surface</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>🌟 Applications</h3>
+                    <ul>
+                        <li>Finding fields with symmetry</li>
+                        <li>Conductor field analysis</li>
+                        <li>Charge distribution problems</li>
+                        <li>Verifying inverse square law</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rotationAngle = 0;
+        let animationId;
+        let isRotating = false;
+        let externalCharges = [];
+
+        const canvas = document.getElementById('gaussCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Quiz data
+        const questions = [
+            {
+                question: "What does Gauss's Law state about electric flux through a closed surface?",
+                options: [
+                    "It equals the total field strength",
+                    "It equals enclosed charge divided by ε₀",
+                    "It equals the surface area times field",
+                    "It's always zero"
+                ],
+                correct: 1,
+                explanation: "Gauss's Law: ∮ E⃗·dS⃗ = q_enclosed/ε₀. The flux depends only on the charge enclosed by the surface."
+            },
+            {
+                question: "The electric flux through a closed surface depends on:",
+                options: [
+                    "The shape of the surface",
+                    "The size of the surface",
+                    "Only the charge enclosed by the surface",
+                    "All charges in the universe"
+                ],
+                correct: 2,
+                explanation: "Flux only depends on the charge enclosed by the surface, not its shape, size, or external charges."
+            },
+            {
+                question: "For a point charge at the center of a sphere, the electric flux is:",
+                options: [
+                    "Proportional to the sphere's radius",
+                    "Inversely proportional to radius squared",
+                    "Independent of the sphere's radius",
+                    "Zero"
+                ],
+                correct: 2,
+                explanation: "Φ = q/ε₀ is independent of radius. The field decreases as 1/r² but area increases as r², so they cancel."
+            },
+            {
+                question: "A Gaussian surface can pass through:",
+                options: [
+                    "Any discrete point charge",
+                    "Continuous charge distributions only",
+                    "Both discrete and continuous charges",
+                    "Neither type of charge"
+                ],
+                correct: 1,
+                explanation: "Gaussian surfaces can pass through continuous charge distributions but not discrete charges (field undefined at charge location)."
+            },
+            {
+                question: "If the net flux through a closed surface is zero, what can you conclude?",
+                options: [
+                    "No charges exist anywhere",
+                    "The electric field is zero everywhere",
+                    "The net enclosed charge is zero",
+                    "The surface is perfectly spherical"
+                ],
+                correct: 2,
+                explanation: "Zero flux means zero net enclosed charge. There could be equal positive and negative charges inside."
+            },
+            {
+                question: "Gauss's Law is most useful when the charge distribution has:",
+                options: [
+                    "Random arrangement",
+                    "High symmetry",
+                    "Very few charges",
+                    "All negative charges"
+                ],
+                correct: 1,
+                explanation: "Gauss's Law simplifies calculations when symmetry allows choosing surfaces where E⃗ is constant and parallel/perpendicular to dS⃗."
+            },
+            {
+                question: "For a uniform electric field E through a closed cylinder with axis parallel to E:",
+                options: [
+                    "Flux is E times cylinder volume",
+                    "Flux is E times cylinder surface area",
+                    "Flux is zero",
+                    "Flux equals E times base area"
+                ],
+                correct: 2,
+                explanation: "Flux through curved surface is zero (E⊥dS), and fluxes through the two ends cancel out, giving total flux = 0."
+            },
+            {
+                question: "The constant ε₀ in Gauss's Law represents:",
+                options: [
+                    "Speed of light",
+                    "Elementary charge",
+                    "Permittivity of free space",
+                    "Permeability of free space"
+                ],
+                correct: 2,
+                explanation: "ε₀ = 8.854 × 10⁻¹² C²/(N⋅m²) is the permittivity of free space, relating electric field to charge density."
+            },
+            {
+                question: "If you double the charge enclosed by a Gaussian surface, the electric flux:",
+                options: [
+                    "Remains the same",
+                    "Doubles",
+                    "Becomes four times larger",
+                    "Becomes half"
+                ],
+                correct: 1,
+                explanation: "From Φ = q/ε₀, doubling the enclosed charge doubles the flux through the surface."
+            },
+            {
+                question: "Gauss's Law is a consequence of:",
+                options: [
+                    "Conservation of energy",
+                    "Conservation of charge",
+                    "The inverse square nature of Coulomb's Law",
+                    "Quantum mechanics"
+                ],
+                correct: 2,
+                explanation: "Gauss's Law directly follows from the 1/r² dependence in Coulomb's Law. Any deviation would violate Gauss's Law."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let selectedAnswer = -1;
+        let score = 0;
+        let quizCompleted = false;
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content and highlight tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function updateSimulation() {
+            const chargeSlider = document.getElementById('chargeAmount');
+            const sizeSlider = document.getElementById('surfaceSize');
+            const surfaceType = document.getElementById('surfaceType').value;
+            
+            const charge = parseFloat(chargeSlider.value);
+            const size = parseFloat(sizeSlider.value);
+            
+            // Update displays
+            document.getElementById('chargeValue').textContent = `${charge.toFixed(1)} nC`;
+            document.getElementById('sizeValue').textContent = `${size.toFixed(1)} units`;
+            
+            // Calculate flux using Gauss's law
+            const epsilon0 = 8.854e-12; // C²/(N⋅m²)
+            const chargeInCoulombs = charge * 1e-9; // Convert nC to C
+            const flux = chargeInCoulombs / epsilon0;
+            
+            document.getElementById('fluxDisplay').textContent = `Φ = ${flux.toExponential(2)} N⋅m²/C`;
+            document.getElementById('chargeDisplay').textContent = `q_enc = ${charge.toFixed(2)} × 10⁻⁹ C`;
+            
+            drawGaussianSurface();
+        }
+
+        function drawGaussianSurface() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const charge = parseFloat(document.getElementById('chargeAmount').value);
+            const size = parseFloat(document.getElementById('surfaceSize').value);
+            const surfaceType = document.getElementById('surfaceType').value;
+            const showField = document.getElementById('fieldVisualization').checked;
+            
+            // Draw background field pattern
+            if (showField) {
+                drawFieldLines(centerX, centerY, charge);
+            }
+            
+            // Draw the Gaussian surface based on type
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotationAngle);
+            
+            switch(surfaceType) {
+                case 'sphere':
+                    drawSphere(size * 60, charge);
+                    break;
+                case 'cylinder':
+                    drawCylinder(size * 50, size * 80, charge);
+                    break;
+                case 'cube':
+                    drawCube(size * 80, charge);
+                    break;
+            }
+            
+            ctx.restore();
+            
+            // Draw central charge
+            drawCharge(centerX, centerY, charge, 15);
+            
+            // Draw external charges
+            externalCharges.forEach(extCharge => {
+                drawCharge(extCharge.x, extCharge.y, extCharge.q, 10);
+            });
+            
+            // Add labels
+            ctx.fillStyle = '#00d4ff';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Gaussian Surface', 10, 30);
+            ctx.fillText(`Type: ${surfaceType.charAt(0).toUpperCase() + surfaceType.slice(1)}`, 10, 50);
+        }
+
+        function drawFieldLines(centerX, centerY, charge) {
+            const numLines = 16;
+            const maxRadius = 200;
+            
+            ctx.strokeStyle = charge > 0 ? 'rgba(255, 100, 100, 0.6)' : 'rgba(100, 100, 255, 0.6)';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < numLines; i++) {
+                const angle = (i / numLines) * 2 * Math.PI;
+                const startRadius = 20;
+                const endRadius = maxRadius;
+                
+                if (charge > 0) {
+                    // Outward field lines
+                    drawArrow(
+                        centerX + startRadius * Math.cos(angle),
+                        centerY + startRadius * Math.sin(angle),
+                        centerX + endRadius * Math.cos(angle),
+                        centerY + endRadius * Math.sin(angle),
+                        ctx.strokeStyle
+                    );
+                } else {
+                    // Inward field lines
+                    drawArrow(
+                        centerX + endRadius * Math.cos(angle),
+                        centerY + endRadius * Math.sin(angle),
+                        centerX + startRadius * Math.cos(angle),
+                        centerY + startRadius * Math.sin(angle),
+                        ctx.strokeStyle
+                    );
+                }
+            }
+        }
+
+        function drawSphere(radius, charge) {
+            // Draw 3D-looking sphere
+            const gradient = ctx.createRadialGradient(-radius/3, -radius/3, 0, 0, 0, radius);
+            gradient.addColorStop(0, 'rgba(0, 212, 255, 0.3)');
+            gradient.addColorStop(0.7, 'rgba(0, 212, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 212, 255, 0.6)');
+            
+            ctx.fillStyle = gradient;
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Add surface normal vectors
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * 2 * Math.PI;
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                drawArrow(x, y, x + 20 * Math.cos(angle), y + 20 * Math.sin(angle), '#ffff00', 2);
+            }
+        }
+
+        function drawCylinder(radius, height, charge) {
+            // Draw cylinder in 3D perspective
+            const ellipseHeight = radius * 0.3; // Perspective effect
+            
+            // Top ellipse
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(0, -height/2, radius, ellipseHeight, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Bottom ellipse
+            ctx.beginPath();
+            ctx.ellipse(0, height/2, radius, ellipseHeight, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Cylinder sides
+            ctx.beginPath();
+            ctx.moveTo(-radius, -height/2);
+            ctx.lineTo(-radius, height/2);
+            ctx.moveTo(radius, -height/2);
+            ctx.lineTo(radius, height/2);
+            ctx.stroke();
+            
+            // Fill with gradient
+            const gradient = ctx.createLinearGradient(-radius, 0, radius, 0);
+            gradient.addColorStop(0, 'rgba(0, 212, 255, 0.1)');
+            gradient.addColorStop(0.5, 'rgba(0, 212, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 212, 255, 0.1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(-radius, -height/2, 2*radius, height);
+            
+            // Normal vectors on cylinder surface
+            for (let i = 0; i < 6; i++) {
+                const y = -height/2 + (i / 5) * height;
+                drawArrow(radius, y, radius + 25, y, '#ffff00', 2);
+                drawArrow(-radius, y, -radius - 25, y, '#ffff00', 2);
+            }
+        }
+
+        function drawCube(size, charge) {
+            // Draw 3D cube in isometric view
+            const offset = size * 0.3; // 3D offset
+            
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 3;
+            ctx.fillStyle = 'rgba(0, 212, 255, 0.2)';
+            
+            // Front face
+            ctx.fillRect(-size/2, -size/2, size, size);
+            ctx.strokeRect(-size/2, -size/2, size, size);
+            
+            // Top face (parallelogram)
+            ctx.beginPath();
+            ctx.moveTo(-size/2, -size/2);
+            ctx.lineTo(-size/2 + offset, -size/2 - offset);
+            ctx.lineTo(size/2 + offset, -size/2 - offset);
+            ctx.lineTo(size/2, -size/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Right face (parallelogram)
+            ctx.beginPath();
+            ctx.moveTo(size/2, -size/2);
+            ctx.lineTo(size/2 + offset, -size/2 - offset);
+            ctx.lineTo(size/2 + offset, size/2 - offset);
+            ctx.lineTo(size/2, size/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Normal vectors on visible faces
+            drawArrow(0, -size/2, 0, -size/2 - 30, '#ffff00', 2); // Top
+            drawArrow(size/2, 0, size/2 + 30, 0, '#ffff00', 2); // Right
+            drawArrow(0, 0, -15, 15, '#ffff00', 2); // Front
+        }
+
+        function drawCharge(x, y, charge, radius) {
+            const color = charge > 0 ? '#ff4444' : charge < 0 ? '#4444ff' : '#888888';
+            
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(charge > 0 ? '+' : charge < 0 ? '-' : '0', x, y + 4);
+            
+            // Glow effect
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawArrow(fromX, fromY, toX, toY, color, lineWidth = 2) {
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = lineWidth;
+            
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            
+            // Draw arrowhead
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            const arrowLength = 8;
+            const arrowAngle = Math.PI / 6;
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(
+                toX - arrowLength * Math.cos(angle - arrowAngle),
+                toY - arrowLength * Math.sin(angle - arrowAngle)
+            );
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(
+                toX - arrowLength * Math.cos(angle + arrowAngle),
+                toY - arrowLength * Math.sin(angle + arrowAngle)
+            );
+            ctx.stroke();
+        }
+
+        function addExternalCharge() {
+            const randomX = Math.random() * (canvas.width - 100) + 50;
+            const randomY = Math.random() * (canvas.height - 100) + 50;
+            const randomCharge = (Math.random() - 0.5) * 10; // -5 to +5
+            
+            externalCharges.push({x: randomX, y: randomY, q: randomCharge});
+            updateSimulation();
+        }
+
+        function resetSimulation() {
+            if (isRotating) {
+                cancelAnimationFrame(animationId);
+                isRotating = false;
+            }
+            
+            rotationAngle = 0;
+            externalCharges = [];
+            document.getElementById('chargeAmount').value = 5;
+            document.getElementById('surfaceSize').value = 1.5;
+            document.getElementById('surfaceType').value = 'sphere';
+            document.getElementById('fieldVisualization').checked = true;
+            
+            updateSimulation();
+        }
+
+        function animateRotation() {
+            if (isRotating) return;
+            
+            isRotating = true;
+            let startTime = Date.now();
+            const duration = 3000; // 3 seconds
+            
+            function rotate() {
+                const elapsed = Date.now() - startTime;
+                const progress = (elapsed % duration) / duration;
+                
+                rotationAngle = progress * 2 * Math.PI;
+                drawGaussianSurface();
+                
+                if (elapsed < duration * 2) { // Rotate twice
+                    animationId = requestAnimationFrame(rotate);
+                } else {
+                    isRotating = false;
+                    rotationAngle = 0;
+                    drawGaussianSurface();
+                }
+            }
+            
+            rotate();
+        }
+
+        // Example solvers
+        function solveCubeExample() {
+            const a = parseFloat(document.getElementById('cubeSize').value);
+            const alpha = parseFloat(document.getElementById('fieldConstant').value);
+            
+            // Calculate fields at left and right faces
+            const E_L = alpha * Math.pow(a, 0.5);
+            const E_R = alpha * Math.pow(2*a, 0.5);
+            
+            // Calculate flux
+            const flux = Math.pow(a, 2) * (E_R - E_L);
+            const fluxValue = alpha * Math.pow(a, 2.5) * (Math.sqrt(2) - 1);
+            
+            // Calculate charge using Gauss's law
+            const epsilon0 = 8.854e-12;
+            const charge = fluxValue * epsilon0;
+            
+            const results = document.getElementById('cubeResults');
+            results.style.display = 'block';
+            results.innerHTML = `
+                <h4>📊 Calculation Results:</h4>
+                <p><strong>Electric field at left face (x = ${a}m):</strong> E_L = ${E_L.toFixed(2)} N/C</p>
+                <p><strong>Electric field at right face (x = ${2*a}m):</strong> E_R = ${E_R.toFixed(2)} N/C</p>
+                <p><strong>Net flux through cube:</strong> Φ = ${fluxValue.toFixed(3)} N⋅m²/C</p>
+                <p><strong>Charge enclosed:</strong> q = ${charge.toExponential(2)} C</p>
+                <p><em>Note: Only left and right faces contribute to flux since E_y = E_z = 0</em></p>
+            `;
+        }
+
+        function solveCylinderExample() {
+            const E = parseFloat(document.getElementById('cylinderField').value);
+            const length = parseFloat(document.getElementById('cylinderLength').value) / 100; // Convert to meters
+            const radius = parseFloat(document.getElementById('cylinderRadius').value) / 100; // Convert to meters
+            
+            const area = Math.PI * radius * radius;
+            
+            // Flux through left face: E⋅dS = E⋅A (outward normal opposite to E)
+            const flux_left = E * area;
+            
+            // Flux through right face: E⋅dS = E⋅A (outward normal same as E)
+            const flux_right = E * area;
+            
+            // Flux through curved surface = 0 (E perpendicular to surface)
+            const flux_curved = 0;
+            
+            // Total flux
+            const total_flux = flux_left + flux_right;
+            
+            // Charge using Gauss's law
+            const epsilon0 = 8.854e-12;
+            const charge = total_flux * epsilon0;
+            
+            const results = document.getElementById('cylinderResults');
+            results.style.display = 'block';
+            results.innerHTML = `
+                <h4>📊 Calculation Results:</h4>
+                <p><strong>Cylinder area:</strong> A = π × (${radius*100} cm)² = ${(area*10000).toFixed(2)} cm²</p>
+                <p><strong>Flux through left face:</strong> Φ_L = ${flux_left.toFixed(3)} N⋅m²/C</p>
+                <p><strong>Flux through right face:</strong> Φ_R = ${flux_right.toFixed(3)} N⋅m²/C</p>
+                <p><strong>Flux through curved surface:</strong> Φ_curved = ${flux_curved} N⋅m²/C</p>
+                <p><strong>Total flux:</strong> Φ_total = ${total_flux.toFixed(3)} N⋅m²/C</p>
+                <p><strong>Enclosed charge:</strong> q = ${charge.toExponential(2)} C</p>
+            `;
+        }
+
+        // Quiz functions
+        function checkAnswer() {
+            if (selectedAnswer === -1) return;
+            
+            const options = document.querySelectorAll('.quiz-option');
+            const question = questions[currentQuestionIndex];
+            
+            if (selectedAnswer === question.correct) {
+                score++;
+            }
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedAnswer && index !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            const feedback = document.getElementById('feedback');
+            if (selectedAnswer === question.correct) {
+                feedback.innerHTML = `<strong style="color: #4CAF50;">✓ Correct!</strong><br>${question.explanation}`;
+            } else {
+                feedback.innerHTML = `<strong style="color: #f44336;">✗ Incorrect.</strong><br>${question.explanation}`;
+            }
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            
+            if (currentQuestionIndex === questions.length - 1) {
+                document.getElementById('nextBtn').textContent = 'Finish Quiz';
+            }
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= questions.length) {
+                showQuizResults();
+                return;
+            }
+            
+            loadQuestion();
+        }
+
+        function showQuizResults() {
+            quizCompleted = true;
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            let resultMessage = '';
+            let resultColor = '';
+            
+            if (percentage >= 90) {
+                resultMessage = '🏆 Excellent! You\'ve mastered Gauss\'s Law!';
+                resultColor = '#4CAF50';
+            } else if (percentage >= 70) {
+                resultMessage = '👍 Great work! Strong understanding of Gauss\'s Law!';
+                resultColor = '#2196F3';
+            } else if (percentage >= 50) {
+                resultMessage = '👌 Good effort! Review the theory and try again!';
+                resultColor = '#FF9800';
+            } else {
+                resultMessage = '📚 Keep studying! Focus on the fundamental concepts.';
+                resultColor = '#f44336';
+            }
+            
+            document.getElementById('currentQuestion').innerHTML = `
+                <div style="text-align: center;">
+                    <h3 style="color: ${resultColor}; margin-bottom: 20px;">${resultMessage}</h3>
+                    <div style="font-size: 2.5em; color: #00d4ff; margin: 20px 0;">
+                        ${score}/${questions.length}
+                    </div>
+                    <div style="font-size: 1.8em; color: ${resultColor};">
+                        ${percentage}%
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('quizOptions').innerHTML = '';
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            
+            const restartBtn = document.createElement('button');
+            restartBtn.textContent = '🔄 Restart Quiz';
+            restartBtn.onclick = restartQuiz;
+            restartBtn.style.marginTop = '20px';
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('feedback').appendChild(restartBtn);
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            selectedAnswer = -1;
+            score = 0;
+            quizCompleted = false;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            
+            document.getElementById('currentQuestion').textContent = `Question ${currentQuestionIndex + 1}/${questions.length}: ${question.question}`;
+            
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'quiz-option';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            selectedAnswer = -1;
+            document.getElementById('checkBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('nextBtn').textContent = 'Next Question';
+            document.getElementById('feedback').innerHTML = '';
+        }
+
+        function selectOption(index) {
+            selectedAnswer = index;
+            
+            document.querySelectorAll('.quiz-option').forEach((option, i) => {
+                option.classList.remove('selected');
+                if (i === index) {
+                    option.classList.add('selected');
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('chargeAmount').addEventListener('input', updateSimulation);
+        document.getElementById('surfaceSize').addEventListener('input', updateSimulation);
+        document.getElementById('surfaceType').addEventListener('change', updateSimulation);
+        document.getElementById('fieldVisualization').addEventListener('change', updateSimulation);
+
+        // Initialize
+        updateSimulation();
+        loadQuestion();
+    </script>
+</body>
+</html>

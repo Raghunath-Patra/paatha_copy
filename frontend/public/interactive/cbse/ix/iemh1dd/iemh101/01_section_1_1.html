@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.1 Introduction to Number Systems - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #0891b2;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .interactive-area {
+            background: #f0fdfa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #a7f3d0;
+        }
+
+        .interactive-area h3 {
+            color: #0891b2;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .number-line {
+            width: 100%;
+            height: 80px;
+            position: relative;
+            background: linear-gradient(to right, #06b6d4, #10b981, #22d3ee);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: visible;
+        }
+
+        .number-line-marks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .mark {
+            width: 2px;
+            height: 30px;
+            background: white;
+            position: relative;
+        }
+
+        .mark-label {
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .user-number-marker {
+            position: absolute;
+            top: 10px;
+            width: 4px;
+            height: 60px;
+            background: #dc2626;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            transition: all 0.5s ease;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.5);
+        }
+
+        .user-number-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .user-number-label::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: #dc2626;
+        }
+
+        .number-line-container {
+            position: relative;
+            margin: 30px 0;
+        }
+
+        .range-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .range-btn {
+            background: #0891b2;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .range-btn:hover {
+            background: #0e7490;
+            transform: translateY(-1px);
+        }
+
+        .range-btn.active {
+            background: #dc2626;
+        }
+
+        .number-bag {
+            display: inline-block;
+            background: #fff3cd;
+            border: 3px dashed #856404;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 10px;
+            min-width: 200px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            vertical-align: top;
+        }
+
+        .number-bag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: #ffeaa7;
+        }
+
+        .number-bag h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .number-examples {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 8px;
+        }
+
+        .calc-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .calc-input:focus {
+            border-color: #0891b2;
+            outline: none;
+        }
+
+        .calc-result {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #0891b2, #06b6d4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .quiz-area {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .quiz-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: #edf2f7;
+            border-color: #0891b2;
+            transform: translateY(-1px);
+        }
+
+        .quiz-option.selected {
+            background: #0891b2;
+            color: white;
+            border-color: #0891b2;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .input-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .bag-details {
+            background: #f0fdfa;
+            border: 2px solid #0891b2;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 120px;
+        }
+
+        .bag-details h4 {
+            color: #0891b2;
+            margin-bottom: 10px;
+        }
+
+        .bag-details p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: #f0fdfa;
+            border-left: 4px solid #0891b2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .info-box::before {
+            content: "💡 Paaṭha AI Explains";
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #0891b2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .brand-watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .achievement-badge {
+            background: linear-gradient(45deg, #dc2626, #fbbf24);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 5px;
+            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .paatha-tip {
+            background: linear-gradient(135deg, #ecfeff, #f0fdfa);
+            border: 2px solid #22d3ee;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .paatha-tip::before {
+            content: "🤖 Paaṭha AI Smart Tip";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(45deg, #0891b2, #22d3ee);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .input-row {
+                flex-direction: column;
+            }
+            
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .number-bag {
+                margin: 5px 0;
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="height: 48px; width: 48px;"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8">
+                        </circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Mathematics Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">🔢 1.1 Introduction to Number Systems</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Class IX Mathematics - Chapter 1</p>
+        </div>
+
+        <div class="section">
+            <h2>Number Line Explorer</h2>
+            
+            <div class="interactive-area">
+                <h3>🔍 Explore the Number Line</h3>
+                <p>The number line contains different types of numbers. Let's explore them!</p>
+                
+                <div class="range-controls">
+                    <button class="range-btn active" onclick="setNumberLineRange(-5, 5)">-5 to 5</button>
+                    <button class="range-btn" onclick="setNumberLineRange(-10, 10)">-10 to 10</button>
+                    <button class="range-btn" onclick="setNumberLineRange(-2, 2)">-2 to 2 (decimals)</button>
+                    <button class="range-btn" onclick="setNumberLineRange(0, 10)">0 to 10</button>
+                </div>
+                
+                <div class="number-line-container">
+                    <div class="number-line" id="numberLine">
+                        <div class="number-line-marks" id="numberLineMarks">
+                            <!-- Marks will be generated dynamically -->
+                        </div>
+                        <!-- User number marker will be added here -->
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <input type="number" id="numberInput" class="calc-input" placeholder="Enter any number (integers or decimals)" step="0.1">
+                    <button class="btn" onclick="classifyNumber()">🔍 Classify & Mark on Line!</button>
+                </div>
+                
+                <div id="numberResult" class="calc-result">
+                    Enter a number above to see its classification and position on the number line!
+                </div>
+            </div>
+
+            <div class="paatha-tip">
+                <strong>🎯 Key Learning Objective:</strong> Every point on the number line represents a unique real number, and every real number corresponds to a unique point on the number line! This fundamental concept helps us visualize mathematical relationships.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Number System Collection Bags</h2>
+            
+            <div class="interactive-area">
+                <h3>🎒 Collect Numbers in Different Bags</h3>
+                <p>Click on each bag to explore the different number systems and see examples!</p>
+                
+                <div class="examples-grid">
+                    <div class="number-bag" onclick="showBagContents('N')">
+                        <h4>📦 Natural Numbers (ℕ)</h4>
+                        <div class="number-examples">1, 2, 3, 4, 5...</div>
+                        <small>Click to explore!</small>
+                    </div>
+                    
+                    <div class="number-bag" onclick="showBagContents('W')">
+                        <h4>📦 Whole Numbers (W)</h4>
+                        <div class="number-examples">0, 1, 2, 3, 4...</div>
+                        <small>Click to explore!</small>
+                    </div>
+                    
+                    <div class="number-bag" onclick="showBagContents('Z')">
+                        <h4>📦 Integers (ℤ)</h4>
+                        <div class="number-examples">...-2, -1, 0, 1, 2...</div>
+                        <small>Click to explore!</small>
+                    </div>
+                    
+                    <div class="number-bag" onclick="showBagContents('Q')">
+                        <h4>📦 Rational Numbers (ℚ)</h4>
+                        <div class="number-examples">1/2, -3/4, 0.75, 2.33...</div>
+                        <small>Click to explore!</small>
+                    </div>
+                </div>
+                
+                <div id="bagDetails" class="bag-details">
+                    <h4>👆 Click on any bag above to see detailed information!</h4>
+                    <p>Each number system contains different types of numbers with unique properties.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Find Rational Numbers Between Two Numbers</h2>
+            
+            <div class="interactive-area">
+                <h3>🔍 Rational Numbers Between Any Two Numbers</h3>
+                <p>Find rational numbers between any two given numbers!</p>
+                
+                <div class="input-row">
+                    <input type="number" id="num1" class="calc-input" placeholder="First number" step="any" value="1">
+                    <span style="font-size: 1.5em; font-weight: bold;">and</span>
+                    <input type="number" id="num2" class="calc-input" placeholder="Second number" step="any" value="2">
+                </div>
+                
+                <div class="input-row">
+                    <button class="btn" onclick="findRationalsBetween()">🔍 Find 5 Rationals Between Them</button>
+                </div>
+                
+                <div id="rationalsResult" class="calc-result">
+                    Enter two numbers above to find rational numbers between them!
+                </div>
+                
+                <div id="rationalsExplanation" class="info-box" style="display: none; padding-top: 25px;">
+                    <strong>Method Used:</strong> We can find infinitely many rational numbers between any two given numbers using the formula (a + b)/2 repeatedly, or by expressing the numbers with a common denominator.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Quick Knowledge Check</h2>
+            
+            <div class="quiz-area">
+                <div class="quiz-question">📝 Test Your Understanding</div>
+                
+                <div id="question1">
+                    <p><strong>Question 1:</strong> Every whole number is a natural number.</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(1, 'false', this)">❌ False</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'true', this)">✅ True</div>
+                    </div>
+                    <div id="feedback1"></div>
+                </div>
+                
+                <div id="question2" style="margin-top: 20px;">
+                    <p><strong>Question 2:</strong> Every integer is a rational number.</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(2, 'true', this)">✅ True</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'false', this)">❌ False</div>
+                    </div>
+                    <div id="feedback2"></div>
+                </div>
+                
+                <div id="question3" style="margin-top: 20px;">
+                    <p><strong>Question 3:</strong> Every rational number is an integer.</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(3, 'false', this)">❌ False</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'true', this)">✅ True</div>
+                    </div>
+                    <div id="feedback3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Key Concepts Summary</h2>
+            
+            <div class="info-box" style="padding-top: 25px;">
+                <h4>🔑 Important Points to Remember:</h4>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li><span class="highlight">Natural Numbers (ℕ)</span>: Counting numbers {1, 2, 3, 4, ...}</li>
+                    <li><span class="highlight">Whole Numbers (W)</span>: Natural numbers + 0 {0, 1, 2, 3, ...}</li>
+                    <li><span class="highlight">Integers (ℤ)</span>: All positive and negative whole numbers {..., -2, -1, 0, 1, 2, ...}</li>
+                    <li><span class="highlight">Rational Numbers (ℚ)</span>: Numbers that can be written as p/q where p, q are integers and q ≠ 0</li>
+                    <li><span class="highlight">Every number system contains all previous ones</span>: ℕ ⊂ W ⊂ ℤ ⊂ ℚ</li>
+                    <li><span class="highlight">Between any two rational numbers</span>, there are infinitely many rational numbers</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Brand Watermark -->
+        <div class="brand-watermark">
+            <svg width="120" height="120" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                <g transform="rotate(-45, 256, 256)">
+                    <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                        c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                        c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                        c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                        c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                        c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                        c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                        c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                        c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                        c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                        c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                        c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                        c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                        c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                        c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                        c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                        c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                        c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                        c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                        c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                        c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                        c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                        c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                        c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                        c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                        c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                        c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                        c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                        fill="#0891b2">
+                    </path>
+                    <circle cx="385" cy="256" r="48" fill="#dc2626"></circle>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.2);">
+            <div style="color: white; opacity: 0.9;">
+                <p style="margin: 5px 0; font-size: 16px; font-weight: 600;">Powered by Paaṭha AI</p>
+                <p style="margin: 5px 0; font-size: 14px;">Interactive Mathematics Learning Platform</p>
+                <p style="margin: 5px 0; font-size: 12px; opacity: 0.7;">© 2024 Paaṭha AI. Transforming Education with AI.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Number line range settings
+        let currentRange = { min: -5, max: 5 };
+        
+        function setNumberLineRange(min, max) {
+            currentRange = { min, max };
+            
+            // Update active button
+            document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Regenerate number line marks
+            generateNumberLineMarks();
+            
+            // Re-mark any existing number with the new range
+            const currentInput = document.getElementById('numberInput').value;
+            if (currentInput && !isNaN(parseFloat(currentInput))) {
+                markNumberOnLine(parseFloat(currentInput));
+            }
+        }
+        
+        function generateNumberLineMarks() {
+            const marksContainer = document.getElementById('numberLineMarks');
+            marksContainer.innerHTML = '';
+            
+            const { min, max } = currentRange;
+            const range = max - min;
+            const stepSize = range <= 4 ? 0.5 : (range <= 10 ? 1 : Math.ceil(range / 10));
+            
+            for (let i = min; i <= max; i += stepSize) {
+                const mark = document.createElement('div');
+                mark.className = 'mark';
+                
+                const label = document.createElement('span');
+                label.className = 'mark-label';
+                label.textContent = i % 1 === 0 ? i : i.toFixed(1);
+                
+                mark.appendChild(label);
+                marksContainer.appendChild(mark);
+            }
+        }
+        
+        function markNumberOnLine(number) {
+            // Remove existing marker first
+            const existingMarker = document.querySelector('.user-number-marker');
+            if (existingMarker) {
+                existingMarker.remove();
+            }
+            
+            const { min, max } = currentRange;
+            
+            // Check if number is within current range
+            if (number < min || number > max) {
+                // Number is outside current range - show a message but don't auto-change range
+                // unless it's drastically outside
+                if (Math.abs(number) > 20 && (max - min) <= 20) {
+                    // Auto-adjust to a larger range for very large numbers
+                    const newRange = Math.max(Math.abs(number) * 1.2, 20);
+                    currentRange = { min: -newRange, max: newRange };
+                    
+                    // Update the active button (if we had a button for this range)
+                    document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
+                    
+                    // Regenerate marks with new range
+                    generateNumberLineMarks();
+                }
+            }
+            
+            // Use current range for positioning
+            const { min: currentMin, max: currentMax } = currentRange;
+            
+            // Always try to mark the number, even if outside range (for educational purposes)
+            const numberLine = document.getElementById('numberLine');
+            const lineWidth = numberLine.offsetWidth - 40; // Account for padding
+            
+            let position;
+            let isOutsideRange = false;
+            
+            if (number < currentMin) {
+                position = -10; // Position to the left of the line
+                isOutsideRange = true;
+            } else if (number > currentMax) {
+                position = lineWidth + 30; // Position to the right of the line
+                isOutsideRange = true;
+            } else {
+                // Number is within range - calculate normal position
+                position = ((number - currentMin) / (currentMax - currentMin)) * lineWidth + 20;
+            }
+            
+            // Create marker
+            const marker = document.createElement('div');
+            marker.className = 'user-number-marker';
+            marker.style.left = position + 'px';
+            
+            // Create label
+            const label = document.createElement('div');
+            label.className = 'user-number-label';
+            label.textContent = number % 1 === 0 ? number : number.toFixed(2);
+            
+            // Add special styling if outside range
+            if (isOutsideRange) {
+                label.style.background = '#ff9800';
+                label.textContent += ' (outside range)';
+                marker.style.background = '#ff9800';
+            }
+            
+            marker.appendChild(label);
+            numberLine.appendChild(marker);
+            
+            // Add pulse animation
+            setTimeout(() => {
+                marker.style.animation = 'pulse 0.6s ease-in-out';
+            }, 100);
+            
+            return !isOutsideRange; // Return whether the number was successfully positioned within range
+        }
+
+        function classifyNumber() {
+            const input = document.getElementById('numberInput').value;
+            const num = parseFloat(input);
+            const result = document.getElementById('numberResult');
+            
+            if (input === '') {
+                result.innerHTML = '⚠️ Please enter a number!';
+                result.style.background = '#fff3cd';
+                result.style.borderColor = '#ffc107';
+                return;
+            }
+            
+            if (isNaN(num)) {
+                result.innerHTML = '❌ Please enter a valid number!';
+                result.style.background = '#f8d7da';
+                result.style.borderColor = '#dc3545';
+                return;
+            }
+            
+            // Mark the number on the line and check if it's within range
+            const withinRange = markNumberOnLine(num);
+            
+            let classification = [];
+            let symbolsUsed = [];
+            
+            // Check if it's a natural number
+            if (num > 0 && Number.isInteger(num)) {
+                classification.push('Natural Number');
+                symbolsUsed.push('ℕ');
+            }
+            
+            // Check if it's a whole number
+            if (num >= 0 && Number.isInteger(num)) {
+                classification.push('Whole Number');
+                symbolsUsed.push('W');
+            }
+            
+            // Check if it's an integer
+            if (Number.isInteger(num)) {
+                classification.push('Integer');
+                symbolsUsed.push('ℤ');
+            }
+            
+            // Check if it appears to be rational (for demo purposes, we'll assume most decimals are rational)
+            // In a real scenario, we'd need more sophisticated checking
+            if (!Number.isInteger(num)) {
+                // Simple check for common rational decimals
+                const decimalStr = num.toString();
+                if (decimalStr.includes('.')) {
+                    const decimalPart = decimalStr.split('.')[1];
+                    if (decimalPart.length <= 6) { // Assume short decimals are likely rational
+                        classification.push('Rational Number (likely)');
+                        symbolsUsed.push('ℚ');
+                    } else {
+                        classification.push('Real Number (may be irrational)');
+                        symbolsUsed.push('ℝ');
+                    }
+                }
+            } else {
+                classification.push('Rational Number');
+                symbolsUsed.push('ℚ');
+            }
+            
+            classification.push('Real Number');
+            symbolsUsed.push('ℝ');
+            
+            // Create a well-formatted response
+            let explanation = '<div style="text-align: center; margin-bottom: 20px;">';
+            explanation += '<h3 style="color: #0891b2; margin-bottom: 10px;">📍 Classification of ' + num + '</h3>';
+            explanation += '</div>';
+            
+            explanation += '<div style="background: #f0fdfa; border-radius: 10px; padding: 15px; margin: 15px 0;">';
+            explanation += '<h4 style="color: #0891b2; margin-bottom: 10px;">🔢 Number Systems:</h4>';
+            explanation += '<div style="display: grid; gap: 8px;">';
+            classification.forEach(function(cls) {
+                explanation += '<div style="background: white; padding: 8px 12px; border-radius: 5px; border-left: 4px solid #0891b2;">✓ ' + cls + '</div>';
+            });
+            explanation += '</div>';
+            explanation += '</div>';
+            
+            explanation += '<div style="background: #ecfeff; border-radius: 10px; padding: 15px; margin: 15px 0;">';
+            explanation += '<h4 style="color: #0891b2; margin-bottom: 10px;">🔤 Mathematical Symbols:</h4>';
+            explanation += '<div style="text-align: center; font-size: 24px; letter-spacing: 8px; color: #0891b2;">';
+            explanation += symbolsUsed.join(' , ');
+            explanation += '</div>';
+            explanation += '</div>';
+            
+            // Add position information
+            const { min, max } = currentRange;
+            const positionColor = withinRange ? '#10b981' : '#f59e0b';
+            const positionIcon = withinRange ? '✅' : '⚠️';
+            
+            explanation += '<div style="background: ' + (withinRange ? '#ecfdf5' : '#fffbeb') + '; border-radius: 10px; padding: 15px; margin: 15px 0;">';
+            explanation += '<h4 style="color: ' + positionColor + '; margin-bottom: 10px;">' + positionIcon + ' Position on Number Line:</h4>';
+            
+            if (withinRange) {
+                explanation += '<div style="color: #10b981;">';
+                explanation += '<strong>' + num + '</strong> is positioned within the current range <strong>(' + min + ' to ' + max + ')</strong>';
+                explanation += '</div>';
+            } else {
+                explanation += '<div style="color: #f59e0b;">';
+                explanation += '<strong>' + num + '</strong> is outside the current range <strong>(' + min + ' to ' + max + ')</strong><br>';
+                explanation += '<small>💡 Try selecting a different range to see it positioned correctly on the line</small>';
+                explanation += '</div>';
+            }
+            
+            explanation += '</div>';
+            
+            result.innerHTML = explanation;
+            result.style.background = '#ffffff';
+            result.style.borderColor = '#0891b2';
+        }
+
+        function showBagContents(bagType) {
+            const details = document.getElementById('bagDetails');
+            const bags = {
+                'N': {
+                    name: 'Natural Numbers (ℕ)',
+                    description: 'The counting numbers: 1, 2, 3, 4, 5, ...',
+                    examples: ['1', '2', '10', '100', '1000', '1,000,000'],
+                    properties: 'Used for counting objects. The set goes on infinitely! These are the first numbers humans learned to use.',
+                    symbol: 'ℕ',
+                    fun_fact: 'The symbol ℕ comes from "Natural" numbers!'
+                },
+                'W': {
+                    name: 'Whole Numbers (W)',
+                    description: 'Natural numbers plus zero: 0, 1, 2, 3, 4, ...',
+                    examples: ['0', '1', '5', '42', '999', '2024'],
+                    properties: 'Includes all natural numbers and zero. Zero was a revolutionary concept in mathematics!',
+                    symbol: 'W',
+                    fun_fact: 'Zero was invented in India around 628 CE!'
+                },
+                'Z': {
+                    name: 'Integers (ℤ)',
+                    description: 'All positive and negative whole numbers: ..., -2, -1, 0, 1, 2, ...',
+                    examples: ['-100', '-5', '-1', '0', '3', '17', '2024'],
+                    properties: 'Includes positive numbers, negative numbers, and zero. Essential for representing debts, temperatures below zero, etc.',
+                    symbol: 'ℤ',
+                    fun_fact: 'ℤ comes from German "Zahlen" meaning "to count"!'
+                },
+                'Q': {
+                    name: 'Rational Numbers (ℚ)',
+                    description: 'Numbers that can be written as p/q where p, q are integers and q ≠ 0',
+                    examples: ['1/2', '-3/4', '0.25', '2.333...', '5', '-7'],
+                    properties: 'From "quotient". Every integer is also rational! Can be written as fractions.',
+                    symbol: 'ℚ',
+                    fun_fact: 'ℚ comes from "Quotient" - the result of division!'
+                }
+            };
+            
+            const bag = bags[bagType];
+            let bagHTML = '<h4>🎒 ' + bag.name + '</h4>';
+            bagHTML += '<p><strong>📋 Definition:</strong> ' + bag.description + '</p>';
+            bagHTML += '<p><strong>🔢 Examples:</strong> ' + bag.examples.join(', ') + '</p>';
+            bagHTML += '<p><strong>🔑 Key Property:</strong> ' + bag.properties + '</p>';
+            bagHTML += '<p><strong>🎯 Fun Fact:</strong> ' + bag.fun_fact + '</p>';
+            bagHTML += '<div style="margin-top: 15px; padding: 10px; background: #f0fdfa; border-radius: 5px;">';
+            bagHTML += '<strong>Symbol:</strong> <span style="font-size: 1.5em; color: #0891b2;">' + bag.symbol + '</span>';
+            bagHTML += '</div>';
+            
+            details.innerHTML = bagHTML;
+        }
+
+        function findRationalsBetween() {
+            const num1 = parseFloat(document.getElementById('num1').value);
+            const num2 = parseFloat(document.getElementById('num2').value);
+            const result = document.getElementById('rationalsResult');
+            const explanation = document.getElementById('rationalsExplanation');
+            
+            if (isNaN(num1) || isNaN(num2)) {
+                result.innerHTML = '⚠️ Please enter valid numbers!';
+                result.style.background = '#fff3cd';
+                result.style.borderColor = '#ffc107';
+                explanation.style.display = 'none';
+                return;
+            }
+            
+            if (num1 === num2) {
+                result.innerHTML = '⚠️ Please enter two different numbers!';
+                result.style.background = '#fff3cd';
+                result.style.borderColor = '#ffc107';
+                explanation.style.display = 'none';
+                return;
+            }
+            
+            const a = Math.min(num1, num2);
+            const b = Math.max(num1, num2);
+            
+            // Method 1: Using midpoint repeatedly
+            let rationals = [];
+            let current = a;
+            for (let i = 0; i < 5; i++) {
+                current = (current + b) / 2;
+                rationals.push(current.toFixed(6));
+            }
+            
+            // Method 2: Using common denominator
+            let alternativeRationals = [];
+            const step = (b - a) / 6;
+            for (let i = 1; i <= 5; i++) {
+                alternativeRationals.push((a + i * step).toFixed(6));
+            }
+            
+            let resultHTML = '<strong>📊 5 Rational Numbers between ' + a + ' and ' + b + ':</strong><br>';
+            resultHTML += '<div style="margin: 10px 0; padding: 10px; background: #f0fdfa; border-radius: 5px;">';
+            resultHTML += rationals.join(', ');
+            resultHTML += '</div>';
+            resultHTML += '<strong>Alternative set:</strong><br>';
+            resultHTML += '<div style="margin: 10px 0; padding: 10px; background: #ecfdf5; border-radius: 5px;">';
+            resultHTML += alternativeRationals.join(', ');
+            resultHTML += '</div>';
+            
+            result.innerHTML = resultHTML;
+            result.style.background = '#ecfdf5';
+            result.style.borderColor = '#10b981';
+            explanation.style.display = 'block';
+        }
+
+        function answerQuiz(questionNum, answer, element) {
+            // Remove previous selections
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(function(opt) {
+                opt.classList.remove('selected');
+            });
+            
+            // Select current option
+            element.classList.add('selected');
+            
+            const feedback = document.getElementById('feedback' + questionNum);
+            const correctAnswers = {
+                1: 'false', // Every whole number is NOT a natural number (0 is whole but not natural)
+                2: 'true',  // Every integer IS a rational number
+                3: 'false'  // Every rational number is NOT an integer (like 1/2)
+            };
+            
+            const isCorrect = answer === correctAnswers[questionNum];
+            
+            const explanations = {
+                1: 'Zero is a whole number but not a natural number. Natural numbers start from 1.',
+                2: 'Every integer m can be written as m/1, so all integers are rational numbers.',
+                3: 'Numbers like 1/2, 3/5 are rational but not integers.'
+            };
+            
+            if (isCorrect) {
+                feedback.innerHTML = '<div class="feedback success">✅ Correct! ' + explanations[questionNum] + '</div>';
+            } else {
+                feedback.innerHTML = '<div class="feedback error">❌ Not quite right. ' + explanations[questionNum] + '</div>';
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default bag to show Natural Numbers
+            showBagContents('N');
+            
+            // Generate initial number line marks
+            generateNumberLineMarks();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colligative Properties Interactive Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .section-title {
+            color: #4a5568;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .calculator {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .calculator h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+            width: 100%;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .visualization {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .phase-diagram {
+            margin: 20px 0;
+            position: relative;
+            height: 300px;
+            background: linear-gradient(to right, #e6f7ff 0%, #fff2e6 100%);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .curve {
+            position: absolute;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .solvent-curve {
+            stroke: #ff6b6b;
+        }
+
+        .solution-curve {
+            stroke: #4ecdc4;
+        }
+
+        .interactive-demo {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .osmosis-demo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            position: relative;
+        }
+
+        .container-left, .container-right {
+            width: 100px;
+            height: 150px;
+            border: 3px solid #333;
+            border-radius: 10px;
+            position: relative;
+            background: linear-gradient(to top, #4ecdc4 0%, #4ecdc4 50%, transparent 50%);
+            margin: 0 20px;
+        }
+
+        .membrane {
+            width: 4px;
+            height: 120px;
+            background: #333;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .molecule {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 1s ease;
+        }
+
+        .water-molecule {
+            background: #3498db;
+        }
+
+        .solute-molecule {
+            background: #e74c3c;
+        }
+
+        .equation-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .property-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .property-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .property-card p {
+            line-height: 1.6;
+        }
+
+        .interactive-slider {
+            margin: 20px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+
+        .quiz-question {
+            margin-bottom: 20px;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .quiz-option {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .quiz-option.correct {
+            background: rgba(72, 187, 120, 0.8);
+        }
+
+        .quiz-option.incorrect {
+            background: rgba(245, 101, 101, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Colligative Properties Interactive Tool</h1>
+            <p>Explore how solute particles affect solution properties</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(0)">Overview</button>
+            <button class="tab" onclick="switchTab(1)">Vapor Pressure</button>
+            <button class="tab" onclick="switchTab(2)">Boiling Point</button>
+            <button class="tab" onclick="switchTab(3)">Freezing Point</button>
+            <button class="tab" onclick="switchTab(4)">Osmotic Pressure</button>
+            <button class="tab" onclick="switchTab(5)">Quiz</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div class="tab-content active">
+            <h2 class="section-title">What are Colligative Properties?</h2>
+            
+            <div class="properties-grid">
+                <div class="property-card">
+                    <h3>🌡️ Vapor Pressure Lowering</h3>
+                    <p>Addition of non-volatile solute decreases the vapor pressure of the solvent</p>
+                </div>
+                <div class="property-card">
+                    <h3>🔥 Boiling Point Elevation</h3>
+                    <p>Solutions boil at higher temperatures than pure solvents</p>
+                </div>
+                <div class="property-card">
+                    <h3>❄️ Freezing Point Depression</h3>
+                    <p>Solutions freeze at lower temperatures than pure solvents</p>
+                </div>
+                <div class="property-card">
+                    <h3>💧 Osmotic Pressure</h3>
+                    <p>Pressure needed to prevent solvent flow through semipermeable membrane</p>
+                </div>
+            </div>
+
+            <div class="equation-display">
+                Key Concept: These properties depend only on the NUMBER of particles,<br>
+                not their IDENTITY (colligative = "collective binding")
+            </div>
+
+            <div class="interactive-demo">
+                <h3>Interactive Molecule Visualization</h3>
+                <div class="interactive-slider">
+                    <label>Number of Solute Particles: <span id="particleCount">50</span></label>
+                    <input type="range" min="10" max="100" value="50" class="slider" id="particleSlider">
+                </div>
+                <canvas id="moleculeCanvas" width="800" height="300" style="border: 2px solid #ddd; border-radius: 10px; background: linear-gradient(to bottom, #e3f2fd 0%, #f3e5f5 100%);"></canvas>
+            </div>
+        </div>
+
+        <!-- Vapor Pressure Tab -->
+        <div class="tab-content">
+            <h2 class="section-title">Relative Lowering of Vapor Pressure</h2>
+            
+            <div class="equation-display">
+                Δp₁/p₁⁰ = χ₂ = n₂/(n₁ + n₂)
+            </div>
+
+            <div class="calculator-grid">
+                <div class="calculator">
+                    <h3>Calculate Vapor Pressure Lowering</h3>
+                    <div class="input-group">
+                        <label>Pure Solvent Vapor Pressure (p₁⁰) [bar]:</label>
+                        <input type="number" id="vp-p0" step="0.001" placeholder="0.850">
+                    </div>
+                    <div class="input-group">
+                        <label>Solution Vapor Pressure (p₁) [bar]:</label>
+                        <input type="number" id="vp-p1" step="0.001" placeholder="0.845">
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Mass (w₂) [g]:</label>
+                        <input type="number" id="vp-w2" step="0.1" placeholder="0.5">
+                    </div>
+                    <div class="input-group">
+                        <label>Solvent Mass (w₁) [g]:</label>
+                        <input type="number" id="vp-w1" step="0.1" placeholder="39.0">
+                    </div>
+                    <div class="input-group">
+                        <label>Solvent Molar Mass (M₁) [g/mol]:</label>
+                        <input type="number" id="vp-M1" step="0.1" placeholder="78">
+                    </div>
+                    <button class="calculate-btn" onclick="calculateVaporPressure()">Calculate Molar Mass</button>
+                    <div class="result" id="vp-result"></div>
+                </div>
+
+                <div class="visualization">
+                    <h3>Vapor Pressure vs Temperature</h3>
+                    <canvas id="vpCanvas" width="400" height="300"></canvas>
+                    <p style="margin-top: 15px; color: #666;">
+                        <span style="color: #ff6b6b;">■</span> Pure Solvent &nbsp;
+                        <span style="color: #4ecdc4;">■</span> Solution
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boiling Point Tab -->
+        <div class="tab-content">
+            <h2 class="section-title">Elevation of Boiling Point</h2>
+            
+            <div class="equation-display">
+                ΔTb = Kb × m
+            </div>
+
+            <div class="calculator-grid">
+                <div class="calculator">
+                    <h3>Calculate Boiling Point Elevation</h3>
+                    <div class="input-group">
+                        <label>Solvent:</label>
+                        <select id="bp-solvent" onchange="updateKb()">
+                            <option value="water">Water (Kb = 0.52)</option>
+                            <option value="benzene">Benzene (Kb = 2.53)</option>
+                            <option value="ethanol">Ethanol (Kb = 1.20)</option>
+                            <option value="cyclohexane">Cyclohexane (Kb = 2.79)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Mass (w₂) [g]:</label>
+                        <input type="number" id="bp-w2" step="0.1" placeholder="18">
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Molar Mass (M₂) [g/mol]:</label>
+                        <input type="number" id="bp-M2" step="0.1" placeholder="180">
+                    </div>
+                    <div class="input-group">
+                        <label>Solvent Mass (w₁) [kg]:</label>
+                        <input type="number" id="bp-w1" step="0.001" placeholder="1.0">
+                    </div>
+                    <button class="calculate-btn" onclick="calculateBoilingPoint()">Calculate ΔTb</button>
+                    <div class="result" id="bp-result"></div>
+                </div>
+
+                <div class="calculator">
+                    <h3>Find Molar Mass from ΔTb</h3>
+                    <div class="input-group">
+                        <label>Boiling Point Elevation (ΔTb) [K]:</label>
+                        <input type="number" id="bp-delta" step="0.01" placeholder="0.88">
+                    </div>
+                    <div class="input-group">
+                        <label>Kb [K⋅kg/mol]:</label>
+                        <input type="number" id="bp-kb" step="0.01" placeholder="2.53">
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Mass (w₂) [g]:</label>
+                        <input type="number" id="bp-w2-mass" step="0.1" placeholder="1.8">
+                    </div>
+                    <div class="input-group">
+                        <label>Solvent Mass (w₁) [g]:</label>
+                        <input type="number" id="bp-w1-mass" step="0.1" placeholder="90">
+                    </div>
+                    <button class="calculate-btn" onclick="calculateMolarMassBP()">Calculate Molar Mass</button>
+                    <div class="result" id="bp-mass-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Freezing Point Tab -->
+        <div class="tab-content">
+            <h2 class="section-title">Depression of Freezing Point</h2>
+            
+            <div class="equation-display">
+                ΔTf = Kf × m
+            </div>
+
+            <div class="calculator-grid">
+                <div class="calculator">
+                    <h3>Calculate Freezing Point Depression</h3>
+                    <div class="input-group">
+                        <label>Solvent:</label>
+                        <select id="fp-solvent" onchange="updateKf()">
+                            <option value="water">Water (Kf = 1.86)</option>
+                            <option value="benzene">Benzene (Kf = 5.12)</option>
+                            <option value="cyclohexane">Cyclohexane (Kf = 20.00)</option>
+                            <option value="ethanol">Ethanol (Kf = 1.99)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Mass (w₂) [g]:</label>
+                        <input type="number" id="fp-w2" step="0.1" placeholder="45">
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Molar Mass (M₂) [g/mol]:</label>
+                        <input type="number" id="fp-M2" step="0.1" placeholder="62">
+                    </div>
+                    <div class="input-group">
+                        <label>Solvent Mass (w₁) [kg]:</label>
+                        <input type="number" id="fp-w1" step="0.001" placeholder="0.6">
+                    </div>
+                    <button class="calculate-btn" onclick="calculateFreezingPoint()">Calculate ΔTf</button>
+                    <div class="result" id="fp-result"></div>
+                </div>
+
+                <div class="visualization">
+                    <h3>Freezing Point vs Concentration</h3>
+                    <canvas id="fpCanvas" width="400" height="300"></canvas>
+                    <div class="interactive-slider">
+                        <label>Molality: <span id="molalityValue">0.5</span> mol/kg</label>
+                        <input type="range" min="0" max="2" step="0.1" value="0.5" class="slider" id="molalitySlider">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Osmotic Pressure Tab -->
+        <div class="tab-content">
+            <h2 class="section-title">Osmotic Pressure</h2>
+            
+            <div class="equation-display">
+                Π = CRT = (n₂/V)RT
+            </div>
+
+            <div class="calculator-grid">
+                <div class="calculator">
+                    <h3>Calculate Osmotic Pressure</h3>
+                    <div class="input-group">
+                        <label>Solute Mass (w₂) [g]:</label>
+                        <input type="number" id="op-w2" step="0.01" placeholder="1.26">
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Molar Mass (M₂) [g/mol]:</label>
+                        <input type="number" id="op-M2" step="1" placeholder="61022">
+                    </div>
+                    <div class="input-group">
+                        <label>Solution Volume (V) [L]:</label>
+                        <input type="number" id="op-V" step="0.001" placeholder="0.200">
+                    </div>
+                    <div class="input-group">
+                        <label>Temperature (T) [K]:</label>
+                        <input type="number" id="op-T" step="1" placeholder="300">
+                    </div>
+                    <button class="calculate-btn" onclick="calculateOsmoticPressure()">Calculate Π</button>
+                    <div class="result" id="op-result"></div>
+                </div>
+
+                <div class="calculator">
+                    <h3>Find Molar Mass from Osmotic Pressure</h3>
+                    <div class="input-group">
+                        <label>Osmotic Pressure (Π) [bar]:</label>
+                        <input type="number" id="op-pi" step="0.0001" placeholder="0.00257">
+                    </div>
+                    <div class="input-group">
+                        <label>Solute Mass (w₂) [g]:</label>
+                        <input type="number" id="op-w2-mass" step="0.01" placeholder="1.26">
+                    </div>
+                    <div class="input-group">
+                        <label>Solution Volume (V) [L]:</label>
+                        <input type="number" id="op-V-mass" step="0.001" placeholder="0.200">
+                    </div>
+                    <div class="input-group">
+                        <label>Temperature (T) [K]:</label>
+                        <input type="number" id="op-T-mass" step="1" placeholder="300">
+                    </div>
+                    <button class="calculate-btn" onclick="calculateMolarMassOP()">Calculate Molar Mass</button>
+                    <div class="result" id="op-mass-result"></div>
+                </div>
+            </div>
+
+            <div class="interactive-demo">
+                <h3>Osmosis Visualization</h3>
+                <div class="osmosis-demo">
+                    <div class="container-left" id="leftContainer">
+                        <div style="position: absolute; bottom: 10px; left: 10px; font-size: 12px; color: #333;">Solvent</div>
+                    </div>
+                    <div class="membrane"></div>
+                    <div class="container-right" id="rightContainer">
+                        <div style="position: absolute; bottom: 10px; right: 10px; font-size: 12px; color: #333;">Solution</div>
+                    </div>
+                </div>
+                <button class="calculate-btn" onclick="startOsmosis()" style="width: 200px; margin: 20px auto; display: block;">Start Osmosis Animation</button>
+            </div>
+        </div>
+
+        <!-- Quiz Tab -->
+        <div class="tab-content">
+            <div class="quiz-section">
+                <h2>Test Your Knowledge! 🧠</h2>
+                
+                <div class="quiz-question">
+                    <h3>Question 1: Which property is NOT colligative?</h3>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 1)">A) Vapor pressure lowering</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 1)">B) Boiling point elevation</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 1)">C) Freezing point depression</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, true, 1)">D) Density</div>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <h3>Question 2: Raoult's Law states that vapor pressure lowering depends on:</h3>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 2)">A) Nature of solute particles</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, true, 2)">B) Concentration of solute particles</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 2)">C) Size of solute particles</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 2)">D) Shape of solute particles</div>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <h3>Question 3: What happens to red blood cells when placed in a hypertonic solution?</h3>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 3)">A) They swell up</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, true, 3)">B) They shrink</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 3)">C) They remain unchanged</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 3)">D) They burst</div>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <h3>Question 4: The osmotic pressure of a solution is given by which equation?</h3>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 4)">A) Π = nRT</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, true, 4)">B) Π = CRT</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 4)">C) Π = mRT</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 4)">D) Π = χRT</div>
+                    </div>
+                </div>
+
+                <div class="quiz-question">
+                    <h3>Question 5: Which colligative property is most useful for determining molar masses of large biomolecules like proteins?</h3>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 5)">A) Vapor pressure lowering</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 5)">B) Boiling point elevation</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, false, 5)">C) Freezing point depression</div>
+                        <div class="quiz-option" onclick="selectAnswer(this, true, 5)">D) Osmotic pressure</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-section" style="margin-top: 30px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                <h2>🎯 Quiz Results</h2>
+                <div id="quizResults" style="font-size: 1.2em; text-align: center;">
+                    <p>Answer all questions to see your score!</p>
+                    <div id="scoreDisplay" style="margin-top: 15px; font-size: 1.5em; font-weight: bold;"></div>
+                    <button onclick="resetQuiz()" style="margin-top: 15px; padding: 10px 20px; background: rgba(255,255,255,0.3); border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px;">Reset Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function switchTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            tabs[index].classList.add('active');
+            contents[index].classList.add('active');
+        }
+
+        // Molecule animation
+        function initMoleculeCanvas() {
+            const canvas = document.getElementById('moleculeCanvas');
+            const ctx = canvas.getContext('2d');
+            const slider = document.getElementById('particleSlider');
+            const countSpan = document.getElementById('particleCount');
+            
+            let molecules = [];
+            
+            function createMolecules() {
+                molecules = [];
+                const count = parseInt(slider.value);
+                
+                // Water molecules (blue)
+                for (let i = 0; i < 100; i++) {
+                    molecules.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        type: 'water',
+                        radius: 3
+                    });
+                }
+                
+                // Solute molecules (red)
+                for (let i = 0; i < count; i++) {
+                    molecules.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 1,
+                        vy: (Math.random() - 0.5) * 1,
+                        type: 'solute',
+                        radius: 5
+                    });
+                }
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                molecules.forEach(mol => {
+                    mol.x += mol.vx;
+                    mol.y += mol.vy;
+                    
+                    if (mol.x <= mol.radius || mol.x >= canvas.width - mol.radius) mol.vx *= -1;
+                    if (mol.y <= mol.radius || mol.y >= canvas.height - mol.radius) mol.vy *= -1;
+                    
+                    ctx.beginPath();
+                    ctx.arc(mol.x, mol.y, mol.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = mol.type === 'water' ? '#3498db' : '#e74c3c';
+                    ctx.fill();
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            slider.addEventListener('input', function() {
+                countSpan.textContent = this.value;
+                createMolecules();
+            });
+            
+            createMolecules();
+            animate();
+        }
+
+        // Vapor pressure calculations
+        function calculateVaporPressure() {
+            const p0 = parseFloat(document.getElementById('vp-p0').value);
+            const p1 = parseFloat(document.getElementById('vp-p1').value);
+            const w2 = parseFloat(document.getElementById('vp-w2').value);
+            const w1 = parseFloat(document.getElementById('vp-w1').value);
+            const M1 = parseFloat(document.getElementById('vp-M1').value);
+            
+            const relativeLowering = (p0 - p1) / p0;
+            const M2 = (w2 * M1) / (relativeLowering * w1);
+            
+            const result = document.getElementById('vp-result');
+            result.innerHTML = `
+                <strong>Results:</strong><br>
+                Relative Lowering: ${relativeLowering.toFixed(4)}<br>
+                Molar Mass of Solute: ${M2.toFixed(1)} g/mol
+            `;
+            result.style.display = 'block';
+        }
+
+        // Boiling point calculations
+        function updateKb() {
+            const solvent = document.getElementById('bp-solvent').value;
+            const kbValues = {
+                water: 0.52,
+                benzene: 2.53,
+                ethanol: 1.20,
+                cyclohexane: 2.79
+            };
+            // Auto-fill Kb value based on selection
+        }
+
+        function calculateBoilingPoint() {
+            const solvent = document.getElementById('bp-solvent').value;
+            const w2 = parseFloat(document.getElementById('bp-w2').value);
+            const M2 = parseFloat(document.getElementById('bp-M2').value);
+            const w1 = parseFloat(document.getElementById('bp-w1').value);
+            
+            const kbValues = {
+                water: { kb: 0.52, bp: 373.15 },
+                benzene: { kb: 2.53, bp: 353.3 },
+                ethanol: { kb: 1.20, bp: 351.5 },
+                cyclohexane: { kb: 2.79, bp: 353.74 }
+            };
+            
+            const kb = kbValues[solvent].kb;
+            const normalBP = kbValues[solvent].bp;
+            
+            const molality = (w2 / M2) / w1;
+            const deltaTb = kb * molality;
+            const newBP = normalBP + deltaTb;
+            
+            const result = document.getElementById('bp-result');
+            result.innerHTML = `
+                <strong>Results:</strong><br>
+                Molality: ${molality.toFixed(3)} mol/kg<br>
+                ΔTb: ${deltaTb.toFixed(3)} K<br>
+                New Boiling Point: ${newBP.toFixed(2)} K
+            `;
+            result.style.display = 'block';
+        }
+
+        function calculateMolarMassBP() {
+            const deltaTb = parseFloat(document.getElementById('bp-delta').value);
+            const kb = parseFloat(document.getElementById('bp-kb').value);
+            const w2 = parseFloat(document.getElementById('bp-w2-mass').value);
+            const w1 = parseFloat(document.getElementById('bp-w1-mass').value);
+            
+            const M2 = (kb * w2 * 1000) / (deltaTb * w1);
+            
+            const result = document.getElementById('bp-mass-result');
+            result.innerHTML = `
+                <strong>Molar Mass of Solute:</strong> ${M2.toFixed(1)} g/mol
+            `;
+            result.style.display = 'block';
+        }
+
+        // Freezing point calculations
+        function updateKf() {
+            // Similar to updateKb for freezing point
+        }
+
+        function calculateFreezingPoint() {
+            const solvent = document.getElementById('fp-solvent').value;
+            const w2 = parseFloat(document.getElementById('fp-w2').value);
+            const M2 = parseFloat(document.getElementById('fp-M2').value);
+            const w1 = parseFloat(document.getElementById('fp-w1').value);
+            
+            const kfValues = {
+                water: { kf: 1.86, fp: 273.15 },
+                benzene: { kf: 5.12, fp: 278.6 },
+                cyclohexane: { kf: 20.00, fp: 279.55 },
+                ethanol: { kf: 1.99, fp: 155.7 }
+            };
+            
+            const kf = kfValues[solvent].kf;
+            const normalFP = kfValues[solvent].fp;
+            
+            const molality = (w2 / M2) / w1;
+            const deltaTf = kf * molality;
+            const newFP = normalFP - deltaTf;
+            
+            const result = document.getElementById('fp-result');
+            result.innerHTML = `
+                <strong>Results:</strong><br>
+                Molality: ${molality.toFixed(3)} mol/kg<br>
+                ΔTf: ${deltaTf.toFixed(3)} K<br>
+                New Freezing Point: ${newFP.toFixed(2)} K
+            `;
+            result.style.display = 'block';
+        }
+
+        // Osmotic pressure calculations
+        function calculateOsmoticPressure() {
+            const w2 = parseFloat(document.getElementById('op-w2').value);
+            const M2 = parseFloat(document.getElementById('op-M2').value);
+            const V = parseFloat(document.getElementById('op-V').value);
+            const T = parseFloat(document.getElementById('op-T').value);
+            const R = 0.083; // L·bar/(mol·K)
+            
+            const n2 = w2 / M2;
+            const C = n2 / V;
+            const pi = C * R * T;
+            
+            const result = document.getElementById('op-result');
+            result.innerHTML = `
+                <strong>Results:</strong><br>
+                Moles of solute: ${n2.toFixed(6)} mol<br>
+                Molarity: ${C.toFixed(4)} mol/L<br>
+                Osmotic Pressure: ${pi.toFixed(6)} bar
+            `;
+            result.style.display = 'block';
+        }
+
+        function calculateMolarMassOP() {
+            const pi = parseFloat(document.getElementById('op-pi').value);
+            const w2 = parseFloat(document.getElementById('op-w2-mass').value);
+            const V = parseFloat(document.getElementById('op-V-mass').value);
+            const T = parseFloat(document.getElementById('op-T-mass').value);
+            const R = 0.083;
+            
+            const M2 = (w2 * R * T) / (pi * V);
+            
+            const result = document.getElementById('op-mass-result');
+            result.innerHTML = `
+                <strong>Molar Mass of Solute:</strong> ${M2.toFixed(0)} g/mol
+            `;
+            result.style.display = 'block';
+        }
+
+        // Vapor pressure visualization
+        function drawVaporPressureCurve() {
+            const canvas = document.getElementById('vpCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, 250);
+            ctx.lineTo(350, 250);
+            ctx.moveTo(50, 50);
+            ctx.lineTo(50, 250);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('Temperature (K)', 150, 280);
+            ctx.save();
+            ctx.translate(20, 150);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Vapor Pressure', 0, 0);
+            ctx.restore();
+            
+            // Draw curves
+            ctx.lineWidth = 3;
+            
+            // Pure solvent curve (red)
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.beginPath();
+            for (let x = 50; x <= 350; x++) {
+                const temp = 300 + (x - 50) * 100 / 300;
+                const pressure = Math.exp((temp - 350) / 30) * 200;
+                const y = 250 - pressure;
+                if (x === 50) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Solution curve (teal)
+            ctx.strokeStyle = '#4ecdc4';
+            ctx.beginPath();
+            for (let x = 50; x <= 350; x++) {
+                const temp = 300 + (x - 50) * 100 / 300;
+                const pressure = Math.exp((temp - 350) / 30) * 200 * 0.95; // 5% lower
+                const y = 250 - pressure;
+                if (x === 50) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Atmospheric pressure line
+            ctx.strokeStyle = '#666';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(50, 150);
+            ctx.lineTo(350, 150);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillText('1 atm', 360, 155);
+        }
+
+        // Freezing point visualization
+        function drawFreezingPointCurve() {
+            const canvas = document.getElementById('fpCanvas');
+            const ctx = canvas.getContext('2d');
+            const slider = document.getElementById('molalitySlider');
+            const valueSpan = document.getElementById('molalityValue');
+            
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw axes
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(50, 250);
+                ctx.lineTo(350, 250);
+                ctx.moveTo(50, 50);
+                ctx.lineTo(50, 250);
+                ctx.stroke();
+                
+                // Labels
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.fillText('Molality (mol/kg)', 150, 280);
+                ctx.save();
+                ctx.translate(20, 150);
+                ctx.rotate(-Math.PI/2);
+                ctx.fillText('Freezing Point (°C)', 0, 0);
+                ctx.restore();
+                
+                // Draw freezing point curve
+                const kf = 1.86; // Water
+                const normalFP = 0; // 0°C for water
+                
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                for (let x = 50; x <= 350; x++) {
+                    const molality = (x - 50) / 300 * 3; // 0 to 3 mol/kg
+                    const deltaTf = kf * molality;
+                    const fp = normalFP - deltaTf;
+                    const y = 150 - fp * 20; // Scale for display
+                    
+                    if (x === 50) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                
+                // Mark current molality
+                const currentMolality = parseFloat(slider.value);
+                const currentX = 50 + (currentMolality / 3) * 300;
+                const currentDeltaTf = kf * currentMolality;
+                const currentFP = normalFP - currentDeltaTf;
+                const currentY = 150 - currentFP * 20;
+                
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Show current values
+                ctx.fillStyle = '#333';
+                ctx.fillText(`ΔTf = ${currentDeltaTf.toFixed(2)} °C`, 250, 70);
+                ctx.fillText(`FP = ${currentFP.toFixed(2)} °C`, 250, 90);
+            }
+            
+            slider.addEventListener('input', function() {
+                valueSpan.textContent = this.value;
+                draw();
+            });
+            
+            draw();
+        }
+
+        // Osmosis animation
+        function startOsmosis() {
+            const leftContainer = document.getElementById('leftContainer');
+            const rightContainer = document.getElementById('rightContainer');
+            
+            // Clear previous molecules
+            leftContainer.querySelectorAll('.molecule').forEach(mol => mol.remove());
+            rightContainer.querySelectorAll('.molecule').forEach(mol => mol.remove());
+            
+            // Add water molecules to left side
+            for (let i = 0; i < 10; i++) {
+                const molecule = document.createElement('div');
+                molecule.className = 'molecule water-molecule';
+                molecule.style.left = Math.random() * 80 + 'px';
+                molecule.style.top = Math.random() * 120 + 'px';
+                leftContainer.appendChild(molecule);
+            }
+            
+            // Add solution molecules to right side
+            for (let i = 0; i < 8; i++) {
+                const molecule = document.createElement('div');
+                molecule.className = 'molecule water-molecule';
+                molecule.style.left = Math.random() * 80 + 'px';
+                molecule.style.top = Math.random() * 120 + 'px';
+                rightContainer.appendChild(molecule);
+            }
+            
+            // Add solute molecules to right side
+            for (let i = 0; i < 3; i++) {
+                const molecule = document.createElement('div');
+                molecule.className = 'molecule solute-molecule';
+                molecule.style.left = Math.random() * 80 + 'px';
+                molecule.style.top = Math.random() * 120 + 'px';
+                rightContainer.appendChild(molecule);
+            }
+            
+            // Animate water molecules moving from left to right
+            setTimeout(() => {
+                const waterMolecules = leftContainer.querySelectorAll('.water-molecule');
+                waterMolecules.forEach((mol, index) => {
+                    setTimeout(() => {
+                        mol.style.transform = 'translateX(140px)';
+                        setTimeout(() => {
+                            mol.remove();
+                            const newMol = mol.cloneNode();
+                            newMol.style.transform = 'translateX(-140px)';
+                            newMol.style.left = Math.random() * 80 + 'px';
+                            newMol.style.top = Math.random() * 120 + 'px';
+                            rightContainer.appendChild(newMol);
+                        }, 1000);
+                    }, index * 200);
+                });
+                
+                // Raise water level in right container
+                setTimeout(() => {
+                    rightContainer.style.background = 'linear-gradient(to top, #4ecdc4 0%, #4ecdc4 70%, transparent 70%)';
+                }, 2000);
+            }, 500);
+        }
+
+        // Quiz functionality
+        let quizAnswers = {};
+        let totalQuestions = 5;
+
+        function selectAnswer(element, isCorrect, questionNumber) {
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            
+            // Prevent multiple selections
+            if (quizAnswers[questionNumber] !== undefined) return;
+            
+            options.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                if (opt === element) {
+                    opt.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    quizAnswers[questionNumber] = isCorrect;
+                } else {
+                    // Highlight the correct answer
+                    const correctAnswers = {
+                        1: 'D) Density',
+                        2: 'B) Concentration of solute particles',
+                        3: 'B) They shrink',
+                        4: 'B) Π = CRT',
+                        5: 'D) Osmotic pressure'
+                    };
+                    
+                    if (opt.textContent.includes(correctAnswers[questionNumber])) {
+                        opt.classList.add('correct');
+                    }
+                }
+            });
+            
+            // Show immediate feedback
+            if (isCorrect) {
+                setTimeout(() => {
+                    showFeedback('Correct! 🎉', true);
+                }, 300);
+            } else {
+                setTimeout(() => {
+                    showFeedback('Incorrect. The correct answer is highlighted! 🤔', false);
+                }, 300);
+            }
+            
+            // Update quiz results if all questions answered
+            updateQuizResults();
+        }
+
+        function showFeedback(message, isCorrect) {
+            const feedback = document.createElement('div');
+            feedback.style.position = 'fixed';
+            feedback.style.top = '20px';
+            feedback.style.right = '20px';
+            feedback.style.padding = '15px 25px';
+            feedback.style.borderRadius = '10px';
+            feedback.style.color = 'white';
+            feedback.style.fontWeight = 'bold';
+            feedback.style.zIndex = '1000';
+            feedback.style.animation = 'slideIn 0.3s ease';
+            feedback.style.background = isCorrect ? 
+                'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' : 
+                'linear-gradient(135deg, #f56565 0%, #e53e3e 100%)';
+            feedback.textContent = message;
+            
+            document.body.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 3000);
+        }
+
+        function updateQuizResults() {
+            const answeredCount = Object.keys(quizAnswers).length;
+            const correctCount = Object.values(quizAnswers).filter(answer => answer === true).length;
+            
+            if (answeredCount === totalQuestions) {
+                const percentage = Math.round((correctCount / totalQuestions) * 100);
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                
+                let message = '';
+                let emoji = '';
+                
+                if (percentage >= 90) {
+                    message = 'Excellent! You\'ve mastered colligative properties!';
+                    emoji = '🌟';
+                } else if (percentage >= 70) {
+                    message = 'Great job! You understand the concepts well!';
+                    emoji = '👏';
+                } else if (percentage >= 50) {
+                    message = 'Good effort! Review the concepts and try again!';
+                    emoji = '📚';
+                } else {
+                    message = 'Keep studying! Practice makes perfect!';
+                    emoji = '💪';
+                }
+                
+                scoreDisplay.innerHTML = `
+                    <div>${emoji}</div>
+                    <div>Score: ${correctCount}/${totalQuestions} (${percentage}%)</div>
+                    <div style="font-size: 0.8em; margin-top: 10px;">${message}</div>
+                `;
+            } else {
+                document.getElementById('scoreDisplay').innerHTML = `
+                    <div>Progress: ${answeredCount}/${totalQuestions} questions answered</div>
+                `;
+            }
+        }
+
+        function resetQuiz() {
+            quizAnswers = {};
+            
+            // Reset all question options
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.classList.remove('correct', 'incorrect');
+                option.style.pointerEvents = 'auto';
+            });
+            
+            // Reset score display
+            document.getElementById('scoreDisplay').innerHTML = '';
+            document.getElementById('quizResults').querySelector('p').textContent = 'Answer all questions to see your score!';
+            
+            showFeedback('Quiz reset! Try again! 🔄', true);
+        }
+
+        // Initialize everything when page loads
+        window.addEventListener('load', function() {
+            initMoleculeCanvas();
+            drawVaporPressureCurve();
+            drawFreezingPointCurve();
+            
+            // Add some default values
+            document.getElementById('vp-p0').value = '0.850';
+            document.getElementById('vp-p1').value = '0.845';
+            document.getElementById('vp-w2').value = '0.5';
+            document.getElementById('vp-w1').value = '39.0';
+            document.getElementById('vp-M1').value = '78';
+            
+            document.getElementById('bp-w2').value = '18';
+            document.getElementById('bp-M2').value = '180';
+            document.getElementById('bp-w1').value = '1.0';
+            
+            document.getElementById('fp-w2').value = '45';
+            document.getElementById('fp-M2').value = '62';
+            document.getElementById('fp-w1').value = '0.6';
+            
+            document.getElementById('op-w2').value = '1.26';
+            document.getElementById('op-M2').value = '61022';
+            document.getElementById('op-V').value = '0.200';
+            document.getElementById('op-T').value = '300';
+        });
+    </script>
+</body>
+</html>

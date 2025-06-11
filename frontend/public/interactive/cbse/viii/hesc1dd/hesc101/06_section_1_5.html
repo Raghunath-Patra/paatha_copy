@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adding Manure and Fertilisers - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="leafPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M10 5 Q15 10 10 15 Q5 10 10 5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23leafPattern)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 15px;
+            background: #ecfdf5;
+            border-left: 5px solid #059669;
+        }
+
+        .section h2 {
+            color: #065f46;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .experiment-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .glasses-setup {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .glass {
+            width: 120px;
+            height: 200px;
+            background: linear-gradient(to bottom, transparent 20%, #e5e7eb 20%, #a16207 80%, #92400e 100%);
+            border: 3px solid #374151;
+            border-radius: 10px 10px 30px 30px;
+            position: relative;
+            margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .glass:hover {
+            transform: scale(1.05);
+        }
+
+        .glass-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #374151;
+        }
+
+        .glass-content {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-align: center;
+            width: 90%;
+        }
+
+        .seedling {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            transition: all 2s ease;
+        }
+
+        .glass.grown .seedling {
+            font-size: 3rem;
+            top: 10px;
+        }
+
+        .glass.super-grown .seedling {
+            font-size: 4rem;
+            top: -10px;
+        }
+
+        .glass.stunted .seedling {
+            font-size: 1.5rem;
+            opacity: 0.7;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            width: 0%;
+            transition: width 2s ease;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: #059669;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        .crop-rotation-game {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .field-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        .season-field {
+            min-width: 150px;
+            height: 120px;
+            background: #92400e;
+            border-radius: 10px;
+            margin: 0 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .season-field:hover {
+            border-color: #059669;
+            transform: scale(1.05);
+        }
+
+        .season-field.selected {
+            border-color: #16a34a;
+            background: #065f46;
+        }
+
+        .season-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .crop-in-field {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .season-field.planted .crop-in-field {
+            opacity: 1;
+        }
+
+        .crop-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .crop-option {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .crop-option:hover {
+            background: #dcfce7;
+            transform: scale(1.05);
+        }
+
+        .crop-option.selected {
+            background: #16a34a;
+            color: white;
+        }
+
+        .crop-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .nutrient-meter {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #d1d5db;
+        }
+
+        .nutrient-bar {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .nutrient-name {
+            width: 100px;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 1s ease;
+            border-radius: 10px;
+        }
+
+        .nitrogen-bar { background: #3b82f6; }
+        .phosphorus-bar { background: #f59e0b; }
+        .potassium-bar { background: #8b5cf6; }
+
+        .quiz-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #374151;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option {
+            padding: 15px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            background: #f3f4f6;
+            border-color: #059669;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score {
+            background: linear-gradient(135deg, #065f46, #064e3b);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .feedback.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+
+        .feedback.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .bacteria-demo {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .root-system {
+            width: 300px;
+            height: 200px;
+            background: #92400e;
+            border-radius: 10px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .root-branch {
+            position: absolute;
+            background: #059669;
+            border-radius: 5px;
+        }
+
+        .nodule {
+            position: absolute;
+            width: 20px;
+            height: 15px;
+            background: #fbbf24;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #f59e0b;
+        }
+
+        .nodule:hover {
+            transform: scale(1.3);
+            background: #f59e0b;
+        }
+
+        .nodule.active {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .nitrogen-bubble {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: float-up 3s ease-out forwards;
+        }
+
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
+        }
+
+        @media (max-width: 768px) {
+            .glasses-setup {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .field-timeline {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .season-field {
+                margin: 10px 0;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <svg 
+                        viewBox="0 0 512 512" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        style="height: 48px; width: 48px;"
+                        aria-label="Paaṭha AI Logo"
+                    >
+                        <defs>
+                            <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#dc2626" />
+                                <stop offset="33%" stop-color="#dc2626" />
+                                <stop offset="66%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#ecfdf5" />
+                            </linearGradient>
+                        </defs>
+                        <g transform="rotate(-45, 256, 256)">
+                            <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                                c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                                c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                                c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                                c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                                c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                                c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                                c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                                c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                                c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                                c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                                c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                                c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                                c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                                c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                                c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                                c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                                c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                                c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                                c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                                c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                                c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                                c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                                c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                                c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                                c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                                c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                                c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                                fill="url(#brandGradient)"
+                                opacity="0.9">
+                            </path>
+                            <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                        </g>
+                    </svg>
+                    <div>
+                        <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                        <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Agriculture Learning</p>
+                    </div>
+                </div>
+                <h2 style="font-size: 1.8em; margin-bottom: 10px;">🧪 1.5 Adding Manure and Fertilisers</h2>
+                <p style="font-size: 1.2em; opacity: 0.9;">Discover the nutrients plants need to grow and compare organic manure with chemical fertilizers!</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Activity 1.2 Simulation -->
+            <div class="section">
+                <h2>🧪 Activity 1.2 - Plant Growth Experiment</h2>
+                <p>Recreate the three-glass experiment to see how different treatments affect plant growth!</p>
+                
+                <div class="experiment-container">
+                    <h3>Three Glass Experiment Setup</h3>
+                    <p>Watch how seedlings grow differently with various soil treatments over 7-10 days</p>
+                    
+                    <div class="glasses-setup">
+                        <div class="glass" id="glass-a">
+                            <div class="glass-label">Glass A</div>
+                            <div class="seedling">🌱</div>
+                            <div class="glass-content">Soil + Cow Dung Manure</div>
+                        </div>
+                        
+                        <div class="glass" id="glass-b">
+                            <div class="glass-label">Glass B</div>
+                            <div class="seedling">🌱</div>
+                            <div class="glass-content">Soil + Urea (Fertilizer)</div>
+                        </div>
+                        
+                        <div class="glass" id="glass-c">
+                            <div class="glass-label">Glass C</div>
+                            <div class="seedling">🌱</div>
+                            <div class="glass-content">Soil Only (Control)</div>
+                        </div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="startExperiment()">🌱 Start Growth Experiment</button>
+                        <button class="btn" onclick="resetExperiment()">🔄 Reset</button>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <h4>Growth Progress</h4>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="experiment-progress"></div>
+                        </div>
+                        <div id="experiment-status">Click "Start Growth Experiment" to begin!</div>
+                    </div>
+
+                    <div id="experiment-results" class="feedback" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Manure vs Fertilizer Comparison -->
+            <div class="section">
+                <h2>⚖️ Manure vs Fertilizer Comparison</h2>
+                <p>Understand the key differences between organic manure and chemical fertilizers!</p>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>S. No.</th>
+                            <th>Fertilizer</th>
+                            <th>Manure</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1.</strong></td>
+                            <td>Fertilizer is a man-made inorganic salt</td>
+                            <td>Manure is a natural substance obtained by decomposition of cattle dung and plant residues</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2.</strong></td>
+                            <td>Fertilizer is prepared in factories</td>
+                            <td>Manure can be prepared in the fields</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3.</strong></td>
+                            <td>Fertilizer does not provide any humus to the soil</td>
+                            <td>Manure provides a lot of humus to the soil</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4.</strong></td>
+                            <td>Fertilizers are very rich in plant nutrients like nitrogen, phosphorus and potassium</td>
+                            <td>Manure is relatively less rich in plant nutrients</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; border-left: 4px solid #22c55e; margin-top: 20px;">
+                    <h4>🌟 Advantages of Organic Manure:</h4>
+                    <ul style="margin-left: 20px; line-height: 1.6;">
+                        <li>Enhances the water holding capacity of the soil</li>
+                        <li>Makes the soil porous, allowing easy gas exchange</li>
+                        <li>Increases the number of friendly microbes</li>
+                        <li>Improves the texture of the soil</li>
+                        <li>Provides long-lasting nutrition</li>
+                        <li>Environmentally sustainable</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Soil Nutrient Monitor -->
+            <div class="section">
+                <h2>📊 Soil Nutrient Monitor</h2>
+                <p>See how continuous cropping depletes soil nutrients and how manuring helps!</p>
+                
+                <div class="nutrient-meter">
+                    <h3>Soil Nutrient Levels</h3>
+                    
+                    <div class="nutrient-bar">
+                        <div class="nutrient-name">Nitrogen (N)</div>
+                        <div class="bar-container">
+                            <div class="bar-fill nitrogen-bar" id="nitrogen-bar" style="width: 80%;"></div>
+                        </div>
+                        <span id="nitrogen-level">80%</span>
+                    </div>
+                    
+                    <div class="nutrient-bar">
+                        <div class="nutrient-name">Phosphorus (P)</div>
+                        <div class="bar-container">
+                            <div class="bar-fill phosphorus-bar" id="phosphorus-bar" style="width: 75%;"></div>
+                        </div>
+                        <span id="phosphorus-level">75%</span>
+                    </div>
+                    
+                    <div class="nutrient-bar">
+                        <div class="nutrient-name">Potassium (K)</div>
+                        <div class="bar-container">
+                            <div class="bar-fill potassium-bar" id="potassium-bar" style="width: 70%;"></div>
+                        </div>
+                        <span id="potassium-level">70%</span>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button class="btn" onclick="simulateCropping()">🌾 Continuous Cropping</button>
+                        <button class="btn" onclick="addManure()">🚚 Add Manure</button>
+                        <button class="btn" onclick="addFertilizer()">⚗️ Add NPK Fertilizer</button>
+                        <button class="btn" onclick="resetNutrients()">🔄 Reset Soil</button>
+                    </div>
+
+                    <div id="nutrient-feedback" class="feedback" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Crop Rotation Game -->
+            <div class="section">
+                <h2>🔄 Crop Rotation Strategy</h2>
+                <p>Plan a crop rotation to maintain soil fertility naturally!</p>
+                
+                <div class="crop-rotation-game">
+                    <h3>🗓️ Seasonal Crop Planning</h3>
+                    <p>Select appropriate crops for each season to replenish soil nutrients</p>
+                    
+                    <div class="field-timeline">
+                        <div class="season-field" data-season="1">
+                            <div class="season-label">Year 1 - Winter</div>
+                            <div class="crop-in-field" id="crop-1"></div>
+                        </div>
+                        <div class="season-field" data-season="2">
+                            <div class="season-label">Year 1 - Summer</div>
+                            <div class="crop-in-field" id="crop-2"></div>
+                        </div>
+                        <div class="season-field" data-season="3">
+                            <div class="season-label">Year 2 - Winter</div>
+                            <div class="crop-in-field" id="crop-3"></div>
+                        </div>
+                        <div class="season-field" data-season="4">
+                            <div class="season-label">Year 2 - Summer</div>
+                            <div class="crop-in-field" id="crop-4"></div>
+                        </div>
+                    </div>
+
+                    <div class="crop-options">
+                        <div class="crop-option" data-crop="wheat" onclick="selectCrop('wheat')">
+                            <div class="crop-icon">🌾</div>
+                            <div>Wheat</div>
+                            <small>Nutrient Consumer</small>
+                        </div>
+                        <div class="crop-option" data-crop="legume" onclick="selectCrop('legume')">
+                            <div class="crop-icon">🫘</div>
+                            <div>Legumes</div>
+                            <small>Nitrogen Fixer</small>
+                        </div>
+                        <div class="crop-option" data-crop="fallow" onclick="selectCrop('fallow')">
+                            <div class="crop-icon">🟫</div>
+                            <div>Fallow</div>
+                            <small>Rest Period</small>
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="checkRotation()">✅ Check Rotation Plan</button>
+                    <button class="btn" onclick="resetRotation()">🔄 Reset</button>
+
+                    <div id="rotation-feedback" class="feedback" style="display: none;"></div>
+
+                    <div style="background: #dbeafe; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <h4>💡 Crop Rotation Tips:</h4>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Legumes:</strong> Fix nitrogen from air using Rhizobium bacteria</li>
+                            <li><strong>Wheat:</strong> Uses soil nutrients, especially nitrogen</li>
+                            <li><strong>Fallow:</strong> Allows soil to rest and regenerate naturally</li>
+                            <li><strong>Strategy:</strong> Alternate nutrient-consuming crops with nitrogen-fixing crops</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rhizobium Bacteria Demo -->
+            <div class="section">
+                <h2>🦠 Rhizobium Bacteria - Nature's Nitrogen Factory</h2>
+                <p>Explore how these helpful bacteria fix atmospheric nitrogen in legume roots!</p>
+                
+                <div class="bacteria-demo">
+                    <h3>🌱 Legume Root System with Nodules</h3>
+                    <p>Click on the yellow nodules to see nitrogen fixation in action!</p>
+                    
+                    <div class="root-system" id="root-system">
+                        <!-- Root branches -->
+                        <div class="root-branch" style="top: 80px; left: 140px; width: 20px; height: 100px;"></div>
+                        <div class="root-branch" style="top: 120px; left: 50px; width: 100px; height: 8px;"></div>
+                        <div class="root-branch" style="top: 140px; left: 200px; width: 80px; height: 8px;"></div>
+                        <div class="root-branch" style="top: 160px; left: 100px; width: 60px; height: 8px;"></div>
+                        
+                        <!-- Nodules -->
+                        <div class="nodule" style="top: 110px; left: 45px;" onclick="activateNodule(this)"></div>
+                        <div class="nodule" style="top: 130px; left: 190px;" onclick="activateNodule(this)"></div>
+                        <div class="nodule" style="top: 150px; left: 95px;" onclick="activateNodule(this)"></div>
+                        <div class="nodule" style="top: 135px; left: 270px;" onclick="activateNodule(this)"></div>
+                        <div class="nodule" style="top: 170px; left: 155px;" onclick="activateNodule(this)"></div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="startNitrogenFixation()">⚡ Start Nitrogen Fixation</button>
+                        <button class="btn" onclick="resetBacteria()">🔄 Reset</button>
+                    </div>
+
+                    <div style="background: #fffbeb; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <h4>🔬 How Rhizobium Works:</h4>
+                        <ol style="margin-left: 20px; line-height: 1.6;">
+                            <li>Rhizobium bacteria live in root nodules of legumes</li>
+                            <li>They convert atmospheric nitrogen (N₂) into ammonia (NH₃)</li>
+                            <li>Plants use this ammonia to make proteins and other compounds</li>
+                            <li>When plants decompose, they enrich soil with nitrogen</li>
+                            <li>This reduces the need for synthetic nitrogen fertilizers</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge Quiz -->
+            <div class="section">
+                <h2>🧠 Nutrition Knowledge Quiz</h2>
+                <div class="quiz-container">
+                    <div id="quiz-question" class="question">Loading question...</div>
+                    <div id="quiz-options" class="options"></div>
+                    <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="nextQuestion()">Next Question</button>
+                    <div id="quiz-score" class="score">Score: 0/0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Questions
+        const quizQuestions = [
+            {
+                question: "What happens to soil nutrients when crops are grown continuously?",
+                options: ["They increase", "They remain same", "They become poor/depleted", "They change color"],
+                correct: 2
+            },
+            {
+                question: "Which treatment showed the best growth in Activity 1.2?",
+                options: ["Soil only", "Soil + cow dung", "Soil + urea", "All were same"],
+                correct: 2
+            },
+            {
+                question: "What is the main advantage of manure over fertilizer?",
+                options: ["It's cheaper", "It provides humus", "It works faster", "It has more nitrogen"],
+                correct: 1
+            },
+            {
+                question: "Which bacteria help in nitrogen fixation in legume roots?",
+                options: ["E. coli", "Rhizobium", "Lactobacillus", "Streptococcus"],
+                correct: 1
+            },
+            {
+                question: "What does NPK stand for in fertilizers?",
+                options: ["Nitrogen, Potassium, Phosphorus", "Nitrogen, Phosphorus, Potassium", "Natural Plant Killer", "New Plant Knowledge"],
+                correct: 1
+            },
+            {
+                question: "Why is crop rotation beneficial?",
+                options: ["It looks better", "It replenishes soil nutrients", "It prevents rain", "It saves water"],
+                correct: 1
+            }
+        ];
+
+        // Global Variables
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+        let selectedCrop = null;
+        let selectedField = null;
+        let rotationPlan = {};
+
+        // Experiment Simulation
+        function startExperiment() {
+            const progress = document.getElementById('experiment-progress');
+            const status = document.getElementById('experiment-status');
+            const results = document.getElementById('experiment-results');
+            
+            let day = 0;
+            status.textContent = 'Day 0: Experiment started - seeds planted in all glasses';
+            
+            const interval = setInterval(() => {
+                day++;
+                progress.style.width = (day * 10) + '%';
+                
+                // Update glass appearances based on day
+                if (day >= 3) {
+                    document.getElementById('glass-b').classList.add('super-grown');
+                    status.textContent = `Day ${day}: Glass B (fertilizer) showing rapid growth!`;
+                }
+                if (day >= 5) {
+                    document.getElementById('glass-a').classList.add('grown');
+                    status.textContent = `Day ${day}: Glass A (manure) showing steady growth, Glass B still leading`;
+                }
+                if (day >= 7) {
+                    document.getElementById('glass-c').classList.add('stunted');
+                    status.textContent = `Day ${day}: Glass C (soil only) showing minimal growth`;
+                }
+                
+                if (day >= 10) {
+                    clearInterval(interval);
+                    status.textContent = 'Day 10: Experiment completed! Analyze the results below.';
+                    showExperimentResults();
+                }
+            }, 800);
+        }
+
+        function showExperimentResults() {
+            const results = document.getElementById('experiment-results');
+            results.innerHTML = `
+                <div class="feedback success">
+                    <h4>🔬 Experiment Results:</h4>
+                    <ul style="text-align: left; margin-left: 20px;">
+                        <li><strong>Glass B (Fertilizer):</strong> Fastest growth - concentrated nutrients provide immediate boost</li>
+                        <li><strong>Glass A (Manure):</strong> Steady, healthy growth - organic matter improves soil structure</li>
+                        <li><strong>Glass C (Control):</strong> Poorest growth - limited nutrients in plain soil</li>
+                    </ul>
+                    <p><strong>Conclusion:</strong> Plants need nutrients for healthy growth. Both manure and fertilizers provide these nutrients, but in different ways!</p>
+                </div>
+            `;
+            results.style.display = 'block';
+        }
+
+        function resetExperiment() {
+            document.querySelectorAll('.glass').forEach(glass => {
+                glass.classList.remove('grown', 'super-grown', 'stunted');
+            });
+            document.getElementById('experiment-progress').style.width = '0%';
+            document.getElementById('experiment-status').textContent = 'Click "Start Growth Experiment" to begin!';
+            document.getElementById('experiment-results').style.display = 'none';
+        }
+
+        // Nutrient Monitor Functions
+        function simulateCropping() {
+            updateNutrientBar('nitrogen', -20);
+            updateNutrientBar('phosphorus', -15);
+            updateNutrientBar('potassium', -10);
+            
+            showNutrientFeedback('Continuous cropping has depleted soil nutrients! Plants are showing signs of deficiency.', 'error');
+        }
+
+        function addManure() {
+            updateNutrientBar('nitrogen', 15);
+            updateNutrientBar('phosphorus', 10);
+            updateNutrientBar('potassium', 12);
+            
+            showNutrientFeedback('Organic manure added! Soil structure improved and nutrients slowly released.', 'success');
+        }
+
+        function addFertilizer() {
+            updateNutrientBar('nitrogen', 25);
+            updateNutrientBar('phosphorus', 20);
+            updateNutrientBar('potassium', 18);
+            
+            showNutrientFeedback('NPK fertilizer added! Immediate nutrient boost provided to plants.', 'success');
+        }
+
+        function updateNutrientBar(nutrient, change) {
+            const bar = document.getElementById(`${nutrient}-bar`);
+            const level = document.getElementById(`${nutrient}-level`);
+            
+            let currentWidth = parseInt(bar.style.width);
+            let newWidth = Math.max(0, Math.min(100, currentWidth + change));
+            
+            bar.style.width = newWidth + '%';
+            level.textContent = newWidth + '%';
+        }
+
+        function showNutrientFeedback(message, type) {
+            const feedback = document.getElementById('nutrient-feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.style.display = 'block';
+        }
+
+        function resetNutrients() {
+            updateNutrientBar('nitrogen', 80 - parseInt(document.getElementById('nitrogen-bar').style.width));
+            updateNutrientBar('phosphorus', 75 - parseInt(document.getElementById('phosphorus-bar').style.width));
+            updateNutrientBar('potassium', 70 - parseInt(document.getElementById('potassium-bar').style.width));
+            
+            document.getElementById('nutrient-feedback').style.display = 'none';
+        }
+
+        // Crop Rotation Functions
+        function selectCrop(crop) {
+            // Remove previous selections
+            document.querySelectorAll('.crop-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelectorAll('.season-field').forEach(field => field.classList.remove('selected'));
+            
+            // Select new crop
+            document.querySelector(`[data-crop="${crop}"]`).classList.add('selected');
+            selectedCrop = crop;
+            
+            // Show instruction
+            showRotationFeedback('Now click on a field to plant this crop!', 'success');
+        }
+
+        function selectField(season) {
+            if (!selectedCrop) {
+                showRotationFeedback('Please select a crop first!', 'error');
+                return;
+            }
+            
+            const field = document.querySelector(`[data-season="${season}"]`);
+            const cropElement = document.getElementById(`crop-${season}`);
+            
+            field.classList.add('planted');
+            
+            const cropIcons = {
+                wheat: '🌾',
+                legume: '🫘',
+                fallow: '🟫'
+            };
+            
+            cropElement.textContent = cropIcons[selectedCrop];
+            rotationPlan[season] = selectedCrop;
+            
+            // Reset selections
+            document.querySelectorAll('.crop-option').forEach(opt => opt.classList.remove('selected'));
+            selectedCrop = null;
+            
+            showRotationFeedback(`${selectedCrop} planted in season ${season}!`, 'success');
+        }
+
+        // Add click handlers for season fields
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.season-field').forEach(field => {
+                field.addEventListener('click', function() {
+                    const season = this.dataset.season;
+                    selectField(season);
+                });
+            });
+        });
+
+        function checkRotation() {
+            const seasons = Object.keys(rotationPlan).length;
+            if (seasons < 4) {
+                showRotationFeedback('Please plan all 4 seasons!', 'error');
+                return;
+            }
+            
+            let score = 0;
+            let feedback = 'Rotation Analysis:\n';
+            
+            // Check for good practices
+            const crops = Object.values(rotationPlan);
+            const hasLegume = crops.includes('legume');
+            const hasFallow = crops.includes('fallow');
+            const notAllWheat = crops.filter(c => c === 'wheat').length < 4;
+            
+            if (hasLegume) {
+                score += 30;
+                feedback += '✅ Good! Legumes help fix nitrogen\n';
+            }
+            if (hasFallow) {
+                score += 20;
+                feedback += '✅ Excellent! Fallow period helps soil recover\n';
+            }
+            if (notAllWheat) {
+                score += 30;
+                feedback += '✅ Smart! Avoiding continuous wheat cultivation\n';
+            }
+            
+            // Check alternating pattern
+            if (hasLegume && crops.includes('wheat')) {
+                score += 20;
+                feedback += '✅ Perfect! Alternating legumes with wheat\n';
+            }
+            
+            const type = score >= 80 ? 'success' : score >= 50 ? 'success' : 'error';
+            feedback += `\nScore: ${score}/100 - ${score >= 80 ? 'Excellent rotation!' : score >= 50 ? 'Good attempt!' : 'Needs improvement'}`;
+            
+            showRotationFeedback(feedback, type);
+        }
+
+        function resetRotation() {
+            rotationPlan = {};
+            document.querySelectorAll('.season-field').forEach(field => {
+                field.classList.remove('planted');
+            });
+            document.querySelectorAll('.crop-in-field').forEach(crop => {
+                crop.textContent = '';
+            });
+            document.getElementById('rotation-feedback').style.display = 'none';
+        }
+
+        function showRotationFeedback(message, type) {
+            const feedback = document.getElementById('rotation-feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.style.display = 'block';
+        }
+
+        // Rhizobium Functions
+        function activateNodule(nodule) {
+            nodule.classList.add('active');
+            
+            // Create nitrogen bubbles
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    createNitrogenBubble(nodule);
+                }, i * 300);
+            }
+        }
+
+        function createNitrogenBubble(nodule) {
+            const bubble = document.createElement('div');
+            bubble.className = 'nitrogen-bubble';
+            bubble.style.left = nodule.style.left;
+            bubble.style.top = nodule.style.top;
+            
+            document.getElementById('root-system').appendChild(bubble);
+            
+            setTimeout(() => {
+                bubble.remove();
+            }, 3000);
+        }
+
+        function startNitrogenFixation() {
+            const nodules = document.querySelectorAll('.nodule');
+            nodules.forEach((nodule, index) => {
+                setTimeout(() => {
+                    activateNodule(nodule);
+                }, index * 500);
+            });
+        }
+
+        function resetBacteria() {
+            document.querySelectorAll('.nodule').forEach(nodule => {
+                nodule.classList.remove('active');
+            });
+            document.querySelectorAll('.nitrogen-bubble').forEach(bubble => {
+                bubble.remove();
+            });
+        }
+
+        // Quiz Functions
+        function loadQuestion() {
+            if (currentQuizIndex >= quizQuestions.length) {
+                document.getElementById('quiz-question').textContent = `Quiz Complete! Final Score: ${quizScore}/${quizQuestions.length}`;
+                document.getElementById('quiz-options').innerHTML = '<p style="text-align: center; font-size: 1.2rem; color: #065f46;">🎉 Outstanding! You\'ve mastered plant nutrition!</p>';
+                return;
+            }
+
+            const question = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-question').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(optionElement);
+            });
+
+            document.getElementById('quiz-feedback').style.display = 'none';
+            quizAnswered = false;
+            updateQuizScore();
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (quizAnswered) return;
+
+            const question = quizQuestions[currentQuizIndex];
+            const options = document.querySelectorAll('#quiz-options .option');
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && selectedIndex !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            const feedback = document.getElementById('quiz-feedback');
+            if (selectedIndex === question.correct) {
+                quizScore++;
+                feedback.textContent = '✅ Excellent! That\'s correct!';
+                feedback.className = 'feedback success';
+            } else {
+                feedback.textContent = `❌ Not quite right. The correct answer is: ${question.options[question.correct]}`;
+                feedback.className = 'feedback error';
+            }
+            
+            feedback.style.display = 'block';
+            quizAnswered = true;
+            updateQuizScore();
+        }
+
+        function nextQuestion() {
+            currentQuizIndex++;
+            loadQuestion();
+        }
+
+        function updateQuizScore() {
+            document.getElementById('quiz-score').textContent = `Score: ${quizScore}/${Math.min(currentQuizIndex + 1, quizQuestions.length)}`;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuestion();
+        });
+    </script>
+</body>
+</html>

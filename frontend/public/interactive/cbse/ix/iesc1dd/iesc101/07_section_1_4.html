@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paaṭha AI - Section 1.4 Can Matter Change its State?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            height: 48px;
+            width: 48px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .water-states-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #e0f2fe, #f0fdfa);
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .water-state {
+            text-align: center;
+            margin: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .water-state:hover {
+            transform: translateY(-5px);
+        }
+
+        .state-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .heating-setup {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .beaker-setup {
+            position: relative;
+            display: inline-block;
+            margin: 20px;
+        }
+
+        .beaker {
+            width: 120px;
+            height: 150px;
+            border: 4px solid #333;
+            border-radius: 0 0 60px 60px;
+            position: relative;
+            background: linear-gradient(to bottom, transparent 20%, var(--content-color, #87CEEB) 20%);
+            overflow: hidden;
+        }
+
+        .ice-cubes {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 20px;
+            background: #e6f3ff;
+            border-radius: 5px;
+            opacity: var(--ice-opacity, 1);
+            transition: all 2s ease;
+        }
+
+        .thermometer {
+            position: absolute;
+            right: -30px;
+            top: 20px;
+            width: 20px;
+            height: 100px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: linear-gradient(to top, #ff4444 0%, #ff4444 var(--temp-level, 20%), #f0f0f0 var(--temp-level, 20%));
+        }
+
+        .thermometer::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: #ff4444;
+            border-radius: 50%;
+        }
+
+        .flame {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 30px;
+            background: radial-gradient(ellipse at bottom, #ff6b35, #ff4500, #ffa500);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            opacity: var(--flame-opacity, 0);
+            animation: flicker 0.5s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1); }
+            100% { transform: translateX(-50%) scale(1.1) rotate(2deg); }
+        }
+
+        .steam-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #87CEEB;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: steam 2s infinite ease-out;
+        }
+
+        @keyframes steam {
+            0% { 
+                transform: translateY(0) scale(1);
+                opacity: 0.7;
+            }
+            100% { 
+                transform: translateY(-60px) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        .temperature-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .temp-slider {
+            width: 200px;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #0066cc, #ffaa00, #ff4444);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .phase-diagram {
+            background: #f0fdfa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #10b981;
+        }
+
+        .phase-transitions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .phase-state {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .transition-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .arrow-up, .arrow-down {
+            font-size: 20px;
+            color: #667eea;
+            margin: 2px 0;
+        }
+
+        .transition-label {
+            font-size: 12px;
+            text-align: center;
+            margin: 2px 0;
+            font-weight: bold;
+        }
+
+        .sublimation-demo {
+            background: #fff7ed;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #fb923c;
+        }
+
+        .camphor-setup {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .china-dish {
+            width: 80px;
+            height: 20px;
+            border: 3px solid #8B4513;
+            border-radius: 50%;
+            position: relative;
+            background: #DEB887;
+        }
+
+        .camphor {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 8px;
+            background: white;
+            border-radius: 4px;
+            opacity: var(--camphor-opacity, 1);
+            transition: all 3s ease;
+        }
+
+        .funnel {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 60px solid #ddd;
+            opacity: 0.7;
+        }
+
+        .funnel::after {
+            content: '';
+            position: absolute;
+            top: 60px;
+            left: -10px;
+            width: 20px;
+            height: 30px;
+            background: #ddd;
+        }
+
+        .deposited-camphor {
+            position: absolute;
+            top: -45px;
+            left: 20px;
+            right: 20px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            opacity: var(--deposit-opacity, 0);
+            transition: all 3s ease;
+        }
+
+        .pressure-demo {
+            background: #e3f2fd;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #2196f3;
+        }
+
+        .cylinder-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .gas-cylinder {
+            width: 80px;
+            height: 120px;
+            border: 3px solid #333;
+            border-radius: 5px;
+            position: relative;
+            margin: 15px;
+            background: linear-gradient(to bottom, #f0f0f0 0%, #f0f0f0 var(--gas-compression, 80%), #e0e0e0 var(--gas-compression, 80%));
+        }
+
+        .piston {
+            position: absolute;
+            top: var(--piston-position, 0px);
+            left: -5px;
+            right: -5px;
+            height: 15px;
+            background: #666;
+            border-radius: 3px;
+            transition: all 1s ease;
+        }
+
+        .gas-particles {
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            right: 10px;
+            top: 20px;
+        }
+
+        .gas-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: gasMove 1s infinite linear;
+        }
+
+        @keyframes gasMove {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(10px, 15px); }
+            50% { transform: translate(-5px, 10px); }
+            75% { transform: translate(15px, -5px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #64748b, #475569);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table tr:hover {
+            background: #f0f8ff;
+        }
+
+        .quiz-section {
+            background: #fff3e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .quiz-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quiz-option.correct {
+            background: #48bb78;
+            color: white;
+            border-color: #48bb78;
+        }
+
+        .quiz-option.incorrect {
+            background: #f56565;
+            color: white;
+            border-color: #f56565;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-highlight {
+            background: linear-gradient(135deg, #e0f2fe, #f0fdfa);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .key-concept {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .water-states-demo { flex-direction: column; }
+            .phase-transitions { flex-direction: column; align-items: center; }
+            .cylinder-demo { flex-direction: column; }
+            .camphor-setup { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="logo"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Chemistry Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">🌡️ Section 1.4 - Can Matter Change its State?</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Discover how temperature and pressure change matter's state!</p>
+        </div>
+
+        <div class="section">
+            <h2>💧 Water: A Perfect Example</h2>
+            
+            <div class="water-states-demo">
+                <div class="water-state">
+                    <span class="state-icon">🧊</span>
+                    <h3>ICE</h3>
+                    <p><strong>Solid State</strong></p>
+                    <p>Below 0°C (273 K)</p>
+                </div>
+                <div class="water-state">
+                    <span class="state-icon">💧</span>
+                    <h3>WATER</h3>
+                    <p><strong>Liquid State</strong></p>
+                    <p>0°C to 100°C (273-373 K)</p>
+                </div>
+                <div class="water-state">
+                    <span class="state-icon">💨</span>
+                    <h3>STEAM</h3>
+                    <p><strong>Gas State</strong></p>
+                    <p>Above 100°C (373 K)</p>
+                </div>
+            </div>
+
+            <div class="key-concept">
+                <h3>🎯 Key Questions</h3>
+                <p>What happens inside matter during state changes? How do particles behave? What causes these changes?</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔥 1.4.1 - Effect of Temperature Change</h2>
+            
+            <div class="heating-setup">
+                <h3 style="color: #667eea; margin-bottom: 20px;">🧪 Activity 1.12 - Heating Ice & Water</h3>
+                
+                <div class="beaker-setup">
+                    <div class="beaker" id="experimentBeaker">
+                        <div class="ice-cubes" id="iceCubes"></div>
+                        <div class="thermometer" id="thermometer"></div>
+                        <div class="flame" id="flame"></div>
+                    </div>
+                </div>
+
+                <div class="temperature-control">
+                    <label>Temperature Control:</label>
+                    <input type="range" min="-10" max="120" value="-10" class="temp-slider" id="tempSlider" onchange="updateTemperature(this.value)">
+                    <span id="tempDisplay">-10°C</span>
+                </div>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <button class="btn" onclick="startHeating()">🔥 Start Heating</button>
+                    <button class="btn" onclick="autoHeat()">⚡ Auto Heat to 120°C</button>
+                    <button class="btn secondary" onclick="resetExperiment()">🔄 Reset</button>
+                </div>
+
+                <div id="heatingObservation" class="info-highlight">
+                    <h4>📝 Observations</h4>
+                    <p>Adjust temperature or start heating to observe state changes!</p>
+                </div>
+
+                <div class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Temperature Range</th>
+                            <th>State</th>
+                            <th>What Happens</th>
+                            <th>Process Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Below 0°C</td>
+                            <td>🧊 Solid (Ice)</td>
+                            <td>Particles vibrate in fixed positions</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Exactly 0°C</td>
+                            <td>🧊➡️💧 Melting</td>
+                            <td>Temperature constant, ice converts to water</td>
+                            <td><strong>Fusion</strong></td>
+                        </tr>
+                        <tr>
+                            <td>0°C to 100°C</td>
+                            <td>💧 Liquid (Water)</td>
+                            <td>Particles move freely, temperature rises</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Exactly 100°C</td>
+                            <td>💧➡️💨 Boiling</td>
+                            <td>Temperature constant, water converts to steam</td>
+                            <td><strong>Vaporization</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Above 100°C</td>
+                            <td>💨 Gas (Steam)</td>
+                            <td>Particles move rapidly and freely</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </div>
+            </div>
+
+            <div class="info-highlight">
+                <h4>🎯 Key Discoveries</h4>
+                <ul style="margin-top: 10px;">
+                    <li><strong>Melting Point:</strong> 0°C (273 K) - minimum temperature for solid to become liquid</li>
+                    <li><strong>Boiling Point:</strong> 100°C (373 K) - temperature at which liquid becomes gas</li>
+                    <li><strong>Latent Heat:</strong> Heat energy used to change state (hidden heat)</li>
+                    <li><strong>Temperature remains constant</strong> during melting and boiling!</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Complete Phase Diagram</h2>
+            
+            <div class="phase-diagram">
+                <h3 style="color: #10b981; text-align: center; margin-bottom: 20px;">🌡️ All Possible State Changes</h3>
+                
+                <div class="phase-transitions">
+                    <div class="phase-state">SOLID</div>
+                    
+                    <div class="transition-arrow">
+                        <div class="arrow-up">→</div>
+                        <div class="transition-label">Melting/Fusion<br>(Heat)</div>
+                        <div class="arrow-down">←</div>
+                        <div class="transition-label">Freezing/Solidification<br>(Cool)</div>
+                    </div>
+                    
+                    <div class="phase-state">LIQUID</div>
+                    
+                    <div class="transition-arrow">
+                        <div class="arrow-up">→</div>
+                        <div class="transition-label">Boiling/Vaporization<br>(Heat)</div>
+                        <div class="arrow-down">←</div>
+                        <div class="transition-label">Condensation<br>(Cool)</div>
+                    </div>
+                    
+                    <div class="phase-state">GAS</div>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <div class="transition-arrow" style="flex-direction: row;">
+                        <div class="phase-state" style="margin: 0 10px;">SOLID</div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div class="arrow-up">→</div>
+                            <div class="transition-label">Sublimation<br>(Heat)</div>
+                            <div class="arrow-down">←</div>
+                            <div class="transition-label">Deposition<br>(Cool)</div>
+                        </div>
+                        <div class="phase-state" style="margin: 0 10px;">GAS</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌟 Sublimation - Direct Solid to Gas</h2>
+            
+            <div class="sublimation-demo">
+                <h3 style="color: #fb923c; text-align: center; margin-bottom: 15px;">🧪 Activity 1.13 - Camphor Sublimation</h3>
+                
+                <div class="camphor-setup">
+                    <div style="position: relative;">
+                        <div class="china-dish">
+                            <div class="camphor" id="camphor"></div>
+                        </div>
+                        <div class="funnel">
+                            <div class="deposited-camphor" id="depositedCamphor"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <button class="btn" onclick="startSublimation()">🔥 Heat Camphor</button>
+                    <button class="btn secondary" onclick="resetSublimation()">🔄 Reset</button>
+                </div>
+
+                <div id="sublimationResult" class="info-highlight">
+                    <h4>🎯 Sublimation Process</h4>
+                    <p>Heat the camphor to see it change directly from solid to gas, then back to solid on cool surfaces!</p>
+                </div>
+
+                <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0;">
+                    <h4>🌟 Examples of Sublimation</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="text-align: center; padding: 10px;">
+                            <div style="font-size: 30px;">🧊</div>
+                            <strong>Dry Ice (CO₂)</strong>
+                            <p>Solid CO₂ directly becomes gas</p>
+                        </div>
+                        <div style="text-align: center; padding: 10px;">
+                            <div style="font-size: 30px;">🌿</div>
+                            <strong>Camphor</strong>
+                            <p>Used in this experiment</p>
+                        </div>
+                        <div style="text-align: center; padding: 10px;">
+                            <div style="font-size: 30px;">💊</div>
+                            <strong>Naphthalene</strong>
+                            <p>Mothballs sublime slowly</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 1.4.2 - Effect of Pressure Change</h2>
+            
+            <div class="pressure-demo">
+                <h3 style="color: #2196f3; text-align: center; margin-bottom: 15px;">⚡ Pressure & State Changes</h3>
+                
+                <div class="cylinder-demo">
+                    <div style="text-align: center;">
+                        <h4>Low Pressure</h4>
+                        <div class="gas-cylinder" id="lowPressure">
+                            <div class="piston"></div>
+                            <div class="gas-particles">
+                                <!-- Gas particles will be generated -->
+                            </div>
+                        </div>
+                        <p>Gas particles far apart</p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <h4>High Pressure</h4>
+                        <div class="gas-cylinder" id="highPressure">
+                            <div class="piston"></div>
+                            <div class="gas-particles">
+                                <!-- Gas particles will be generated -->
+                            </div>
+                        </div>
+                        <p>Gas particles closer together</p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <h4>Very High Pressure</h4>
+                        <div class="gas-cylinder" id="veryHighPressure">
+                            <div class="piston"></div>
+                            <div class="gas-particles">
+                                <!-- Gas particles will be generated -->
+                            </div>
+                        </div>
+                        <p>Gas becomes liquid!</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <button class="btn" onclick="applyPressure()">🔽 Apply Pressure</button>
+                    <button class="btn secondary" onclick="resetPressure()">🔄 Reset</button>
+                </div>
+
+                <div class="info-highlight">
+                    <h4>🎯 Pressure Effects</h4>
+                    <p><strong>Increasing pressure + Decreasing temperature = Gas becomes Liquid</strong></p>
+                    <p>This principle is used in LPG cylinders, refrigerators, and air conditioners!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧠 Knowledge Check</h2>
+            
+            <div class="quiz-section">
+                <div class="quiz-question">🎯 Test Your Understanding</div>
+                
+                <div id="question1">
+                    <p><strong>Question 1:</strong> What happens to temperature during melting of ice?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">It increases continuously</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'correct', this)">It remains constant at 0°C</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">It decreases</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">It fluctuates randomly</div>
+                    </div>
+                    <div id="feedback1"></div>
+                </div>
+                
+                <div id="question2" style="margin-top: 20px;">
+                    <p><strong>Question 2:</strong> What is sublimation?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Liquid to gas conversion</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'correct', this)">Direct solid to gas conversion</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Gas to liquid conversion</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Solid to liquid conversion</div>
+                    </div>
+                    <div id="feedback2"></div>
+                </div>
+                
+                <div id="question3" style="margin-top: 20px;">
+                    <p><strong>Question 3:</strong> Why is dry ice called "dry" ice?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">It doesn't contain water</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'correct', this)">It sublimes directly from solid to gas without becoming liquid</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">It's completely dehydrated</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">It absorbs moisture from air</div>
+                    </div>
+                    <div id="feedback3"></div>
+                </div>
+
+                <div id="question4" style="margin-top: 20px;">
+                    <p><strong>Question 4:</strong> What determines the state of a substance?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(4, 'wrong', this)">Only temperature</div>
+                        <div class="quiz-option" onclick="answerQuiz(4, 'wrong', this)">Only pressure</div>
+                        <div class="quiz-option" onclick="answerQuiz(4, 'correct', this)">Both temperature and pressure</div>
+                        <div class="quiz-option" onclick="answerQuiz(4, 'wrong', this)">Only the type of matter</div>
+                    </div>
+                    <div id="feedback4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let heatingInterval;
+        let currentTemp = -10;
+        
+        // Temperature control and heating simulation
+        function updateTemperature(temp) {
+            currentTemp = parseInt(temp);
+            const tempDisplay = document.getElementById('tempDisplay');
+            const thermometer = document.getElementById('thermometer');
+            const beaker = document.getElementById('experimentBeaker');
+            const iceCubes = document.getElementById('iceCubes');
+            const flame = document.getElementById('flame');
+            const observation = document.getElementById('heatingObservation');
+            
+            tempDisplay.textContent = temp + '°C';
+            
+            // Update thermometer
+            const tempLevel = Math.max(0, Math.min(100, (parseInt(temp) + 10) * 100 / 130));
+            thermometer.style.setProperty('--temp-level', tempLevel + '%');
+            
+            // Show/hide flame
+            if (temp > -10) {
+                flame.style.setProperty('--flame-opacity', '1');
+            } else {
+                flame.style.setProperty('--flame-opacity', '0');
+            }
+            
+            // Update states and observations
+            if (temp < 0) {
+                beaker.style.setProperty('--content-color', '#e6f3ff');
+                iceCubes.style.setProperty('--ice-opacity', '1');
+                observation.innerHTML = `
+                    <h4>📝 Observation at ${temp}°C</h4>
+                    <p><strong>State:</strong> Solid (Ice) 🧊</p>
+                    <p>Ice particles vibrate in fixed positions. All water is frozen.</p>
+                `;
+            } else if (temp >= 0 && temp < 100) {
+                beaker.style.setProperty('--content-color', '#87CEEB');
+                iceCubes.style.setProperty('--ice-opacity', temp === 0 ? '0.5' : '0');
+                
+                if (temp === 0) {
+                    observation.innerHTML = `
+                        <h4>📝 Observation at ${temp}°C - MELTING POINT!</h4>
+                        <p><strong>State:</strong> Melting 🧊➡️💧</p>
+                        <p><strong>Key Discovery:</strong> Temperature stays constant during melting! Heat energy is used to break intermolecular forces (Latent Heat of Fusion).</p>
+                    `;
+                } else {
+                    observation.innerHTML = `
+                        <h4>📝 Observation at ${temp}°C</h4>
+                        <p><strong>State:</strong> Liquid (Water) 💧</p>
+                        <p>Water particles move freely. Temperature rises as heat increases kinetic energy.</p>
+                    `;
+                }
+            } else if (temp === 100) {
+                beaker.style.setProperty('--content-color', '#87CEEB');
+                generateSteam();
+                observation.innerHTML = `
+                    <h4>📝 Observation at ${temp}°C - BOILING POINT!</h4>
+                    <p><strong>State:</strong> Boiling 💧➡️💨</p>
+                    <p><strong>Key Discovery:</strong> Temperature stays constant during boiling! Heat energy converts liquid to gas (Latent Heat of Vaporization).</p>
+                `;
+            } else {
+                beaker.style.setProperty('--content-color', '#ffd700');
+                generateSteam();
+                observation.innerHTML = `
+                    <h4>📝 Observation at ${temp}°C</h4>
+                    <p><strong>State:</strong> Gas (Steam) 💨</p>
+                    <p>Steam particles move rapidly and randomly. High kinetic energy allows particles to move freely.</p>
+                `;
+            }
+        }
+        
+        function generateSteam() {
+            const beaker = document.getElementById('experimentBeaker');
+            
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const steam = document.createElement('div');
+                    steam.className = 'steam-particle';
+                    steam.style.left = (40 + Math.random() * 40) + 'px';
+                    steam.style.top = '20px';
+                    beaker.appendChild(steam);
+                    
+                    setTimeout(() => {
+                        if (steam.parentNode) {
+                            steam.parentNode.removeChild(steam);
+                        }
+                    }, 2000);
+                }, i * 200);
+            }
+        }
+        
+        function startHeating() {
+            if (heatingInterval) clearInterval(heatingInterval);
+            
+            heatingInterval = setInterval(() => {
+                if (currentTemp < 120) {
+                    currentTemp += 2;
+                    document.getElementById('tempSlider').value = currentTemp;
+                    updateTemperature(currentTemp);
+                } else {
+                    clearInterval(heatingInterval);
+                }
+            }, 1000);
+        }
+        
+        function autoHeat() {
+            if (heatingInterval) clearInterval(heatingInterval);
+            
+            heatingInterval = setInterval(() => {
+                if (currentTemp < 120) {
+                    currentTemp += 5;
+                    document.getElementById('tempSlider').value = currentTemp;
+                    updateTemperature(currentTemp);
+                } else {
+                    clearInterval(heatingInterval);
+                }
+            }, 500);
+        }
+        
+        function resetExperiment() {
+            if (heatingInterval) clearInterval(heatingInterval);
+            currentTemp = -10;
+            document.getElementById('tempSlider').value = -10;
+            updateTemperature(-10);
+        }
+        
+        // Sublimation demonstration
+        function startSublimation() {
+            const camphor = document.getElementById('camphor');
+            const depositedCamphor = document.getElementById('depositedCamphor');
+            const result = document.getElementById('sublimationResult');
+            
+            // Camphor disappears
+            camphor.style.setProperty('--camphor-opacity', '0');
+            
+            // Camphor appears on funnel walls
+            setTimeout(() => {
+                depositedCamphor.style.setProperty('--deposit-opacity', '1');
+                result.innerHTML = `
+                    <h4>🎯 Sublimation Observed!</h4>
+                    <p><strong>Amazing!</strong> Camphor has changed directly from solid to gas (sublimation) and then back to solid (deposition) on the cool funnel walls!</p>
+                    <p><strong>Process:</strong> Solid Camphor → Heat → Gas (invisible) → Cool Surface → Solid Camphor</p>
+                `;
+            }, 2000);
+        }
+        
+        function resetSublimation() {
+            document.getElementById('camphor').style.setProperty('--camphor-opacity', '1');
+            document.getElementById('depositedCamphor').style.setProperty('--deposit-opacity', '0');
+            document.getElementById('sublimationResult').innerHTML = `
+                <h4>🎯 Sublimation Process</h4>
+                <p>Heat the camphor to see it change directly from solid to gas, then back to solid on cool surfaces!</p>
+            `;
+        }
+        
+        // Pressure demonstration
+        function generateGasParticles(containerId, count) {
+            const container = document.querySelector(`#${containerId} .gas-particles`);
+            container.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'gas-particle';
+                particle.style.left = Math.random() * 50 + 'px';
+                particle.style.top = Math.random() * 70 + 'px';
+                particle.style.animationDelay = Math.random() * 1 + 's';
+                container.appendChild(particle);
+            }
+        }
+        
+        function applyPressure() {
+            // Low pressure - normal state
+            document.getElementById('lowPressure').style.setProperty('--piston-position', '0px');
+            document.getElementById('lowPressure').style.setProperty('--gas-compression', '80%');
+            generateGasParticles('lowPressure', 8);
+            
+            // High pressure - compressed
+            document.getElementById('highPressure').style.setProperty('--piston-position', '30px');
+            document.getElementById('highPressure').style.setProperty('--gas-compression', '60%');
+            generateGasParticles('highPressure', 8);
+            
+            // Very high pressure - liquefied
+            document.getElementById('veryHighPressure').style.setProperty('--piston-position', '60px');
+            document.getElementById('veryHighPressure').style.setProperty('--gas-compression', '30%');
+            
+            // Change to liquid color
+            setTimeout(() => {
+                const cylinder = document.getElementById('veryHighPressure');
+                cylinder.style.background = 'linear-gradient(to bottom, #f0f0f0 0%, #f0f0f0 30%, #4FC3F7 30%)';
+                cylinder.querySelector('.gas-particles').innerHTML = '';
+            }, 1000);
+        }
+        
+        function resetPressure() {
+            ['lowPressure', 'highPressure', 'veryHighPressure'].forEach(id => {
+                const cylinder = document.getElementById(id);
+                cylinder.style.setProperty('--piston-position', '0px');
+                cylinder.style.setProperty('--gas-compression', '80%');
+                cylinder.style.background = 'linear-gradient(to bottom, #f0f0f0 0%, #f0f0f0 80%, #e0e0e0 80%)';
+                cylinder.querySelector('.gas-particles').innerHTML = '';
+            });
+        }
+        
+        // Quiz functionality
+        function answerQuiz(questionNum, answer, element) {
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            const correctAnswers = {
+                1: 'correct', // Temperature remains constant during melting
+                2: 'correct', // Sublimation is direct solid to gas
+                3: 'correct', // Dry ice sublimes without becoming liquid
+                4: 'correct'  // Both temperature and pressure determine state
+            };
+            
+            const isCorrect = answer === correctAnswers[questionNum];
+            
+            const explanations = {
+                1: 'During melting, temperature remains constant at the melting point while heat energy is used to overcome intermolecular forces (latent heat of fusion).',
+                2: 'Sublimation is the direct conversion of a solid to a gas without passing through the liquid state, like camphor or dry ice.',
+                3: 'Dry ice (solid CO₂) is called "dry" because it sublimes directly to gas without melting into a liquid, leaving no wet residue.',
+                4: 'Both temperature and pressure determine whether a substance will be solid, liquid, or gas. Changes in either can cause state transitions.'
+            };
+            
+            if (isCorrect) {
+                feedback.innerHTML = `<div class="feedback success">✅ Excellent! ${explanations[questionNum]}</div>`;
+            } else {
+                feedback.innerHTML = `<div class="feedback error">❌ Try again! ${explanations[questionNum]}</div>`;
+            }
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTemperature(-10);
+            generateGasParticles('lowPressure', 8);
+            generateGasParticles('highPressure', 8);
+            generateGasParticles('veryHighPressure', 8);
+        });
+    </script>
+</body>
+</html>

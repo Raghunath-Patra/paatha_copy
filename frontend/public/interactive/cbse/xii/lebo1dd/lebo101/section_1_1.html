@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sexual Reproduction in Flowering Plants</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flower-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            position: relative;
+            background: radial-gradient(circle, #e8f5e8 0%, #f0f8f0 100%);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .flower-diagram {
+            width: 500px;
+            height: 600px;
+            position: relative;
+        }
+
+        .flower-part {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .flower-part:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+            z-index: 10;
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .info-panel h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .info-panel ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .info-panel li {
+            margin: 8px 0;
+            list-style-type: none;
+            position: relative;
+        }
+
+        .info-panel li:before {
+            content: "🌸";
+            position: absolute;
+            left: -20px;
+        }
+
+        .quiz-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            border-color: #ffd43b;
+            background: rgba(255, 212, 59, 0.3);
+        }
+
+        .option.correct {
+            border-color: #51cf66;
+            background: rgba(81, 207, 102, 0.3);
+        }
+
+        .option.incorrect {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .interactive-section {
+            background: linear-gradient(135deg, #20c997, #38d9a9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .drag-drop-area {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            gap: 20px;
+        }
+
+        .drag-items, .drop-zones {
+            flex: 1;
+        }
+
+        .drag-item {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            user-select: none;
+            border: 2px solid transparent;
+        }
+
+        .drag-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .drop-zone {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            min-height: 60px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #ffd43b;
+            transform: scale(1.02);
+        }
+
+        .drop-zone.filled {
+            background: rgba(81, 207, 102, 0.3);
+            border-color: #51cf66;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #ffd43b, #fff3bf);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .drag-drop-area {
+                flex-direction: column;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            .flower-diagram {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌸 Sexual Reproduction in Flowering Plants 🌸</h1>
+            <p>Explore the fascinating world of flower anatomy and reproduction mechanisms</p>
+        </div>
+
+        <div class="section">
+            <h2>📚 Chapter Overview</h2>
+            <div class="tab-container">
+                <button class="tab active" onclick="showTab('overview')">Overview</button>
+                <button class="tab" onclick="showTab('structure')">Flower Structure</button>
+                <button class="tab" onclick="showTab('reproduction')">Reproduction Process</button>
+                <button class="tab" onclick="showTab('adaptations')">Adaptations</button>
+            </div>
+
+            <div id="overview" class="tab-content active">
+                <h3>🌺 Why Sexual Reproduction in Plants?</h3>
+                <p>Sexual reproduction in flowering plants has given us the incredible diversity of flowers we see today. Every flower's color, scent, and structure serves the ultimate purpose of successful reproduction.</p>
+                <ul style="margin: 15px 0; padding-left: 20px;">
+                    <li><strong>Aesthetic Value:</strong> Flowers provide beauty and emotional connection</li>
+                    <li><strong>Genetic Diversity:</strong> Sexual reproduction ensures variation</li>
+                    <li><strong>Adaptation:</strong> Different flower structures for different pollination strategies</li>
+                    <li><strong>Survival:</strong> Seeds and fruits ensure species continuation</li>
+                </ul>
+            </div>
+
+            <div id="structure" class="tab-content">
+                <h3>🔬 Flower Anatomy</h3>
+                <p>A typical flower consists of four main whorls, each with specific reproductive functions:</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div>
+                        <h4>🌿 Vegetative Parts</h4>
+                        <ul>
+                            <li><strong>Sepals:</strong> Protective outer whorl</li>
+                            <li><strong>Petals:</strong> Attractive colored structures</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>🌱 Reproductive Parts</h4>
+                        <ul>
+                            <li><strong>Stamens:</strong> Male reproductive organs</li>
+                            <li><strong>Pistil:</strong> Female reproductive organs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reproduction" class="tab-content">
+                <h3>🔄 Reproduction Process</h3>
+                <p>Sexual reproduction in flowering plants involves several key stages:</p>
+                <ol style="margin: 15px 0; padding-left: 20px;">
+                    <li><strong>Pre-fertilization:</strong> Development of male and female gametes</li>
+                    <li><strong>Pollination:</strong> Transfer of pollen from anther to stigma</li>
+                    <li><strong>Double Fertilization:</strong> Unique process in angiosperms</li>
+                    <li><strong>Post-fertilization:</strong> Seed and fruit development</li>
+                </ol>
+            </div>
+
+            <div id="adaptations" class="tab-content">
+                <h3>🦋 Pollination Adaptations</h3>
+                <p>Flowers show amazing adaptations for different pollination mechanisms:</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div>
+                        <h4>🐝 Insect Pollination</h4>
+                        <ul>
+                            <li>Bright colors and patterns</li>
+                            <li>Sweet fragrances</li>
+                            <li>Nectar production</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>💨 Wind Pollination</h4>
+                        <ul>
+                            <li>Small, inconspicuous flowers</li>
+                            <li>Large amounts of light pollen</li>
+                            <li>Feathery stigmas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌺 Interactive Flower Anatomy</h2>
+            <p>Click on different parts of the flower to learn about their functions!</p>
+            
+            <div class="flower-container">
+                <svg class="flower-diagram" viewBox="0 0 500 600" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Definitions for gradients -->
+                    <defs>
+                        <radialGradient id="petalGrad" cx="50%" cy="30%" r="70%">
+                            <stop offset="0%" style="stop-color:#ff69b4;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ff1493;stop-opacity:1" />
+                        </radialGradient>
+                        <radialGradient id="sepalGrad" cx="50%" cy="30%" r="70%">
+                            <stop offset="0%" style="stop-color:#90ee90;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#228b22;stop-opacity:1" />
+                        </radialGradient>
+                        <radialGradient id="stamenGrad" cx="50%" cy="30%" r="70%">
+                            <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ffa500;stop-opacity:1" />
+                        </radialGradient>
+                        <radialGradient id="pistilGrad" cx="50%" cy="30%" r="70%">
+                            <stop offset="0%" style="stop-color:#dda0dd;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#9370db;stop-opacity:1" />
+                        </radialGradient>
+                        <radialGradient id="ovaryGrad" cx="50%" cy="30%" r="70%">
+                            <stop offset="0%" style="stop-color:#98fb98;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#32cd32;stop-opacity:1" />
+                        </radialGradient>
+                    </defs>
+                    
+                    <!-- Stem -->
+                    <rect x="240" y="520" width="20" height="80" fill="#228b22" stroke="#1f6b1f" stroke-width="2"/>
+                    
+                    <!-- Receptacle -->
+                    <ellipse cx="250" cy="510" rx="35" ry="20" fill="#8b4513" stroke="#654321" stroke-width="2"/>
+                    
+                    <!-- Sepals (green, protective) -->
+                    <ellipse cx="220" cy="480" rx="25" ry="45" fill="url(#sepalGrad)" class="flower-part" onclick="showInfo('sepal')" transform="rotate(-30 220 480)"/>
+                    <ellipse cx="280" cy="480" rx="25" ry="45" fill="url(#sepalGrad)" class="flower-part" onclick="showInfo('sepal')" transform="rotate(30 280 480)"/>
+                    <ellipse cx="200" cy="420" rx="25" ry="45" fill="url(#sepalGrad)" class="flower-part" onclick="showInfo('sepal')" transform="rotate(-60 200 420)"/>
+                    <ellipse cx="300" cy="420" rx="25" ry="45" fill="url(#sepalGrad)" class="flower-part" onclick="showInfo('sepal')" transform="rotate(60 300 420)"/>
+                    <ellipse cx="250" cy="380" rx="25" ry="45" fill="url(#sepalGrad)" class="flower-part" onclick="showInfo('sepal')"/>
+                    
+                    <!-- Petals (colorful, attractive) -->
+                    <ellipse cx="210" cy="450" rx="35" ry="60" fill="url(#petalGrad)" class="flower-part" onclick="showInfo('petal')" transform="rotate(-40 210 450)"/>
+                    <ellipse cx="290" cy="450" rx="35" ry="60" fill="url(#petalGrad)" class="flower-part" onclick="showInfo('petal')" transform="rotate(40 290 450)"/>
+                    <ellipse cx="180" cy="380" rx="35" ry="60" fill="url(#petalGrad)" class="flower-part" onclick="showInfo('petal')" transform="rotate(-70 180 380)"/>
+                    <ellipse cx="320" cy="380" rx="35" ry="60" fill="url(#petalGrad)" class="flower-part" onclick="showInfo('petal')" transform="rotate(70 320 380)"/>
+                    <ellipse cx="250" cy="320" rx="35" ry="60" fill="url(#petalGrad)" class="flower-part" onclick="showInfo('petal')"/>
+                    
+                    <!-- Stamens (male parts) -->
+                    <g class="flower-part" onclick="showInfo('stamen')">
+                        <!-- Filaments -->
+                        <line x1="220" y1="420" x2="235" y2="390" stroke="#90ee90" stroke-width="3"/>
+                        <line x1="280" y1="420" x2="265" y2="390" stroke="#90ee90" stroke-width="3"/>
+                        <line x1="200" y1="390" x2="230" y2="380" stroke="#90ee90" stroke-width="3"/>
+                        <line x1="300" y1="390" x2="270" y2="380" stroke="#90ee90" stroke-width="3"/>
+                        <line x1="240" y1="360" x2="250" y2="370" stroke="#90ee90" stroke-width="3"/>
+                        <line x1="260" y1="360" x2="250" y2="370" stroke="#90ee90" stroke-width="3"/>
+                        
+                        <!-- Anthers -->
+                        <ellipse cx="235" cy="385" rx="8" ry="15" fill="url(#stamenGrad)"/>
+                        <ellipse cx="265" cy="385" rx="8" ry="15" fill="url(#stamenGrad)"/>
+                        <ellipse cx="230" cy="375" rx="8" ry="15" fill="url(#stamenGrad)"/>
+                        <ellipse cx="270" cy="375" rx="8" ry="15" fill="url(#stamenGrad)"/>
+                        <ellipse cx="240" cy="365" rx="8" ry="15" fill="url(#stamenGrad)"/>
+                        <ellipse cx="260" cy="365" rx="8" ry="15" fill="url(#stamenGrad)"/>
+                    </g>
+                    
+                    <!-- Pistil (female part) -->
+                    <g class="flower-part" onclick="showInfo('pistil')">
+                        <!-- Style -->
+                        <rect x="247" y="380" width="6" height="35" fill="url(#pistilGrad)" rx="3"/>
+                        <!-- Stigma -->
+                        <circle cx="250" cy="375" r="8" fill="#ff69b4" stroke="#ff1493" stroke-width="2"/>
+                        <circle cx="245" cy="372" r="3" fill="#ff1493"/>
+                        <circle cx="255" cy="372" r="3" fill="#ff1493"/>
+                        <circle cx="250" cy="368" r="3" fill="#ff1493"/>
+                    </g>
+                    
+                    <!-- Ovary -->
+                    <ellipse cx="250" cy="430" rx="30" ry="20" fill="url(#ovaryGrad)" class="flower-part" onclick="showInfo('ovary')" stroke="#228b22" stroke-width="2"/>
+                    <!-- Ovules inside ovary -->
+                    <circle cx="240" cy="430" r="4" fill="#fff" opacity="0.8"/>
+                    <circle cx="250" cy="425" r="4" fill="#fff" opacity="0.8"/>
+                    <circle cx="260" cy="430" r="4" fill="#fff" opacity="0.8"/>
+                    <circle cx="250" cy="435" r="4" fill="#fff" opacity="0.8"/>
+                    
+                    <!-- Labels -->
+                    <text x="120" y="340" font-family="Arial" font-size="14" font-weight="bold" fill="#333">Petals</text>
+                    <line x1="145" y1="345" x2="180" y2="380" stroke="#333" stroke-width="1"/>
+                    
+                    <text x="350" y="340" font-family="Arial" font-size="14" font-weight="bold" fill="#333">Sepals</text>
+                    <line x1="350" y1="345" x2="320" y2="380" stroke="#333" stroke-width="1"/>
+                    
+                    <text x="100" y="280" font-family="Arial" font-size="14" font-weight="bold" fill="#333">Stamens</text>
+                    <line x1="130" y1="285" x2="235" y2="385" stroke="#333" stroke-width="1"/>
+                    
+                    <text x="320" y="280" font-family="Arial" font-size="14" font-weight="bold" fill="#333">Pistil</text>
+                    <line x1="340" y1="285" x2="250" y2="375" stroke="#333" stroke-width="1"/>
+                    
+                    <text x="350" y="450" font-family="Arial" font-size="14" font-weight="bold" fill="#333">Ovary</text>
+                    <line x1="350" y1="445" x2="280" y2="430" stroke="#333" stroke-width="1"/>
+                </svg>
+            </div>
+
+            <div id="part-info" class="info-panel">
+                <h3 id="part-title"></h3>
+                <p id="part-description"></p>
+                <ul id="part-functions"></ul>
+            </div>
+        </div>
+
+        <div class="interactive-section">
+            <h2>🎯 Drag and Drop Challenge</h2>
+            <p>Match the flower parts with their correct functions!</p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            
+            <div class="drag-drop-area">
+                <div class="drag-items">
+                    <h3>🌸 Flower Parts</h3>
+                    <div class="drag-item" draggable="true" data-answer="protects-flower">Sepals</div>
+                    <div class="drag-item" draggable="true" data-answer="attracts-pollinators">Petals</div>
+                    <div class="drag-item" draggable="true" data-answer="produces-pollen">Stamens</div>
+                    <div class="drag-item" draggable="true" data-answer="receives-pollen">Pistil</div>
+                    <div class="drag-item" draggable="true" data-answer="contains-ovules">Ovary</div>
+                </div>
+                
+                <div class="drop-zones">
+                    <h3>🎯 Functions</h3>
+                    <div class="drop-zone" data-function="protects-flower">Protects the flower bud</div>
+                    <div class="drop-zone" data-function="attracts-pollinators">Attracts pollinators</div>
+                    <div class="drop-zone" data-function="produces-pollen">Produces pollen grains</div>
+                    <div class="drop-zone" data-function="receives-pollen">Receives pollen</div>
+                    <div class="drop-zone" data-function="contains-ovules">Contains ovules</div>
+                </div>
+            </div>
+            <button class="btn" onclick="checkDragDrop()">Check Answers</button>
+            <button class="btn" onclick="resetDragDrop()">Reset</button>
+        </div>
+
+        <div class="quiz-container">
+            <h2>🧠 Test Your Knowledge</h2>
+            <div id="quiz">
+                <!-- Quiz questions will be loaded here -->
+            </div>
+            <div class="score" id="score" style="display: none;"></div>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+            <button class="btn" onclick="resetQuiz()" style="display: none;" id="resetBtn">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let totalQuestions = 0;
+        let quizData = [];
+        let draggedElement = null;
+
+        const questions = [
+            {
+                question: "What is the main function of petals in a flower?",
+                options: ["Protect the flower", "Attract pollinators", "Produce pollen", "Store nutrients"],
+                correct: 1,
+                explanation: "Petals are typically colorful and fragrant to attract pollinators like bees, butterflies, and birds."
+            },
+            {
+                question: "Which part of the flower produces pollen?",
+                options: ["Pistil", "Sepals", "Stamens", "Ovary"],
+                correct: 2,
+                explanation: "Stamens are the male reproductive organs that produce pollen in their anthers."
+            },
+            {
+                question: "What unique reproductive process occurs in flowering plants?",
+                options: ["Single fertilization", "Double fertilization", "Triple fertilization", "No fertilization"],
+                correct: 1,
+                explanation: "Double fertilization is unique to angiosperms, where one sperm fertilizes the egg and another fertilizes the polar nuclei."
+            },
+            {
+                question: "Which structure develops into the seed after fertilization?",
+                options: ["Petal", "Sepal", "Ovule", "Stamen"],
+                correct: 2,
+                explanation: "The ovule contains the female gamete and develops into a seed after fertilization."
+            },
+            {
+                question: "What is the collective term for sepals?",
+                options: ["Corolla", "Calyx", "Androecium", "Gynoecium"],
+                correct: 1,
+                explanation: "Calyx is the collective term for all sepals, which form the outermost whorl of the flower."
+            }
+        ];
+
+        const partInfo = {
+            sepal: {
+                title: "Sepals - The Protectors 🛡️",
+                description: "Sepals form the outermost whorl of the flower and are typically green. They protect the developing flower bud.",
+                functions: [
+                    "Protect the flower bud during development",
+                    "Support the flower structure when it opens",
+                    "Sometimes attract pollinators (when colorful)",
+                    "Collectively called the calyx",
+                    "May persist after flowering to protect developing fruit"
+                ]
+            },
+            petal: {
+                title: "Petals - The Attractors 🌺",
+                description: "Petals are the colorful, often fragrant parts of the flower that make them so beautiful and appealing.",
+                functions: [
+                    "Attract pollinators with bright colors and patterns",
+                    "Produce sweet fragrances to guide pollinators",
+                    "Provide landing platforms for insects",
+                    "Collectively called the corolla",
+                    "May contain nectar guides to direct pollinators to nectar"
+                ]
+            },
+            stamen: {
+                title: "Stamens - The Male Reproductive Organs ♂️",
+                description: "Stamens are the male reproductive organs consisting of anthers (pollen producers) and filaments (support structures).",
+                functions: [
+                    "Produce pollen grains in the anthers",
+                    "Support anthers with filaments for optimal pollen dispersal",
+                    "Release pollen at the right time for pollination",
+                    "Collectively called the androecium",
+                    "May have different heights to prevent self-pollination"
+                ]
+            },
+            pistil: {
+                title: "Pistil - The Female Reproductive Organ ♀️",
+                description: "The pistil consists of stigma (receives pollen), style (connects stigma to ovary), and ovary (contains ovules).",
+                functions: [
+                    "Receive pollen grains on the sticky stigma",
+                    "Transport pollen through the style to the ovary",
+                    "House ovules in the ovary for fertilization",
+                    "Collectively called the gynoecium",
+                    "May have multiple carpels fused together"
+                ]
+            },
+            ovary: {
+                title: "Ovary - The Seed House 🏠",
+                description: "The ovary is the enlarged base of the pistil containing ovules that will develop into seeds.",
+                functions: [
+                    "Contains ovules (future seeds)",
+                    "Develops into fruit after fertilization",
+                    "Protects developing seeds from damage",
+                    "May have one or multiple chambers (locules)",
+                    "Provides nutrients for seed development"
+                ]
+            }
+        };
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showInfo(partName) {
+            const info = partInfo[partName];
+            const infoPanel = document.getElementById('part-info');
+            const title = document.getElementById('part-title');
+            const description = document.getElementById('part-description');
+            const functions = document.getElementById('part-functions');
+            
+            title.textContent = info.title;
+            description.textContent = info.description;
+            
+            functions.innerHTML = '';
+            info.functions.forEach(func => {
+                const li = document.createElement('li');
+                li.textContent = func;
+                functions.appendChild(li);
+            });
+            
+            infoPanel.style.display = 'block';
+            infoPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startQuiz() {
+            quizData = [...questions];
+            totalQuestions = quizData.length;
+            currentQuestion = 0;
+            score = 0;
+            
+            document.querySelector('.btn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('score').style.display = 'none';
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                showResults();
+                return;
+            }
+            
+            const question = quizData[currentQuestion];
+            const quizContainer = document.getElementById('quiz');
+            
+            quizContainer.innerHTML = `
+                <div class="question">Question ${currentQuestion + 1}/${totalQuestions}: ${question.question}</div>
+                <div class="options">
+                    ${question.options.map((option, index) => 
+                        `<div class="option" onclick="selectAnswer(${index})">${option}</div>`
+                    ).join('')}
+                </div>
+                <button class="btn" onclick="nextQuestion()" style="display: none;" id="nextBtn">Next Question</button>
+                <div id="explanation" style="display: none; margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;"></div>
+            `;
+        }
+
+        function selectAnswer(selectedIndex) {
+            const options = document.querySelectorAll('.option');
+            const question = quizData[currentQuestion];
+            
+            options.forEach((option, index) => {
+                option.classList.remove('selected');
+                option.style.pointerEvents = 'none';
+                if (index === selectedIndex) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            setTimeout(() => {
+                options.forEach((option, index) => {
+                    if (index === question.correct) {
+                        option.classList.add('correct');
+                    } else if (index === selectedIndex && index !== question.correct) {
+                        option.classList.add('incorrect');
+                    }
+                });
+                
+                if (selectedIndex === question.correct) {
+                    score++;
+                }
+                
+                const explanation = document.getElementById('explanation');
+                explanation.innerHTML = `<strong>Explanation:</strong> ${question.explanation}`;
+                explanation.style.display = 'block';
+                
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            }, 500);
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            showQuestion();
+        }
+
+        function showResults() {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const quizContainer = document.getElementById('quiz');
+            const scoreContainer = document.getElementById('score');
+            
+            quizContainer.innerHTML = '';
+            scoreContainer.innerHTML = `
+                🎉 Quiz Complete! 🎉<br>
+                You scored ${score} out of ${totalQuestions}<br>
+                Percentage: ${percentage}%<br>
+                ${percentage >= 80 ? '🌟 Excellent work!' : percentage >= 60 ? '👍 Good job!' : '📚 Keep studying and try again!'}
+            `;
+            scoreContainer.style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+        }
+
+        function resetQuiz() {
+            document.querySelector('.btn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('score').style.display = 'none';
+            document.getElementById('quiz').innerHTML = '';
+        }
+
+        // Drag and Drop functionality
+        function setupDragAndDrop() {
+            const dragItems = document.querySelectorAll('.drag-item');
+            const dropZones = document.querySelectorAll('.drop-zone');
+
+            dragItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            this.classList.remove('drag-over');
+
+            if (draggedElement && draggedElement !== this && this.children.length === 0) {
+                const draggedClone = draggedElement.cloneNode(true);
+                draggedClone.draggable = false;
+                draggedClone.classList.remove('dragging');
+                draggedClone.style.margin = '0';
+                draggedClone.style.width = '100%';
+                this.innerHTML = '';
+                this.appendChild(draggedClone);
+                this.classList.add('filled');
+                draggedElement.style.display = 'none';
+                updateProgress();
+            }
+
+            return false;
+        }
+
+        function updateProgress() {
+            const filledZones = document.querySelectorAll('.drop-zone.filled').length;
+            const totalZones = document.querySelectorAll('.drop-zone').length;
+            const progress = (filledZones / totalZones) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+
+        function checkDragDrop() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            let correct = 0;
+            let total = 0;
+
+            dropZones.forEach(zone => {
+                if (zone.classList.contains('filled')) {
+                    total++;
+                    const draggedItem = zone.querySelector('.drag-item');
+                    const expectedAnswer = zone.getAttribute('data-function');
+                    const actualAnswer = draggedItem.getAttribute('data-answer');
+                    
+                    if (expectedAnswer === actualAnswer) {
+                        zone.style.borderColor = '#51cf66';
+                        zone.style.backgroundColor = 'rgba(81, 207, 102, 0.4)';
+                        correct++;
+                    } else {
+                        zone.style.borderColor = '#ff6b6b';
+                        zone.style.backgroundColor = 'rgba(255, 107, 107, 0.4)';
+                    }
+                }
+            });
+
+            setTimeout(() => {
+                const message = `You got ${correct} out of ${total} correct!\n${correct === total && total === 5 ? '🎉 Perfect! You understand flower anatomy!' : correct >= 3 ? '👍 Good job! Review the incorrect ones.' : '📚 Keep learning! Try clicking on the flower parts above to review.'}`;
+                alert(message);
+            }, 500);
+        }
+
+        function resetDragDrop() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            const dragItems = document.querySelectorAll('.drag-item');
+            
+            // Reset drop zones
+            dropZones.forEach(zone => {
+                const functionName = zone.getAttribute('data-function');
+                const displayText = functionName.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+                
+                zone.innerHTML = displayText;
+                zone.classList.remove('filled');
+                zone.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                zone.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            });
+
+            // Reset drag items
+            dragItems.forEach(item => {
+                item.style.display = 'block';
+                item.draggable = true;
+            });
+
+            // Reset progress
+            document.getElementById('progress').style.width = '0%';
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDragAndDrop();
+            
+            // Add some initial animations
+            setTimeout(() => {
+                const flowerParts = document.querySelectorAll('.flower-part');
+                flowerParts.forEach((part, index) => {
+                    setTimeout(() => {
+                        part.style.animation = 'pulse 0.6s ease';
+                    }, index * 200);
+                });
+            }, 1000);
+        });
+
+        // Add pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

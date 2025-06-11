@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sets and their Representations - Interactive Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+        }
+        
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .content {
+            padding: 30px;
+            min-height: 600px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .concept-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .concept-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .interactive-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #e9ecef;
+        }
+        
+        .set-display {
+            background: white;
+            border: 3px solid #007bff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .roster-form {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .builder-form {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .input-section {
+            margin: 20px 0;
+        }
+        
+        .input-section input, .input-section select {
+            padding: 12px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1em;
+            margin: 5px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-section input:focus, .input-section select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.5);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 4px 12px rgba(108,117,125,0.4);
+        }
+        
+        .exercise-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .exercise-box h4 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d1edff;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .set-notation {
+            font-family: 'Courier New', monospace;
+            background: #f1f3f4;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 1.1em;
+        }
+        
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .example-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .example-card h4 {
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .symbol-box {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 2px;
+            font-weight: bold;
+        }
+        
+        .well-defined-checker {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .membership-tester {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .venn-diagram {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .number-sets-diagram {
+            width: 100%;
+            height: 500px;
+            background: white;
+            border: 3px solid #007bff;
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .set-circle {
+            position: absolute;
+            border: 3px solid;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .set-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        
+        .natural-set {
+            width: 80px;
+            height: 80px;
+            background: #ff6b6b;
+            border-color: #ee5a52;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .integer-set {
+            width: 120px;
+            height: 120px;
+            background: rgba(74, 144, 226, 0.8);
+            border-color: #4a90e2;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .rational-set {
+            width: 180px;
+            height: 180px;
+            background: rgba(46, 204, 113, 0.6);
+            border-color: #2ecc71;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .real-set {
+            width: 250px;
+            height: 250px;
+            background: rgba(155, 89, 182, 0.4);
+            border-color: #9b59b6;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .set-label {
+            position: absolute;
+            font-weight: bold;
+            color: #333;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            z-index: 10;
+        }
+        
+        .element-input-section {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .element-result {
+            margin-top: 15px;
+            padding: 20px;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .quiz-question {
+            background: white;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .quiz-option {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .quiz-option:hover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        
+        .quiz-option.selected {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+        
+        .score-display {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .diagram-explanation {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .subset-arrows {
+            position: absolute;
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .visualization-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tab {
+                font-size: 0.8em;
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sets and their Representations</h1>
+            <p>Interactive Learning Tool for Class 11 Mathematics</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('basics')">Basics of Sets</button>
+            <button class="nav-tab" onclick="showTab('visual')">Visual Diagrams</button>
+            <button class="nav-tab" onclick="showTab('representations')">Representations</button>
+            <button class="nav-tab" onclick="showTab('converter')">Set Converter</button>
+            <button class="nav-tab" onclick="showTab('checker')">Element Checker</button>
+            <button class="nav-tab" onclick="showTab('quiz')">Quick Quiz</button>
+        </div>
+        
+        <div class="content">
+            <!-- Basics Tab -->
+            <div id="basics" class="tab-content active">
+                <div class="concept-box">
+                    <h3>What is a Set?</h3>
+                    <p>A set is a well-defined collection of objects. The objects in a set are called elements or members of the set.</p>
+                </div>
+                
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h4>Standard Number Sets</h4>
+                        <p><span class="symbol-box">ℕ</span> Natural Numbers: {1, 2, 3, ...}</p>
+                        <p><span class="symbol-box">ℤ</span> Integers: {..., -2, -1, 0, 1, 2, ...}</p>
+                        <p><span class="symbol-box">ℚ</span> Rational Numbers</p>
+                        <p><span class="symbol-box">ℝ</span> Real Numbers</p>
+                        <p><span class="symbol-box">ℤ⁺</span> Positive Integers</p>
+                        <p><span class="symbol-box">ℚ⁺</span> Positive Rationals</p>
+                        <p><span class="symbol-box">ℝ⁺</span> Positive Reals</p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Set Membership</h4>
+                        <p><strong>∈</strong> means "belongs to" or "is an element of"</p>
+                        <p><strong>∉</strong> means "does not belong to"</p>
+                        <br>
+                        <p>Example: If V = {a, e, i, o, u}</p>
+                        <p>Then: a ∈ V (a belongs to V)</p>
+                        <p>But: b ∉ V (b does not belong to V)</p>
+                    </div>
+                </div>
+                
+                <div class="well-defined-checker">
+                    <h4>Well-Defined Collection Checker</h4>
+                    <p>A collection is well-defined if we can clearly determine whether any given object belongs to it or not.</p>
+                    <div class="input-section">
+                        <input type="text" id="collectionInput" placeholder="Enter a collection description..." style="width: 70%;">
+                        <button class="btn" onclick="checkWellDefined()">Check</button>
+                    </div>
+                    <div id="wellDefinedResult"></div>
+                </div>
+                
+                <div class="membership-tester">
+                    <h4>Set Membership Tester</h4>
+                    <p>Test if an element belongs to a set</p>
+                    <div class="input-section">
+                        <input type="text" id="setElements" placeholder="Enter set elements (comma separated)">
+                        <input type="text" id="testElement" placeholder="Element to test">
+                        <button class="btn" onclick="testMembership()">Test Membership</button>
+                    </div>
+                    <div id="membershipResult"></div>
+                </div>
+            </div>
+            
+            <!-- Visual Diagrams Tab -->
+            <div id="visual" class="tab-content">
+                <div class="concept-box">
+                    <h3>Visual Representation of Number Sets</h3>
+                    <p>Understanding the relationship between different number sets through visual diagrams</p>
+                </div>
+                
+                <div class="visualization-grid">
+                    <div>
+                        <h4>Number Sets Hierarchy</h4>
+                        <div class="number-sets-diagram">
+                            <div class="set-circle real-set"></div>
+                            <div class="set-circle rational-set"></div>
+                            <div class="set-circle integer-set"></div>
+                            <div class="set-circle natural-set">ℕ</div>
+                            
+                            <div class="set-label" style="bottom: 10px; right: 20px; color: #9b59b6;">ℝ (Real Numbers)</div>
+                            <div class="set-label" style="bottom: 50px; right: 60px; color: #2ecc71;">ℚ (Rational Numbers)</div>
+                            <div class="set-label" style="bottom: 90px; right: 100px; color: #4a90e2;">ℤ (Integers)</div>
+                            <div class="set-label" style="bottom: 130px; right: 140px; color: #ee5a52;">ℕ (Natural Numbers)</div>
+                            
+                            <div class="subset-arrows" style="top: 120px; left: 280px;">⊂</div>
+                            <div class="subset-arrows" style="top: 80px; left: 320px;">⊂</div>
+                            <div class="subset-arrows" style="top: 40px; left: 360px;">⊂</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="diagram-explanation">
+                            <h4>Set Relationships</h4>
+                            <p><strong>ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ</strong></p>
+                            <br>
+                            <p><strong>ℕ (Natural Numbers):</strong> {1, 2, 3, 4, ...}</p>
+                            <p><strong>ℤ (Integers):</strong> {..., -2, -1, 0, 1, 2, ...}</p>
+                            <p><strong>ℚ (Rational Numbers):</strong> Numbers that can be expressed as p/q where p, q ∈ ℤ and q ≠ 0</p>
+                            <p><strong>ℝ (Real Numbers):</strong> All rational and irrational numbers</p>
+                            <br>
+                            <p><strong>⊂</strong> means "is a subset of"</p>
+                            <p>Every natural number is also an integer, every integer is also rational, and every rational number is also real.</p>
+                        </div>
+                        
+                        <div class="interactive-section">
+                            <h4>Interactive Example</h4>
+                            <div class="input-section">
+                                <button class="btn" onclick="showSetExample('natural')">Show ℕ Example</button>
+                                <button class="btn" onclick="showSetExample('integer')">Show ℤ Example</button>
+                                <button class="btn" onclick="showSetExample('rational')">Show ℚ Example</button>
+                                <button class="btn" onclick="showSetExample('real')">Show ℝ Example</button>
+                            </div>
+                            <div id="setExampleResult"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Venn Diagram Generator</h4>
+                    <p>Create custom Venn diagrams for set relationships</p>
+                    <div class="input-section">
+                        <input type="text" id="setA" placeholder="Enter elements for Set A (comma separated)">
+                        <input type="text" id="setB" placeholder="Enter elements for Set B (comma separated)">
+                        <button class="btn" onclick="generateVennDiagram()">Generate Venn Diagram</button>
+                    </div>
+                    <div id="vennDiagramResult"></div>
+                </div>
+            </div>
+            
+            <!-- Representations Tab -->
+            <div id="representations" class="tab-content">
+                <div class="concept-box">
+                    <h3>Two Ways to Represent Sets</h3>
+                    <p><strong>1. Roster Form:</strong> List all elements separated by commas within braces { }</p>
+                    <p><strong>2. Set-Builder Form:</strong> Describe the common property of elements</p>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Interactive Examples</h4>
+                    
+                    <div class="example-card">
+                        <h4>Example 1: Even numbers less than 10</h4>
+                        <div class="set-display">
+                            <div class="roster-form">Roster Form: {2, 4, 6, 8}</div>
+                            <br>
+                            <div class="builder-form">Set-Builder Form: {x : x is an even natural number and x < 10}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 2: Vowels in English alphabet</h4>
+                        <div class="set-display">
+                            <div class="roster-form">Roster Form: {a, e, i, o, u}</div>
+                            <br>
+                            <div class="builder-form">Set-Builder Form: {x : x is a vowel in English alphabet}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h4>Example 3: Prime factors of 30</h4>
+                        <div class="set-display">
+                            <div class="roster-form">Roster Form: {2, 3, 5}</div>
+                            <br>
+                            <div class="builder-form">Set-Builder Form: {x : x is a prime factor of 30}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Generate Custom Examples</h4>
+                    <div class="input-section">
+                        <select id="setType">
+                            <option value="divisors">Divisors of a number</option>
+                            <option value="multiples">First n multiples</option>
+                            <option value="range">Numbers in range</option>
+                            <option value="squares">Perfect squares</option>
+                        </select>
+                        <input type="number" id="setParameter" placeholder="Enter number">
+                        <button class="btn" onclick="generateExample()">Generate Example</button>
+                    </div>
+                    <div id="generatedExample"></div>
+                </div>
+            </div>
+            
+            <!-- Converter Tab -->
+            <div id="converter" class="tab-content">
+                <div class="concept-box">
+                    <h3>Set Form Converter</h3>
+                    <p>Convert between roster form and set-builder form</p>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Roster to Set-Builder</h4>
+                    <div class="input-section">
+                        <input type="text" id="rosterInput" placeholder="Enter elements separated by commas (e.g., 1,4,9,16,25)" style="width: 60%;">
+                        <button class="btn" onclick="convertToBuilder()">Convert to Set-Builder</button>
+                    </div>
+                    <div id="builderOutput"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Set-Builder to Roster</h4>
+                    <div class="input-section">
+                        <select id="builderType">
+                            <option value="range">Numbers in range: x < n</option>
+                            <option value="even">Even numbers less than n</option>
+                            <option value="odd">Odd numbers less than n</option>
+                            <option value="squares">Perfect squares less than n</option>
+                            <option value="divisors">Divisors of n</option>
+                        </select>
+                        <input type="number" id="builderParameter" placeholder="Enter limit/number">
+                        <button class="btn" onclick="convertToRoster()">Convert to Roster</button>
+                    </div>
+                    <div id="rosterOutput"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Solve Quadratic Equation</h4>
+                    <p>Find solution set of quadratic equations</p>
+                    <div class="input-section">
+                        <input type="number" id="coefA" placeholder="a" style="width: 60px;"> x² + 
+                        <input type="number" id="coefB" placeholder="b" style="width: 60px;"> x + 
+                        <input type="number" id="coefC" placeholder="c" style="width: 60px;"> = 0
+                        <button class="btn" onclick="solveQuadratic()">Solve</button>
+                    </div>
+                    <div id="quadraticResult"></div>
+                </div>
+            </div>
+            
+            <!-- Element Checker Tab -->
+            <div id="checker" class="tab-content">
+                <div class="concept-box">
+                    <h3>Element Set Checker</h3>
+                    <p>Enter any number or element and discover which number sets it belongs to</p>
+                </div>
+                
+                <div class="element-input-section">
+                    <h4>Number Set Classifier</h4>
+                    <div class="input-section">
+                        <input type="text" id="elementInput" placeholder="Enter a number (e.g., 5, -3, 2.5, π, √2)">
+                        <button class="btn" onclick="classifyElement()">Classify Element</button>
+                    </div>
+                    <div id="classificationResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Custom Set Membership Checker</h4>
+                    <div class="input-section">
+                        <input type="text" id="customSet" placeholder="Define your set (comma separated)">
+                        <input type="text" id="checkElement" placeholder="Element to check">
+                        <button class="btn" onclick="checkCustomMembership()">Check Membership</button>
+                    </div>
+                    <div id="customMembershipResult"></div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Set Builder Expression Checker</h4>
+                    <p>Check if an element satisfies a set-builder condition</p>
+                    <div class="input-section">
+                        <select id="conditionType">
+                            <option value="even">Even numbers</option>
+                            <option value="odd">Odd numbers</option>
+                            <option value="prime">Prime numbers</option>
+                            <option value="perfect">Perfect squares</option>
+                            <option value="range">Numbers in range</option>
+                            <option value="divisible">Divisible by n</option>
+                        </select>
+                        <input type="number" id="conditionParam" placeholder="Parameter (if needed)">
+                        <input type="number" id="testNumber" placeholder="Number to test">
+                        <button class="btn" onclick="checkCondition()">Check Condition</button>
+                    </div>
+                    <div id="conditionResult"></div>
+                </div>
+            </div>
+            
+            <!-- Quick Quiz Tab -->
+            <div id="quiz" class="tab-content">
+                <div class="concept-box">
+                    <h3>Quick Knowledge Check</h3>
+                    <p>Test your understanding of sets and their representations</p>
+                </div>
+                
+                <div class="score-display" id="scoreDisplay">
+                    Score: <span id="currentScore">0</span> / <span id="totalQuestions">0</span>
+                </div>
+                
+                <div class="quiz-container">
+                    <div class="quiz-question">
+                        <h4 id="quizQuestionText">Click "New Question" to start the quiz!</h4>
+                        <div class="quiz-options" id="quizOptions"></div>
+                        <div class="input-section">
+                            <button class="btn" onclick="generateQuizQuestion()">New Question</button>
+                            <button class="btn btn-secondary" onclick="submitQuizAnswer()" id="submitBtn" style="display: none;">Submit Answer</button>
+                        </div>
+                        <div id="quizResult"></div>
+                    </div>
+                </div>
+                
+                <div class="interactive-section">
+                    <h4>Quick Practice Exercises</h4>
+                    
+                    <div class="exercise-box">
+                        <h4>Exercise 1: Identify Representation Form</h4>
+                        <p id="practiceQ1"></p>
+                        <div class="input-section">
+                            <button class="btn" onclick="generatePracticeQ1()">New Question</button>
+                            <select id="practiceA1">
+                                <option value="">Select form</option>
+                                <option value="roster">Roster Form</option>
+                                <option value="builder">Set-Builder Form</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="checkPracticeA1()">Check</button>
+                        </div>
+                        <div id="practiceR1"></div>
+                    </div>
+                    
+                    <div class="exercise-box">
+                        <h4>Exercise 2: Set Membership</h4>
+                        <p id="practiceQ2"></p>
+                        <div class="input-section">
+                            <button class="btn" onclick="generatePracticeQ2()">New Question</button>
+                            <select id="practiceA2">
+                                <option value="">Select answer</option>
+                                <option value="yes">Yes (∈)</option>
+                                <option value="no">No (∉)</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="checkPracticeA2()">Check</button>
+                        </div>
+                        <div id="practiceR2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        // Global variables for quiz
+        let quizScore = 0;
+        let totalQuizQuestions = 0;
+        let currentQuizAnswer = '';
+        let selectedOption = '';
+        
+        // Practice data
+        let practiceData = {
+            q1: { question: '', answer: '', type: '' },
+            q2: { question: '', answer: '', element: '', set: [] }
+        };
+        
+        // Well-defined collection checker
+        function checkWellDefined() {
+            const collection = document.getElementById('collectionInput').value.toLowerCase();
+            const result = document.getElementById('wellDefinedResult');
+            
+            const wellDefined = [
+                'even numbers', 'odd numbers', 'prime numbers', 'vowels', 
+                'natural numbers', 'integers', 'positive integers',
+                'divisors', 'multiples', 'factors'
+            ];
+            
+            const notWellDefined = [
+                'beautiful', 'tall', 'smart', 'best', 'most famous',
+                'good', 'bad', 'interesting', 'difficult'
+            ];
+            
+            let isWellDefined = false;
+            let reason = '';
+            
+            for (let term of wellDefined) {
+                if (collection.includes(term)) {
+                    isWellDefined = true;
+                    reason = `This is well-defined because "${term}" has a clear mathematical definition.`;
+                    break;
+                }
+            }
+            
+            if (!isWellDefined) {
+                for (let term of notWellDefined) {
+                    if (collection.includes(term)) {
+                        reason = `This is NOT well-defined because "${term}" is subjective and can vary from person to person.`;
+                        break;
+                    }
+                }
+            }
+            
+            if (!reason) {
+                reason = 'Please provide more specific description to determine if this collection is well-defined.';
+            }
+            
+            result.innerHTML = `<div class="result ${isWellDefined ? 'success' : 'error'}">${reason}</div>`;
+        }
+        
+        // Set membership tester
+        function testMembership() {
+            const elements = document.getElementById('setElements').value.split(',').map(e => e.trim());
+            const testElement = document.getElementById('testElement').value.trim();
+            const result = document.getElementById('membershipResult');
+            
+            if (!elements[0] || !testElement) {
+                result.innerHTML = '<div class="result error">Please enter both set elements and test element.</div>';
+                return;
+            }
+            
+            const belongs = elements.includes(testElement);
+            const symbol = belongs ? '∈' : '∉';
+            const message = belongs ? 'belongs to' : 'does not belong to';
+            
+            result.innerHTML = `
+                <div class="result success">
+                    <div class="set-display">
+                        ${testElement} ${symbol} {${elements.join(', ')}}
+                        <br><br>
+                        "${testElement}" ${message} the set
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Show set examples
+        function showSetExample(setType) {
+            const result = document.getElementById('setExampleResult');
+            let examples = '';
+            
+            switch(setType) {
+                case 'natural':
+                    examples = `
+                        <div class="set-display">
+                            <h4>ℕ (Natural Numbers)</h4>
+                            <p><strong>Examples:</strong> 1, 2, 3, 4, 5, ...</p>
+                            <p><strong>Properties:</strong> Positive integers starting from 1</p>
+                            <p><strong>Roster Form:</strong> {1, 2, 3, 4, 5, ...}</p>
+                            <p><strong>Set-Builder:</strong> {x : x ∈ ℤ and x > 0}</p>
+                        </div>
+                    `;
+                    break;
+                case 'integer':
+                    examples = `
+                        <div class="set-display">
+                            <h4>ℤ (Integers)</h4>
+                            <p><strong>Examples:</strong> ..., -2, -1, 0, 1, 2, ...</p>
+                            <p><strong>Properties:</strong> All whole numbers (positive, negative, and zero)</p>
+                            <p><strong>Includes:</strong> All natural numbers + 0 + negative numbers</p>
+                            <p><strong>Set-Builder:</strong> {x : x is a whole number}</p>
+                        </div>
+                    `;
+                    break;
+                case 'rational':
+                    examples = `
+                        <div class="set-display">
+                            <h4>ℚ (Rational Numbers)</h4>
+                            <p><strong>Examples:</strong> 1/2, -3/4, 0.75, 2, -5</p>
+                            <p><strong>Properties:</strong> Numbers that can be expressed as p/q where p, q ∈ ℤ and q ≠ 0</p>
+                            <p><strong>Includes:</strong> All integers + fractions + terminating/repeating decimals</p>
+                            <p><strong>Set-Builder:</strong> {x : x = p/q, where p, q ∈ ℤ and q ≠ 0}</p>
+                        </div>
+                    `;
+                    break;
+                case 'real':
+                    examples = `
+                        <div class="set-display">
+                            <h4>ℝ (Real Numbers)</h4>
+                            <p><strong>Examples:</strong> π, √2, e, -√3, all rational numbers</p>
+                            <p><strong>Properties:</strong> All numbers on the number line</p>
+                            <p><strong>Includes:</strong> All rational numbers + irrational numbers</p>
+                            <p><strong>Set-Builder:</strong> {x : x can be represented on the number line}</p>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            result.innerHTML = examples;
+        }
+        
+        // Generate Venn diagram
+        function generateVennDiagram() {
+            const setAInput = document.getElementById('setA').value;
+            const setBInput = document.getElementById('setB').value;
+            const result = document.getElementById('vennDiagramResult');
+            
+            if (!setAInput || !setBInput) {
+                result.innerHTML = '<div class="result error">Please enter elements for both sets.</div>';
+                return;
+            }
+            
+            const setA = setAInput.split(',').map(e => e.trim());
+            const setB = setBInput.split(',').map(e => e.trim());
+            
+            const intersection = setA.filter(e => setB.includes(e));
+            const onlyA = setA.filter(e => !setB.includes(e));
+            const onlyB = setB.filter(e => !setA.includes(e));
+            
+            result.innerHTML = `
+                <div class="venn-diagram" style="position: relative;">
+                    <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
+                        <circle cx="150" cy="200" r="120" fill="rgba(255, 107, 107, 0.6)" stroke="#ee5a52" stroke-width="3"/>
+                        <circle cx="250" cy="200" r="120" fill="rgba(74, 144, 226, 0.6)" stroke="#4a90e2" stroke-width="3"/>
+                        <text x="100" y="120" font-weight="bold" font-size="18" fill="#ee5a52">Set A</text>
+                        <text x="270" y="120" font-weight="bold" font-size="18" fill="#4a90e2">Set B</text>
+                        <text x="90" y="200" font-size="14" fill="#333">${onlyA.join(', ')}</text>
+                        <text x="200" y="200" font-size="14" fill="#333" text-anchor="middle">${intersection.join(', ')}</text>
+                        <text x="310" y="200" font-size="14" fill="#333">${onlyB.join(', ')}</text>
+                    </svg>
+                </div>
+                <div class="diagram-explanation">
+                    <p><strong>Set A:</strong> {${setA.join(', ')}}</p>
+                    <p><strong>Set B:</strong> {${setB.join(', ')}}</p>
+                    <p><strong>A ∩ B (Intersection):</strong> {${intersection.join(', ') || '∅'}}</p>
+                    <p><strong>A - B (Only in A):</strong> {${onlyA.join(', ') || '∅'}}</p>
+                    <p><strong>B - A (Only in B):</strong> {${onlyB.join(', ') || '∅'}}</p>
+                </div>
+            `;
+        }
+        
+        // Generate examples
+        function generateExample() {
+            const type = document.getElementById('setType').value;
+            const param = parseInt(document.getElementById('setParameter').value);
+            const result = document.getElementById('generatedExample');
+            
+            if (!param) {
+                result.innerHTML = '<div class="result error">Please enter a number.</div>';
+                return;
+            }
+            
+            let rosterForm = '';
+            let builderForm = '';
+            
+            switch(type) {
+                case 'divisors':
+                    const divisors = [];
+                    for (let i = 1; i <= param; i++) {
+                        if (param % i === 0) divisors.push(i);
+                    }
+                    rosterForm = `{${divisors.join(', ')}}`;
+                    builderForm = `{x : x is a natural number and x divides ${param}}`;
+                    break;
+                    
+                case 'multiples':
+                    const multiples = [];
+                    for (let i = 1; i <= param; i++) {
+                        multiples.push(i * (param === 1 ? 1 : Math.floor(param/5) || 1));
+                    }
+                    rosterForm = `{${multiples.slice(0, param).join(', ')}}`;
+                    builderForm = `{x : x = n × k, where n ∈ ℕ and 1 ≤ k ≤ ${param}}`;
+                    break;
+                    
+                case 'range':
+                    const range = [];
+                    for (let i = 1; i < param; i++) {
+                        range.push(i);
+                    }
+                    rosterForm = `{${range.join(', ')}}`;
+                    builderForm = `{x : x ∈ ℕ and x < ${param}}`;
+                    break;
+                    
+                case 'squares':
+                    const squares = [];
+                    for (let i = 1; i * i < param; i++) {
+                        squares.push(i * i);
+                    }
+                    rosterForm = `{${squares.join(', ')}}`;
+                    builderForm = `{x : x = n², where n ∈ ℕ and x < ${param}}`;
+                    break;
+            }
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <div class="roster-form">Roster Form: ${rosterForm}</div>
+                    <br>
+                    <div class="builder-form">Set-Builder Form: ${builderForm}</div>
+                </div>
+            `;
+        }
+        
+        // Convert roster to set-builder
+        function convertToBuilder() {
+            const input = document.getElementById('rosterInput').value;
+            const result = document.getElementById('builderOutput');
+            
+            if (!input) {
+                result.innerHTML = '<div class="result error">Please enter elements.</div>';
+                return;
+            }
+            
+            const elements = input.split(',').map(e => parseFloat(e.trim())).filter(e => !isNaN(e));
+            
+            if (elements.length === 0) {
+                result.innerHTML = '<div class="result error">Please enter valid numbers.</div>';
+                return;
+            }
+            
+            let builderForm = '';
+            
+            // Check for patterns
+            if (elements.every(e => e % 2 === 0)) {
+                const max = Math.max(...elements);
+                builderForm = `{x : x is an even natural number and x ≤ ${max}}`;
+            } else if (elements.every(e => e % 2 === 1)) {
+                const max = Math.max(...elements);
+                builderForm = `{x : x is an odd natural number and x ≤ ${max}}`;
+            } else if (elements.every(e => Math.sqrt(e) % 1 === 0)) {
+                const max = Math.max(...elements);
+                builderForm = `{x : x = n², where n ∈ ℕ and x ≤ ${max}}`;
+            } else {
+                builderForm = `{x : x ∈ {${elements.join(', ')}}}`;
+            }
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <div class="builder-form">Set-Builder Form: ${builderForm}</div>
+                </div>
+            `;
+        }
+        
+        // Convert set-builder to roster
+        function convertToRoster() {
+            const type = document.getElementById('builderType').value;
+            const param = parseInt(document.getElementById('builderParameter').value);
+            const result = document.getElementById('rosterOutput');
+            
+            if (!param) {
+                result.innerHTML = '<div class="result error">Please enter a number.</div>';
+                return;
+            }
+            
+            let elements = [];
+            let builderForm = '';
+            
+            switch(type) {
+                case 'range':
+                    for (let i = 1; i < param; i++) elements.push(i);
+                    builderForm = `{x : x ∈ ℕ and x < ${param}}`;
+                    break;
+                case 'even':
+                    for (let i = 2; i < param; i += 2) elements.push(i);
+                    builderForm = `{x : x is even and x < ${param}}`;
+                    break;
+                case 'odd':
+                    for (let i = 1; i < param; i += 2) elements.push(i);
+                    builderForm = `{x : x is odd and x < ${param}}`;
+                    break;
+                case 'squares':
+                    for (let i = 1; i * i < param; i++) elements.push(i * i);
+                    builderForm = `{x : x = n² and x < ${param}}`;
+                    break;
+                case 'divisors':
+                    for (let i = 1; i <= param; i++) {
+                        if (param % i === 0) elements.push(i);
+                    }
+                    builderForm = `{x : x divides ${param}}`;
+                    break;
+            }
+            
+            result.innerHTML = `
+                <div class="set-display">
+                    <div class="builder-form">Set-Builder Form: ${builderForm}</div>
+                    <br>
+                    <div class="roster-form">Roster Form: {${elements.join(', ')}}</div>
+                </div>
+            `;
+        }
+        
+        // Solve quadratic equation
+        function solveQuadratic() {
+            const a = parseFloat(document.getElementById('coefA').value) || 1;
+            const b = parseFloat(document.getElementById('coefB').value) || 0;
+            const c = parseFloat(document.getElementById('coefC').value) || 0;
+            const result = document.getElementById('quadraticResult');
+            
+            const discriminant = b * b - 4 * a * c;
+            
+            if (discriminant < 0) {
+                result.innerHTML = `
+                    <div class="set-display">
+                        <div class="roster-form">Solution Set: ∅ (Empty set)</div>
+                        <br>
+                        <div class="builder-form">No real solutions exist</div>
+                    </div>
+                `;
+            } else if (discriminant === 0) {
+                const x = -b / (2 * a);
+                result.innerHTML = `
+                    <div class="set-display">
+                        <div class="roster-form">Solution Set: {${x}}</div>
+                        <br>
+                        <div class="builder-form">{x : ${a}x² + ${b}x + ${c} = 0}</div>
+                    </div>
+                `;
+            } else {
+                const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+                const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+                result.innerHTML = `
+                    <div class="set-display">
+                        <div class="roster-form">Solution Set: {${Math.round(x1 * 100) / 100}, ${Math.round(x2 * 100) / 100}}</div>
+                        <br>
+                        <div class="builder-form">{x : ${a}x² + ${b}x + ${c} = 0}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Classify element into number sets
+        function classifyElement() {
+            const input = document.getElementById('elementInput').value.trim();
+            const result = document.getElementById('classificationResult');
+            
+            if (!input) {
+                result.innerHTML = '<div class="result error">Please enter a number or element.</div>';
+                return;
+            }
+            
+            let classification = '';
+            let belongsTo = [];
+            
+            // Handle special cases
+            if (input.toLowerCase().includes('π') || input.toLowerCase().includes('pi')) {
+                belongsTo = ['ℝ (Real Numbers)'];
+                classification = 'π (Pi) is an irrational number';
+            } else if (input.includes('√') && !input.includes('√1') && !input.includes('√4') && !input.includes('√9') && !input.includes('√16')) {
+                belongsTo = ['ℝ (Real Numbers)'];
+                classification = 'Square root of non-perfect square is irrational';
+            } else {
+                const num = parseFloat(input);
+                
+                if (isNaN(num)) {
+                    result.innerHTML = '<div class="result error">Please enter a valid number.</div>';
+                    return;
+                }
+                
+                // Check each set
+                if (num > 0 && Number.isInteger(num)) {
+                    belongsTo = ['ℕ (Natural Numbers)', 'ℤ (Integers)', 'ℚ (Rational Numbers)', 'ℝ (Real Numbers)'];
+                    classification = 'Positive integer';
+                } else if (Number.isInteger(num)) {
+                    belongsTo = ['ℤ (Integers)', 'ℚ (Rational Numbers)', 'ℝ (Real Numbers)'];
+                    classification = num === 0 ? 'Zero' : 'Negative integer';
+                } else if (isFinite(num)) {
+                    belongsTo = ['ℚ (Rational Numbers)', 'ℝ (Real Numbers)'];
+                    classification = 'Decimal/Rational number';
+                }
+            }
+            
+            result.innerHTML = `
+                <div class="element-result">
+                    <h4>Element: ${input}</h4>
+                    <p><strong>Classification:</strong> ${classification}</p>
+                    <p><strong>Belongs to:</strong></p>
+                    <ul>
+                        ${belongsTo.map(set => `<li>${set}</li>`).join('')}
+                    </ul>
+                    <div class="set-display">
+                        <strong>Membership notation:</strong><br>
+                        ${belongsTo.map(set => `${input} ∈ ${set.split(' ')[0]}`).join('<br>')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Check custom set membership
+        function checkCustomMembership() {
+            const setElements = document.getElementById('customSet').value.split(',').map(e => e.trim());
+            const element = document.getElementById('checkElement').value.trim();
+            const result = document.getElementById('customMembershipResult');
+            
+            if (!setElements[0] || !element) {
+                result.innerHTML = '<div class="result error">Please enter both set elements and element to check.</div>';
+                return;
+            }
+            
+            const belongs = setElements.includes(element);
+            const symbol = belongs ? '∈' : '∉';
+            
+            result.innerHTML = `
+                <div class="element-result">
+                    <div class="set-display">
+                        ${element} ${symbol} {${setElements.join(', ')}}
+                        <br><br>
+                        "${element}" ${belongs ? 'belongs to' : 'does not belong to'} the set
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Helper function to check if number is prime
+        function isPrime(n) {
+            if (n < 2) return false;
+            for (let i = 2; i <= Math.sqrt(n); i++) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+        
+        // Check condition for set-builder form
+        function checkCondition() {
+            const condition = document.getElementById('conditionType').value;
+            const param = parseInt(document.getElementById('conditionParam').value);
+            const num = parseInt(document.getElementById('testNumber').value);
+            const result = document.getElementById('conditionResult');
+            
+            if (isNaN(num)) {
+                result.innerHTML = '<div class="result error">Please enter a valid number to test.</div>';
+                return;
+            }
+            
+            let satisfies = false;
+            let setDescription = '';
+            
+            switch(condition) {
+                case 'even':
+                    satisfies = num % 2 === 0;
+                    setDescription = '{x : x is even}';
+                    break;
+                case 'odd':
+                    satisfies = num % 2 === 1;
+                    setDescription = '{x : x is odd}';
+                    break;
+                case 'prime':
+                    satisfies = isPrime(num);
+                    setDescription = '{x : x is prime}';
+                    break;
+                case 'perfect':
+                    satisfies = Math.sqrt(num) % 1 === 0;
+                    setDescription = '{x : x is a perfect square}';
+                    break;
+                case 'range':
+                    if (isNaN(param)) {
+                        result.innerHTML = '<div class="result error">Please enter a range parameter.</div>';
+                        return;
+                    }
+                    satisfies = num < param;
+                    setDescription = `{x : x < ${param}}`;
+                    break;
+                case 'divisible':
+                    if (isNaN(param)) {
+                        result.innerHTML = '<div class="result error">Please enter a divisor parameter.</div>';
+                        return;
+                    }
+                    satisfies = num % param === 0;
+                    setDescription = `{x : x is divisible by ${param}}`;
+                    break;
+            }
+            
+            const symbol = satisfies ? '∈' : '∉';
+            
+            result.innerHTML = `
+                <div class="element-result">
+                    <div class="set-display">
+                        ${num} ${symbol} ${setDescription}
+                        <br><br>
+                        "${num}" ${satisfies ? 'satisfies' : 'does not satisfy'} the condition
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Quiz functionality
+        function generateQuizQuestion() {
+            const questions = [
+                {
+                    question: "Which of the following is the correct roster form for the set of first 4 natural numbers?",
+                    options: ["{0, 1, 2, 3}", "{1, 2, 3, 4}", "{1, 2, 3, 4, ...}", "{x : x ≤ 4}"],
+                    correct: 1
+                },
+                {
+                    question: "What does the symbol ∈ mean?",
+                    options: ["Subset", "Belongs to", "Union", "Intersection"],
+                    correct: 1
+                },
+                {
+                    question: "Which set contains all the others as subsets?",
+                    options: ["ℕ", "ℤ", "ℚ", "ℝ"],
+                    correct: 3
+                },
+                {
+                    question: "The set {x : x² = 9} in roster form is:",
+                    options: ["{3}", "{-3}", "{3, -3}", "{9}"],
+                    correct: 2
+                },
+                {
+                    question: "Which of the following is NOT a well-defined collection?",
+                    options: ["Prime numbers less than 20", "Tall students in class", "Even numbers", "Vowels in English"],
+                    correct: 1
+                },
+                {
+                    question: "The set of positive integers is denoted by:",
+                    options: ["ℕ", "ℤ+", "Both ℕ and ℤ+", "ℚ+"],
+                    correct: 2
+                }
+            ];
+            
+            const randomQ = questions[Math.floor(Math.random() * questions.length)];
+            currentQuizAnswer = randomQ.correct;
+            
+            document.getElementById('quizQuestionText').textContent = randomQ.question;
+            
+            const optionsHtml = randomQ.options.map((option, index) => 
+                `<div class="quiz-option" onclick="selectOption(${index})">${option}</div>`
+            ).join('');
+            
+            document.getElementById('quizOptions').innerHTML = optionsHtml;
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            document.getElementById('quizResult').innerHTML = '';
+            selectedOption = '';
+        }
+        
+        function selectOption(index) {
+            // Remove previous selection
+            document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            document.querySelectorAll('.quiz-option')[index].classList.add('selected');
+            selectedOption = index;
+        }
+        
+        function submitQuizAnswer() {
+            if (selectedOption === '') {
+                document.getElementById('quizResult').innerHTML = '<div class="result error">Please select an answer.</div>';
+                return;
+            }
+            
+            totalQuizQuestions++;
+            const isCorrect = selectedOption === currentQuizAnswer;
+            
+            if (isCorrect) {
+                quizScore++;
+                document.getElementById('quizResult').innerHTML = '<div class="result success">Correct! Well done!</div>';
+            } else {
+                document.getElementById('quizResult').innerHTML = '<div class="result error">Incorrect. Try another question!</div>';
+            }
+            
+            document.getElementById('currentScore').textContent = quizScore;
+            document.getElementById('totalQuestions').textContent = totalQuizQuestions;
+            document.getElementById('submitBtn').style.display = 'none';
+        }
+        
+        // Practice exercises
+        function generatePracticeQ1() {
+            const examples = [
+                { text: "{2, 4, 6, 8, 10}", answer: "roster", type: "Even numbers 1-10" },
+                { text: "{x : x is a prime number and x < 20}", answer: "builder", type: "Prime numbers less than 20" },
+                { text: "{1, 3, 5, 7, 9}", answer: "roster", type: "Odd numbers 1-9" },
+                { text: "{x : x² < 25 and x ∈ ℕ}", answer: "builder", type: "Natural numbers whose square is less than 25" },
+                { text: "{a, e, i, o, u}", answer: "roster", type: "Vowels" }
+            ];
+            
+            const random = examples[Math.floor(Math.random() * examples.length)];
+            practiceData.q1 = random;
+            
+            document.getElementById('practiceQ1').innerHTML = `What form is this set written in?<br><strong>${random.text}</strong>`;
+            document.getElementById('practiceA1').value = '';
+            document.getElementById('practiceR1').innerHTML = '';
+        }
+        
+        function checkPracticeA1() {
+            const userAnswer = document.getElementById('practiceA1').value;
+            const correct = practiceData.q1.answer;
+            const result = document.getElementById('practiceR1');
+            
+            if (!userAnswer) {
+                result.innerHTML = '<div class="result error">Please select an answer.</div>';
+                return;
+            }
+            
+            if (userAnswer === correct) {
+                result.innerHTML = '<div class="result success">Correct! This is written in ' + correct + ' form.</div>';
+            } else {
+                result.innerHTML = '<div class="result error">Incorrect. This is actually written in ' + correct + ' form.</div>';
+            }
+        }
+        
+        function generatePracticeQ2() {
+            const examples = [
+                { element: "5", set: [2, 4, 6, 8, 10], answer: "no", setName: "even numbers from 2 to 10" },
+                { element: "7", set: [2, 3, 5, 7, 11], answer: "yes", setName: "prime numbers less than 12" },
+                { element: "0", set: [1, 2, 3, 4, 5], answer: "no", setName: "natural numbers from 1 to 5" },
+                { element: "e", set: ["a", "e", "i", "o", "u"], answer: "yes", setName: "vowels in English alphabet" },
+                { element: "9", set: [1, 4, 9, 16, 25], answer: "yes", setName: "perfect squares from 1 to 25" }
+            ];
+            
+            const random = examples[Math.floor(Math.random() * examples.length)];
+            practiceData.q2 = random;
+            
+            document.getElementById('practiceQ2').innerHTML = 
+                `Does <strong>${random.element}</strong> belong to the set {${random.set.join(', ')}}?<br>
+                <em>(Set of ${random.setName})</em>`;
+            document.getElementById('practiceA2').value = '';
+            document.getElementById('practiceR2').innerHTML = '';
+        }
+        
+        function checkPracticeA2() {
+            const userAnswer = document.getElementById('practiceA2').value;
+            const correct = practiceData.q2.answer;
+            const result = document.getElementById('practiceR2');
+            const element = practiceData.q2.element;
+            const symbol = correct === "yes" ? "∈" : "∉";
+            
+            if (!userAnswer) {
+                result.innerHTML = '<div class="result error">Please select an answer.</div>';
+                return;
+            }
+            
+            if (userAnswer === correct) {
+                result.innerHTML = `<div class="result success">Correct! ${element} ${symbol} {${practiceData.q2.set.join(', ')}}</div>`;
+            } else {
+                result.innerHTML = `<div class="result error">Incorrect. ${element} ${symbol} {${practiceData.q2.set.join(', ')}}</div>`;
+            }
+        }
+        
+        // Initialize the tool
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate some initial examples
+            generatePracticeQ1();
+            generatePracticeQ2();
+        });
+    </script>
+</body>
+</html>

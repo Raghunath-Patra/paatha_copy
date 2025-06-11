@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complement of a Set - Interactive Learning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .venn-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .venn-diagram {
+            width: 400px;
+            height: 300px;
+            border: 2px solid #333;
+            position: relative;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .universal-set {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border-radius: 8px;
+        }
+
+        .set-a {
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 99, 132, 0.3);
+            border: 3px solid #ff6384;
+            border-radius: 50%;
+            position: absolute;
+            top: 50px;
+            left: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .complement-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(54, 162, 235, 0.2);
+            border-radius: 8px;
+            z-index: -1;
+        }
+
+        .label {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .label-u {
+            top: 10px;
+            left: 15px;
+            color: #2d3748;
+        }
+
+        .label-a {
+            top: 130px;
+            left: 180px;
+            color: #e53e3e;
+        }
+
+        .label-complement {
+            top: 20px;
+            right: 20px;
+            color: #3182ce;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            align-items: flex-end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: fit-content;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .results {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .set-display {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .set-box {
+            background: #edf2f7;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #cbd5e0;
+            min-width: 150px;
+        }
+
+        .set-box h4 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .set-elements {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .quiz-section {
+            margin-top: 20px;
+        }
+
+        .question {
+            background: #f0f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #38a169;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .option {
+            padding: 10px;
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .option.correct {
+            background: #c6f6d5;
+            border-color: #38a169;
+        }
+
+        .option.incorrect {
+            background: #fed7d7;
+            border-color: #e53e3e;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .feedback.incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .demorgans-demo {
+            background: #fffbf0;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #f6e05e;
+            margin: 20px 0;
+        }
+
+        .laws-section {
+            background: #e6fffa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #38b2ac;
+            margin: 20px 0;
+        }
+
+        .law-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #38b2ac;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .venn-diagram {
+                width: 300px;
+                height: 250px;
+            }
+            
+            .set-a {
+                width: 150px;
+                height: 150px;
+                left: 75px;
+                top: 50px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Complement of a Set</h1>
+            <p>Interactive Learning Tool for Class 11 Mathematics</p>
+        </div>
+
+        <!-- Visual Representation Section -->
+        <div class="section">
+            <h2>📊 Visual Representation</h2>
+            <div class="venn-container">
+                <div class="venn-diagram">
+                    <div class="complement-area"></div>
+                    <div class="universal-set">
+                        <div class="set-a" id="setA">A</div>
+                        <div class="label label-u">U</div>
+                        <div class="label label-a">A</div>
+                        <div class="label label-complement">A'</div>
+                    </div>
+                </div>
+            </div>
+            <p><strong>Visual Explanation:</strong> The blue shaded area represents A' (complement of A), which contains all elements in the universal set U that are NOT in set A.</p>
+        </div>
+
+        <!-- Interactive Exploration Section -->
+        <div class="section">
+            <h2>🔧 Interactive Set Explorer</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="universalSetInput">Universal Set U:</label>
+                    <input type="text" id="universalSetInput" placeholder="Enter elements separated by commas (e.g., 1,2,3,4,5,6,7,8,9,10)" value="">
+                </div>
+                <div class="control-group">
+                    <label for="setAInput">Set A:</label>
+                    <input type="text" id="setAInput" placeholder="Enter elements separated by commas (e.g., 1,3,5,7,9)" value="">
+                </div>
+                <button onclick="calculateComplement()">Calculate A'</button>
+                <button onclick="loadExample()">Load Example</button>
+            </div>
+
+            <div class="results" id="results" style="display: none;">
+                <div class="set-display">
+                    <div class="set-box">
+                        <h4>Universal Set (U)</h4>
+                        <div class="set-elements" id="displayU"></div>
+                    </div>
+                    <div class="set-box">
+                        <h4>Set A</h4>
+                        <div class="set-elements" id="displayA"></div>
+                    </div>
+                    <div class="set-box">
+                        <h4>Complement A'</h4>
+                        <div class="set-elements" id="displayComplement"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- De Morgan's Laws Demo -->
+        <div class="section">
+            <h2>⚖️ De Morgan's Laws Interactive Demo</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="setB">Set B:</label>
+                    <input type="text" id="setB" placeholder="Enter elements for set B (e.g., 2,4,6,8,10)" value="2,4,6,8,10">
+                </div>
+                <button onclick="demonstrateDeMorgan()">Demonstrate De Morgan's Laws</button>
+            </div>
+            
+            <div class="demorgans-demo" id="demorganResults" style="display: none;">
+                <h3>De Morgan's Laws Verification:</h3>
+                <div id="demorganContent"></div>
+            </div>
+        </div>
+
+        <!-- Complement Laws Section -->
+        <div class="section">
+            <h2>📜 Properties of Complement Sets</h2>
+            <div class="laws-section">
+                <h3>Important Laws:</h3>
+                <div class="law-item">
+                    <strong>1. Complement Laws:</strong>
+                    <br>• A ∪ A' = U (Union of a set and its complement equals the universal set)
+                    <br>• A ∩ A' = ∅ (Intersection of a set and its complement is empty)
+                </div>
+                <div class="law-item">
+                    <strong>2. De Morgan's Laws:</strong>
+                    <br>• (A ∪ B)' = A' ∩ B' (Complement of union equals intersection of complements)
+                    <br>• (A ∩ B)' = A' ∪ B' (Complement of intersection equals union of complements)
+                </div>
+                <div class="law-item">
+                    <strong>3. Double Complementation:</strong>
+                    <br>• (A')' = A (Complement of complement equals the original set)
+                </div>
+                <div class="law-item">
+                    <strong>4. Universal and Empty Set Laws:</strong>
+                    <br>• ∅' = U (Complement of empty set is universal set)
+                    <br>• U' = ∅ (Complement of universal set is empty set)
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Check Section -->
+        <div class="section">
+            <h2>🧠 Check Your Knowledge</h2>
+            <div class="quiz-section">
+                <div class="question">
+                    <h4>Question 1: If U = {1, 2, 3, 4, 5, 6, 7, 8} and A = {2, 4, 6, 8}, what is A'?</h4>
+                    <div class="options">
+                        <div class="option" onclick="checkAnswer(this, false)">A) {2, 4, 6, 8}</div>
+                        <div class="option" onclick="checkAnswer(this, true)">B) {1, 3, 5, 7}</div>
+                        <div class="option" onclick="checkAnswer(this, false)">C) {1, 2, 3, 4, 5, 6, 7, 8}</div>
+                        <div class="option" onclick="checkAnswer(this, false)">D) ∅</div>
+                    </div>
+                    <div class="feedback" id="feedback1" style="display: none;"></div>
+                </div>
+
+                <div class="question">
+                    <h4>Question 2: According to De Morgan's Law, (A ∪ B)' equals:</h4>
+                    <div class="options">
+                        <div class="option" onclick="checkAnswer(this, false)">A) A' ∪ B'</div>
+                        <div class="option" onclick="checkAnswer(this, true)">B) A' ∩ B'</div>
+                        <div class="option" onclick="checkAnswer(this, false)">C) A ∩ B</div>
+                        <div class="option" onclick="checkAnswer(this, false)">D) A ∪ B</div>
+                    </div>
+                    <div class="feedback" id="feedback2" style="display: none;"></div>
+                </div>
+
+                <div class="question">
+                    <h4>Question 3: What is (A')'?</h4>
+                    <div class="options">
+                        <div class="option" onclick="checkAnswer(this, false)">A) A'</div>
+                        <div class="option" onclick="checkAnswer(this, true)">B) A</div>
+                        <div class="option" onclick="checkAnswer(this, false)">C) U</div>
+                        <div class="option" onclick="checkAnswer(this, false)">D) ∅</div>
+                    </div>
+                    <div class="feedback" id="feedback3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let questionCount = 0;
+
+        function parseSet(str) {
+            if (!str || str.trim() === '') return [];
+            return str.split(',')
+                     .map(s => s.trim())
+                     .filter(s => s !== '' && s !== null && s !== undefined);
+        }
+
+        function formatSet(arr) {
+            return `{${arr.join(', ')}}`;
+        }
+
+        function calculateComplement() {
+            const universalSetElement = document.getElementById('universalSetInput');
+            const setAElement = document.getElementById('setAInput');
+            
+            if (!universalSetElement || !setAElement) {
+                alert('Error: Input fields not found');
+                return;
+            }
+            
+            const universalInput = universalSetElement.value.trim();
+            const setAInput = setAElement.value.trim();
+            
+            if (!universalInput || !setAInput) {
+                alert('Please enter both Universal Set and Set A');
+                return;
+            }
+
+            try {
+                const U = parseSet(universalInput);
+                const A = parseSet(setAInput);
+                
+                if (U.length === 0) {
+                    alert('Universal Set cannot be empty');
+                    return;
+                }
+                
+                // Validate that A is subset of U
+                const isSubset = A.every(element => U.includes(element));
+                if (!isSubset) {
+                    alert('Set A must be a subset of Universal Set U');
+                    return;
+                }
+
+                const complement = U.filter(element => !A.includes(element));
+                
+                document.getElementById('displayU').textContent = formatSet(U);
+                document.getElementById('displayA').textContent = formatSet(A);
+                document.getElementById('displayComplement').textContent = formatSet(complement);
+                document.getElementById('results').style.display = 'block';
+            } catch (error) {
+                alert('Please check your input format. Use comma-separated values like: 1,2,3,4,5');
+                console.error('Error in calculateComplement:', error);
+            }
+        }
+
+        function loadExample() {
+            document.getElementById('universalSetInput').value = '1,2,3,4,5,6,7,8,9,10';
+            document.getElementById('setAInput').value = '1,3,5,7,9';
+            calculateComplement();
+        }
+
+        function demonstrateDeMorgan() {
+            const universalSetElement = document.getElementById('universalSetInput');
+            const setAElement = document.getElementById('setAInput');
+            const setBElement = document.getElementById('setB');
+            
+            if (!universalSetElement || !setAElement || !setBElement) {
+                alert('Error: Input fields not found');
+                return;
+            }
+            
+            const universalInput = universalSetElement.value.trim();
+            const setAInput = setAElement.value.trim();
+            const setBInput = setBElement.value.trim();
+            
+            if (!universalInput || !setAInput || !setBInput) {
+                alert('Please enter Universal Set, Set A, and Set B');
+                return;
+            }
+
+            const U = parseSet(universalInput);
+            const A = parseSet(setAInput);
+            const B = parseSet(setBInput);
+            
+            // Calculate complements
+            const AComplement = U.filter(element => !A.includes(element));
+            const BComplement = U.filter(element => !B.includes(element));
+            
+            // Calculate unions and intersections
+            const AUnionB = [...new Set([...A, ...B])];
+            const AIntersectB = A.filter(element => B.includes(element));
+            
+            // Calculate De Morgan's law results
+            const AUnionBComplement = U.filter(element => !AUnionB.includes(element));
+            const AComplementIntersectBComplement = AComplement.filter(element => BComplement.includes(element));
+            
+            const AIntersectBComplement = U.filter(element => !AIntersectB.includes(element));
+            const AComplementUnionBComplement = [...new Set([...AComplement, ...BComplement])];
+            
+            const demorganContent = `
+                <div class="set-display">
+                    <div class="set-box">
+                        <h4>Set A</h4>
+                        <div class="set-elements">${formatSet(A)}</div>
+                    </div>
+                    <div class="set-box">
+                        <h4>Set B</h4>
+                        <div class="set-elements">${formatSet(B)}</div>
+                    </div>
+                </div>
+                <div class="set-display">
+                    <div class="set-box">
+                        <h4>A ∪ B</h4>
+                        <div class="set-elements">${formatSet(AUnionB)}</div>
+                    </div>
+                    <div class="set-box">
+                        <h4>(A ∪ B)'</h4>
+                        <div class="set-elements">${formatSet(AUnionBComplement)}</div>
+                    </div>
+                    <div class="set-box">
+                        <h4>A' ∩ B'</h4>
+                        <div class="set-elements">${formatSet(AComplementIntersectBComplement)}</div>
+                    </div>
+                </div>
+                <p><strong>First Law Verification:</strong> (A ∪ B)' = A' ∩ B' ✓</p>
+                <div class="set-display">
+                    <div class="set-box">
+                        <h4>A ∩ B</h4>
+                        <div class="set-elements">${formatSet(AIntersectB)}</div>
+                    </div>
+                    <div class="set-box">
+                        <h4>(A ∩ B)'</h4>
+                        <div class="set-elements">${formatSet(AIntersectBComplement)}</div>
+                    </div>
+                    <div class="set-box">
+                        <h4>A' ∪ B'</h4>
+                        <div class="set-elements">${formatSet(AComplementUnionBComplement)}</div>
+                    </div>
+                </div>
+                <p><strong>Second Law Verification:</strong> (A ∩ B)' = A' ∪ B' ✓</p>
+            `;
+            
+            document.getElementById('demorganContent').innerHTML = demorganContent;
+            document.getElementById('demorganResults').style.display = 'block';
+        }
+
+        function checkAnswer(optionElement, isCorrect) {
+            questionCount++;
+            const parentQuestion = optionElement.parentElement.parentElement;
+            const options = parentQuestion.querySelectorAll('.option');
+            const feedback = parentQuestion.querySelector('.feedback');
+            
+            // Remove previous styling
+            options.forEach(opt => {
+                opt.classList.remove('correct', 'incorrect');
+                opt.style.pointerEvents = 'none';
+            });
+            
+            // Style the selected option
+            if (isCorrect) {
+                optionElement.classList.add('correct');
+                feedback.textContent = '✅ Correct! Well done!';
+                feedback.className = 'feedback correct';
+            } else {
+                optionElement.classList.add('incorrect');
+                // Show the correct answer
+                options.forEach(opt => {
+                    if (opt.onclick.toString().includes('true')) {
+                        opt.classList.add('correct');
+                    }
+                });
+                feedback.textContent = '❌ Incorrect. The correct answer is highlighted in green.';
+                feedback.className = 'feedback incorrect';
+            }
+            
+            feedback.style.display = 'block';
+        }
+
+        // Initialize page without loading example
+        window.onload = function() {
+            // Page is ready, but no example is loaded automatically
+            console.log('Page loaded successfully');
+        };
+    </script>
+</body>
+</html>

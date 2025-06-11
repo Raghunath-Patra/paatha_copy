@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisiting Irrational Numbers - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #0891b2;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .interactive-area {
+            background: #f0fdfa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #a7f3d0;
+        }
+
+        .number-classifier {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .number-input-section {
+            background: white;
+            border: 2px solid #0891b2;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .number-result-section {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .proof-theater {
+            background: #1f2937;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            min-height: 400px;
+            color: white;
+            position: relative;
+        }
+
+        .proof-step {
+            background: #374151;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #22d3ee;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .proof-step.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .proof-step.assumption {
+            border-left-color: #fbbf24;
+            background: #451a03;
+        }
+
+        .proof-step.contradiction {
+            border-left-color: #dc2626;
+            background: #450a0a;
+            animation: flash 0.5s ease-in-out;
+        }
+
+        .proof-step.conclusion {
+            border-left-color: #10b981;
+            background: #064e3b;
+        }
+
+        @keyframes flash {
+            0%, 100% { background: #450a0a; }
+            50% { background: #7f1d1d; }
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #0891b2, #06b6d4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #6b7280, #9ca3af);
+        }
+
+        .btn.danger {
+            background: linear-gradient(45deg, #dc2626, #f59e0b);
+        }
+
+        .calc-input {
+            width: 200px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+            margin: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .calc-input:focus {
+            border-color: #0891b2;
+            outline: none;
+        }
+
+        .number-display {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            color: #0891b2;
+        }
+
+        .classification-result {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .classification-result.rational {
+            background: #f0fdf4;
+            border-color: #16a34a;
+        }
+
+        .classification-result.irrational {
+            background: #fff7ed;
+            border-color: #ea580c;
+        }
+
+        .famous-irrationals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .irrational-card {
+            background: white;
+            border: 3px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .irrational-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #f59e0b;
+        }
+
+        .irrational-card.selected {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .irrational-symbol {
+            font-size: 2.5em;
+            color: #dc2626;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .operations-lab {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .operation-example {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #0891b2;
+        }
+
+        .proof-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .proof-selector {
+            background: #374151;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .proof-btn {
+            background: #0891b2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .proof-btn:hover {
+            background: #0e7490;
+            transform: scale(1.05);
+        }
+
+        .proof-btn.active {
+            background: #dc2626;
+        }
+
+        .paatha-tip {
+            background: linear-gradient(135deg, #ecfeff, #f0fdfa);
+            border: 2px solid #22d3ee;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .paatha-tip::before {
+            content: "🤖 Paaṭha AI Smart Tip";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(45deg, #0891b2, #22d3ee);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .decimal-explorer {
+            background: #1f2937;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .decimal-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            background: #374151;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            letter-spacing: 1px;
+        }
+
+        .pattern-highlight {
+            background: #dc2626;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .number-classifier {
+                grid-template-columns: 1fr;
+            }
+            
+            .famous-irrationals {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="height: 48px; width: 48px;"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8">
+                        </circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Mathematics Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">√ Revisiting Irrational Numbers</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Class X Mathematics - Chapter 1, Section 1.3</p>
+        </div>
+
+        <div class="section">
+            <h2>What Are Irrational Numbers?</h2>
+            
+            <div class="paatha-tip">
+                <strong>📚 Definition:</strong> A number 's' is called <span class="highlight">irrational</span> if it cannot be written in the form p/q, where p and q are integers and q ≠ 0.
+                <br><br>
+                <strong>🎯 Key Insight:</strong> Irrational numbers have infinite, non-repeating decimal expansions. They "fill the gaps" between rational numbers on the number line!
+            </div>
+
+            <div class="famous-irrationals">
+                <div class="irrational-card" onclick="exploreIrrational('sqrt2')">
+                    <div class="irrational-symbol">√2</div>
+                    <h4>Square Root of 2</h4>
+                    <p>≈ 1.41421356...</p>
+                    <small>First proven irrational by ancient Greeks</small>
+                </div>
+                
+                <div class="irrational-card" onclick="exploreIrrational('sqrt3')">
+                    <div class="irrational-symbol">√3</div>
+                    <h4>Square Root of 3</h4>
+                    <p>≈ 1.73205080...</p>
+                    <small>Another famous irrational</small>
+                </div>
+                
+                <div class="irrational-card" onclick="exploreIrrational('pi')">
+                    <div class="irrational-symbol">π</div>
+                    <h4>Pi</h4>
+                    <p>≈ 3.14159265...</p>
+                    <small>Ratio of circumference to diameter</small>
+                </div>
+                
+                <div class="irrational-card" onclick="exploreIrrational('e')">
+                    <div class="irrational-symbol">e</div>
+                    <h4>Euler's Number</h4>
+                    <p>≈ 2.71828182...</p>
+                    <small>Base of natural logarithm</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Interactive Number Classifier</h2>
+            
+            <div class="number-classifier">
+                <div class="number-input-section">
+                    <h3>🔍 Test Any Number</h3>
+                    <input type="text" id="numberInput" class="calc-input" placeholder="Enter a number or expression">
+                    <br>
+                    <button class="btn" onclick="classifyNumber()">🧮 Classify Number</button>
+                    <button class="btn secondary" onclick="clearClassifier()">🗑️ Clear</button>
+                </div>
+                
+                <div class="number-result-section">
+                    <h3>📊 Classification Result</h3>
+                    <div id="classificationResult">
+                        Enter a number to see if it's rational or irrational!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Proof Theater: √2 is Irrational</h2>
+            
+            <div class="interactive-area">
+                <h3>🎭 Interactive Proof by Contradiction</h3>
+                <p>Watch how we prove √2 is irrational step by step using the method of contradiction!</p>
+                
+                <div class="proof-controls">
+                    <div class="proof-selector">
+                        <button class="proof-btn" onclick="startProof('sqrt2')">Prove √2</button>
+                        <button class="proof-btn" onclick="startProof('sqrt3')">Prove √3</button>
+                        <button class="proof-btn" onclick="startProof('sqrt5')">Prove √5</button>
+                    </div>
+                    
+                    <button class="btn" onclick="nextProofStep()" id="nextStepBtn" style="display: none;">▶️ Next Step</button>
+                    <button class="btn secondary" onclick="resetProof()">🔄 Reset Proof</button>
+                </div>
+                
+                <div class="proof-theater" id="proofTheater">
+                    <div style="text-align: center; padding: 50px; color: #22d3ee;">
+                        🎬 Choose a number above to start the proof!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Operations with Irrational Numbers</h2>
+            
+            <div class="operations-lab">
+                <h3>🧪 Exploring Operations</h3>
+                <p>Let's explore what happens when we perform operations with rational and irrational numbers!</p>
+                
+                <div class="operation-example">
+                    <h4>🔢 Rational + Irrational = ?</h4>
+                    <div style="margin: 10px 0;">
+                        <strong>Example:</strong> 5 + √3
+                    </div>
+                    <button class="btn" onclick="proveOperation('addition')">🔍 Prove This is Irrational</button>
+                    <div id="additionProof" style="display: none; margin-top: 15px; padding: 15px; background: #f0fdfa; border-radius: 8px;">
+                        <!-- Proof will be shown here -->
+                    </div>
+                </div>
+                
+                <div class="operation-example">
+                    <h4>✖️ Rational × Irrational = ?</h4>
+                    <div style="margin: 10px 0;">
+                        <strong>Example:</strong> 3 × √2 = 3√2
+                    </div>
+                    <button class="btn" onclick="proveOperation('multiplication')">🔍 Prove This is Irrational</button>
+                    <div id="multiplicationProof" style="display: none; margin-top: 15px; padding: 15px; background: #f0fdfa; border-radius: 8px;">
+                        <!-- Proof will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Decimal Explorer</h2>
+            
+            <div class="decimal-explorer">
+                <h3 style="color: #22d3ee; margin-bottom: 20px;">🔍 Comparing Decimal Patterns</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div>
+                        <h4 style="color: #10b981;">Rational Numbers</h4>
+                        <div class="decimal-display" id="rationalDecimal">
+                            1/3 = 0.<span class="pattern-highlight">333333</span>...
+                        </div>
+                        <div class="decimal-display">
+                            22/7 = 3.<span class="pattern-highlight">142857142857</span>...
+                        </div>
+                        <p style="color: #10b981; margin-top: 10px;">✅ Repeating patterns</p>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #f59e0b;">Irrational Numbers</h4>
+                        <div class="decimal-display" id="irrationalDecimal">
+                            √2 = 1.41421356237309504880...
+                        </div>
+                        <div class="decimal-display">
+                            π = 3.14159265358979323846...
+                        </div>
+                        <p style="color: #f59e0b; margin-top: 10px;">❌ No repeating patterns</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn" onclick="generateMoreDecimals()">🔄 Generate More Decimals</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 2px solid rgba(255,255,255,0.2);">
+            <div style="color: white; opacity: 0.9;">
+                <p style="margin: 5px 0; font-size: 16px; font-weight: 600;">Powered by Paaṭha AI</p>
+                <p style="margin: 5px 0; font-size: 14px;">Interactive Mathematics Learning Platform</p>
+                <p style="margin: 5px 0; font-size: 12px; opacity: 0.7;">© 2024 Paaṭha AI. Transforming Education with AI.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let currentProof = '';
+        let currentStep = 0;
+        let proofSteps = [];
+
+        // Famous irrational numbers data
+        const irrationalData = {
+            sqrt2: {
+                symbol: '√2',
+                value: '1.41421356237309504880168872420969807856967187537694...',
+                description: 'The diagonal of a unit square',
+                funFact: 'Ancient Greeks discovered this when trying to find the diagonal of a square!'
+            },
+            sqrt3: {
+                symbol: '√3',
+                value: '1.73205080756887729352744634150587236694280525381038...',
+                description: 'Height of an equilateral triangle with side 2',
+                funFact: 'Appears in many geometric constructions!'
+            },
+            pi: {
+                symbol: 'π',
+                value: '3.14159265358979323846264338327950288419716939937510...',
+                description: 'Ratio of circumference to diameter',
+                funFact: 'Humans have calculated over 31 trillion digits of π!'
+            },
+            e: {
+                symbol: 'e',
+                value: '2.71828182845904523536028747135266249775724709369995...',
+                description: 'Base of natural logarithm',
+                funFact: 'Named after Leonhard Euler, appears everywhere in mathematics!'
+            }
+        };
+
+        // Proof templates
+        const proofTemplates = {
+            sqrt2: [
+                { type: 'assumption', text: 'Assume, for contradiction, that √2 is rational.' },
+                { type: 'normal', text: 'Then √2 = a/b where a, b are integers with b ≠ 0.' },
+                { type: 'normal', text: 'We can assume a and b are coprime (no common factors except 1).' },
+                { type: 'normal', text: 'Squaring both sides: 2 = a²/b²' },
+                { type: 'normal', text: 'Rearranging: 2b² = a²' },
+                { type: 'normal', text: 'This means a² is even, so a must be even (Theorem 1.2).' },
+                { type: 'normal', text: 'Let a = 2c for some integer c.' },
+                { type: 'normal', text: 'Substituting: 2b² = (2c)² = 4c²' },
+                { type: 'normal', text: 'Simplifying: b² = 2c²' },
+                { type: 'normal', text: 'This means b² is even, so b must be even.' },
+                { type: 'contradiction', text: 'CONTRADICTION! Both a and b are even, so they have common factor 2.' },
+                { type: 'conclusion', text: 'Therefore, our assumption was wrong. √2 is irrational!' }
+            ],
+            sqrt3: [
+                { type: 'assumption', text: 'Assume, for contradiction, that √3 is rational.' },
+                { type: 'normal', text: 'Then √3 = a/b where a, b are coprime integers with b ≠ 0.' },
+                { type: 'normal', text: 'Squaring both sides: 3 = a²/b²' },
+                { type: 'normal', text: 'Rearranging: 3b² = a²' },
+                { type: 'normal', text: 'This means a² is divisible by 3, so a is divisible by 3.' },
+                { type: 'normal', text: 'Let a = 3c for some integer c.' },
+                { type: 'normal', text: 'Substituting: 3b² = (3c)² = 9c²' },
+                { type: 'normal', text: 'Simplifying: b² = 3c²' },
+                { type: 'normal', text: 'This means b² is divisible by 3, so b is divisible by 3.' },
+                { type: 'contradiction', text: 'CONTRADICTION! Both a and b are divisible by 3, so they have common factor 3.' },
+                { type: 'conclusion', text: 'Therefore, our assumption was wrong. √3 is irrational!' }
+            ],
+            sqrt5: [
+                { type: 'assumption', text: 'Assume, for contradiction, that √5 is rational.' },
+                { type: 'normal', text: 'Then √5 = a/b where a, b are coprime integers with b ≠ 0.' },
+                { type: 'normal', text: 'Squaring both sides: 5 = a²/b²' },
+                { type: 'normal', text: 'Rearranging: 5b² = a²' },
+                { type: 'normal', text: 'This means a² is divisible by 5, so a is divisible by 5.' },
+                { type: 'normal', text: 'Let a = 5c for some integer c.' },
+                { type: 'normal', text: 'Substituting: 5b² = (5c)² = 25c²' },
+                { type: 'normal', text: 'Simplifying: b² = 5c²' },
+                { type: 'normal', text: 'This means b² is divisible by 5, so b is divisible by 5.' },
+                { type: 'contradiction', text: 'CONTRADICTION! Both a and b are divisible by 5, so they have common factor 5.' },
+                { type: 'conclusion', text: 'Therefore, our assumption was wrong. √5 is irrational!' }
+            ]
+        };
+
+        function exploreIrrational(type) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.irrational-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            event.target.closest('.irrational-card').classList.add('selected');
+            
+            const data = irrationalData[type];
+            
+            // Show detailed information (you could expand this)
+            const result = document.getElementById('classificationResult');
+            if (result) {
+                result.innerHTML = `
+                    <div class="classification-result irrational">
+                        <h4>${data.symbol} is Irrational</h4>
+                        <div class="number-display">${data.value.substring(0, 20)}...</div>
+                        <p><strong>Mathematical significance:</strong> ${data.description}</p>
+                        <p><strong>Fun fact:</strong> ${data.funFact}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function classifyNumber() {
+            const input = document.getElementById('numberInput').value.trim();
+            const result = document.getElementById('classificationResult');
+            
+            if (!input) {
+                result.innerHTML = 'Please enter a number or expression!';
+                return;
+            }
+            
+            // Simple classification based on input
+            const classifications = {
+                'sqrt(2)': { type: 'irrational', reason: '√2 cannot be expressed as p/q' },
+                '√2': { type: 'irrational', reason: '√2 cannot be expressed as p/q' },
+                'sqrt(3)': { type: 'irrational', reason: '√3 cannot be expressed as p/q' },
+                '√3': { type: 'irrational', reason: '√3 cannot be expressed as p/q' },
+                'pi': { type: 'irrational', reason: 'π has infinite non-repeating decimals' },
+                'π': { type: 'irrational', reason: 'π has infinite non-repeating decimals' },
+                'e': { type: 'irrational', reason: 'e has infinite non-repeating decimals' },
+                '1/3': { type: 'rational', reason: '1/3 = 0.333... (repeating decimal)' },
+                '0.5': { type: 'rational', reason: '0.5 = 1/2 (terminating decimal)' },
+                '3': { type: 'rational', reason: '3 = 3/1 (can be expressed as p/q)' }
+            };
+            
+            let classification = classifications[input.toLowerCase()];
+            
+            // Try to parse as number
+            if (!classification) {
+                const num = parseFloat(input);
+                if (!isNaN(num)) {
+                    // Check if it's an integer
+                    if (Number.isInteger(num)) {
+                        classification = { type: 'rational', reason: `${num} is an integer, so it equals ${num}/1` };
+                    } else {
+                        // Check if it's a simple decimal
+                        const decimalPart = input.split('.')[1];
+                        if (decimalPart && decimalPart.length <= 10) {
+                            classification = { type: 'rational', reason: 'Finite decimal can be expressed as fraction' };
+                        } else {
+                            classification = { type: 'unknown', reason: 'Cannot determine from input alone' };
+                        }
+                    }
+                }
+            }
+            
+            if (!classification) {
+                result.innerHTML = `
+                    <div class="classification-result">
+                        <h4>Cannot Classify</h4>
+                        <p>Try entering: √2, √3, π, 1/3, 0.5, or any integer</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            result.innerHTML = `
+                <div class="classification-result ${classification.type}">
+                    <h4>${input} is ${classification.type === 'rational' ? 'Rational' : classification.type === 'irrational' ? 'Irrational' : 'Unknown'}</h4>
+                    <p>${classification.reason}</p>
+                </div>
+            `;
+        }
+
+        function clearClassifier() {
+            document.getElementById('numberInput').value = '';
+            document.getElementById('classificationResult').innerHTML = 'Enter a number to see if it\'s rational or irrational!';
+        }
+
+        function startProof(number) {
+            currentProof = number;
+            currentStep = 0;
+            proofSteps = proofTemplates[number] || [];
+            
+            // Update button states
+            document.querySelectorAll('.proof-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const theater = document.getElementById('proofTheater');
+            theater.innerHTML = `
+                <div style="text-align: center; color: #22d3ee; margin-bottom: 20px;">
+                    <h3>Proving ${number === 'sqrt2' ? '√2' : number === 'sqrt3' ? '√3' : '√5'} is Irrational</h3>
+                    <p>Using the method of <strong>Proof by Contradiction</strong></p>
+                </div>
+            `;
+            
+            document.getElementById('nextStepBtn').style.display = 'inline-block';
+        }
+
+        function nextProofStep() {
+            if (currentStep >= proofSteps.length) return;
+            
+            const theater = document.getElementById('proofTheater');
+            const step = proofSteps[currentStep];
+            
+            const stepDiv = document.createElement('div');
+            stepDiv.className = `proof-step ${step.type}`;
+            stepDiv.innerHTML = `<strong>Step ${currentStep + 1}:</strong> ${step.text}`;
+            
+            theater.appendChild(stepDiv);
+            
+            // Animate step appearance
+            setTimeout(() => {
+                stepDiv.classList.add('show');
+            }, 100);
+            
+            currentStep++;
+            
+            // Hide button when proof is complete
+            if (currentStep >= proofSteps.length) {
+                document.getElementById('nextStepBtn').style.display = 'none';
+                
+                // Add completion message
+                setTimeout(() => {
+                    const completionDiv = document.createElement('div');
+                    completionDiv.style.cssText = 'text-align: center; color: #10b981; margin-top: 20px; font-size: 1.2em; font-weight: bold;';
+                    completionDiv.innerHTML = '🎉 Proof Complete! The number is definitely irrational!';
+                    theater.appendChild(completionDiv);
+                }, 1000);
+            }
+        }
+
+        function resetProof() {
+            currentProof = '';
+            currentStep = 0;
+            proofSteps = [];
+            
+            document.getElementById('proofTheater').innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #22d3ee;">
+                    🎬 Choose a number above to start the proof!
+                </div>
+            `;
+            
+            document.getElementById('nextStepBtn').style.display = 'none';
+            
+            document.querySelectorAll('.proof-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function proveOperation(operation) {
+            const proofDiv = document.getElementById(operation + 'Proof');
+            
+            if (operation === 'addition') {
+                proofDiv.innerHTML = `
+                    <h5>Proof that 5 + √3 is irrational:</h5>
+                    <ol style="margin-left: 20px; line-height: 1.6;">
+                        <li>Assume, for contradiction, that 5 + √3 is rational.</li>
+                        <li>Then 5 + √3 = a/b for some integers a, b with b ≠ 0.</li>
+                        <li>Rearranging: √3 = a/b - 5 = (a - 5b)/b</li>
+                        <li>Since a, b are integers, (a - 5b)/b is rational.</li>
+                        <li>This would mean √3 is rational.</li>
+                        <li><strong>Contradiction!</strong> We know √3 is irrational.</li>
+                        <li>Therefore, 5 + √3 is irrational.</li>
+                    </ol>
+                `;
+            } else if (operation === 'multiplication') {
+                proofDiv.innerHTML = `
+                    <h5>Proof that 3√2 is irrational:</h5>
+                    <ol style="margin-left: 20px; line-height: 1.6;">
+                        <li>Assume, for contradiction, that 3√2 is rational.</li>
+                        <li>Then 3√2 = a/b for some integers a, b with b ≠ 0.</li>
+                        <li>Dividing by 3: √2 = a/(3b)</li>
+                        <li>Since a, b are integers, a/(3b) is rational.</li>
+                        <li>This would mean √2 is rational.</li>
+                        <li><strong>Contradiction!</strong> We know √2 is irrational.</li>
+                        <li>Therefore, 3√2 is irrational.</li>
+                    </ol>
+                `;
+            }
+            
+            proofDiv.style.display = 'block';
+        }
+
+        function generateMoreDecimals() {
+            // Generate more digits for demonstration
+            const rationalDiv = document.getElementById('rationalDecimal');
+            const irrationalDiv = document.getElementById('irrationalDecimal');
+            
+            // Show more digits of 1/7
+            rationalDiv.innerHTML = '1/7 = 0.<span class="pattern-highlight">142857142857142857</span>...';
+            
+            // Show more digits of √2
+            irrationalDiv.innerHTML = '√2 = 1.4142135623730950488016887242096980785696718753769480731766797379907324784621070388503875343276415727350138462309122970249248360558507372126441214970999358314132226659275055927557999505011527820605714701095599716059702745345968620147285174186408891986095523292304843087143214508397626036279952514079896872533965463318088296406206152583523950547457502877599617298355752203375318570113543746034084988471603868999706990048150305440277903164542478230684929369186215805784631115966687130130156185689872372352885092648612494977154218334204285686060146824720771435854874155657069677653720226485447015858801620758474922657226002085584466521458398893944370926591800311388246468157082630100594858704003186480342194897278290641045072636881313739855256117322040245091227700226941127573627280495738108967504018369868368450725799364729060762996941380475654823728997180326802474420629269124859052181004459842150591120249441341728531478105803603371077309182869314710171111683916581726889419758716582152128229518488472089694633862891562882765952635140542267653239694617511291602408347087145597722183174044231661441280965786147449696299462334129347747756350500395522533694689020923345266372898461271327992700466825033194758966000200350937599876929879906336122711423560160969786860547704888237113506236476570626007183057851016680095392158394020879024862081037063075528045309953550244863175727654987980334353239067395506951994227550414675297651065092100618345613166085074325700629568374889055738540528094356161652598621092162303297692130649329984096074077899050646738825508374253866893064096711306203399924653929821430074088952067568043623717467816318522142822170616654536915849949899154717802888302138095655987336802778635636071175046593061893648088061716903854936700264327628644717825550633709549139139999993796644821462166162398020745659491736253062652831265610316863079463647951439334969671952745734968642133226152726655997549928936893623624742830654476688952644244066063076999037051442799103151068096698439962976302598476624808932883455426344829095547135725000010010151097327838092007080436901669671825825508726936203244899133764610631458495616275633906063569623985556823830070644507686574693688055648606008506423434829774133062064449476066838033169050763654154949059095109421577532005012827041549997994851088096994000555698847439863580418062079433088997298896444915142900829434695088938323866749951644050847507701154500993893336444969306946226325092056764068639230481968988845734063950871065644075346570536826976139549439066953096705764071106066226503926893334569037030996327354301495896851978593399847020654263152721069624301635073226439127036424967090529623442624527316100978568508717037444502970701669797686113226030036055641892012996399503062624421444693298354779965080866459900636027424623906077476398050421900598162772598175139915031162142671056166950871103639799899700893508881894779952493607001606885067900006698698600717623654095226639983306949346749507336329113808772493978426092652430473527097569709633862503842701346166395398993072003524593316764693306046963133100647395302849863669698901426924701651998426074903772026700651068547871698983623508952928923969398632040395827885924508439838821414434015006055647302103808568635593071123387002095041700844424609008655020623414993508598414325094242851799983426014123728436162063069926537754473825463893194671066066096037951073987993269988508700570827976996124138090074970133012068648827777924103899063966737001006020826831636068346962862068059436686398318398693399823749529169506946398606853079421892728863154693449618721031844926479686395169982982654996398816663418456344734449982606830344502536978738983779503999006984157481669959695166799901736754399925829061970013628892423827488554688885885006029316081983306424069688982398697067449633103133063506709987671397139896426647885026885853169610009066041866024064806162473951421966816506644346847978728458154825426020932632010976423893463633006050993008938583987695003077012014306802488451159648050424951648932264039705527618583503456709436701925648444166434698982970037354618334395013624030893327749090095925414983976157847503031772568098726159097439242005799892985066398639094901344373066644524993506577061772829124802721695067041764924476924095166436838103050925953554491064825377996419516067329529749113265893949697006055998522414993451648488055866502071932005059093003063831012988226999883736827399983043263821896648043959636764062924398899423830829976764154325423419139569968932598893999127169871077142043007772142326647756652093481524951833987159851842064056364263823431003725093226076950051863962896008547705969624988749616871700556982616896264649377424847639649253978698073074698842988806434067827094938002772970885993659329244522698439001123542012549419717623006066994026451693431649024774093008027030070001776157061037344906756899915007442932923159154297306088985959998436329952892306700577426064419100344996540327070041985899095133103777926710449550734821654421074073007406324074000983924821862653327892030030436838002507893733063892669928097097693007503925705244806998468606436040071103005963516061059896582419883055242733624932242736866346003669738024825334885899997346549436623733024900899481899399073056773700006040721653133030395094074037103949127851088157978851095825885063426568507926816701569006556966334063742406777077764871652871847988364506653766577055398159095476821133851062569529440693896967064434968936773092952644671430442879998024998063951686479607026013655899442946738388456827159654031008050636936096436570014598705090016399742647423844263952969388069892306831879653847950507607003988624509031549569982096925036488096726336346154444983761062007871063157012421090938717924932003033695962076006644633996036166823089439993639080373763002014726903302227705451899399721649648883364491013653106468721050963742999473633754928892488799997693963456041726863799449449436639166766653853127154893061064593203647097449671067399892726623950570688302399079885502799742838318866628816993468071618344896764863655831142203639316568398956968473721993468421997020969693749624456901536779444065433003962962779056982978095542102628354639701989838503468162669926726925754103606607503329502344728821002842625094203996542705653509012607556688648072701717002901610779419012842946077688062006043072095978090618139071244726866127159695346395899026550436871938779609041030067996008728439030669903089529976983774983302414096628830329649024766442524073103001709395529968299568049336077962648648092799985616700411527012139096738354000693093701334651779473527002100242329936842066325996728468754953777568066549424639376738825963041002570133476334449844013154306068009962411983142624244618451509088651327962717688700442113418644509568226547455901533326547816901556635166823827827825479618055043598847950736966635802481508089983844354951439982426669831481738952893468113000113978644823536302449847536074411606244598024742547451577772459932700633649067068244077932074906157329892540327094388593808449439133705006302777503090456463866065503406100733799166554006936470423169829953669885830071433671139009854431097866529725439863754999932963969449988844924549654073725862932067772063456806892020853063982623540946537938953962742952473302688062463066802764838969092430411509569671133449949074071013097926329953983406124624020733414797926442550449426962459606040842242999142459554127001079031008988139924139536072901624481547583037764862968831406077953124554424885754979959094536609726088346779124734242983892103635056985763847618033097095399093932076481062871336154623725969006301058936455051398550455853655554325398554302988844024088493655395157705754067459090993851024479059899705969344756076424089639779709316089959623842459756633397088302883089883844763031426364827050524946607030542449088244966593037142996721900742064701124067994444893127610550952649802094772577542655871508844264802094065542425985854306749000516072244549020733831749507419095154006061550994439829476988139476885302866863013885444885463154067398983076056969479598636419103885041593653926736008698076618079027088700871529097459159015924628924654701089893455002649024700008336157064015059871926509838088648226000075006069516072327336399103043061618344853610829009901103077728698607334264659398066924070074055950399827102734516159825779481093516842570491481073866388493434728041459506885166077951978092797946069542547695985988434133962127302133203754998695963423644618449644547953030659203950030900244936838458473411473988516994624998493006816688006644502077950949069806936554306036089092830570725062705717647509473633488547946547264806938993549027336554030479951524936829885639066671808090036468058169096459994636067777439433095659458593027508906522952806529698418473346008074414473064746618264853059414932055736064463066062302423040096414842633736636893166070043568133388850074462077698506985159031326451537568037468423444968993503649066969398669468686423516999092439924606430936537978946418444041959468749344932302166932976055808570946344406050777659395953426695598700651976012606969906853506058336659932774951958436326549946977302003774493302000844056938726419568816316536851043124556476653993776464002097094092978962649709885639093959593906329952965946893893926946568654754649264030593695726797030522654542073004705766862965949607896439414749041159838892701688068433756866088036669095406899698606456946169998439093831607808906996073776329242693593701598013092686633503506701827749976746056002090100556766068336088388993997982636203946439746871609493090059529327633728154616616569569697688424654721648507395316976077728998097423336066043993098344421966570043686041569970946547854925036264089547998636244686892688738967522055978242089095306166556998096598059556568623700302686903582924067838516406060636003008068624799169995624421598730959968766055649006830524717455764471488982455698424808772093395938423777012779073970636423488746006169829244306967952421593983844925609464998302063506096825364623536736652842938671806693336772488095468734506733842766459003996468455797977070779127014068644779439742071089826556554906003688593479093269831951749013398698524476654506777728633325024932963936095825508688959395142529264473095698976031325959936059426377468203570825851346556844097688066582568688717709997766966009946799728000969000976700073600095503104089797094924980936529074924529050010329508094006825825030699041269089925924799000000000000000000000000000000000000000000000000...';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Irrational Numbers Tool Loaded');
+        });
+    </script>
+</body>
+</html>

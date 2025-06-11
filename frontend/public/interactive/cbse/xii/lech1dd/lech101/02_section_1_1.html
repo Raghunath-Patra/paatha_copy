@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solutions Chemistry - Interactive Learning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 50%, #553c9a 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #68d391;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 8px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            margin: 5px;
+            background: transparent;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #68d391, #4a5568);
+            box-shadow: 0 5px 15px rgba(104, 211, 145, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .simulation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(104, 211, 145, 0.25);
+        }
+
+        .beaker {
+            position: relative;
+            width: 250px;
+            height: 300px;
+            margin: 20px auto;
+            background: linear-gradient(to bottom, transparent 20%, rgba(160, 174, 192, 0.2) 100%);
+            border: 3px solid #68d391;
+            border-radius: 0 0 125px 125px;
+            border-top: none;
+            overflow: hidden;
+        }
+
+        .solution {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(45deg, #81c784, #64b5f6);
+            border-radius: 0 0 122px 122px;
+            transition: all 0.8s ease;
+            opacity: 0.7;
+            height: 30%;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e0f7ff;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(104, 211, 145, 0.3);
+            outline: none;
+        }
+
+        .value-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #68d391;
+        }
+
+        button {
+            background: linear-gradient(45deg, #68d391, #4a5568);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .quiz-section {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .quiz-option.selected {
+            border-color: #68d391;
+            background: rgba(104, 211, 145, 0.15);
+        }
+
+        .quiz-option.correct {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .quiz-option.incorrect {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid rgba(113, 128, 150, 0.25);
+        }
+
+        .info-card h3 {
+            color: #68d391;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .simulation-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Solutions Chemistry Explorer</h1>
+        <p class="subtitle">Interactive learning tool for understanding solutions</p>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('lab')">🔬 Virtual Lab</button>
+            <button class="tab" onclick="showTab('types')">📊 Solution Types</button>
+            <button class="tab" onclick="showTab('quiz')">🧠 Quiz</button>
+            <button class="tab" onclick="showTab('theory')">📚 Theory</button>
+        </div>
+
+        <div id="lab" class="tab-content active">
+            <div class="simulation-grid">
+                <div class="panel">
+                    <h2>Virtual Beaker</h2>
+                    <div class="beaker">
+                        <div class="solution" id="solutionLevel"></div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="value-display" id="concentrationDisplay">Concentration: 0.0 M</div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Controls</h2>
+                    
+                    <div class="control-group">
+                        <label for="soluteAmount">Solute Amount (mol):</label>
+                        <input type="range" id="soluteAmount" min="0" max="3" step="0.1" value="0">
+                        <div class="value-display" id="soluteValue">0.0 mol</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="solventVolume">Solvent Volume (L):</label>
+                        <input type="range" id="solventVolume" min="0.5" max="2" step="0.1" value="1">
+                        <div class="value-display" id="solventValue">1.0 L</div>
+                    </div>
+                    
+                    <button onclick="mixSolution()">🌀 Mix Solution</button>
+                    <button onclick="resetLab()">🔄 Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="types" class="tab-content">
+            <h2>Types of Solutions</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>💨 Gaseous Solutions</h3>
+                    <p><strong>Examples:</strong></p>
+                    <ul>
+                        <li>Air (O₂ + N₂)</li>
+                        <li>Natural gas mixtures</li>
+                        <li>Humid air</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>💧 Liquid Solutions</h3>
+                    <p><strong>Examples:</strong></p>
+                    <ul>
+                        <li>Salt water</li>
+                        <li>Sugar in water</li>
+                        <li>Alcohol in water</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>🏗️ Solid Solutions</h3>
+                    <p><strong>Examples:</strong></p>
+                    <ul>
+                        <li>Brass (Cu + Zn)</li>
+                        <li>Bronze (Cu + Sn)</li>
+                        <li>Steel alloys</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz" class="tab-content">
+            <div class="quiz-section">
+                <h2>Knowledge Test</h2>
+                <div id="quizContainer">
+                    <div id="currentQuestion">Loading question...</div>
+                    <div id="quizOptions">
+                        <!-- Options will be populated by JavaScript -->
+                    </div>
+                    <button onclick="checkAnswer()" id="checkBtn">Check Answer</button>
+                    <button onclick="nextQuestion()" id="nextBtn" style="display:none;">Next Question</button>
+                    <div id="feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="theory" class="tab-content">
+            <h2>Theory & Key Concepts</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Definition</h3>
+                    <p>Solutions are homogeneous mixtures of two or more components with uniform composition throughout.</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Components</h3>
+                    <p><strong>Solvent:</strong> Present in largest quantity<br>
+                    <strong>Solute:</strong> Present in smaller quantities</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Concentration Units</h3>
+                    <ul>
+                        <li>Molarity (M): mol/L</li>
+                        <li>Molality (m): mol/kg</li>
+                        <li>Mass %: (mass solute/mass solution) × 100</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Applications</h3>
+                    <ul>
+                        <li>Medical: IV fluids</li>
+                        <li>Industrial: Alloys</li>
+                        <li>Biological: Blood plasma</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedAnswer = -1;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizCompleted = false;
+
+        const questions = [
+            {
+                question: "What is a solution?",
+                options: [
+                    "A heterogeneous mixture",
+                    "A homogeneous mixture", 
+                    "A pure substance",
+                    "A compound"
+                ],
+                correct: 1,
+                explanation: "Solutions are homogeneous mixtures with uniform composition throughout."
+            },
+            {
+                question: "In a solution, the component present in the largest quantity is called:",
+                options: [
+                    "Solute",
+                    "Solvent",
+                    "Mixture", 
+                    "Compound"
+                ],
+                correct: 1,
+                explanation: "The solvent is the component present in the largest quantity and determines the physical state of the solution."
+            },
+            {
+                question: "Which of the following is an example of a solid solution?",
+                options: [
+                    "Sugar dissolved in water",
+                    "Oxygen dissolved in water",
+                    "Brass (copper and zinc alloy)",
+                    "Carbon dioxide in soda water"
+                ],
+                correct: 2,
+                explanation: "Brass is an alloy of copper and zinc, which is an example of a solid-solid solution."
+            },
+            {
+                question: "What concentration of fluoride ions in water prevents tooth decay?",
+                options: [
+                    "0.1 ppm",
+                    "1 ppm",
+                    "1.5 ppm",
+                    "10 ppm"
+                ],
+                correct: 1,
+                explanation: "1 part per million (ppm) of fluoride ions in water prevents tooth decay, while higher concentrations can be harmful."
+            },
+            {
+                question: "Which type of solution is most important for biological processes?",
+                options: [
+                    "Gaseous solutions",
+                    "Solid solutions", 
+                    "Liquid solutions",
+                    "All are equally important"
+                ],
+                correct: 2,
+                explanation: "Liquid solutions, especially aqueous solutions, are most important for biological processes."
+            },
+            {
+                question: "An example of a gas-liquid solution is:",
+                options: [
+                    "Air (oxygen and nitrogen)",
+                    "Soda water (CO₂ in water)",
+                    "Brass (copper and zinc)",
+                    "Alcohol in water"
+                ],
+                correct: 1,
+                explanation: "Soda water is CO₂ gas dissolved in water, making it a gas-liquid solution."
+            },
+            {
+                question: "What determines the physical state of a solution?",
+                options: [
+                    "The solute",
+                    "The solvent",
+                    "The temperature",
+                    "The pressure"
+                ],
+                correct: 1,
+                explanation: "The solvent determines the physical state of the solution since it's the component present in the largest quantity."
+            },
+            {
+                question: "Which concentration unit is temperature independent?",
+                options: [
+                    "Molarity (M)",
+                    "Molality (m)",
+                    "Both molarity and molality",
+                    "Neither molarity nor molality"
+                ],
+                correct: 1,
+                explanation: "Molality is temperature independent because it's based on mass of solvent, while molarity depends on volume which changes with temperature."
+            }
+        ];
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active from all tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function updateLab() {
+            const soluteAmount = parseFloat(document.getElementById('soluteAmount').value);
+            const solventVolume = parseFloat(document.getElementById('solventVolume').value);
+            
+            // Update displays
+            document.getElementById('soluteValue').textContent = soluteAmount.toFixed(1) + ' mol';
+            document.getElementById('solventValue').textContent = solventVolume.toFixed(1) + ' L';
+            
+            // Calculate concentration
+            const molarity = soluteAmount / solventVolume;
+            document.getElementById('concentrationDisplay').textContent = 'Concentration: ' + molarity.toFixed(2) + ' M';
+            
+            // Update beaker visual
+            const solutionLevel = document.getElementById('solutionLevel');
+            const levelHeight = Math.min(30 + molarity * 150, 90);
+            solutionLevel.style.height = levelHeight + '%';
+            
+            // Change color based on concentration
+            if (molarity === 0) {
+                solutionLevel.style.background = 'rgba(160, 174, 192, 0.3)';
+            } else {
+                const intensity = Math.min(molarity * 0.5, 1);
+                solutionLevel.style.background = 'rgba(129, 199, 132, ' + (0.3 + intensity * 0.4) + ')';
+            }
+        }
+
+        function mixSolution() {
+            const soluteAmount = parseFloat(document.getElementById('soluteAmount').value);
+            if (soluteAmount === 0) {
+                alert('Add some solute first!');
+                return;
+            }
+            
+            const solutionLevel = document.getElementById('solutionLevel');
+            solutionLevel.style.transition = 'all 1s ease-in-out';
+            solutionLevel.style.transform = 'scale(1.1)';
+            
+            setTimeout(() => {
+                solutionLevel.style.transform = 'scale(1)';
+                alert('Solution mixed successfully!');
+            }, 1000);
+        }
+
+        function resetLab() {
+            document.getElementById('soluteAmount').value = 0;
+            document.getElementById('solventVolume').value = 1;
+            updateLab();
+        }
+
+        function selectOption(index) {
+            selectedAnswer = index;
+            
+            // Remove selected class from all options
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            document.querySelectorAll('.quiz-option')[index].classList.add('selected');
+        }
+
+        function checkAnswer() {
+            if (selectedAnswer === -1) {
+                alert('Please select an answer first!');
+                return;
+            }
+            
+            const question = questions[currentQuestionIndex];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            // Update score if correct
+            if (selectedAnswer === question.correct) {
+                score++;
+            }
+            
+            // Show correct/incorrect
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedAnswer && index !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Show feedback
+            const feedback = document.getElementById('feedback');
+            if (selectedAnswer === question.correct) {
+                feedback.innerHTML = '<strong style="color: #4CAF50;">✓ Correct!</strong><br>' + question.explanation;
+            } else {
+                feedback.innerHTML = '<strong style="color: #f44336;">✗ Incorrect.</strong><br>' + question.explanation;
+            }
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            
+            // Check if this is the last question
+            if (currentQuestionIndex === questions.length - 1) {
+                document.getElementById('nextBtn').textContent = 'Finish Quiz';
+            }
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= questions.length) {
+                showQuizResults();
+                return;
+            }
+            
+            loadQuestion();
+        }
+
+        function showQuizResults() {
+            quizCompleted = true;
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            let resultMessage = '';
+            let resultColor = '';
+            
+            if (percentage >= 90) {
+                resultMessage = '🏆 Excellent! You have mastered Solutions chemistry!';
+                resultColor = '#4CAF50';
+            } else if (percentage >= 70) {
+                resultMessage = '🧪 Great work! Strong understanding of solutions!';
+                resultColor = '#2196F3';
+            } else if (percentage >= 50) {
+                resultMessage = '⚗️ Good effort! Review the concepts and try again!';
+                resultColor = '#FF9800';
+            } else {
+                resultMessage = '📚 Keep studying! Focus on the fundamental principles.';
+                resultColor = '#f44336';
+            }
+            
+            document.getElementById('currentQuestion').innerHTML = `
+                <div style="text-align: center;">
+                    <h3 style="color: ${resultColor}; margin-bottom: 20px;">${resultMessage}</h3>
+                    <div style="font-size: 2.5em; color: #68d391; margin: 20px 0;">
+                        ${score}/${questions.length}
+                    </div>
+                    <div style="font-size: 1.8em; color: ${resultColor};">
+                        ${percentage}%
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('quizOptions').innerHTML = '';
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            
+            const restartBtn = document.createElement('button');
+            restartBtn.textContent = '🔄 Restart Quiz';
+            restartBtn.onclick = restartQuiz;
+            restartBtn.style.marginTop = '20px';
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('feedback').appendChild(restartBtn);
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            selectedAnswer = -1;
+            score = 0;
+            quizCompleted = false;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            
+            document.getElementById('currentQuestion').textContent = `Question ${currentQuestionIndex + 1}/${questions.length}: ${question.question}`;
+            
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'quiz-option';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            selectedAnswer = -1;
+            document.getElementById('checkBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('nextBtn').textContent = 'Next Question';
+            document.getElementById('feedback').innerHTML = '';
+        }
+
+        // Event listeners
+        document.getElementById('soluteAmount').addEventListener('input', updateLab);
+        document.getElementById('solventVolume').addEventListener('input', updateLab);
+
+        // Initialize
+        updateLab();
+        loadQuestion();
+    </script>
+</body>
+</html>

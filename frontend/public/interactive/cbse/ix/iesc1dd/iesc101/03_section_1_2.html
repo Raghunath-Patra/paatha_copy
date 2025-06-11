@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paaṭha AI - Section 1.2 Characteristics of Particles</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            height: 48px;
+            width: 48px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .characteristic-card {
+            background: linear-gradient(135deg, #f0fdfa, #e6fffa);
+            border: 2px solid #10b981;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .activity-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .incense-demo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .incense-stick {
+            width: 120px;
+            height: 8px;
+            background: #8B4513;
+            border-radius: 4px;
+            position: relative;
+            margin: 20px;
+        }
+
+        .incense-stick.lit::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -2px;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #ff6b35, #ff4500);
+            border-radius: 50%;
+            animation: glow 1s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px #ff4500; }
+            100% { box-shadow: 0 0 15px #ff6b35, 0 0 25px #ff4500; }
+        }
+
+        .aroma-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ff6b35;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: spreadAroma 4s ease-out infinite;
+        }
+
+        @keyframes spreadAroma {
+            0% { 
+                transform: translate(0, 0) scale(1);
+                opacity: 0.8;
+            }
+            100% { 
+                transform: translate(var(--end-x, 100px), var(--end-y, -50px)) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        .diffusion-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .beaker-container {
+            text-align: center;
+            margin: 15px;
+        }
+
+        .diffusion-beaker {
+            width: 100px;
+            height: 120px;
+            border: 3px solid #333;
+            border-radius: 0 0 50px 50px;
+            position: relative;
+            background: linear-gradient(to bottom, transparent 20%, #87CEEB 20%);
+            margin: 0 auto;
+        }
+
+        .ink-drop {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 3s ease;
+        }
+
+        .ink-drop.blue { background: #0066cc; }
+        .ink-drop.spreading {
+            width: 70px;
+            height: 70px;
+            opacity: 0.3;
+            top: 50px;
+            left: 15px;
+            transform: none;
+        }
+
+        .honey-drop {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 15px;
+            background: #DAA520;
+            border-radius: 0 0 50% 50%;
+            transition: all 5s ease;
+        }
+
+        .honey-drop.spreading {
+            width: 40px;
+            height: 30px;
+            opacity: 0.4;
+            bottom: 20px;
+            left: 30px;
+            transform: none;
+        }
+
+        .temperature-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .temp-beaker {
+            width: 80px;
+            height: 100px;
+            border: 3px solid #333;
+            border-radius: 0 0 40px 40px;
+            position: relative;
+            margin: 15px;
+        }
+
+        .cold-water {
+            background: linear-gradient(to bottom, transparent 25%, #87CEEB 25%);
+        }
+
+        .hot-water {
+            background: linear-gradient(to bottom, transparent 25%, #FFB347 25%);
+        }
+
+        .crystal {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: #8B0000;
+            border-radius: 2px;
+        }
+
+        .color-stream {
+            position: absolute;
+            bottom: 23px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 0;
+            background: linear-gradient(to top, #8B0000, transparent);
+            transition: height 3s ease;
+        }
+
+        .color-stream.active {
+            height: 50px;
+        }
+
+        .color-stream.fast {
+            animation: fastDiffusion 2s ease infinite;
+        }
+
+        @keyframes fastDiffusion {
+            0%, 100% { width: 2px; }
+            50% { width: 6px; }
+        }
+
+        .human-chain-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .chain-group {
+            text-align: center;
+            margin: 15px;
+        }
+
+        .human-chain {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .person {
+            width: 35px;
+            height: 45px;
+            background: #FFB84D;
+            border-radius: 17px 17px 8px 8px;
+            position: relative;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .chain-strong .person { margin: 0 -8px; }
+        .chain-medium .person { margin: 0 -2px; }
+        .chain-weak .person { margin: 0 8px; }
+
+        .chain-broken .person {
+            opacity: 0.6;
+            transform: rotate(var(--rotation, 15deg)) translateY(10px);
+        }
+
+        .strength-test {
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .material-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .material-item {
+            text-align: center;
+            margin: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .material-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .material-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .water-surface-demo {
+            background: #e0f7fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .water-container {
+            width: 200px;
+            height: 100px;
+            border: 3px solid #333;
+            border-radius: 10px;
+            background: #00bcd4;
+            position: relative;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .finger {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 30px;
+            background: #FFDBAC;
+            border-radius: 7px 7px 3px 3px;
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+
+        .finger.cutting {
+            top: 20px;
+        }
+
+        .water-ripple {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 50%;
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 100px;
+                height: 100px;
+                opacity: 0;
+            }
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #64748b, #475569);
+        }
+
+        .quiz-section {
+            background: #fff3e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .quiz-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quiz-option.correct {
+            background: #48bb78;
+            color: white;
+            border-color: #48bb78;
+        }
+
+        .quiz-option.incorrect {
+            background: #f56565;
+            color: white;
+            border-color: #f56565;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-highlight {
+            background: linear-gradient(135deg, #e0f2fe, #f0fdfa);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .key-concept {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .incense-demo { flex-direction: column; }
+            .diffusion-demo { flex-direction: column; }
+            .temperature-demo { flex-direction: column; }
+            .human-chain-demo { flex-direction: column; }
+            .material-demo { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <svg 
+                    viewBox="0 0 512 512" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="logo"
+                    aria-label="Paaṭha AI Logo"
+                >
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#dc2626" />
+                            <stop offset="33%" stop-color="#dc2626" />
+                            <stop offset="66%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#ecfdf5" />
+                        </linearGradient>
+                    </defs>
+                    <g transform="rotate(-45, 256, 256)">
+                        <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                            c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                            c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                            c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                            c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                            c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                            c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                            c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                            c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                            c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                            c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                            c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                            c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                            c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                            c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                            c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                            c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                            c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                            c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                            c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                            c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                            c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                            c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                            c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                            c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                            c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                            c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                            c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                            fill="url(#brandGradient)"
+                            opacity="0.9">
+                        </path>
+                        <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                    </g>
+                </svg>
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                    <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Chemistry Learning</p>
+                </div>
+            </div>
+            <h2 style="font-size: 1.8em; margin-bottom: 10px;">⚛️ Section 1.2 - Characteristics of Particles</h2>
+            <p style="font-size: 1.2em; opacity: 0.9;">Explore the three amazing properties of particles!</p>
+        </div>
+
+        <div class="section">
+            <h2>🌟 The Three Key Characteristics</h2>
+            
+            <div class="key-concept">
+                <h3>🎯 What Makes Particles Special?</h3>
+                <p>We know matter is made of particles, but what are their properties?</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+                <div class="characteristic-card">
+                    <h4>🌌 Characteristic 1</h4>
+                    <h3>Particles have spaces between them</h3>
+                    <p>Activities 1.1 & 1.2 showed us this!</p>
+                </div>
+                <div class="characteristic-card">
+                    <h4>🏃‍♂️ Characteristic 2</h4>
+                    <h3>Particles are continuously moving</h3>
+                    <p>They possess kinetic energy!</p>
+                </div>
+                <div class="characteristic-card">
+                    <h4>🤝 Characteristic 3</h4>
+                    <h3>Particles attract each other</h3>
+                    <p>Forces hold them together!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏃‍♂️ Characteristic 2: Particles Are Continuously Moving</h2>
+            
+            <div class="activity-container">
+                <h3>🪔 Activity 1.3 - Incense Stick Experiment</h3>
+                
+                <div class="incense-demo">
+                    <div style="text-align: center;">
+                        <h4>Unlit Incense Stick</h4>
+                        <div class="incense-stick" id="unlitStick"></div>
+                        <p>Smell only detectable very close</p>
+                    </div>
+                    
+                    <div style="text-align: center; font-size: 24px; color: #667eea;">🔥</div>
+                    
+                    <div style="text-align: center;">
+                        <h4>Lit Incense Stick</h4>
+                        <div class="incense-stick lit" id="litStick" style="position: relative;"></div>
+                        <p>Smell spreads throughout room!</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <button class="btn" onclick="lightIncense()">🔥 Light the Incense</button>
+                    <button class="btn secondary" onclick="resetIncense()">🔄 Reset</button>
+                </div>
+
+                <div class="info-highlight">
+                    <h4>🎯 Key Learning</h4>
+                    <p><strong>Why does smell spread?</strong> Aroma particles from the incense mix with air particles and move around the room. This proves particles are continuously moving!</p>
+                </div>
+            </div>
+
+            <div class="activity-container">
+                <h3>🎨 Activity 1.4 - Ink vs Honey Diffusion</h3>
+                
+                <div class="diffusion-demo">
+                    <div class="beaker-container">
+                        <h4>Ink in Water</h4>
+                        <div class="diffusion-beaker">
+                            <div class="ink-drop blue" id="inkDrop"></div>
+                        </div>
+                        <p>Spreads quickly</p>
+                    </div>
+                    
+                    <div class="beaker-container">
+                        <h4>Honey in Water</h4>
+                        <div class="diffusion-beaker">
+                            <div class="honey-drop" id="honeyDrop"></div>
+                        </div>
+                        <p>Spreads slowly</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <button class="btn" onclick="startDiffusion()">💧 Start Diffusion</button>
+                    <button class="btn secondary" onclick="resetDiffusion()">🔄 Reset</button>
+                </div>
+
+                <div class="info-highlight">
+                    <h4>🎯 Conclusion</h4>
+                    <p><strong>Different rates of diffusion:</strong> Ink particles move faster than honey particles, but both are continuously moving and mixing with water!</p>
+                </div>
+            </div>
+
+            <div class="activity-container">
+                <h3>🌡️ Activity 1.5 - Temperature Effect on Particle Motion</h3>
+                
+                <div class="temperature-demo">
+                    <div style="text-align: center;">
+                        <h4>Cold Water (Slow Motion)</h4>
+                        <div class="temp-beaker cold-water">
+                            <div class="crystal"></div>
+                            <div class="color-stream" id="coldStream"></div>
+                        </div>
+                        <p>Slow diffusion</p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <h4>Hot Water (Fast Motion)</h4>
+                        <div class="temp-beaker hot-water">
+                            <div class="crystal"></div>
+                            <div class="color-stream fast" id="hotStream"></div>
+                        </div>
+                        <p>Fast diffusion</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <button class="btn" onclick="dropCrystal()">💎 Drop Crystal</button>
+                    <button class="btn secondary" onclick="resetCrystal()">🔄 Reset</button>
+                </div>
+
+                <div class="info-highlight">
+                    <h4>🎯 Temperature Effect</h4>
+                    <p><strong>Higher temperature = Faster movement!</strong> Heat increases kinetic energy of particles, making them move faster and diffuse quicker.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🤝 Characteristic 3: Particles Attract Each Other</h2>
+            
+            <div class="activity-container">
+                <h3>👥 Activity 1.6 - Human Chain Demonstration</h3>
+                
+                <div class="human-chain-demo">
+                    <div class="chain-group">
+                        <h4>Strong Forces (Solid)</h4>
+                        <div class="human-chain chain-strong" id="strongChain">
+                            <div class="person">💪</div>
+                            <div class="person">💪</div>
+                            <div class="person">💪</div>
+                            <div class="person">💪</div>
+                        </div>
+                        <p>Locked Arms - Hardest to Break</p>
+                    </div>
+                    
+                    <div class="chain-group">
+                        <h4>Medium Forces (Liquid)</h4>
+                        <div class="human-chain chain-medium" id="mediumChain">
+                            <div class="person">🤝</div>
+                            <div class="person">🤝</div>
+                            <div class="person">🤝</div>
+                            <div class="person">🤝</div>
+                        </div>
+                        <p>Holding Hands - Medium Strength</p>
+                    </div>
+                    
+                    <div class="chain-group">
+                        <h4>Weak Forces (Gas)</h4>
+                        <div class="human-chain chain-weak" id="weakChain">
+                            <div class="person">👆</div>
+                            <div class="person">👆</div>
+                            <div class="person">👆</div>
+                            <div class="person">👆</div>
+                        </div>
+                        <p>Fingertip Touch - Easiest to Break</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 25px 0;">
+                    <button class="btn" onclick="breakChains()">💥 Try to Break Chains</button>
+                    <button class="btn secondary" onclick="resetChains()">🔄 Reform Chains</button>
+                </div>
+            </div>
+
+            <div class="activity-container">
+                <h3>🔨 Activity 1.7 - Material Strength Test</h3>
+                
+                <div class="strength-test">
+                    <div class="material-demo">
+                        <div class="material-item" onclick="testMaterial('nail')">
+                            <div class="material-icon">🔩</div>
+                            <h4>Iron Nail</h4>
+                            <p>Very strong forces</p>
+                        </div>
+                        <div class="material-item" onclick="testMaterial('chalk')">
+                            <div class="material-icon">✏️</div>
+                            <h4>Chalk</h4>
+                            <p>Weak forces</p>
+                        </div>
+                        <div class="material-item" onclick="testMaterial('rubber')">
+                            <div class="material-icon">🎯</div>
+                            <h4>Rubber Band</h4>
+                            <p>Flexible forces</p>
+                        </div>
+                    </div>
+                    
+                    <div id="materialResult" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                        <p>Click on materials to test their strength!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="activity-container">
+                <h3>✋ Activity 1.8 - Water Surface Investigation</h3>
+                
+                <div class="water-surface-demo">
+                    <h4>Try to "Cut" the Water Surface</h4>
+                    <div class="water-container" id="waterContainer" onclick="cutWater()">
+                        <div class="finger" id="finger"></div>
+                    </div>
+                    <p>Click to try cutting the water with your finger!</p>
+                    
+                    <div id="waterResult" style="margin-top: 15px; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                        <p><strong>Can't cut water permanently!</strong> Water particles attract each other, keeping the surface together.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧠 Knowledge Check</h2>
+            
+            <div class="quiz-section">
+                <div class="quiz-question">🎯 Test Your Understanding</div>
+                
+                <div id="question1">
+                    <p><strong>Question 1:</strong> Why does the smell of incense spread throughout a room?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">Air carries the smell</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'correct', this)">Aroma particles are continuously moving and mixing with air</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">Heat makes smell travel</div>
+                        <div class="quiz-option" onclick="answerQuiz(1, 'wrong', this)">Wind blows the smell</div>
+                    </div>
+                    <div id="feedback1"></div>
+                </div>
+                
+                <div id="question2" style="margin-top: 20px;">
+                    <p><strong>Question 2:</strong> Why does diffusion happen faster in hot water than cold water?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Hot water has more space</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'correct', this)">Higher temperature increases kinetic energy of particles</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Hot water is lighter</div>
+                        <div class="quiz-option" onclick="answerQuiz(2, 'wrong', this)">Hot water has fewer particles</div>
+                    </div>
+                    <div id="feedback2"></div>
+                </div>
+                
+                <div id="question3" style="margin-top: 20px;">
+                    <p><strong>Question 3:</strong> Which human chain represents the strongest force of attraction between particles?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(3, 'correct', this)">Locked arms (like solids)</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">Holding hands (like liquids)</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">Fingertip touch (like gases)</div>
+                        <div class="quiz-option" onclick="answerQuiz(3, 'wrong', this)">All are equally strong</div>
+                    </div>
+                    <div id="feedback3"></div>
+                </div>
+
+                <div id="question4" style="margin-top: 20px;">
+                    <p><strong>Question 4:</strong> What is diffusion?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="answerQuiz(4, 'wrong', this)">Particles becoming smaller</div>
+                        <div class="quiz-option" onclick="answerQuiz(4, 'correct', this)">Intermixing of particles of different types of matter</div>
+                        <div class="quiz-option" onclick="answerQuiz(4, 'wrong', this)">Particles changing color</div>
+                        <div class="quiz-option" onclick="answerQuiz(4, 'wrong', this)">Particles stopping movement</div>
+                    </div>
+                    <div id="feedback4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let particleInterval;
+        
+        // Incense experiment
+        function lightIncense() {
+            const litStick = document.getElementById('litStick');
+            
+            // Generate aroma particles
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'aroma-particle';
+                    particle.style.setProperty('--end-x', (Math.random() - 0.5) * 200 + 'px');
+                    particle.style.setProperty('--end-y', (Math.random() - 0.5) * 100 + 'px');
+                    particle.style.left = '115px';
+                    particle.style.top = '2px';
+                    litStick.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 4000);
+                }, i * 300);
+            }
+        }
+        
+        function resetIncense() {
+            const litStick = document.getElementById('litStick');
+            litStick.innerHTML = '';
+        }
+        
+        // Diffusion experiments
+        function startDiffusion() {
+            document.getElementById('inkDrop').classList.add('spreading');
+            
+            setTimeout(() => {
+                document.getElementById('honeyDrop').classList.add('spreading');
+            }, 1000);
+        }
+        
+        function resetDiffusion() {
+            document.getElementById('inkDrop').classList.remove('spreading');
+            document.getElementById('honeyDrop').classList.remove('spreading');
+        }
+        
+        // Crystal diffusion in temperature
+        function dropCrystal() {
+            document.getElementById('coldStream').classList.add('active');
+            document.getElementById('hotStream').classList.add('active');
+        }
+        
+        function resetCrystal() {
+            document.getElementById('coldStream').classList.remove('active');
+            document.getElementById('hotStream').classList.remove('active');
+        }
+        
+        // Human chain breaking
+        function breakChains() {
+            // Weak chain breaks first (gases)
+            setTimeout(() => {
+                const weakChain = document.getElementById('weakChain');
+                weakChain.classList.add('chain-broken');
+                weakChain.querySelectorAll('.person').forEach((person, index) => {
+                    person.style.setProperty('--rotation', (Math.random() * 30 - 15) + 'deg');
+                });
+            }, 500);
+            
+            // Medium chain breaks next (liquids)
+            setTimeout(() => {
+                const mediumChain = document.getElementById('mediumChain');
+                mediumChain.classList.add('chain-broken');
+                mediumChain.querySelectorAll('.person').forEach((person, index) => {
+                    person.style.setProperty('--rotation', (Math.random() * 20 - 10) + 'deg');
+                });
+            }, 2000);
+            
+            // Strong chain is hardest to break (solids)
+            setTimeout(() => {
+                const strongChain = document.getElementById('strongChain');
+                strongChain.classList.add('chain-broken');
+                strongChain.querySelectorAll('.person').forEach((person, index) => {
+                    person.style.setProperty('--rotation', (Math.random() * 10 - 5) + 'deg');
+                });
+            }, 4000);
+        }
+        
+        function resetChains() {
+            ['weakChain', 'mediumChain', 'strongChain'].forEach(id => {
+                const chain = document.getElementById(id);
+                chain.classList.remove('chain-broken');
+                chain.querySelectorAll('.person').forEach(person => {
+                    person.style.setProperty('--rotation', '0deg');
+                });
+            });
+        }
+        
+        // Material strength test
+        function testMaterial(material) {
+            const result = document.getElementById('materialResult');
+            
+            switch(material) {
+                case 'nail':
+                    result.innerHTML = `
+                        <h4>🔩 Iron Nail Test Result</h4>
+                        <p><strong>Very difficult to break!</strong> Particles are held together by very strong forces of attraction. This represents the solid state.</p>
+                    `;
+                    break;
+                case 'chalk':
+                    result.innerHTML = `
+                        <h4>✏️ Chalk Test Result</h4>
+                        <p><strong>Breaks easily!</strong> Particles have weaker forces of attraction compared to iron. Still a solid, but more brittle.</p>
+                    `;
+                    break;
+                case 'rubber':
+                    result.innerHTML = `
+                        <h4>🎯 Rubber Band Test Result</h4>
+                        <p><strong>Stretches and returns!</strong> Flexible forces allow shape change but particles try to return to original position.</p>
+                    `;
+                    break;
+            }
+        }
+        
+        // Water cutting experiment
+        function cutWater() {
+            const finger = document.getElementById('finger');
+            const container = document.getElementById('waterContainer');
+            
+            finger.classList.add('cutting');
+            
+            // Create ripple effect
+            const ripple = document.createElement('div');
+            ripple.className = 'water-ripple';
+            container.appendChild(ripple);
+            
+            setTimeout(() => {
+                finger.classList.remove('cutting');
+                if (ripple.parentNode) {
+                    ripple.parentNode.removeChild(ripple);
+                }
+            }, 1000);
+        }
+        
+        // Quiz functionality
+        function answerQuiz(questionNum, answer, element) {
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            const correctAnswers = {
+                1: 'correct', // Aroma particles moving and mixing
+                2: 'correct', // Higher temperature increases kinetic energy
+                3: 'correct', // Locked arms represents strongest forces
+                4: 'correct'  // Diffusion is intermixing of particles
+            };
+            
+            const isCorrect = answer === correctAnswers[questionNum];
+            
+            const explanations = {
+                1: 'Aroma particles from the incense have kinetic energy and continuously move, mixing with air particles to spread the smell throughout the room.',
+                2: 'Higher temperature gives particles more kinetic energy, making them move faster and therefore diffuse more quickly.',
+                3: 'Locked arms represent the strongest intermolecular forces, similar to particles in solids that are tightly bound together.',
+                4: 'Diffusion is the process where particles of different substances intermix on their own due to their continuous motion.'
+            };
+            
+            if (isCorrect) {
+                feedback.innerHTML = `<div class="feedback success">✅ Excellent! ${explanations[questionNum]}</div>`;
+            } else {
+                feedback.innerHTML = `<div class="feedback error">❌ Try again! ${explanations[questionNum]}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

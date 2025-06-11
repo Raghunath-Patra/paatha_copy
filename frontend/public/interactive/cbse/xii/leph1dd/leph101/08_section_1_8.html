@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electric Field Lines Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .visualization-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .controls-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            height: fit-content;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        #fieldCanvas {
+            display: block;
+            cursor: crosshair;
+            background: #f8f9fa;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #444;
+            font-size: 1.2em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .primary-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .secondary-btn {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .secondary-btn:hover {
+            background: #dee2e6;
+        }
+
+        .danger-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .danger-btn:hover {
+            background: #c82333;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .charge-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .property-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        .property-card h4 {
+            color: #444;
+            margin-bottom: 8px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        .positive { background: #ff4444; }
+        .negative { background: #4444ff; }
+
+        .status-bar {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .formula {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid #667eea;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .quiz-progress {
+            flex: 1;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            width: 12.5%;
+        }
+
+        .quiz-score {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .question-options {
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .option.correct {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .option.incorrect {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+        }
+
+        .option.selected::before {
+            border-color: #2196f3;
+            background: #2196f3;
+        }
+
+        .option.correct::after {
+            content: '✓';
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .option.incorrect::after {
+            content: '✗';
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #f44336;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .question-feedback {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .question-feedback.show {
+            display: block;
+        }
+
+        .question-feedback.correct {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .question-feedback.incorrect {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+
+        .question-controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .question-controls button {
+            margin: 0 10px;
+        }
+
+        .quiz-results {
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .final-score {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #667eea;
+        }
+
+        .performance-message {
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .performance-excellent {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+
+        .performance-good {
+            background: #fff3e0;
+            color: #ef6c00;
+            border-left: 4px solid #ff9800;
+        }
+
+        .performance-needs-work {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        /* Simplified User Interface Styles */
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 10px;
+        }
+
+        .tutorial-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .tutorial-step h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .tutorial-step p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .help-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .help-button:hover {
+            background: #5a6fd8;
+            transform: scale(1.05);
+        }
+
+        .charge-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .charge-btn {
+            padding: 20px 15px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .charge-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .charge-btn.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+            color: #667eea;
+        }
+
+        .positive-btn.active {
+            border-color: #ff4444;
+            background: #fff5f5;
+            color: #ff4444;
+        }
+
+        .negative-btn.active {
+            border-color: #4444ff;
+            background: #f5f5ff;
+            color: #4444ff;
+        }
+
+        .charge-symbol {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .clear-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-btn:hover {
+            background: #ff5252;
+            transform: translateY(-1px);
+        }
+
+        .measure-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .measure-btn:hover {
+            background: #45b7aa;
+            transform: translateY(-1px);
+        }
+
+        .measure-btn.active {
+            background: #ff6b35;
+        }
+
+        .probe-help {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #2e7d32;
+            text-align: center;
+        }
+
+        .simple-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .option-btn {
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .option-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .advanced-toggle {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .advanced-options {
+            display: grid;
+            gap: 8px;
+        }
+
+        .example-buttons {
+            display: grid;
+            gap: 12px;
+        }
+
+        .example-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-1px);
+        }
+
+        .example-icon {
+            font-size: 20px;
+        }
+
+        .simple-legend {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .simple-legend .legend-item {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        /* Simple Quiz Styles */
+        .quiz-simple {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid #667eea;
+        }
+
+        .quiz-progress-simple {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .progress-simple {
+            margin: 10px auto;
+            max-width: 300px;
+        }
+
+        .quiz-question h4 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-option {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .quiz-option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .quiz-option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .quiz-option.correct {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .quiz-option.wrong {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+
+        .quiz-controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .quiz-controls button {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Electric Field Lines Explorer</h1>
+            <p>Interactive visualization of electric field lines and their properties</p>
+        </div>
+
+        <div class="content-grid">
+            <div class="visualization-panel">
+                <div class="tutorial-overlay" id="tutorialOverlay">
+                    <div class="tutorial-content">
+                        <h3>🎯 Welcome to Electric Field Explorer!</h3>
+                        <div class="tutorial-step" id="step1">
+                            <h4>Step 1: Add Your First Charge</h4>
+                            <p>Click anywhere on the canvas to place a positive charge (+). Watch the red lines appear - these show the electric field!</p>
+                            <button class="primary-btn" onclick="nextTutorialStep()">Got it! →</button>
+                        </div>
+                        <div class="tutorial-step" id="step2" style="display: none;">
+                            <h4>Step 2: Add an Opposite Charge</h4>
+                            <p>Switch to negative (-) mode and click somewhere else. See how the blue lines connect the charges!</p>
+                            <button class="primary-btn" onclick="nextTutorialStep()">Cool! →</button>
+                        </div>
+                        <div class="tutorial-step" id="step3" style="display: none;">
+                            <h4>Step 3: Explore the Field</h4>
+                            <p>Use "Measure Field" to click anywhere and see the exact field strength. Try clicking near and far from charges!</p>
+                            <button class="primary-btn" onclick="finishTutorial()">Start Exploring! 🚀</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-button" onclick="showTutorial()">
+                    <span>❓ Need Help?</span>
+                </div>
+                
+                <h2>⚡ Electric Field Visualization</h2>
+                <div class="canvas-container">
+                    <canvas id="fieldCanvas" width="800" height="600"></canvas>
+                </div>
+                
+                <div class="simple-legend">
+                    <div class="legend-item">
+                        <div class="legend-color positive"></div>
+                        <span>Positive Charge (+) - Field lines go OUT</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color negative"></div>
+                        <span>Negative Charge (-) - Field lines come IN</span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 20px; height: 3px; background: linear-gradient(90deg, #ff6b6b, #45b7d1); border-radius: 2px;"></div>
+                        <span>Field Lines - Show direction of electric force</span>
+                    </div>
+                </div>
+                
+                <div class="status-bar" id="statusBar">
+                    👆 Click anywhere to add a positive charge and see the electric field!
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <h3>🎯 Add Charges (Click on Canvas)</h3>
+                    <div class="charge-buttons">
+                        <button class="charge-btn positive-btn active" onclick="setChargeMode('positive')">
+                            <span class="charge-symbol">+</span>
+                            <span>Add Positive</span>
+                        </button>
+                        <button class="charge-btn negative-btn" onclick="setChargeMode('negative')">
+                            <span class="charge-symbol">-</span>
+                            <span>Add Negative</span>
+                        </button>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label for="chargeValue">Charge Strength: <span id="chargeDisplay">Strong (2.0)</span></label>
+                        <input type="range" id="chargeValue" min="1" max="3" step="0.5" value="2" oninput="updateChargeValue()">
+                        <div class="slider-labels">
+                            <span>Weak</span>
+                            <span>Strong</span>
+                        </div>
+                    </div>
+                    
+                    <button class="clear-btn" onclick="clearCharges()">🗑️ Remove All Charges</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>🔬 Explore the Field</h3>
+                    <button class="measure-btn" onclick="toggleFieldProbe()" id="probeBtn">
+                        📏 Measure Field Strength
+                    </button>
+                    <div class="probe-help" id="probeHelp" style="display: none;">
+                        Click anywhere on the canvas to see field strength and direction!
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎨 Visualization Options</h3>
+                    <div class="simple-options">
+                        <button class="option-btn" onclick="adjustFieldLines(-2)" id="fewerLines">
+                            ➖ Fewer Lines
+                        </button>
+                        <button class="option-btn" onclick="adjustFieldLines(2)" id="moreLines">
+                            ➕ More Lines
+                        </button>
+                    </div>
+                    <div class="advanced-toggle">
+                        <button class="secondary-btn" onclick="toggleAdvancedOptions()" id="advancedBtn">
+                            🔧 Advanced Options
+                        </button>
+                    </div>
+                    
+                    <div class="advanced-options" id="advancedOptions" style="display: none;">
+                        <button class="option-btn" onclick="toggleFieldVectors()">Show Field Arrows</button>
+                        <button class="option-btn" onclick="toggleAnimation()">Toggle Animation</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🧪 Try These Examples</h3>
+                    <div class="example-buttons">
+                        <button class="example-btn" onclick="loadExample('single')">
+                            <div class="example-icon">🔴</div>
+                            <span>Single Charge</span>
+                        </button>
+                        <button class="example-btn" onclick="loadExample('dipole')">
+                            <div class="example-icon">🔴🔵</div>
+                            <span>Opposite Charges</span>
+                        </button>
+                        <button class="example-btn" onclick="loadExample('repulsion')">
+                            <div class="example-icon">🔴🔴</div>
+                            <span>Same Charges</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="chargeList">
+                    <h3>Current Charges:</h3>
+                    <div id="charges"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>📚 Understanding Electric Field Lines</h2>
+            
+            <div class="property-card">
+                <h4>Key Properties of Electric Field Lines:</h4>
+                <p><strong>1. Direction:</strong> Field lines start from positive charges and end at negative charges</p>
+                <p><strong>2. Density:</strong> Closer lines indicate stronger electric field</p>
+                <p><strong>3. No Crossing:</strong> Field lines never intersect each other</p>
+                <p><strong>4. Continuity:</strong> Lines are continuous in charge-free regions</p>
+            </div>
+
+            <div class="formula">
+                <strong>Electric Field Strength:</strong> E = kq/r²<br>
+                <strong>Solid Angle:</strong> ΔΩ = ΔS/r²<br>
+                <strong>Field Line Density ∝ 1/r²</strong>
+            </div>
+
+            <div class="property-card">
+                <h4>Interactive Experiments to Try:</h4>
+                <p>• Place a single positive charge and observe radial field lines</p>
+                <p>• Create a dipole and see how field lines connect charges</p>
+                <p>• Add multiple charges and observe field line interactions</p>
+                <p>• Notice how line density changes with distance from charges</p>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>🧠 Test Your Knowledge</h2>
+            
+            <div class="quiz-container">
+                <div class="property-card">
+                    <h4>1. Electric field lines start from _____ charges and end at _____ charges.</h4>
+                    <label><input type="radio" name="q1" value="a" onchange="document.getElementById('a1').style.display='block'"> A) positive, negative</label><br>
+                    <label><input type="radio" name="q1" value="b" onchange="document.getElementById('a1').style.display='block'"> B) negative, positive</label><br>
+                    <label><input type="radio" name="q1" value="c" onchange="document.getElementById('a1').style.display='block'"> C) positive, positive</label><br>
+                    <label><input type="radio" name="q1" value="d" onchange="document.getElementById('a1').style.display='block'"> D) negative, negative</label>
+                    <div id="a1" style="display:none; margin-top:10px; padding:10px; background:#e8f5e8; border-left:4px solid #4caf50;">
+                        <strong>Answer: A) positive, negative</strong><br>
+                        Electric field lines always start from positive charges and end at negative charges.
+                    </div>
+                </div>
+
+                <div class="property-card">
+                    <h4>2. What does the density of electric field lines represent?</h4>
+                    <label><input type="radio" name="q2" value="a" onchange="document.getElementById('a2').style.display='block'"> A) The direction of the field</label><br>
+                    <label><input type="radio" name="q2" value="b" onchange="document.getElementById('a2').style.display='block'"> B) The strength of the electric field</label><br>
+                    <label><input type="radio" name="q2" value="c" onchange="document.getElementById('a2').style.display='block'"> C) The type of charge</label><br>
+                    <label><input type="radio" name="q2" value="d" onchange="document.getElementById('a2').style.display='block'"> D) The temperature</label>
+                    <div id="a2" style="display:none; margin-top:10px; padding:10px; background:#e8f5e8; border-left:4px solid #4caf50;">
+                        <strong>Answer: B) The strength of the electric field</strong><br>
+                        Closer field lines indicate stronger electric field.
+                    </div>
+                </div>
+
+                <div class="property-card">
+                    <h4>3. Can two electric field lines ever cross each other?</h4>
+                    <label><input type="radio" name="q3" value="a" onchange="document.getElementById('a3').style.display='block'"> A) Yes, they can cross at any point</label><br>
+                    <label><input type="radio" name="q3" value="b" onchange="document.getElementById('a3').style.display='block'"> B) Yes, but only at midpoint</label><br>
+                    <label><input type="radio" name="q3" value="c" onchange="document.getElementById('a3').style.display='block'"> C) No, they can never cross</label><br>
+                    <label><input type="radio" name="q3" value="d" onchange="document.getElementById('a3').style.display='block'"> D) Only if charges are equal</label>
+                    <div id="a3" style="display:none; margin-top:10px; padding:10px; background:#e8f5e8; border-left:4px solid #4caf50;">
+                        <strong>Answer: C) No, they can never cross</strong><br>
+                        Field lines cannot cross because the electric field has a unique direction at every point.
+                    </div>
+                </div>
+
+                <div class="property-card">
+                    <h4>4. How does electric field strength vary with distance?</h4>
+                    <label><input type="radio" name="q4" value="a" onchange="document.getElementById('a4').style.display='block'"> A) E ∝ r</label><br>
+                    <label><input type="radio" name="q4" value="b" onchange="document.getElementById('a4').style.display='block'"> B) E ∝ r²</label><br>
+                    <label><input type="radio" name="q4" value="c" onchange="document.getElementById('a4').style.display='block'"> C) E ∝ 1/r</label><br>
+                    <label><input type="radio" name="q4" value="d" onchange="document.getElementById('a4').style.display='block'"> D) E ∝ 1/r²</label>
+                    <div id="a4" style="display:none; margin-top:10px; padding:10px; background:#e8f5e8; border-left:4px solid #4caf50;">
+                        <strong>Answer: D) E ∝ 1/r²</strong><br>
+                        Electric field follows the inverse square law: E = kq/r².
+                    </div>
+                </div>
+
+                <div class="property-card">
+                    <h4>5. What is an electric dipole?</h4>
+                    <label><input type="radio" name="q5" value="a" onchange="document.getElementById('a5').style.display='block'"> A) Two positive charges</label><br>
+                    <label><input type="radio" name="q5" value="b" onchange="document.getElementById('a5').style.display='block'"> B) Two negative charges</label><br>
+                    <label><input type="radio" name="q5" value="c" onchange="document.getElementById('a5').style.display='block'"> C) Two equal and opposite charges</label><br>
+                    <label><input type="radio" name="q5" value="d" onchange="document.getElementById('a5').style.display='block'"> D) A single isolated charge</label>
+                    <div id="a5" style="display:none; margin-top:10px; padding:10px; background:#e8f5e8; border-left:4px solid #4caf50;">
+                        <strong>Answer: C) Two equal and opposite charges</strong><br>
+                        An electric dipole consists of +q and -q charges separated by distance.
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                    <p><strong>How to use:</strong> Click any option to see the correct answer!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ElectricFieldSimulator {
+            constructor() {
+                this.canvas = document.getElementById('fieldCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.charges = [];
+                this.currentChargeMode = 'positive';
+                this.currentChargeMagnitude = 1.0;
+                this.lineCount = 8;
+                this.arrowSize = 1.0;
+                this.animationEnabled = true;
+                this.showFieldVectors = false;
+                this.showEquipotentials = false;
+                this.fieldProbeMode = false;
+                this.probePosition = null;
+                this.animationTime = 0;
+                this.tutorialStep = 0;
+                this.currentChargeMode = 'positive';
+                
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                this.canvas.addEventListener('click', (e) => {
+                    if (this.fieldProbeMode) {
+                        this.setProbePosition(e);
+                    } else {
+                        this.addCharge(e);
+                    }
+                });
+                
+                this.canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    if (!this.fieldProbeMode) {
+                        this.removeCharge(e);
+                    }
+                });
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.fieldProbeMode) {
+                        this.setProbePosition(e);
+                    }
+                });
+            }
+
+            setProbePosition(e) {
+                this.probePosition = this.getMousePos(e);
+            }
+
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+
+            addCharge(e) {
+                const pos = this.getMousePos(e);
+                const charge = {
+                    x: pos.x,
+                    y: pos.y,
+                    q: this.currentChargeMode === 'positive' ? this.currentChargeMagnitude : -this.currentChargeMagnitude,
+                    id: Date.now()
+                };
+                this.charges.push(charge);
+                this.updateChargeList();
+                this.updateStatus(`Added ${this.currentChargeMode} charge at (${Math.round(pos.x)}, ${Math.round(pos.y)})`);
+            }
+
+            removeCharge(e) {
+                const pos = this.getMousePos(e);
+                const chargeIndex = this.charges.findIndex(charge => {
+                    const dx = charge.x - pos.x;
+                    const dy = charge.y - pos.y;
+                    return Math.sqrt(dx*dx + dy*dy) < 20;
+                });
+                
+                if (chargeIndex !== -1) {
+                    this.charges.splice(chargeIndex, 1);
+                    this.updateChargeList();
+                    this.updateStatus('Charge removed');
+                }
+            }
+
+            calculateField(x, y) {
+                let Ex = 0, Ey = 0;
+                
+                for (let charge of this.charges) {
+                    const dx = x - charge.x;
+                    const dy = y - charge.y;
+                    const r = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (r > 5) { // Avoid singularity
+                        const k = 8990; // Coulomb constant (scaled)
+                        const magnitude = k * Math.abs(charge.q) / (r*r);
+                        const Ex_component = magnitude * dx / r * Math.sign(charge.q);
+                        const Ey_component = magnitude * dy / r * Math.sign(charge.q);
+                        
+                        Ex -= Ex_component;
+                        Ey -= Ey_component;
+                    }
+                }
+                
+                return { Ex, Ey, magnitude: Math.sqrt(Ex*Ex + Ey*Ey) };
+            }
+
+            drawFieldLines() {
+                // Draw field lines with enhanced visuals
+                for (let charge of this.charges) {
+                    if (charge.q > 0) { // Only start lines from positive charges
+                        for (let i = 0; i < this.lineCount; i++) {
+                            const angle = (2 * Math.PI * i) / this.lineCount;
+                            this.drawFieldLine(charge.x, charge.y, angle, charge);
+                        }
+                    }
+                }
+            }
+
+            drawFieldLine(startX, startY, angle, sourceCharge) {
+                const step = 2;
+                const maxSteps = 400;
+                let x = startX + Math.cos(angle) * 18;
+                let y = startY + Math.sin(angle) * 18;
+                
+                const points = [];
+                points.push({x, y});
+                
+                // Trace the field line path
+                for (let step_count = 0; step_count < maxSteps; step_count++) {
+                    const field = this.calculateField(x, y);
+                    
+                    if (field.magnitude < 0.1) break;
+                    
+                    // Check if we're too close to a negative charge (end point)
+                    let nearNegative = false;
+                    let targetCharge = null;
+                    for (let charge of this.charges) {
+                        if (charge.q < 0) {
+                            const dx = x - charge.x;
+                            const dy = y - charge.y;
+                            const distance = Math.sqrt(dx*dx + dy*dy);
+                            if (distance < 18) {
+                                nearNegative = true;
+                                targetCharge = charge;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (nearNegative) {
+                        // Add final point towards the negative charge
+                        points.push({x: targetCharge.x, y: targetCharge.y});
+                        break;
+                    }
+                    
+                    // Check bounds with some margin
+                    if (x < -50 || x > this.canvas.width + 50 || y < -50 || y > this.canvas.height + 50) break;
+                    
+                    const stepSize = step / Math.max(1, field.magnitude / 40);
+                    const newX = x + (field.Ex / field.magnitude) * stepSize;
+                    const newY = y + (field.Ey / field.magnitude) * stepSize;
+                    
+                    points.push({x: newX, y: newY});
+                    
+                    x = newX;
+                    y = newY;
+                }
+                
+                // Draw the field line with gradient and smooth curves
+                this.drawSmoothFieldLine(points, sourceCharge);
+            }
+
+            drawSmoothFieldLine(points, sourceCharge) {
+                if (points.length < 2) return;
+                
+                // Create gradient for field line
+                const gradient = this.ctx.createLinearGradient(
+                    points[0].x, points[0].y,
+                    points[points.length - 1].x, points[points.length - 1].y
+                );
+                
+                if (sourceCharge.q > 0) {
+                    gradient.addColorStop(0, '#ff6b6b');
+                    gradient.addColorStop(0.5, '#4ecdc4');
+                    gradient.addColorStop(1, '#45b7d1');
+                } else {
+                    gradient.addColorStop(0, '#45b7d1');
+                    gradient.addColorStop(0.5, '#4ecdc4');
+                    gradient.addColorStop(1, '#ff6b6b');
+                }
+                
+                // Draw smooth curved line
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = 2.5;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                
+                // Add shadow for depth
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                this.ctx.shadowBlur = 3;
+                this.ctx.shadowOffsetX = 1;
+                this.ctx.shadowOffsetY = 1;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(points[0].x, points[0].y);
+                
+                // Draw smooth curves using quadratic curves
+                for (let i = 1; i < points.length - 1; i++) {
+                    const currentPoint = points[i];
+                    const nextPoint = points[i + 1];
+                    const controlX = (currentPoint.x + nextPoint.x) / 2;
+                    const controlY = (currentPoint.y + nextPoint.y) / 2;
+                    
+                    this.ctx.quadraticCurveTo(currentPoint.x, currentPoint.y, controlX, controlY);
+                }
+                
+                // Final point
+                if (points.length > 1) {
+                    const lastPoint = points[points.length - 1];
+                    this.ctx.lineTo(lastPoint.x, lastPoint.y);
+                }
+                
+                this.ctx.stroke();
+                
+                // Reset shadow
+                this.ctx.shadowColor = 'transparent';
+                this.ctx.shadowBlur = 0;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 0;
+                
+                // Draw arrows along the line
+                this.drawArrowsAlongLine(points);
+            }
+
+            drawArrowsAlongLine(points) {
+                const arrowSpacing = 60; // Distance between arrows
+                let currentDistance = 0;
+                
+                for (let i = 1; i < points.length; i++) {
+                    const p1 = points[i - 1];
+                    const p2 = points[i];
+                    const segmentLength = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+                    
+                    if (currentDistance + segmentLength >= arrowSpacing) {
+                        // Calculate arrow position
+                        const ratio = (arrowSpacing - currentDistance) / segmentLength;
+                        const arrowX = p1.x + (p2.x - p1.x) * ratio;
+                        const arrowY = p1.y + (p2.y - p1.y) * ratio;
+                        
+                        // Calculate arrow direction
+                        const dx = p2.x - p1.x;
+                        const dy = p2.y - p1.y;
+                        const angle = Math.atan2(dy, dx);
+                        
+                        this.drawEnhancedArrow(arrowX, arrowY, angle);
+                        currentDistance = 0;
+                    } else {
+                        currentDistance += segmentLength;
+                    }
+                }
+            }
+
+            drawEnhancedArrow(x, y, angle) {
+                const arrowLength = 12 * this.arrowSize;
+                const arrowWidth = 6 * this.arrowSize;
+                
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                this.ctx.rotate(angle);
+                
+                // Draw arrow with gradient
+                const arrowGradient = this.ctx.createLinearGradient(-arrowLength, 0, 0, 0);
+                arrowGradient.addColorStop(0, '#666');
+                arrowGradient.addColorStop(1, '#333');
+                
+                this.ctx.fillStyle = arrowGradient;
+                this.ctx.strokeStyle = '#222';
+                this.ctx.lineWidth = 1;
+                
+                // Draw arrow shape
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(-arrowLength, -arrowWidth);
+                this.ctx.lineTo(-arrowLength * 0.7, 0);
+                this.ctx.lineTo(-arrowLength, arrowWidth);
+                this.ctx.closePath();
+                
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
+
+            drawCharges() {
+                for (let charge of this.charges) {
+                    // Calculate animation offset
+                    let glowIntensity = 1;
+                    if (this.animationEnabled) {
+                        glowIntensity = 0.7 + 0.3 * Math.sin(this.animationTime * 3 + charge.id * 0.001);
+                    }
+                    
+                    // Draw glow effect
+                    this.ctx.save();
+                    this.ctx.globalAlpha = 0.3 * glowIntensity;
+                    for (let i = 0; i < 3; i++) {
+                        this.ctx.beginPath();
+                        this.ctx.arc(charge.x, charge.y, 25 + i * 8, 0, 2 * Math.PI);
+                        
+                        if (charge.q > 0) {
+                            this.ctx.fillStyle = '#ff6b6b';
+                        } else {
+                            this.ctx.fillStyle = '#4dabf7';
+                        }
+                        
+                        this.ctx.fill();
+                    }
+                    this.ctx.restore();
+                    
+                    // Draw main charge circle
+                    this.ctx.beginPath();
+                    this.ctx.arc(charge.x, charge.y, 16, 0, 2 * Math.PI);
+                    
+                    // Create radial gradient for 3D effect
+                    const gradient = this.ctx.createRadialGradient(
+                        charge.x - 5, charge.y - 5, 0,
+                        charge.x, charge.y, 16
+                    );
+                    
+                    if (charge.q > 0) {
+                        gradient.addColorStop(0, '#ff8a8a');
+                        gradient.addColorStop(0.7, '#ff4444');
+                        gradient.addColorStop(1, '#cc0000');
+                        this.ctx.strokeStyle = '#990000';
+                    } else {
+                        gradient.addColorStop(0, '#74c0fc');
+                        gradient.addColorStop(0.7, '#4dabf7');
+                        gradient.addColorStop(1, '#1971c2');
+                        this.ctx.strokeStyle = '#1864ab';
+                    }
+                    
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.fill();
+                    this.ctx.lineWidth = 3;
+                    this.ctx.stroke();
+                    
+                    // Draw inner highlight
+                    this.ctx.beginPath();
+                    this.ctx.arc(charge.x - 4, charge.y - 4, 4, 0, 2 * Math.PI);
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    this.ctx.fill();
+                    
+                    // Draw charge symbol with enhanced styling
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = 'bold 18px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeText(charge.q > 0 ? '+' : '−', charge.x, charge.y);
+                    this.ctx.fillText(charge.q > 0 ? '+' : '−', charge.x, charge.y);
+                    
+                    // Draw charge magnitude if not 1
+                    if (Math.abs(charge.q) !== 1) {
+                        this.ctx.font = 'bold 12px Arial';
+                        this.ctx.fillStyle = charge.q > 0 ? '#cc0000' : '#1864ab';
+                        this.ctx.fillText(Math.abs(charge.q).toFixed(1), charge.x, charge.y + 25);
+                    }
+                }
+            }
+
+            drawGrid() {
+                // Enhanced grid with subtle pattern
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+                this.ctx.lineWidth = 0.5;
+                
+                // Draw major grid lines
+                for (let x = 0; x <= this.canvas.width; x += 40) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                
+                for (let y = 0; y <= this.canvas.height; y += 40) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.canvas.width, y);
+                    this.ctx.stroke();
+                }
+                
+                // Add subtle background gradient
+                const backgroundGradient = this.ctx.createRadialGradient(
+                    this.canvas.width / 2, this.canvas.height / 2, 0,
+                    this.canvas.width / 2, this.canvas.height / 2, 
+                    Math.max(this.canvas.width, this.canvas.height) / 2
+                );
+                backgroundGradient.addColorStop(0, 'rgba(102, 126, 234, 0.02)');
+                backgroundGradient.addColorStop(1, 'rgba(118, 75, 162, 0.02)');
+                
+                this.ctx.fillStyle = backgroundGradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            draw() {
+                // Clear canvas with a subtle background
+                this.ctx.fillStyle = '#fafbfc';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw enhanced background
+                this.drawGrid();
+                
+                // Draw equipotential lines if enabled
+                if (this.showEquipotentials && this.charges.length > 0) {
+                    this.drawEquipotentialLines();
+                }
+                
+                // Draw field vectors if enabled
+                if (this.showFieldVectors && this.charges.length > 0) {
+                    this.drawFieldVectors();
+                }
+                
+                // Draw field lines
+                if (this.charges.length > 0) {
+                    this.drawFieldLines();
+                }
+                
+                // Draw charges on top with animation
+                this.drawCharges();
+                
+                // Draw field probe if in probe mode
+                if (this.fieldProbeMode && this.probePosition) {
+                    this.drawFieldProbe();
+                }
+            }
+
+            drawFieldVectors() {
+                const spacing = 60;
+                const maxLength = 30;
+                
+                this.ctx.strokeStyle = '#666';
+                this.ctx.fillStyle = '#444';
+                this.ctx.lineWidth = 2;
+                
+                for (let x = spacing; x < this.canvas.width - spacing; x += spacing) {
+                    for (let y = spacing; y < this.canvas.height - spacing; y += spacing) {
+                        // Skip if too close to any charge
+                        let tooClose = false;
+                        for (let charge of this.charges) {
+                            const dx = x - charge.x;
+                            const dy = y - charge.y;
+                            if (Math.sqrt(dx*dx + dy*dy) < 40) {
+                                tooClose = true;
+                                break;
+                            }
+                        }
+                        if (tooClose) continue;
+                        
+                        const field = this.calculateField(x, y);
+                        if (field.magnitude < 1) continue;
+                        
+                        // Scale arrow length based on field magnitude
+                        const scale = Math.min(field.magnitude / 50, 1);
+                        const length = scale * maxLength;
+                        
+                        const angle = Math.atan2(field.Ey, field.Ex);
+                        const endX = x + Math.cos(angle) * length;
+                        const endY = y + Math.sin(angle) * length;
+                        
+                        // Color based on field strength
+                        const intensity = Math.min(scale, 1);
+                        const red = Math.floor(100 + intensity * 155);
+                        const green = Math.floor(100 + (1-intensity) * 100);
+                        const blue = Math.floor(100 + (1-intensity) * 134);
+                        
+                        this.ctx.strokeStyle = `rgb(${red}, ${green}, ${blue})`;
+                        
+                        // Draw vector arrow
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, y);
+                        this.ctx.lineTo(endX, endY);
+                        this.ctx.stroke();
+                        
+                        // Draw arrowhead
+                        const arrowLength = 8;
+                        const arrowAngle = Math.PI / 6;
+                        
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(endX, endY);
+                        this.ctx.lineTo(
+                            endX - arrowLength * Math.cos(angle - arrowAngle),
+                            endY - arrowLength * Math.sin(angle - arrowAngle)
+                        );
+                        this.ctx.moveTo(endX, endY);
+                        this.ctx.lineTo(
+                            endX - arrowLength * Math.cos(angle + arrowAngle),
+                            endY - arrowLength * Math.sin(angle + arrowAngle)
+                        );
+                        this.ctx.stroke();
+                    }
+                }
+            }
+
+            drawEquipotentialLines() {
+                const levels = [-200, -100, -50, -25, -10, 10, 25, 50, 100, 200];
+                
+                this.ctx.strokeStyle = '#888';
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([5, 5]);
+                
+                for (let level of levels) {
+                    this.drawEquipotentialContour(level);
+                }
+                
+                this.ctx.setLineDash([]);
+            }
+
+            drawEquipotentialContour(potential) {
+                const resolution = 4;
+                const points = [];
+                
+                // Sample potential at grid points
+                for (let x = 0; x < this.canvas.width; x += resolution) {
+                    for (let y = 0; y < this.canvas.height; y += resolution) {
+                        const V = this.calculatePotential(x, y);
+                        
+                        // Check if this point is close to the target potential
+                        if (Math.abs(V - potential) < 10) {
+                            points.push({x, y, V});
+                        }
+                    }
+                }
+                
+                // Draw contour lines through these points
+                if (points.length > 10) {
+                    // Sort points and draw smooth curves
+                    this.ctx.beginPath();
+                    for (let i = 0; i < points.length - 1; i++) {
+                        const p1 = points[i];
+                        const p2 = points[i + 1];
+                        const distance = Math.sqrt((p2.x - p1.x)**2 + (p2.y - p1.y)**2);
+                        
+                        if (distance < 20) {
+                            if (i === 0) {
+                                this.ctx.moveTo(p1.x, p1.y);
+                            }
+                            this.ctx.lineTo(p2.x, p2.y);
+                        } else {
+                            this.ctx.moveTo(p2.x, p2.y);
+                        }
+                    }
+                    this.ctx.stroke();
+                }
+            }
+
+            calculatePotential(x, y) {
+                let V = 0;
+                const k = 8990; // Scaled Coulomb constant
+                
+                for (let charge of this.charges) {
+                    const dx = x - charge.x;
+                    const dy = y - charge.y;
+                    const r = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (r > 5) {
+                        V += k * charge.q / r;
+                    }
+                }
+                
+                return V;
+            }
+
+            drawFieldProbe() {
+                if (!this.probePosition) return;
+                
+                const field = this.calculateField(this.probePosition.x, this.probePosition.y);
+                const potential = this.calculatePotential(this.probePosition.x, this.probePosition.y);
+                
+                // Draw probe point
+                this.ctx.beginPath();
+                this.ctx.arc(this.probePosition.x, this.probePosition.y, 8, 0, 2 * Math.PI);
+                this.ctx.fillStyle = '#ff6b35';
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 3;
+                this.ctx.stroke();
+                
+                // Draw field vector at probe
+                if (field.magnitude > 0.1) {
+                    const scale = Math.min(field.magnitude / 30, 3);
+                    const length = scale * 40;
+                    const angle = Math.atan2(field.Ey, field.Ex);
+                    
+                    const endX = this.probePosition.x + Math.cos(angle) * length;
+                    const endY = this.probePosition.y + Math.sin(angle) * length;
+                    
+                    this.ctx.strokeStyle = '#ff6b35';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.probePosition.x, this.probePosition.y);
+                    this.ctx.lineTo(endX, endY);
+                    this.ctx.stroke();
+                    
+                    // Arrowhead
+                    const arrowLength = 12;
+                    const arrowAngle = Math.PI / 6;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(endX, endY);
+                    this.ctx.lineTo(
+                        endX - arrowLength * Math.cos(angle - arrowAngle),
+                        endY - arrowLength * Math.sin(angle - arrowAngle)
+                    );
+                    this.ctx.moveTo(endX, endY);
+                    this.ctx.lineTo(
+                        endX - arrowLength * Math.cos(angle + arrowAngle),
+                        endY - arrowLength * Math.sin(angle + arrowAngle)
+                    );
+                    this.ctx.stroke();
+                }
+                
+                // Draw info box
+                const infoX = this.probePosition.x + 20;
+                const infoY = this.probePosition.y - 40;
+                
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                this.ctx.fillRect(infoX, infoY, 200, 60);
+                
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText(`E = ${field.magnitude.toFixed(1)} N/C`, infoX + 10, infoY + 20);
+                this.ctx.fillText(`V = ${potential.toFixed(1)} V`, infoX + 10, infoY + 35);
+                this.ctx.fillText(`Position: (${Math.round(this.probePosition.x)}, ${Math.round(this.probePosition.y)})`, infoX + 10, infoY + 50);
+            }
+
+            animate() {
+                this.draw();
+                
+                if (this.animationEnabled) {
+                    this.animationTime += 0.02;
+                }
+                
+                requestAnimationFrame(() => this.animate());
+            }
+
+            updateChargeList() {
+                const chargeListDiv = document.getElementById('charges');
+                if (this.charges.length === 0) {
+                    chargeListDiv.innerHTML = '<p style="color: #666; font-style: italic;">No charges added yet</p>';
+                } else {
+                    chargeListDiv.innerHTML = this.charges.map((charge, index) => 
+                        `<div class="charge-info">
+                            <strong>${charge.q > 0 ? 'Positive' : 'Negative'} Charge</strong><br>
+                            Position: (${Math.round(charge.x)}, ${Math.round(charge.y)})<br>
+                            Magnitude: ${Math.abs(charge.q).toFixed(1)}
+                        </div>`
+                    ).join('');
+                }
+            }
+
+            updateStatus(message) {
+                document.getElementById('statusBar').textContent = message;
+                setTimeout(() => {
+                    const defaultMessage = this.fieldProbeMode ? 
+                        'Field Probe Mode: Click or hover to measure field • Click "Field Probe Mode" to exit' :
+                        'Click to add charges • Right-click to remove charges';
+                    document.getElementById('statusBar').textContent = defaultMessage;
+                }, 3000);
+            }
+        }
+
+        // Initialize simulator
+        const simulator = new ElectricFieldSimulator();
+
+        // Control functions
+        function setChargeMode(mode) {
+            simulator.currentChargeMode = mode;
+            
+            // Update button appearance
+            document.querySelectorAll('.charge-btn').forEach(btn => btn.classList.remove('active'));
+            if (mode === 'positive') {
+                document.querySelector('.positive-btn').classList.add('active');
+                simulator.updateStatus('✅ Positive charge mode selected - click on canvas to add red charges');
+            } else {
+                document.querySelector('.negative-btn').classList.add('active');
+                simulator.updateStatus('✅ Negative charge mode selected - click on canvas to add blue charges');
+            }
+        }
+
+        function updateChargeValue() {
+            const value = document.getElementById('chargeValue').value;
+            simulator.currentChargeMagnitude = parseFloat(value);
+            
+            let strengthText;
+            if (value <= 1.5) strengthText = 'Weak';
+            else if (value <= 2.5) strengthText = 'Medium';
+            else strengthText = 'Strong';
+            
+            document.getElementById('chargeDisplay').textContent = `${strengthText} (${value})`;
+        }
+
+        function adjustFieldLines(change) {
+            simulator.lineCount = Math.max(4, Math.min(16, simulator.lineCount + change));
+            simulator.updateStatus(`Field lines: ${simulator.lineCount === 4 ? 'Few' : simulator.lineCount >= 12 ? 'Many' : 'Normal'}`);
+        }
+
+        function clearCharges() {
+            simulator.charges = [];
+            simulator.updateChargeList();
+            simulator.updateStatus('🗑️ All charges removed - start fresh!');
+        }
+
+        function toggleFieldProbe() {
+            simulator.fieldProbeMode = !simulator.fieldProbeMode;
+            const btn = document.getElementById('probeBtn');
+            const help = document.getElementById('probeHelp');
+            
+            if (simulator.fieldProbeMode) {
+                btn.textContent = '🔬 Stop Measuring';
+                btn.classList.add('active');
+                help.style.display = 'block';
+                simulator.updateStatus('🔬 Measurement mode ON - click anywhere to measure field!');
+                simulator.canvas.style.cursor = 'crosshair';
+            } else {
+                btn.textContent = '📏 Measure Field Strength';
+                btn.classList.remove('active');
+                help.style.display = 'none';
+                simulator.probePosition = null;
+                simulator.updateStatus('🔬 Measurement mode OFF');
+                simulator.canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        function toggleAdvancedOptions() {
+            const options = document.getElementById('advancedOptions');
+            const btn = document.getElementById('advancedBtn');
+            
+            if (options.style.display === 'none') {
+                options.style.display = 'grid';
+                btn.textContent = '🔧 Hide Advanced';
+            } else {
+                options.style.display = 'none';
+                btn.textContent = '🔧 Advanced Options';
+            }
+        }
+
+        function loadExample(type) {
+            simulator.charges = [];
+            const centerX = simulator.canvas.width / 2;
+            const centerY = simulator.canvas.height / 2;
+            
+            switch(type) {
+                case 'single':
+                    simulator.charges.push({ x: centerX, y: centerY, q: 2, id: Date.now() });
+                    simulator.updateStatus('📍 Single positive charge loaded - see how field lines radiate outward!');
+                    break;
+                case 'dipole':
+                    simulator.charges.push({ x: centerX - 80, y: centerY, q: 2, id: Date.now() });
+                    simulator.charges.push({ x: centerX + 80, y: centerY, q: -2, id: Date.now() + 1 });
+                    simulator.updateStatus('⚡ Electric dipole loaded - field lines flow from + to -!');
+                    break;
+                case 'repulsion':
+                    simulator.charges.push({ x: centerX - 100, y: centerY, q: 1.5, id: Date.now() });
+                    simulator.charges.push({ x: centerX + 100, y: centerY, q: 1.5, id: Date.now() + 1 });
+                    simulator.updateStatus('🔴🔴 Two positive charges - see how they repel each other!');
+                    break;
+            }
+            
+            simulator.updateChargeList();
+        }
+
+        // Also define loadPreset as an alias to avoid errors
+        function loadPreset(type) {
+            loadExample(type);
+        }
+
+        // Make sure all other functions are globally available
+        window.setChargeMode = setChargeMode;
+        window.updateChargeValue = updateChargeValue;
+        window.adjustFieldLines = adjustFieldLines;
+        window.clearCharges = clearCharges;
+        window.toggleFieldProbe = toggleFieldProbe;
+        window.toggleAdvancedOptions = toggleAdvancedOptions;
+        window.loadExample = loadExample;
+        window.loadPreset = loadPreset;
+        window.removeChargeById = removeChargeById;
+        window.nextTutorialStep = nextTutorialStep;
+        window.finishTutorial = finishTutorial;
+        window.showTutorial = showTutorial;
+        window.toggleFieldVectors = toggleFieldVectors;
+        window.toggleAnimation = toggleAnimation;
+
+        function removeChargeById(id) {
+            simulator.charges = simulator.charges.filter(charge => charge.id != id);
+            simulator.updateChargeList();
+            simulator.updateStatus('✅ Charge removed!');
+        }
+
+        // Tutorial functions
+        let currentTutorialStep = 1;
+
+        function nextTutorialStep() {
+            document.getElementById(`step${currentTutorialStep}`).style.display = 'none';
+            currentTutorialStep++;
+            if (document.getElementById(`step${currentTutorialStep}`)) {
+                document.getElementById(`step${currentTutorialStep}`).style.display = 'block';
+            }
+            
+            if (currentTutorialStep === 2) {
+                // Switch to negative mode for step 2
+                setChargeMode('negative');
+            }
+        }
+
+        function finishTutorial() {
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            simulator.updateStatus('🎉 Tutorial complete! Start exploring electric fields!');
+        }
+
+        function showTutorial() {
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                currentTutorialStep = 1;
+                document.querySelectorAll('.tutorial-step').forEach(step => step.style.display = 'none');
+                const step1 = document.getElementById('step1');
+                if (step1) {
+                    step1.style.display = 'block';
+                }
+                setChargeMode('positive');
+            }
+        }
+
+        // Simple functions for advanced options
+        function toggleFieldVectors() {
+            simulator.showFieldVectors = !simulator.showFieldVectors;
+            simulator.updateStatus(`Field arrows ${simulator.showFieldVectors ? 'ON' : 'OFF'} - ${simulator.showFieldVectors ? 'arrows show field direction' : 'cleaner view'}`);
+        }
+
+        function toggleAnimation() {
+            simulator.animationEnabled = !simulator.animationEnabled;
+            simulator.updateStatus(`Animation ${simulator.animationEnabled ? 'ON' : 'OFF'}`);
+        }
+
+        // Load default preset
+        loadPreset('dipole');
+
+        // Quiz functionality
+        class ElectricFieldQuiz {
+            constructor() {
+                this.questions = [
+                    {
+                        question: "Electric field lines start from _____ charges and end at _____ charges.",
+                        options: [
+                            "positive, negative",
+                            "negative, positive", 
+                            "positive, positive",
+                            "negative, negative"
+                        ],
+                        correct: 0,
+                        explanation: "Electric field lines always start from positive charges and end at negative charges, showing the direction a positive test charge would move."
+                    },
+                    {
+                        question: "What does the density (closeness) of electric field lines represent?",
+                        options: [
+                            "The direction of the field",
+                            "The strength of the electric field",
+                            "The type of charge",
+                            "The temperature of the field"
+                        ],
+                        correct: 1,
+                        explanation: "The density of field lines represents the strength of the electric field. Closer lines indicate stronger field, while spaced lines indicate weaker field."
+                    },
+                    {
+                        question: "Can two electric field lines ever cross each other?",
+                        options: [
+                            "Yes, they can cross at any point",
+                            "Yes, but only at the midpoint between charges",
+                            "No, they can never cross",
+                            "Only if the charges are of equal magnitude"
+                        ],
+                        correct: 2,
+                        explanation: "Electric field lines can never cross because the electric field has a unique direction at every point. If lines crossed, the field would have two directions at that point, which is impossible."
+                    },
+                    {
+                        question: "How does electric field strength vary with distance from a point charge?",
+                        options: [
+                            "E ∝ r",
+                            "E ∝ r²", 
+                            "E ∝ 1/r",
+                            "E ∝ 1/r²"
+                        ],
+                        correct: 3,
+                        explanation: "Electric field strength follows the inverse square law: E = kq/r². As distance doubles, field strength becomes one-fourth."
+                    },
+                    {
+                        question: "In the solid angle concept, what happens to field line density as we move away from a charge?",
+                        options: [
+                            "It increases as 1/r²",
+                            "It decreases as 1/r²",
+                            "It remains constant",
+                            "It increases linearly with r"
+                        ],
+                        correct: 1,
+                        explanation: "Field line density decreases as 1/r² because while the number of lines remains constant, they spread over an area that increases as r²."
+                    },
+                    {
+                        question: "What configuration is called an electric dipole?",
+                        options: [
+                            "Two positive charges separated by distance",
+                            "Two negative charges separated by distance",
+                            "Two equal and opposite charges separated by distance",
+                            "A single isolated charge"
+                        ],
+                        correct: 2,
+                        explanation: "An electric dipole consists of two equal and opposite charges (+q and -q) separated by a small distance. Field lines flow from positive to negative charge."
+                    },
+                    {
+                        question: "Electric field lines in a charge-free region are:",
+                        options: [
+                            "Discontinuous and broken",
+                            "Continuous curves without breaks",
+                            "Circular loops",
+                            "Straight lines only"
+                        ],
+                        correct: 1,
+                        explanation: "In charge-free regions, electric field lines are continuous curves without any breaks. They only start or end at charges."
+                    },
+                    {
+                        question: "Do electrostatic field lines form closed loops?",
+                        options: [
+                            "Yes, always",
+                            "Yes, but only around positive charges",
+                            "No, never",
+                            "Only in the presence of multiple charges"
+                        ],
+                        correct: 2,
+                        explanation: "Electrostatic field lines never form closed loops. This is due to the conservative nature of the electric field - they must start at positive charges and end at negative charges (or infinity)."
+                    }
+                ];
+                
+                this.currentQuestionIndex = 0;
+                this.score = 0;
+                this.selectedAnswer = null;
+                this.quizCompleted = false;
+                
+                this.initializeQuiz();
+            }
+
+            initializeQuiz() {
+                try {
+                    const totalQuestionsElement = document.getElementById('totalQuestions');
+                    if (totalQuestionsElement) {
+                        totalQuestionsElement.textContent = this.questions.length;
+                    }
+                    this.displayQuestion();
+                    this.updateProgress();
+                    
+                    // Hide loading and show quiz
+                    const loading = document.getElementById('quizLoading');
+                    const header = document.getElementById('quizHeader');
+                    const card = document.getElementById('questionCard');
+                    
+                    if (loading) loading.style.display = 'none';
+                    if (header) header.style.display = 'flex';
+                    if (card) card.style.display = 'block';
+                    
+                    console.log('Quiz initialized with', this.questions.length, 'questions');
+                } catch (error) {
+                    console.error('Error in quiz initialization:', error);
+                }
+            }
+
+            displayQuestion() {
+                try {
+                    const question = this.questions[this.currentQuestionIndex];
+                    const questionTextElement = document.getElementById('questionText');
+                    const optionsContainer = document.getElementById('questionOptions');
+                    
+                    if (!questionTextElement || !optionsContainer) {
+                        console.error('Quiz elements not found');
+                        return;
+                    }
+                    
+                    questionTextElement.textContent = question.question;
+                    
+                    optionsContainer.innerHTML = '';
+                    
+                    question.options.forEach((option, index) => {
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'option';
+                        optionDiv.textContent = option;
+                        optionDiv.onclick = () => this.selectOption(index);
+                        optionsContainer.appendChild(optionDiv);
+                    });
+                    
+                    // Reset feedback and buttons
+                    const feedback = document.getElementById('questionFeedback');
+                    if (feedback) {
+                        feedback.className = 'question-feedback';
+                        feedback.style.display = 'none';
+                        feedback.innerHTML = '';
+                    }
+                    
+                    const submitBtn = document.getElementById('submitAnswer');
+                    const nextBtn = document.getElementById('nextQuestion');
+                    const restartBtn = document.getElementById('restartQuiz');
+                    
+                    if (submitBtn) submitBtn.style.display = 'inline-block';
+                    if (nextBtn) nextBtn.style.display = 'none';
+                    if (restartBtn) restartBtn.style.display = 'none';
+                    
+                    this.selectedAnswer = null;
+                } catch (error) {
+                    console.error('Error displaying question:', error);
+                }
+            }
+
+            selectOption(index) {
+                // Remove previous selection
+                document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selection to clicked option
+                document.querySelectorAll('.option')[index].classList.add('selected');
+                this.selectedAnswer = index;
+            }
+
+            submitAnswer() {
+                try {
+                    if (this.selectedAnswer === null) {
+                        alert('Please select an answer before submitting.');
+                        return;
+                    }
+                    
+                    const question = this.questions[this.currentQuestionIndex];
+                    const options = document.querySelectorAll('.option');
+                    const feedback = document.getElementById('questionFeedback');
+                    
+                    if (!feedback) {
+                        console.error('Feedback element not found');
+                        return;
+                    }
+                    
+                    // Disable further clicking on options
+                    options.forEach(option => {
+                        option.style.pointerEvents = 'none';
+                    });
+                    
+                    // Show correct/incorrect styling
+                    options.forEach((option, index) => {
+                        if (index === question.correct) {
+                            option.classList.add('correct');
+                        } else if (index === this.selectedAnswer && index !== question.correct) {
+                            option.classList.add('incorrect');
+                        }
+                    });
+                    
+                    // Show feedback
+                    feedback.style.display = 'block';
+                    feedback.classList.add('show');
+                    if (this.selectedAnswer === question.correct) {
+                        feedback.classList.add('correct');
+                        feedback.innerHTML = `<strong>Correct! 🎉</strong><br>${question.explanation}`;
+                        this.score++;
+                    } else {
+                        feedback.classList.add('incorrect');
+                        feedback.innerHTML = `<strong>Incorrect! ❌</strong><br>${question.explanation}`;
+                    }
+                    
+                    // Update score display
+                    const scoreElement = document.getElementById('quizScore');
+                    if (scoreElement) {
+                        scoreElement.textContent = this.score;
+                    }
+                    
+                    // Hide submit button, show next button or restart button
+                    const submitBtn = document.getElementById('submitAnswer');
+                    if (submitBtn) submitBtn.style.display = 'none';
+                    
+                    if (this.currentQuestionIndex < this.questions.length - 1) {
+                        const nextBtn = document.getElementById('nextQuestion');
+                        if (nextBtn) nextBtn.style.display = 'inline-block';
+                    } else {
+                        // This is the last question
+                        const restartBtn = document.getElementById('restartQuiz');
+                        if (restartBtn) restartBtn.style.display = 'inline-block';
+                        setTimeout(() => {
+                            this.completeQuiz();
+                        }, 2000); // Show results after 2 seconds
+                    }
+                } catch (error) {
+                    console.error('Error submitting answer:', error);
+                }
+            }
+
+            nextQuestion() {
+                this.currentQuestionIndex++;
+                this.displayQuestion();
+                this.updateProgress();
+                
+                // Re-enable clicking on options
+                setTimeout(() => {
+                    document.querySelectorAll('.option').forEach(option => {
+                        option.style.pointerEvents = 'auto';
+                    });
+                }, 100);
+            }
+
+            updateProgress() {
+                const progress = ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('currentQuestion').textContent = this.currentQuestionIndex + 1;
+            }
+
+            completeQuiz() {
+                document.getElementById('questionCard').style.display = 'none';
+                document.getElementById('quizResults').style.display = 'block';
+                
+                const percentage = Math.round((this.score / this.questions.length) * 100);
+                document.getElementById('finalScore').textContent = `${this.score}/${this.questions.length} (${percentage}%)`;
+                
+                const messageDiv = document.getElementById('performanceMessage');
+                let message, className;
+                
+                if (percentage >= 80) {
+                    message = "Excellent! You have a strong understanding of electric field lines! 🌟";
+                    className = "performance-excellent";
+                } else if (percentage >= 60) {
+                    message = "Good work! You understand most concepts, but review the areas you missed. 👍";
+                    className = "performance-good";
+                } else {
+                    message = "Keep studying! Review the concepts and try the interactive visualization above. 📚";
+                    className = "performance-needs-work";
+                }
+                
+                messageDiv.textContent = message;
+                messageDiv.className = `performance-message ${className}`;
+                
+                this.quizCompleted = true;
+            }
+
+            restart() {
+                this.currentQuestionIndex = 0;
+                this.score = 0;
+                this.selectedAnswer = null;
+                this.quizCompleted = false;
+                
+                document.getElementById('quizScore').textContent = '0';
+                document.getElementById('questionCard').style.display = 'block';
+                document.getElementById('quizResults').style.display = 'none';
+                
+                this.displayQuestion();
+                this.updateProgress();
+            }
+        }
+
+        // Initialize quiz
+        let quiz = null;
+        
+        // Global quiz functions with better error handling
+        function submitAnswer() {
+            try {
+                if (quiz) {
+                    quiz.submitAnswer();
+                } else {
+                    console.error('Quiz not initialized');
+                    initializeQuiz(); // Try to initialize again
+                }
+            } catch (error) {
+                console.error('Error in submitAnswer:', error);
+            }
+        }
+
+        function nextQuestion() {
+            try {
+                if (quiz) {
+                    quiz.nextQuestion();
+                } else {
+                    console.error('Quiz not initialized');
+                }
+            } catch (error) {
+                console.error('Error in nextQuestion:', error);
+            }
+        }
+
+        function restartQuiz() {
+            try {
+                if (quiz) {
+                    quiz.restart();
+                } else {
+                    console.error('Quiz not initialized');
+                    initializeQuiz(); // Try to initialize again
+                }
+            } catch (error) {
+                console.error('Error in restartQuiz:', error);
+            }
+        }
+
+        // Force quiz initialization function
+        function forceInitializeQuiz() {
+            console.log('Force initializing quiz...');
+            
+            // Show loading indicator
+            const loading = document.getElementById('quizLoading');
+            const header = document.getElementById('quizHeader');
+            const card = document.getElementById('questionCard');
+            
+            if (loading) loading.style.display = 'block';
+            if (header) header.style.display = 'none';
+            if (card) card.style.display = 'none';
+            
+            // Reset and try again
+            quiz = null;
+            initAttempts = 0;
+            
+            setTimeout(() => {
+                initializeQuiz();
+            }, 500);
+        }
+
+        // Multiple initialization attempts
+        let initAttempts = 0;
+        const maxAttempts = 5;
+
+        function tryInitializeQuiz() {
+            initAttempts++;
+            console.log(`Quiz initialization attempt ${initAttempts}`);
+            
+            if (initAttempts > maxAttempts) {
+                console.error('Max quiz initialization attempts reached');
+                return;
+            }
+            
+            if (!quiz && document.getElementById('questionText')) {
+                initializeQuiz();
+                if (quiz) {
+                    console.log('Quiz successfully initialized on attempt', initAttempts);
+                    return;
+                }
+            }
+            
+            // Try again in 1 second
+            setTimeout(tryInitializeQuiz, 1000);
+        }
+
+        // Initialize quiz when DOM is ready
+        function initializeQuiz() {
+            try {
+                // Check if all required elements exist
+                const requiredElements = [
+                    'questionText', 'questionOptions', 'questionFeedback',
+                    'submitAnswer', 'nextQuestion', 'restartQuiz',
+                    'currentQuestion', 'totalQuestions', 'progressFill', 'quizScore'
+                ];
+                
+                let allElementsExist = true;
+                for (let elementId of requiredElements) {
+                    if (!document.getElementById(elementId)) {
+                        console.error(`Missing element: ${elementId}`);
+                        allElementsExist = false;
+                    }
+                }
+                
+                if (allElementsExist && !quiz) {
+                    quiz = new ElectricFieldQuiz();
+                    console.log('Quiz initialized successfully');
+                } else if (!allElementsExist) {
+                    console.error('Cannot initialize quiz - missing required elements');
+                }
+            } catch (error) {
+                console.error('Error initializing quiz:', error);
+            }
+        }
+    </script>
+</body>
+</html>

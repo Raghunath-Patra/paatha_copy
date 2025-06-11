@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laws of Chemical Combinations - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .law-title {
+            color: #4a5568;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        .scientist-info {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scientist-info::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%); }
+            100% { transform: translateX(100%) translateY(100%); }
+        }
+
+        .interactive-demo {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f4fd 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .interactive-demo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: sweep 2s infinite;
+        }
+
+        @keyframes sweep {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .balance-scale {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .scale-pan {
+            width: 100px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 20px;
+            border: 3px solid #cc9900;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .scale-beam {
+            width: 200px;
+            height: 5px;
+            background: linear-gradient(90deg, #8b4513, #cd853f, #8b4513);
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .scale-beam::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid #8b4513;
+        }
+
+        .scale-needle {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 30px;
+            background: #333;
+            animation: needleBalance 3s ease-in-out infinite;
+        }
+
+        @keyframes needleBalance {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(2deg); }
+            75% { transform: translateX(-50%) rotate(-2deg); }
+        }
+
+        .floating-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle-element {
+            position: absolute;
+            font-size: 20px;
+            animation: float 6s ease-in-out infinite;
+            animation-delay: var(--delay);
+            opacity: 0.7;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100px) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.7; }
+            50% { transform: translateY(-20px) translateX(50px) rotate(180deg); }
+            90% { opacity: 0.7; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        .molecule-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .molecule {
+            display: flex;
+            align-items: center;
+            margin: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .atom {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin: 0 2px;
+            font-size: 14px;
+            position: relative;
+            animation: atomPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .atom::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 60%, rgba(255,255,255,0.3) 100%);
+            animation: atomGlow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes atomPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes atomGlow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .hydrogen { 
+            background: radial-gradient(circle, #ff6b6b 0%, #e74c3c 100%);
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+        }
+        .oxygen { 
+            background: radial-gradient(circle, #4ecdc4 0%, #16a085 100%);
+            box-shadow: 0 0 20px rgba(22, 160, 133, 0.5);
+        }
+        .carbon { 
+            background: radial-gradient(circle, #45b7d1 0%, #2980b9 100%);
+            box-shadow: 0 0 20px rgba(41, 128, 185, 0.5);
+        }
+        .copper { 
+            background: radial-gradient(circle, #ffa726 0%, #f39c12 100%);
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+        }
+
+        .molecular-bond {
+            width: 20px;
+            height: 3px;
+            background: linear-gradient(90deg, #333, #666, #333);
+            margin: 0 5px;
+            border-radius: 2px;
+            animation: bondVibrate 1s ease-in-out infinite;
+        }
+
+        @keyframes bondVibrate {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(1.1); }
+        }
+
+        .reaction-arrow {
+            font-size: 3rem;
+            color: #667eea;
+            margin: 0 20px;
+            animation: arrowPulse 2s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        @keyframes arrowPulse {
+            0%, 100% { transform: scale(1) translateX(0); }
+            50% { transform: scale(1.2) translateX(5px); }
+        }
+
+        .ratio-display {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #4caf50;
+        }
+
+        .volume-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .gas-container {
+            width: 80px;
+            height: 100px;
+            border: 3px solid #333;
+            border-radius: 10px;
+            position: relative;
+            margin: 10px;
+            background: linear-gradient(to top, #87ceeb 0%, transparent 100%);
+            overflow: hidden;
+        }
+
+        .gas-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 8px,
+                rgba(255,255,255,0.3) 8px,
+                rgba(255,255,255,0.3) 12px
+            );
+            animation: gasFlow 1.5s linear infinite;
+        }
+
+        @keyframes gasFlow {
+            0% { transform: translateY(100%); }
+            100% { transform: translateY(-100%); }
+        }
+
+        .gas-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            animation: particleMove 2s linear infinite;
+        }
+
+        @keyframes particleMove {
+            0% { transform: translateY(100px) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10px) translateX(20px); opacity: 0; }
+        }
+
+        .gas-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .sample-sparkle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 5px,
+                rgba(255,255,255,0.1) 5px,
+                rgba(255,255,255,0.1) 10px
+            );
+            animation: sparkle 2s linear infinite;
+        }
+
+        @keyframes sparkle {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .crystal-animation, .beaker-animation {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 24px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(10deg); }
+        }
+
+        @keyframes moleculeFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        .quiz-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #856404;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quiz-option {
+            background: white;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background: #fff8e1;
+            transform: translateX(5px);
+        }
+
+        .quiz-option.selected {
+            background: #4caf50;
+            color: white;
+            border-color: #388e3c;
+        }
+
+        .quiz-option.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #d32f2f;
+        }
+
+        .check-btn, .reset-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn:hover, .reset-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .molecule-container, .volume-demo {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚗️ Laws of Chemical Combinations</h1>
+            <p>Interactive Learning Tool for Class 11 Chemistry</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showTab('conservation')">Conservation of Mass</button>
+            <button class="tab-btn" onclick="showTab('definite')">Definite Proportions</button>
+            <button class="tab-btn" onclick="showTab('multiple')">Multiple Proportions</button>
+            <button class="tab-btn" onclick="showTab('gaylussac')">Gay-Lussac's Law</button>
+            <button class="tab-btn" onclick="showTab('avogadro')">Avogadro's Law</button>
+            <button class="tab-btn" onclick="showTab('quiz')">Knowledge Check</button>
+        </div>
+
+        <!-- Conservation of Mass -->
+        <div id="conservation" class="content-section active">
+            <h2 class="law-title">1. Law of Conservation of Mass</h2>
+            
+            <div class="scientist-info">
+                <h3>🧪 Antoine Lavoisier (1743-1794)</h3>
+                <p>"Matter can neither be created nor destroyed in chemical reactions"</p>
+            </div>
+
+            <p><strong>Law Statement:</strong> In all physical and chemical changes, there is no net change in mass during the process.</p>
+
+            <div class="interactive-demo">
+                <h3>Interactive Balance Scale</h3>
+                <p>Watch how mass is conserved in a chemical reaction:</p>
+                
+                <div class="balance-scale">
+                    <div class="scale-pan" id="reactants">
+                        <div>Reactants<br><span id="reactant-mass">18g</span></div>
+                    </div>
+                    <div class="scale-beam">
+                        <div class="scale-needle"></div>
+                    </div>
+                    <div class="scale-pan" id="products">
+                        <div>Products<br><span id="product-mass">18g</span></div>
+                    </div>
+                </div>
+
+                <div class="floating-particles">
+                    <div class="particle-element" style="--delay: 0s;">⚛️</div>
+                    <div class="particle-element" style="--delay: 1s;">🔬</div>
+                    <div class="particle-element" style="--delay: 2s;">⚗️</div>
+                    <div class="particle-element" style="--delay: 3s;">🧪</div>
+                </div>
+
+                <div class="molecule-container">
+                    <div class="molecule">
+                        <div class="atom hydrogen">H</div>
+                        <div class="molecular-bond"></div>
+                        <div class="atom hydrogen">H</div>
+                        <span style="margin: 0 10px; font-size: 24px; color: #667eea;">+</span>
+                        <div class="atom oxygen">O</div>
+                        <div class="molecular-bond"></div>
+                        <div class="atom oxygen">O</div>
+                    </div>
+                    <div class="reaction-arrow">→</div>
+                    <div class="molecule">
+                        <div class="atom hydrogen">H</div>
+                        <div class="molecular-bond"></div>
+                        <div class="atom oxygen">O</div>
+                        <div class="molecular-bond"></div>
+                        <div class="atom hydrogen">H</div>
+                    </div>
+                </div>
+
+                <button class="check-btn" onclick="animateBalance()">Demonstrate Balance</button>
+            </div>
+        </div>
+
+        <!-- Definite Proportions -->
+        <div id="definite" class="content-section">
+            <h2 class="law-title">2. Law of Definite Proportions</h2>
+            
+            <div class="scientist-info">
+                <h3>🔬 Joseph Proust (1754-1826)</h3>
+                <p>"A compound always contains the same elements in the same proportion by mass"</p>
+            </div>
+
+            <p><strong>Law Statement:</strong> A given compound always contains exactly the same proportion of elements by weight, regardless of its source.</p>
+
+            <div class="interactive-demo">
+                <h3>Cupric Carbonate Analysis</h3>
+                <p>Compare natural vs synthetic samples:</p>
+                
+                <div style="display: flex; justify-content: space-around; flex-wrap: wrap; margin: 20px 0;">
+                    <div style="text-align: center; margin: 10px; position: relative;">
+                        <h4>Natural Sample</h4>
+                        <div style="background: linear-gradient(135deg, #4caf50, #45a049); color: white; padding: 15px; border-radius: 10px; position: relative; overflow: hidden;">
+                            <div class="sample-sparkle"></div>
+                            <div>Cu: 51.35%</div>
+                            <div>C: 9.74%</div>
+                            <div>O: 38.91%</div>
+                        </div>
+                        <div class="crystal-animation">💎</div>
+                    </div>
+                    <div style="text-align: center; margin: 10px; position: relative;">
+                        <h4>Synthetic Sample</h4>
+                        <div style="background: linear-gradient(135deg, #2196f3, #1976d2); color: white; padding: 15px; border-radius: 10px; position: relative; overflow: hidden;">
+                            <div class="sample-sparkle"></div>
+                            <div>Cu: 51.35%</div>
+                            <div>C: 9.74%</div>
+                            <div>O: 38.91%</div>
+                        </div>
+                        <div class="beaker-animation">🧪</div>
+                    </div>
+                </div>
+
+                <div class="ratio-display">
+                    <strong>Conclusion:</strong> Both samples have identical composition, proving the law of definite proportions!
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Proportions -->
+        <div id="multiple" class="content-section">
+            <h2 class="law-title">3. Law of Multiple Proportions</h2>
+            
+            <div class="scientist-info">
+                <h3>⚛️ John Dalton (1803)</h3>
+                <p>"When two elements form multiple compounds, mass ratios are simple whole numbers"</p>
+            </div>
+
+            <p><strong>Law Statement:</strong> If two elements can combine to form more than one compound, the masses of one element that combine with a fixed mass of the other are in simple whole number ratios.</p>
+
+            <div class="interactive-demo">
+                <h3>Hydrogen + Oxygen Compounds</h3>
+                
+                <div class="molecule-container">
+                    <div>
+                        <h4>Water (H₂O)</h4>
+                        <div class="molecule" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: 2px solid #2196f3;">
+                            <div class="atom hydrogen">H</div>
+                            <div class="molecular-bond"></div>
+                            <div class="atom oxygen">O</div>
+                            <div class="molecular-bond"></div>
+                            <div class="atom hydrogen">H</div>
+                        </div>
+                        <p style="font-weight: bold; color: #1976d2;">H: 2g, O: 16g</p>
+                        <div style="font-size: 30px; animation: moleculeFloat 3s ease-in-out infinite;">💧</div>
+                    </div>
+                    
+                    <div>
+                        <h4>Hydrogen Peroxide (H₂O₂)</h4>
+                        <div class="molecule" style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); border: 2px solid #ff9800;">
+                            <div class="atom hydrogen">H</div>
+                            <div class="molecular-bond"></div>
+                            <div class="atom oxygen">O</div>
+                            <div class="molecular-bond"></div>
+                            <div class="atom oxygen">O</div>
+                            <div class="molecular-bond"></div>
+                            <div class="atom hydrogen">H</div>
+                        </div>
+                        <p style="font-weight: bold; color: #f57c00;">H: 2g, O: 32g</p>
+                        <div style="font-size: 30px; animation: moleculeFloat 3s ease-in-out infinite 1s;">🧴</div>
+                    </div>
+                </div>
+
+                <div class="ratio-display">
+                    <strong>Mass Ratio Analysis:</strong><br>
+                    Fixed mass of H: 2g<br>
+                    Mass of O in H₂O: 16g<br>
+                    Mass of O in H₂O₂: 32g<br>
+                    <strong>Ratio = 16:32 = 1:2 (Simple whole numbers!)</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gay-Lussac's Law -->
+        <div id="gaylussac" class="content-section">
+            <h2 class="law-title">4. Gay-Lussac's Law of Gaseous Volumes</h2>
+            
+            <div class="scientist-info">
+                <h3>🌡️ Joseph Louis Gay-Lussac (1808)</h3>
+                <p>"Gases combine in simple ratios by volume at same temperature and pressure"</p>
+            </div>
+
+            <p><strong>Law Statement:</strong> When gases combine or are produced in a chemical reaction, they do so in simple ratios by volume, provided all gases are at the same temperature and pressure.</p>
+
+            <div class="interactive-demo">
+                <h3>Gas Volume Demonstration</h3>
+                <p>H₂ + O₂ → H₂O (vapor)</p>
+                
+                <div class="volume-demo">
+                    <div class="gas-container" style="background: linear-gradient(to top, #ff6b6b 0%, #ff6b6b 100%);">
+                        <div class="gas-particles">
+                            <div class="particle" style="animation-delay: 0s; left: 20%;"></div>
+                            <div class="particle" style="animation-delay: 0.3s; left: 60%;"></div>
+                            <div class="particle" style="animation-delay: 0.6s; left: 40%;"></div>
+                            <div class="particle" style="animation-delay: 0.9s; left: 70%;"></div>
+                            <div class="particle" style="animation-delay: 1.2s; left: 30%;"></div>
+                        </div>
+                        <div class="gas-label">H₂<br>100 mL</div>
+                    </div>
+                    <div class="reaction-arrow">+</div>
+                    <div class="gas-container" style="background: linear-gradient(to top, #4ecdc4 0%, #4ecdc4 50%, transparent 50%);">
+                        <div class="gas-particles">
+                            <div class="particle" style="animation-delay: 0.2s; left: 25%;"></div>
+                            <div class="particle" style="animation-delay: 0.7s; left: 65%;"></div>
+                            <div class="particle" style="animation-delay: 1.1s; left: 45%;"></div>
+                        </div>
+                        <div class="gas-label">O₂<br>50 mL</div>
+                    </div>
+                    <div class="reaction-arrow">→</div>
+                    <div class="gas-container" style="background: linear-gradient(to top, #9b59b6 0%, #9b59b6 100%);">
+                        <div class="gas-particles">
+                            <div class="particle" style="animation-delay: 0.1s; left: 15%;"></div>
+                            <div class="particle" style="animation-delay: 0.4s; left: 55%;"></div>
+                            <div class="particle" style="animation-delay: 0.8s; left: 35%;"></div>
+                            <div class="particle" style="animation-delay: 1.3s; left: 75%;"></div>
+                        </div>
+                        <div class="gas-label">H₂O<br>100 mL</div>
+                    </div>
+                </div>
+
+                <div class="ratio-display">
+                    <strong>Volume Ratio:</strong> H₂ : O₂ = 100:50 = 2:1<br>
+                    This simple ratio confirms Gay-Lussac's Law!
+                </div>
+            </div>
+        </div>
+
+        <!-- Avogadro's Law -->
+        <div id="avogadro" class="content-section">
+            <h2 class="law-title">5. Avogadro's Law</h2>
+            
+            <div class="scientist-info">
+                <h3>🔬 Amedeo Avogadro (1811)</h3>
+                <p>"Equal volumes of gases contain equal numbers of molecules at same T and P"</p>
+            </div>
+
+            <p><strong>Law Statement:</strong> Equal volumes of all gases at the same temperature and pressure contain equal number of molecules.</p>
+
+            <div class="interactive-demo">
+                <h3>Molecular Explanation</h3>
+                <p>Why do 2 volumes of H₂ + 1 volume of O₂ = 2 volumes of H₂O?</p>
+                
+                <div style="display: flex; justify-content: space-around; align-items: center; margin: 20px 0; flex-wrap: wrap;">
+                    <div style="text-align: center; margin: 10px;">
+                        <div style="border: 2px solid #333; padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #ffe0e0, #ffb3b3);">
+                            <div style="font-size: 24px; margin: 5px;">H-H H-H</div>
+                            <div style="font-size: 24px; margin: 5px;">H-H H-H</div>
+                        </div>
+                        <p><strong>2 volumes H₂</strong><br>(4 molecules)</p>
+                    </div>
+                    <div class="reaction-arrow">+</div>
+                    <div style="text-align: center; margin: 10px;">
+                        <div style="border: 2px solid #333; padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #e0f7fa, #b2ebf2);">
+                            <div style="font-size: 24px; margin: 5px;">O=O</div>
+                            <div style="font-size: 24px; margin: 5px;">O=O</div>
+                        </div>
+                        <p><strong>1 volume O₂</strong><br>(2 molecules)</p>
+                    </div>
+                    <div class="reaction-arrow">→</div>
+                    <div style="text-align: center; margin: 10px;">
+                        <div style="border: 2px solid #333; padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #f3e5f5, #e1bee7);">
+                            <div style="font-size: 24px; margin: 5px;">H-O-H</div>
+                            <div style="font-size: 24px; margin: 5px;">H-O-H</div>
+                            <div style="font-size: 24px; margin: 5px;">H-O-H</div>
+                            <div style="font-size: 24px; margin: 5px;">H-O-H</div>
+                        </div>
+                        <p><strong>2 volumes H₂O</strong><br>(4 molecules)</p>
+                    </div>
+                </div>
+
+                <div class="ratio-display">
+                    <strong>Key Insight:</strong> Avogadro explained Gay-Lussac's observations by proposing that gases exist as diatomic molecules (H₂, O₂), not individual atoms!
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="content-section">
+            <h2 class="law-title">🧠 Knowledge Check</h2>
+            
+            <div class="quiz-section">
+                <div class="quiz-question">1. Who proposed the Law of Conservation of Mass?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="1" data-answer="a">a) Antoine Lavoisier</div>
+                    <div class="quiz-option" data-question="1" data-answer="b">b) Joseph Proust</div>
+                    <div class="quiz-option" data-question="1" data-answer="c">c) John Dalton</div>
+                    <div class="quiz-option" data-question="1" data-answer="d">d) Gay-Lussac</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">2. According to the Law of Multiple Proportions, if 12g of carbon combines with 16g of oxygen in CO and 32g of oxygen in CO₂, what is the ratio?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="2" data-answer="a">a) 1:2</div>
+                    <div class="quiz-option" data-question="2" data-answer="b">b) 2:1</div>
+                    <div class="quiz-option" data-question="2" data-answer="c">c) 1:3</div>
+                    <div class="quiz-option" data-question="2" data-answer="d">d) 3:1</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">3. Gay-Lussac's Law applies to:</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="3" data-answer="a">a) Solids only</div>
+                    <div class="quiz-option" data-question="3" data-answer="b">b) Liquids only</div>
+                    <div class="quiz-option" data-question="3" data-answer="c">c) Gases only</div>
+                    <div class="quiz-option" data-question="3" data-answer="d">d) All states of matter</div>
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <div class="quiz-question">4. Avogadro's Law states that equal volumes of gases at same T and P contain:</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-question="4" data-answer="a">a) Equal masses</div>
+                    <div class="quiz-option" data-question="4" data-answer="b">b) Equal number of molecules</div>
+                    <div class="quiz-option" data-question="4" data-answer="c">c) Equal densities</div>
+                    <div class="quiz-option" data-question="4" data-answer="d">d) Equal atomic numbers</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="check-btn" onclick="checkAnswers()">Check Answers</button>
+                <button class="reset-btn" onclick="resetQuiz()">Reset Quiz</button>
+            </div>
+
+            <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Correct answers
+        const correctAnswers = {
+            1: 'a',
+            2: 'a', 
+            3: 'c',
+            4: 'b'
+        };
+
+        let selectedAnswers = {};
+
+        function showTab(tabName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Remove active from all tabs
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function animateBalance() {
+            const reactants = document.getElementById('reactants');
+            const products = document.getElementById('products');
+            
+            // Add animation effect
+            reactants.style.transform = 'translateY(-10px)';
+            products.style.transform = 'translateY(-10px)';
+            reactants.style.boxShadow = '0 10px 25px rgba(255, 215, 0, 0.5)';
+            products.style.boxShadow = '0 10px 25px rgba(255, 215, 0, 0.5)';
+            
+            setTimeout(() => {
+                reactants.style.transform = 'translateY(0)';
+                products.style.transform = 'translateY(0)';
+                reactants.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+                products.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+            }, 800);
+            
+            // Show balance message
+            setTimeout(() => {
+                alert('⚖️ Perfect Balance! Mass of reactants (18g) = Mass of products (18g)\n\n✨ Mass is conserved in all chemical reactions!');
+            }, 100);
+        }
+
+        // Quiz functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quiz-option')) {
+                const question = e.target.dataset.question;
+                const answer = e.target.dataset.answer;
+                
+                // Remove selection from other options in the same question
+                const sameQuestionOptions = document.querySelectorAll(`[data-question="${question}"]`);
+                sameQuestionOptions.forEach(option => {
+                    option.classList.remove('selected');
+                });
+                
+                // Select clicked option
+                e.target.classList.add('selected');
+                selectedAnswers[question] = answer;
+            }
+        });
+
+        function checkAnswers() {
+            let score = 0;
+            let totalQuestions = Object.keys(correctAnswers).length;
+            
+            // Check each answer
+            for (let question in correctAnswers) {
+                const options = document.querySelectorAll(`[data-question="${question}"]`);
+                const correctAnswer = correctAnswers[question];
+                const userAnswer = selectedAnswers[question];
+                
+                options.forEach(option => {
+                    option.classList.remove('selected', 'incorrect');
+                    if (option.dataset.answer === correctAnswer) {
+                        option.classList.add('selected'); // Show correct answer
+                    } else if (option.dataset.answer === userAnswer && userAnswer !== correctAnswer) {
+                        option.classList.add('incorrect'); // Show wrong selection
+                    }
+                });
+                
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+            }
+            
+            // Show feedback
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.style.display = 'block';
+            
+            if (score === totalQuestions) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `🎉 Excellent! You got ${score}/${totalQuestions} correct!<br>You have mastered the Laws of Chemical Combinations!`;
+            } else if (score >= totalQuestions * 0.7) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `👍 Good job! You got ${score}/${totalQuestions} correct!<br>Review the topics you missed and try again.`;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `📚 You got ${score}/${totalQuestions} correct.<br>Study the concepts again and retake the quiz!`;
+            }
+        }
+
+        function resetQuiz() {
+            selectedAnswers = {};
+            
+            // Clear all selections
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.classList.remove('selected', 'incorrect');
+            });
+            
+            // Hide feedback
+            document.getElementById('quiz-feedback').style.display = 'none';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Chemical Laws Interactive Tool Loaded Successfully!');
+            
+            // Add some startup animations
+            setTimeout(() => {
+                const atoms = document.querySelectorAll('.atom');
+                atoms.forEach((atom, index) => {
+                    setTimeout(() => {
+                        atom.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            atom.style.transform = 'scale(1)';
+                        }, 200);
+                    }, index * 100);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

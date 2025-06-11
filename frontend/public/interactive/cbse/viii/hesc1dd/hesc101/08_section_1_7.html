@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protection from Weeds - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="weedPattern" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M7.5 2 Q12 7.5 7.5 13 Q3 7.5 7.5 2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23weedPattern)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 15px;
+            background: #fef2f2;
+            border-left: 5px solid #dc2626;
+        }
+
+        .section h2 {
+            color: #991b1b;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .field-game {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .field-container {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            background: linear-gradient(to bottom, #87ceeb 20%, #90ee90 20%, #228b22 100%);
+            border-radius: 15px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #22c55e;
+        }
+
+        .crop-row {
+            position: absolute;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .plant {
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .plant:hover {
+            transform: scale(1.2);
+        }
+
+        .crop {
+            color: #22c55e;
+        }
+
+        .weed {
+            color: #dc2626;
+            animation: sway 2s ease-in-out infinite;
+        }
+
+        .weed.removed {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+        }
+
+        .tool-selection {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .tool {
+            background: #f3f4f6;
+            border: 3px solid #d1d5db;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .tool:hover {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .tool.selected {
+            background: #dc2626;
+            color: white;
+            border-color: #991b1b;
+        }
+
+        .tool-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .weedicide-demo {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .sprayer {
+            width: 300px;
+            height: 200px;
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spray-tank {
+            position: absolute;
+            bottom: 20px;
+            left: 50px;
+            width: 60px;
+            height: 80px;
+            background: #3b82f6;
+            border-radius: 10px;
+            border: 2px solid #1d4ed8;
+        }
+
+        .spray-nozzle {
+            position: absolute;
+            bottom: 120px;
+            right: 50px;
+            width: 40px;
+            height: 10px;
+            background: #6b7280;
+            border-radius: 5px;
+        }
+
+        .spray-particles {
+            position: absolute;
+            bottom: 130px;
+            right: 30px;
+            width: 80px;
+            height: 60px;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .spray-particles.active {
+            opacity: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fbbf24;
+            border-radius: 50%;
+            animation: spray-fall 2s ease-out infinite;
+        }
+
+        @keyframes spray-fall {
+            0% { transform: translateY(0px) translateX(0px); opacity: 1; }
+            100% { transform: translateY(60px) translateX(20px); opacity: 0; }
+        }
+
+        .safety-gear {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .gear-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .gear-item:hover {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .gear-item.equipped {
+            border-color: #22c55e;
+            background: #dcfce7;
+        }
+
+        .gear-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .competition-table {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .resource-bars {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .resource-bar {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .resource-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        .bar-container {
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 2s ease;
+            border-radius: 10px;
+        }
+
+        .crop-bar { background: linear-gradient(45deg, #22c55e, #16a34a); }
+        .weed-bar { background: linear-gradient(45deg, #dc2626, #b91c1c); }
+
+        .quiz-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #374151;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option {
+            padding: 15px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            background: #f3f4f6;
+            border-color: #dc2626;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .feedback.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+
+        .feedback.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: #dc2626;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        @media (max-width: 768px) {
+            .resource-bars {
+                grid-template-columns: 1fr;
+            }
+            
+            .tool-selection {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <svg 
+                        viewBox="0 0 512 512" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        style="height: 48px; width: 48px;"
+                        aria-label="Paaṭha AI Logo"
+                    >
+                        <defs>
+                            <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#dc2626" />
+                                <stop offset="33%" stop-color="#dc2626" />
+                                <stop offset="66%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#ecfdf5" />
+                            </linearGradient>
+                        </defs>
+                        <g transform="rotate(-45, 256, 256)">
+                            <path d="M501.98,206.15c-9.769-23.023-25.998-42.56-46.458-56.389c-10.181-6.873-21.446-12.34-33.536-16.068
+                                c-12.009-3.809-24.842-5.798-38.088-5.798c-16.982,0-33.294,3.316-48.197,9.365c-1.246,0.492-2.402,0.986-3.558,1.568
+                                c-13.416,5.879-25.675,14.16-36.188,24.017c-3.396,3.227-6.623,6.623-9.858,10.432c-5.709,6.542-11.588,14.079-17.305,21.696
+                                c-1.157,1.568-2.402,3.226-3.558,4.804c-3.146,4.302-33.212,48.358-38.509,56.226c-2.652,3.97-5.798,8.442-9.195,13.327
+                                c-0.744,1.076-1.568,2.24-2.393,3.396c-5.636,8.031-11.928,16.481-17.726,23.937c-2.895,3.72-5.798,7.197-8.281,10.1
+                                c-2.563,2.976-4.884,5.378-6.542,6.954c-7.116,6.704-15.486,12.171-24.672,15.899c-9.194,3.728-19.214,5.798-29.816,5.798
+                                c-7.286,0-14.322-0.996-20.944-2.815c-3.396-0.913-6.712-2.07-9.939-3.477c-14.248-5.968-26.419-16.068-34.95-28.74
+                                c-4.302-6.372-7.699-13.327-10.019-20.783c-2.233-7.456-3.558-15.316-3.558-23.597c0-11.014,2.24-21.365,6.21-30.892
+                                c6.049-14.24,16.149-26.329,28.821-34.942c6.372-4.31,13.326-7.618,20.782-9.939c7.448-2.321,15.316-3.638,23.597-3.638
+                                c10.602,0.08,20.622,2.07,29.816,5.79c9.187,3.808,17.556,9.194,24.672,15.898c1.658,1.577,3.979,4.059,6.542,6.962
+                                c4.472,5.216,9.769,11.92,15.074,18.964c2.07,2.814,4.14,5.628,6.21,8.523c7.949-11.588,21.858-31.959,29.144-42.48
+                                c-1.237-1.658-2.482-3.307-3.72-4.965c-3.316-4.23-6.631-8.281-9.938-12.009c-3.316-3.809-6.462-7.205-9.858-10.432
+                                c-11.426-10.772-24.922-19.545-39.746-25.586c-14.904-6.049-31.222-9.365-48.196-9.365c-17.637,0-34.53,3.566-49.927,10.108
+                                c-23.022,9.688-42.487,25.918-56.316,46.369c-6.873,10.19-12.332,21.527-16.141,33.536C1.989,229.997,0,242.75,0,256.004
+                                c0,17.637,3.558,34.53,10.02,49.846c9.768,23.104,25.998,42.569,46.369,56.397c10.27,6.874,21.535,12.332,33.624,16.141
+                                c12.008,3.728,24.842,5.717,38.088,5.717c16.974,0,33.293-3.316,48.196-9.356c14.824-6.049,28.239-14.824,39.666-25.506l0.08-0.081
+                                c3.397-3.146,6.543-6.631,9.858-10.44c5.709-6.542,11.588-14.071,17.305-21.689c1.157-1.577,2.402-3.154,3.558-4.723
+                                c3.146-4.391,44.307-64.758,47.696-69.642c0.752-1.076,1.577-2.232,2.401-3.396c5.637-7.95,11.928-16.48,17.726-23.928
+                                c2.895-3.728,5.798-7.206,8.281-10.101c2.564-2.984,4.885-5.386,6.542-6.962c7.116-6.704,15.486-12.09,24.673-15.898
+                                c2.24-0.906,4.472-1.649,6.792-2.402c7.286-2.15,14.984-3.307,23.023-3.388c11.013,0.08,21.446,2.232,30.882,6.291
+                                c14.241,5.96,26.42,16.06,34.943,28.732c4.31,6.38,7.706,13.335,10.019,20.782c2.321,7.456,3.566,15.324,3.566,23.605
+                                c0,11.014-2.24,21.446-6.21,30.883c-6.049,14.24-16.149,26.419-28.821,34.942c-6.372,4.31-13.326,7.707-20.782,9.939
+                                c-7.367,2.321-15.316,3.648-23.597,3.648c-10.602,0-20.622-2.07-29.816-5.798c-9.187-3.728-17.557-9.195-24.673-15.899
+                                c-1.658-1.577-3.979-4.059-6.542-6.954c-4.472-5.135-9.776-11.928-15.074-18.963c-2.15-2.815-4.221-5.718-6.291-8.613
+                                c-0.663,0.994-1.326,1.99-2.07,3.065c-13.666,20.039-22.279,32.71-26.994,39.576c1.237,1.658,2.483,3.235,3.72,4.893
+                                c3.316,4.221,6.631,8.281,9.938,12c3.234,3.808,6.462,7.294,9.858,10.44c11.426,10.763,24.923,19.538,39.746,25.587
+                                c14.904,6.04,31.215,9.356,48.197,9.356c17.636,0,34.53-3.558,49.846-10.019c23.103-9.769,42.56-25.999,56.396-46.458
+                                c6.866-10.181,12.421-21.446,16.141-33.536C510.01,282.083,512,269.25,512,256.004C512,238.367,508.442,221.474,501.98,206.15z"
+                                fill="url(#brandGradient)"
+                                opacity="0.9">
+                            </path>
+                            <circle cx="385" cy="256" r="48" fill="#dc2626" opacity="0.8"></circle>
+                        </g>
+                    </svg>
+                    <div>
+                        <h1 style="margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Paaṭha AI</h1>
+                        <p style="margin: 0; font-size: 1em; opacity: 0.9;">Interactive Agriculture Learning</p>
+                    </div>
+                </div>
+                <h2 style="font-size: 1.8em; margin-bottom: 10px;">🌿 1.7 Protection from Weeds</h2>
+                <p style="font-size: 1.2em; opacity: 0.9;">Learn to identify weeds, understand their harmful effects, and master weed control methods!</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- What are Weeds? -->
+            <div class="section">
+                <h2>🌿 Understanding Weeds</h2>
+                <p>Learn what weeds are and why they compete with crops!</p>
+                
+                <div style="background: #fffbeb; padding: 20px; border-radius: 10px; border-left: 4px solid #f59e0b; margin-top: 20px;">
+                    <h4>🎯 What are Weeds?</h4>
+                    <ul style="margin-left: 20px; line-height: 1.6;">
+                        <li><strong>Definition:</strong> Undesirable plants that grow naturally along with crops</li>
+                        <li><strong>Competition:</strong> They compete for water, nutrients, space, and light</li>
+                        <li><strong>Problems:</strong> Reduce crop yield, interfere with harvesting, may be poisonous</li>
+                        <li><strong>Solution:</strong> Weeding - the removal of weeds from crop fields</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Interactive Weed Identification Game -->
+            <div class="section">
+                <h2>🎮 Weed Identification & Removal Game</h2>
+                <p>Help the farmer remove weeds from the wheat field!</p>
+                
+                <div class="field-game">
+                    <h3>🌾 Wheat Field with Weeds</h3>
+                    <p>Click on weeds to remove them. Leave crops alone!</p>
+                    
+                    <div class="field-container" id="field-container">
+                        <!-- Field rows will be generated dynamically -->
+                    </div>
+
+                    <div class="tool-selection">
+                        <div class="tool" data-tool="hand" onclick="selectTool('hand')">
+                            <div class="tool-icon">✋</div>
+                            <div>Manual Removal</div>
+                            <small>Free, slow</small>
+                        </div>
+                        
+                        <div class="tool" data-tool="khurpi" onclick="selectTool('khurpi')">
+                            <div class="tool-icon">🔪</div>
+                            <div>Khurpi</div>
+                            <small>Tool-assisted</small>
+                        </div>
+                        
+                        <div class="tool" data-tool="chemical" onclick="selectTool('chemical')">
+                            <div class="tool-icon">💉</div>
+                            <div>Weedicide</div>
+                            <small>Chemical spray</small>
+                        </div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="generateField()">🌱 New Field</button>
+                        <button class="btn" onclick="showAllWeeds()">👁️ Highlight Weeds</button>
+                        <button class="btn" onclick="resetField()">🔄 Reset</button>
+                    </div>
+
+                    <div id="field-score" class="score">Weeds Removed: 0 | Crops Protected: 0</div>
+                    <div id="field-feedback" class="feedback" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Resource Competition Simulation -->
+            <div class="section">
+                <h2>⚖️ Resource Competition Simulator</h2>
+                <p>See how weeds compete with crops for resources!</p>
+                
+                <div class="competition-table">
+                    <h3>🥊 Crops vs Weeds Competition</h3>
+                    
+                    <div class="resource-bars">
+                        <div class="resource-bar">
+                            <div class="resource-name">💧 Water</div>
+                            <div class="bar-container">
+                                <div class="bar-fill crop-bar" id="water-crop" style="width: 60%;"></div>
+                            </div>
+                            <small>Crops: 60% | Weeds: 40%</small>
+                        </div>
+                        
+                        <div class="resource-bar">
+                            <div class="resource-name">🌱 Nutrients</div>
+                            <div class="bar-container">
+                                <div class="bar-fill crop-bar" id="nutrients-crop" style="width: 55%;"></div>
+                            </div>
+                            <small>Crops: 55% | Weeds: 45%</small>
+                        </div>
+                        
+                        <div class="resource-bar">
+                            <div class="resource-name">☀️ Sunlight</div>
+                            <div class="bar-container">
+                                <div class="bar-fill crop-bar" id="sunlight-crop" style="width: 50%;"></div>
+                            </div>
+                            <small>Crops: 50% | Weeds: 50%</small>
+                        </div>
+                        
+                        <div class="resource-bar">
+                            <div class="resource-name">🏞️ Space</div>
+                            <div class="bar-container">
+                                <div class="bar-fill crop-bar" id="space-crop" style="width: 45%;"></div>
+                            </div>
+                            <small>Crops: 45% | Weeds: 55%</small>
+                        </div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="addWeeds()">🌿 More Weeds Grow</button>
+                        <button class="btn" onclick="removeWeeds()">✂️ Remove Weeds</button>
+                        <button class="btn" onclick="resetCompetition()">🔄 Reset Competition</button>
+                    </div>
+
+                    <div id="competition-feedback" class="feedback" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Weedicide Safety Simulator -->
+            <div class="section">
+                <h2>🧪 Weedicide Safety Training</h2>
+                <p>Learn safe practices when using chemical weed control!</p>
+                
+                <div class="weedicide-demo">
+                    <h3>🚜 Weedicide Spraying Simulation</h3>
+                    <p>Equip proper safety gear before spraying weedicides!</p>
+                    
+                    <div class="safety-gear">
+                        <div class="gear-item" data-gear="mask" onclick="equipGear('mask')">
+                            <div class="gear-icon">😷</div>
+                            <div>Face Mask</div>
+                        </div>
+                        
+                        <div class="gear-item" data-gear="gloves" onclick="equipGear('gloves')">
+                            <div class="gear-icon">🧤</div>
+                            <div>Gloves</div>
+                        </div>
+                        
+                        <div class="gear-item" data-gear="goggles" onclick="equipGear('goggles')">
+                            <div class="gear-icon">🥽</div>
+                            <div>Safety Goggles</div>
+                        </div>
+                        
+                        <div class="gear-item" data-gear="clothes" onclick="equipGear('clothes')">
+                            <div class="gear-icon">🧥</div>
+                            <div>Protective Clothing</div>
+                        </div>
+                    </div>
+
+                    <div class="sprayer">
+                        <div class="spray-tank"></div>
+                        <div class="spray-nozzle"></div>
+                        <div class="spray-particles" id="spray-particles">
+                            <div class="particle" style="top: 10px; left: 20px; animation-delay: 0s;"></div>
+                            <div class="particle" style="top: 5px; left: 35px; animation-delay: 0.3s;"></div>
+                            <div class="particle" style="top: 15px; left: 50px; animation-delay: 0.6s;"></div>
+                            <div class="particle" style="top: 8px; left: 65px; animation-delay: 0.9s;"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="startSpraying()" id="spray-btn" disabled>🚫 Equip Safety Gear First</button>
+                        <button class="btn" onclick="stopSpraying()">⏹️ Stop Spraying</button>
+                        <button class="btn" onclick="resetSafety()">🔄 Reset Safety Gear</button>
+                    </div>
+
+                    <div id="safety-feedback" class="feedback" style="display: none;"></div>
+
+                    <div style="background: #fee2e2; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <h4>⚠️ Safety Guidelines:</h4>
+                        <ul style="margin-left: 20px; line-height: 1.6;">
+                            <li>Always wear protective clothing and gear</li>
+                            <li>Cover nose and mouth with cloth/mask</li>
+                            <li>Spray during calm weather (no wind)</li>
+                            <li>Apply during vegetative growth, before flowering</li>
+                            <li>Follow proper dilution instructions</li>
+                            <li>Wash hands and equipment after use</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Method Comparison -->
+            <div class="section">
+                <h2>📊 Weed Control Methods Comparison</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Tools Used</th>
+                            <th>Advantages</th>
+                            <th>Disadvantages</th>
+                            <th>Best Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Manual Removal</strong></td>
+                            <td>Hands, Khurpi</td>
+                            <td>No chemicals, Precise, Low cost</td>
+                            <td>Labor intensive, Time consuming</td>
+                            <td>Before flowering</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tilling</strong></td>
+                            <td>Plough, Cultivator</td>
+                            <td>Covers large area, Kills roots</td>
+                            <td>May damage crops, Weather dependent</td>
+                            <td>Before sowing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Chemical Control</strong></td>
+                            <td>Weedicides (2,4-D), Sprayer</td>
+                            <td>Fast, Effective, Large scale</td>
+                            <td>Health risks, Environmental impact</td>
+                            <td>Vegetative growth</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Seed Drill</strong></td>
+                            <td>Mechanical seed drill</td>
+                            <td>Precise sowing, Some weed control</td>
+                            <td>Limited to planting time</td>
+                            <td>During sowing</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Knowledge Quiz -->
+            <div class="section">
+                <h2>🧠 Weed Control Knowledge Quiz</h2>
+                <div class="quiz-container">
+                    <div id="quiz-question" class="question">Loading question...</div>
+                    <div id="quiz-options" class="options"></div>
+                    <div id="quiz-feedback" class="feedback" style="display: none;"></div>
+                    <button class="btn" onclick="nextQuestion()">Next Question</button>
+                    <div id="quiz-score" class="score">Score: 0/0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Questions
+        const quizQuestions = [
+            {
+                question: "What are weeds?",
+                options: ["Useful plants", "Undesirable plants growing with crops", "Planted crops", "Flowering plants"],
+                correct: 1
+            },
+            {
+                question: "What do weeds compete for with crops?",
+                options: ["Only water", "Only nutrients", "Water, nutrients, space and light", "Only space"],
+                correct: 2
+            },
+            {
+                question: "What is the best time to remove weeds?",
+                options: ["After harvesting", "Before they produce flowers and seeds", "During winter", "Only in summer"],
+                correct: 1
+            },
+            {
+                question: "Which tool is commonly used for manual weeding?",
+                options: ["Sickle", "Khurpi", "Combine", "Tractor"],
+                correct: 1
+            },
+            {
+                question: "What safety precaution should be taken when spraying weedicides?",
+                options: ["Spray in windy weather", "Cover nose and mouth", "Use without dilution", "Spray during rain"],
+                correct: 1
+            },
+            {
+                question: "What is 2,4-D?",
+                options: ["A fertilizer", "A weedicide", "A seed variety", "An irrigation method"],
+                correct: 1
+            }
+        ];
+
+        // Global Variables
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+        let selectedTool = null;
+        let weedsRemoved = 0;
+        let cropsProtected = 0;
+        let totalWeeds = 0;
+        let equippedGear = new Set();
+        let sprayingActive = false;
+
+        // Field Generation
+        function generateField() {
+            const container = document.getElementById('field-container');
+            container.innerHTML = '';
+            weedsRemoved = 0;
+            cropsProtected = 0;
+            totalWeeds = 0;
+
+            // Create 5 rows of plants
+            for (let row = 0; row < 5; row++) {
+                const cropRow = document.createElement('div');
+                cropRow.className = 'crop-row';
+                cropRow.style.top = (80 + row * 60) + 'px';
+
+                // Add 8 plants per row (mix of crops and weeds)
+                for (let col = 0; col < 8; col++) {
+                    const plant = document.createElement('div');
+                    plant.className = 'plant';
+                    
+                    // 70% chance of crop, 30% chance of weed
+                    if (Math.random() < 0.7) {
+                        plant.classList.add('crop');
+                        plant.textContent = '🌾';
+                        plant.onclick = () => clickPlant(plant, 'crop');
+                        cropsProtected++;
+                    } else {
+                        plant.classList.add('weed');
+                        plant.textContent = '🌿';
+                        plant.onclick = () => clickPlant(plant, 'weed');
+                        totalWeeds++;
+                    }
+                    
+                    cropRow.appendChild(plant);
+                }
+                
+                container.appendChild(cropRow);
+            }
+            
+            updateFieldScore();
+        }
+
+        function clickPlant(plant, type) {
+            if (!selectedTool) {
+                showFieldFeedback('Please select a weeding tool first!', 'error');
+                return;
+            }
+
+            if (type === 'weed' && !plant.classList.contains('removed')) {
+                plant.classList.add('removed');
+                weedsRemoved++;
+                showFieldFeedback(`🎯 Weed removed with ${selectedTool}!`, 'success');
+            } else if (type === 'crop') {
+                showFieldFeedback('❌ Oops! That was a crop, not a weed!', 'error');
+                // Reduce crop count as "damaged"
+                cropsProtected = Math.max(0, cropsProtected - 1);
+            }
+            
+            updateFieldScore();
+            
+            // Check if all weeds removed
+            if (weedsRemoved === totalWeeds && totalWeeds > 0) {
+                setTimeout(() => {
+                    showFieldFeedback('🎉 Excellent! All weeds removed and crops protected!', 'success');
+                }, 500);
+            }
+        }
+
+        function selectTool(tool) {
+            // Remove previous selections
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('selected'));
+            
+            // Select new tool
+            document.querySelector(`[data-tool="${tool}"]`).classList.add('selected');
+            selectedTool = tool;
+            
+            const toolMessages = {
+                hand: 'Manual removal selected - slow but precise!',
+                khurpi: 'Khurpi selected - traditional weeding tool!',
+                chemical: 'Chemical spray selected - fast but requires safety!'
+            };
+            
+            showFieldFeedback(toolMessages[tool], 'success');
+        }
+
+        function showAllWeeds() {
+            const weeds = document.querySelectorAll('.weed:not(.removed)');
+            weeds.forEach(weed => {
+                weed.style.border = '3px solid #dc2626';
+                weed.style.boxShadow = '0 0 10px #dc2626';
+            });
+            
+            setTimeout(() => {
+                weeds.forEach(weed => {
+                    weed.style.border = '';
+                    weed.style.boxShadow = '';
+                });
+            }, 3000);
+        }
+
+        function resetField() {
+            weedsRemoved = 0;
+            cropsProtected = 0;
+            totalWeeds = 0;
+            selectedTool = null;
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('selected'));
+            document.getElementById('field-container').innerHTML = '';
+            document.getElementById('field-feedback').style.display = 'none';
+            updateFieldScore();
+        }
+
+        function updateFieldScore() {
+            document.getElementById('field-score').textContent = 
+                `Weeds Removed: ${weedsRemoved}/${totalWeeds} | Crops Protected: ${cropsProtected}`;
+        }
+
+        function showFieldFeedback(message, type) {
+            const feedback = document.getElementById('field-feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 3000);
+        }
+
+        // Resource Competition Functions
+        function addWeeds() {
+            updateResourceBars([40, 35, 30, 25], 'Weeds are taking over! Crops getting fewer resources.');
+        }
+
+        function removeWeeds() {
+            updateResourceBars([80, 85, 90, 75], 'Weeds removed! Crops now have access to more resources.');
+        }
+
+        function resetCompetition() {
+            updateResourceBars([60, 55, 50, 45], 'Competition reset to moderate weed presence.');
+        }
+
+        function updateResourceBars(values, message) {
+            const resources = ['water-crop', 'nutrients-crop', 'sunlight-crop', 'space-crop'];
+            
+            resources.forEach((resource, index) => {
+                document.getElementById(resource).style.width = values[index] + '%';
+            });
+            
+            showCompetitionFeedback(message, values[0] > 60 ? 'success' : 'error');
+        }
+
+        function showCompetitionFeedback(message, type) {
+            const feedback = document.getElementById('competition-feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.style.display = 'block';
+        }
+
+        // Safety Gear Functions
+        function equipGear(gear) {
+            const gearElement = document.querySelector(`[data-gear="${gear}"]`);
+            
+            if (equippedGear.has(gear)) {
+                equippedGear.delete(gear);
+                gearElement.classList.remove('equipped');
+            } else {
+                equippedGear.add(gear);
+                gearElement.classList.add('equipped');
+            }
+            
+            updateSprayButton();
+        }
+
+        function updateSprayButton() {
+            const sprayBtn = document.getElementById('spray-btn');
+            const requiredGear = ['mask', 'gloves'];
+            const hasRequiredGear = requiredGear.every(gear => equippedGear.has(gear));
+            
+            if (hasRequiredGear) {
+                sprayBtn.disabled = false;
+                sprayBtn.textContent = '💉 Start Spraying';
+                sprayBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+            } else {
+                sprayBtn.disabled = true;
+                sprayBtn.textContent = '🚫 Equip Safety Gear First';
+                sprayBtn.style.background = '#6b7280';
+            }
+        }
+
+        function startSpraying() {
+            if (equippedGear.size < 2) {
+                showSafetyFeedback('⚠️ More safety gear needed for safe operation!', 'error');
+                return;
+            }
+            
+            sprayingActive = true;
+            document.getElementById('spray-particles').classList.add('active');
+            showSafetyFeedback('✅ Spraying started safely! Weedicide being applied.', 'success');
+        }
+
+        function stopSpraying() {
+            sprayingActive = false;
+            document.getElementById('spray-particles').classList.remove('active');
+            showSafetyFeedback('⏹️ Spraying stopped. Remember to wash hands and equipment!', 'success');
+        }
+
+        function resetSafety() {
+            equippedGear.clear();
+            document.querySelectorAll('.gear-item').forEach(item => {
+                item.classList.remove('equipped');
+            });
+            stopSpraying();
+            updateSprayButton();
+            document.getElementById('safety-feedback').style.display = 'none';
+        }
+
+        function showSafetyFeedback(message, type) {
+            const feedback = document.getElementById('safety-feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.style.display = 'block';
+        }
+
+        // Quiz Functions
+        function loadQuestion() {
+            if (currentQuizIndex >= quizQuestions.length) {
+                document.getElementById('quiz-question').textContent = `Quiz Complete! Final Score: ${quizScore}/${quizQuestions.length}`;
+                document.getElementById('quiz-options').innerHTML = '<p style="text-align: center; font-size: 1.2rem; color: #991b1b;">🎉 Great work! You\'ve mastered weed protection!</p>';
+                return;
+            }
+
+            const question = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-question').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(optionElement);
+            });
+
+            document.getElementById('quiz-feedback').style.display = 'none';
+            quizAnswered = false;
+            updateQuizScore();
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (quizAnswered) return;
+
+            const question = quizQuestions[currentQuizIndex];
+            const options = document.querySelectorAll('#quiz-options .option');
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && selectedIndex !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            const feedback = document.getElementById('quiz-feedback');
+            if (selectedIndex === question.correct) {
+                quizScore++;
+                feedback.textContent = '✅ Excellent! That\'s correct!';
+                feedback.className = 'feedback success';
+            } else {
+                feedback.textContent = `❌ Not quite right. The correct answer is: ${question.options[question.correct]}`;
+                feedback.className = 'feedback error';
+            }
+            
+            feedback.style.display = 'block';
+            quizAnswered = true;
+            updateQuizScore();
+        }
+
+        function nextQuestion() {
+            currentQuizIndex++;
+            loadQuestion();
+        }
+
+        function updateQuizScore() {
+            document.getElementById('quiz-score').textContent = `Score: ${quizScore}/${Math.min(currentQuizIndex + 1, quizQuestions.length)}`;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuestion();
+            generateField();
+            updateSprayButton();
+        });
+    </script>
+</body>
+</html>

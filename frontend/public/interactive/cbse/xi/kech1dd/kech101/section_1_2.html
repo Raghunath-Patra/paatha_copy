@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nature of Matter - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            margin-top: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding: 35px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 35px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2.1em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #74b9ff;
+        }
+
+        .states-simulator {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            padding: 40px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+        }
+
+        .state-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .state-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 15px 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .state-btn:hover,
+        .state-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #ffd32a;
+            transform: scale(1.05);
+        }
+
+        .particle-container {
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            margin: 30px auto;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .particle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+
+        .solid-particle {
+            background: radial-gradient(circle, #ff6b6b, #ee5a24);
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .liquid-particle {
+            background: radial-gradient(circle, #74b9ff, #0984e3);
+            box-shadow: 0 0 10px rgba(116, 185, 255, 0.5);
+        }
+
+        .gas-particle {
+            background: radial-gradient(circle, #55a3ff, #3742fa);
+            box-shadow: 0 0 15px rgba(85, 163, 255, 0.7);
+        }
+
+        .temperature-control {
+            margin: 30px 0;
+        }
+
+        .temperature-slider {
+            width: 100%;
+            max-width: 400px;
+            height: 8px;
+            background: linear-gradient(to right, #74b9ff, #fd79a8, #ff6b6b);
+            border-radius: 5px;
+            outline: none;
+            margin: 20px auto;
+            display: block;
+            -webkit-appearance: none;
+        }
+
+        .temperature-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .temperature-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, #00cec9, #55a3ff);
+            color: white;
+            padding: 45px;
+            border-radius: 20px;
+            margin: 45px 0;
+        }
+
+        .quiz-question {
+            margin-bottom: 40px;
+        }
+
+        .quiz-question h3 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .quiz-option {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid transparent;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            text-align: center;
+            font-weight: bold;
+            backdrop-filter: blur(15px);
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffd32a;
+            transform: translateY(-5px);
+        }
+
+        .quiz-option.correct {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            border-color: #ffd32a;
+        }
+
+        .quiz-option.wrong {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            border-color: #fab1a0;
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            margin: 30px 0;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ffd32a, #fdcb6e);
+            color: #2d3436;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            margin: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .example-card {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .example-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .example-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .example-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 8px;
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 25px;
+            }
+            
+            .section {
+                padding: 25px;
+                margin-bottom: 30px;
+            }
+            
+            .state-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Nature of Matter</h1>
+            <p>Explore the fascinating world of matter - from particles to properties!</p>
+        </div>
+
+        <!-- States of Matter Simulator -->
+        <div class="section">
+            <div class="states-simulator">
+                <h2 style="color: white; border-bottom-color: #ffd32a;">⚗️ Interactive States of Matter Simulator</h2>
+                <p style="font-size: 1.1em;">Control temperature to see how particles behave in different states!</p>
+                
+                <div class="state-controls">
+                    <button class="state-btn active" onclick="setState('solid')" id="solidBtn">🧊 Solid</button>
+                    <button class="state-btn" onclick="setState('liquid')" id="liquidBtn">💧 Liquid</button>
+                    <button class="state-btn" onclick="setState('gas')" id="gasBtn">💨 Gas</button>
+                </div>
+                
+                <div class="temperature-control">
+                    <div class="temperature-display">
+                        🌡️ Temperature: <span id="tempValue">-10</span>°C
+                    </div>
+                    <input type="range" class="temperature-slider" min="-50" max="150" value="-10" 
+                           oninput="updateTemperature(this.value)" id="tempSlider">
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9em;">
+                        <span>❄️ Freezing</span>
+                        <span>🔥 Boiling</span>
+                    </div>
+                </div>
+                
+                <div class="particle-container" id="particleContainer"></div>
+                
+                <div style="margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                    <h4>Current State Properties:</h4>
+                    <p id="stateDescription">Particles are tightly packed in an orderly arrangement. Definite shape and volume.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-World Examples -->
+        <div class="section">
+            <h2>🎯 Real-World Examples</h2>
+            <p>Click on each example to see how matter is classified in everyday life!</p>
+            
+            <div class="examples-grid">
+                <div class="example-card" onclick="showExampleInfo('sugar-water')">
+                    <div class="example-icon">🍯</div>
+                    <h3>Sugar Water</h3>
+                    <p>Homogeneous Mixture</p>
+                </div>
+                
+                <div class="example-card" onclick="showExampleInfo('air')">
+                    <div class="example-icon">💨</div>
+                    <h3>Air</h3>
+                    <p>Homogeneous Mixture</p>
+                </div>
+                
+                <div class="example-card" onclick="showExampleInfo('salad')">
+                    <div class="example-icon">🥗</div>
+                    <h3>Mixed Salad</h3>
+                    <p>Heterogeneous Mixture</p>
+                </div>
+                
+                <div class="example-card" onclick="showExampleInfo('gold')">
+                    <div class="example-icon">🥇</div>
+                    <h3>Gold</h3>
+                    <p>Pure Element</p>
+                </div>
+                
+                <div class="example-card" onclick="showExampleInfo('water')">
+                    <div class="example-icon">💧</div>
+                    <h3>Water</h3>
+                    <p>Pure Compound</p>
+                </div>
+                
+                <div class="example-card" onclick="showExampleInfo('oxygen')">
+                    <div class="example-icon">🫁</div>
+                    <h3>Oxygen Gas</h3>
+                    <p>Pure Element</p>
+                </div>
+            </div>
+            
+            <div id="exampleInfo" style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #fff5cd, #ffecb3); border-radius: 15px; display: none;">
+                <h3 id="exampleTitle" style="color: #2d3436; margin-bottom: 15px;"></h3>
+                <p id="exampleDescription" style="color: #2d3436; font-size: 1.1em;"></p>
+                <div id="exampleProperties" style="margin-top: 15px; padding: 15px; background: rgba(0,184,148,0.2); border-radius: 10px;"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="quiz-section">
+            <h2 style="color: white; border-bottom-color: #ffd32a;">🧠 Test Your Understanding</h2>
+            <div class="score-display">Score: <span id="score">0</span> / <span id="totalQuestions">6</span></div>
+            
+            <div class="quiz-question">
+                <h3>1. Which property is true for solids?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Solids have definite shape and volume')">Definite volume, no definite shape</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Solids have both definite shape and volume')">Definite volume and definite shape</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'This describes gases')">No definite volume or shape</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Solids do have definite volume')">Definite shape, no definite volume</div>
+                </div>
+                <div class="feedback" id="feedback1" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>2. Sugar solution is an example of:</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Sugar solution contains multiple substances')">Pure substance</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Sugar dissolves uniformly in water')">Homogeneous mixture</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'The composition is uniform throughout')">Heterogeneous mixture</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Sugar solution is not a single element')">Element</div>
+                </div>
+                <div class="feedback" id="feedback2" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>3. Which of the following is a compound?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Gold is a pure element')">Gold</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Air is a mixture of gases')">Air</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Water is H₂O - hydrogen and oxygen combined')">Water</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Salt water is a mixture')">Salt water</div>
+                </div>
+                <div class="feedback" id="feedback3" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>4. In which state do particles move most freely?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Solid particles are tightly packed')">Solid</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Liquid particles can move but are still close')">Liquid</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Gas particles are far apart and move freely')">Gas</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'All states have the same particle movement')">All states equally</div>
+                </div>
+                <div class="feedback" id="feedback4" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>5. A water molecule (H₂O) contains:</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Water has 2 hydrogen and 1 oxygen')">1 hydrogen, 2 oxygen atoms</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! H₂O means 2 hydrogen and 1 oxygen')">2 hydrogen, 1 oxygen atoms</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Water only has hydrogen and oxygen')">1 hydrogen, 1 oxygen atoms</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Water does not contain carbon')">2 hydrogen, 1 carbon atoms</div>
+                </div>
+                <div class="feedback" id="feedback5" style="display: none;"></div>
+            </div>
+
+            <div class="quiz-question">
+                <h3>6. Which method can separate components of a mixture?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'Correct! Physical methods like filtration can separate mixtures')">Physical methods like filtration</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Chemical methods break bonds in compounds, not mixtures')">Only chemical methods</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Mixture components can be separated')">Mixtures cannot be separated</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'Nuclear methods are not needed for mixtures')">Nuclear methods only</div>
+                </div>
+                <div class="feedback" id="feedback6" style="display: none;"></div>
+            </div>
+
+            <button class="btn" onclick="resetQuiz()">Reset Quiz</button>
+            <button class="btn" onclick="showResults()">Show Results</button>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="section">
+            <h2>📋 Chapter Summary</h2>
+            <div style="background: linear-gradient(135deg, #e8f5e8, #c8e6c9); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                <h3 style="color: #2d3436; margin-bottom: 20px;">🎯 Key Concepts Mastered:</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div style="background: rgba(255,255,255,0.8); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">🔄 States of Matter</h4>
+                        <p style="color: #2d3436;">Solid, liquid, and gas states depend on particle arrangement and movement</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.8); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">🌳 Classification</h4>
+                        <p style="color: #2d3436;">Matter is classified as mixtures or pure substances (elements/compounds)</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.8); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">🔬 Particle Theory</h4>
+                        <p style="color: #2d3436;">Properties depend on how particles are arranged and how they move</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.8); padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2d3436; margin-bottom: 10px;">🧬 Molecular Structure</h4>
+                        <p style="color: #2d3436;">Compounds have fixed ratios of elements with specific arrangements</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        const totalQuestions = 6;
+        let questionsAnswered = new Set();
+        let currentState = 'solid';
+        let particles = [];
+        let animationId;
+        const particleCount = 50;
+
+        // Example information data
+        const exampleData = {
+            'sugar-water': {
+                title: "🍯 Sugar Water",
+                description: "A homogeneous mixture where sugar dissolves completely in water, creating a uniform solution.",
+                properties: "Properties: Uniform composition, sweet taste throughout, can be separated by evaporation"
+            },
+            air: {
+                title: "💨 Air",
+                description: "A homogeneous mixture of gases including nitrogen (78%), oxygen (21%), and other gases.",
+                properties: "Properties: Invisible, uniform composition, supports combustion due to oxygen"
+            },
+            salad: {
+                title: "🥗 Mixed Salad",
+                description: "A heterogeneous mixture where different components (lettuce, tomatoes, etc.) are visible.",
+                properties: "Properties: Non-uniform, components visible, can be separated by hand-picking"
+            },
+            gold: {
+                title: "🥇 Gold",
+                description: "A pure element consisting only of gold atoms. Cannot be broken down further.",
+                properties: "Properties: Shiny, malleable, does not rust, excellent conductor"
+            },
+            water: {
+                title: "💧 Water",
+                description: "A pure compound made of hydrogen and oxygen atoms in a 2:1 ratio (H₂O).",
+                properties: "Properties: Colorless, odorless, boils at 100°C, essential for life"
+            },
+            oxygen: {
+                title: "🫁 Oxygen Gas",
+                description: "A pure element existing as diatomic molecules (O₂). Essential for respiration.",
+                properties: "Properties: Colorless, odorless, supports combustion, vital for breathing"
+            }
+        };
+
+        // Initialize particles
+        function initializeParticles() {
+            const container = document.getElementById('particleContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            particles = [];
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle solid-particle';
+                
+                const x = Math.random() * (container.offsetWidth - 12);
+                const y = Math.random() * (container.offsetHeight - 12);
+                
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                
+                particles.push({
+                    element: particle,
+                    x: x,
+                    y: y,
+                    vx: 0,
+                    vy: 0
+                });
+                
+                container.appendChild(particle);
+            }
+        }
+
+        // Set state
+        function setState(state) {
+            currentState = state;
+            
+            document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('active'));
+            const btn = document.getElementById(state + 'Btn');
+            if (btn) btn.classList.add('active');
+            
+            const slider = document.getElementById('tempSlider');
+            if (slider) {
+                if (state === 'solid') {
+                    slider.value = -10;
+                    updateTemperature(-10);
+                } else if (state === 'liquid') {
+                    slider.value = 25;
+                    updateTemperature(25);
+                } else if (state === 'gas') {
+                    slider.value = 120;
+                    updateTemperature(120);
+                }
+            }
+            
+            animateParticles();
+        }
+
+        // Update temperature
+        function updateTemperature(temp) {
+            const tempElement = document.getElementById('tempValue');
+            if (tempElement) tempElement.textContent = temp;
+            
+            let newState;
+            if (temp < 0) {
+                newState = 'solid';
+            } else if (temp < 100) {
+                newState = 'liquid';
+            } else {
+                newState = 'gas';
+            }
+            
+            if (newState !== currentState) {
+                currentState = newState;
+                document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('active'));
+                const btn = document.getElementById(currentState + 'Btn');
+                if (btn) btn.classList.add('active');
+                animateParticles();
+            }
+        }
+
+        // Animate particles
+        function animateParticles() {
+            const container = document.getElementById('particleContainer');
+            if (!container) return;
+            
+            const descriptions = {
+                solid: "Particles are tightly packed in an orderly arrangement. Definite shape and volume.",
+                liquid: "Particles are close but can move around each other. Definite volume but takes container shape.",
+                gas: "Particles are far apart and move freely in all directions. No definite shape or volume."
+            };
+            
+            const descElement = document.getElementById('stateDescription');
+            if (descElement) descElement.textContent = descriptions[currentState];
+            
+            particles.forEach((particle, index) => {
+                if (!particle.element) return;
+                
+                particle.element.className = `particle ${currentState}-particle`;
+                
+                if (currentState === 'solid') {
+                    const cols = Math.ceil(Math.sqrt(particleCount));
+                    const row = Math.floor(index / cols);
+                    const col = index % cols;
+                    const spacing = 20;
+                    
+                    particle.x = 50 + col * spacing;
+                    particle.y = 50 + row * spacing;
+                    particle.vx = 0;
+                    particle.vy = 0;
+                    
+                } else if (currentState === 'liquid') {
+                    particle.vx = (Math.random() - 0.5) * 2;
+                    particle.vy = (Math.random() - 0.5) * 2;
+                    
+                    if (particle.y < container.offsetHeight * 0.4) {
+                        particle.y = container.offsetHeight * 0.4 + Math.random() * container.offsetHeight * 0.6;
+                    }
+                    
+                } else if (currentState === 'gas') {
+                    particle.vx = (Math.random() - 0.5) * 6;
+                    particle.vy = (Math.random() - 0.5) * 6;
+                }
+                
+                particle.element.style.left = particle.x + 'px';
+                particle.element.style.top = particle.y + 'px';
+            });
+            
+            if (currentState !== 'solid') {
+                startAnimation();
+            } else {
+                stopAnimation();
+            }
+        }
+
+        // Start animation
+        function startAnimation() {
+            stopAnimation();
+            
+            function animate() {
+                const container = document.getElementById('particleContainer');
+                if (!container) return;
+                
+                particles.forEach(particle => {
+                    if (!particle.element) return;
+                    
+                    if (currentState === 'liquid' || currentState === 'gas') {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        
+                        if (particle.x <= 0 || particle.x >= container.offsetWidth - 12) {
+                            particle.x = Math.max(0, Math.min(container.offsetWidth - 12, particle.x));
+                        }
+                        if (particle.y <= 0 || particle.y >= container.offsetHeight - 12) {
+                            particle.vy *= -1;
+                            particle.y = Math.max(0, Math.min(container.offsetHeight - 12, particle.y));
+                        }
+                        
+                        particle.element.style.left = particle.x + 'px';
+                        particle.element.style.top = particle.y + 'px';
+                    }
+                });
+                
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        // Stop animation
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        // Show example information
+        function showExampleInfo(type) {
+            const info = exampleData[type];
+            if (!info) return;
+            
+            const titleElement = document.getElementById('exampleTitle');
+            const descElement = document.getElementById('exampleDescription');
+            const propElement = document.getElementById('exampleProperties');
+            const infoElement = document.getElementById('exampleInfo');
+            
+            if (titleElement) titleElement.textContent = info.title;
+            if (descElement) descElement.textContent = info.description;
+            if (propElement) propElement.innerHTML = `<strong>${info.properties}</strong>`;
+            if (infoElement) infoElement.style.display = 'block';
+        }
+
+        // Quiz functionality
+        function checkAnswer(element, isCorrect, feedbackText) {
+            const questionNum = element.closest('.quiz-question').querySelector('h3').textContent.charAt(0);
+            
+            if (questionsAnswered.has(questionNum)) return;
+            
+            questionsAnswered.add(questionNum);
+            
+            const allOptions = element.parentNode.children;
+            for (let option of allOptions) {
+                option.style.pointerEvents = 'none';
+                if (option === element) {
+                    option.classList.add(isCorrect ? 'correct' : 'wrong');
+                }
+            }
+            
+            const feedbackId = 'feedback' + questionNum;
+            const feedbackElement = document.getElementById(feedbackId);
+            if (feedbackElement) {
+                feedbackElement.textContent = feedbackText;
+                feedbackElement.style.display = 'block';
+                feedbackElement.style.marginTop = '15px';
+                feedbackElement.style.padding = '15px';
+                feedbackElement.style.borderRadius = '10px';
+                feedbackElement.style.fontWeight = 'bold';
+                
+                if (isCorrect) {
+                    feedbackElement.style.background = 'rgba(0, 184, 148, 0.2)';
+                    feedbackElement.style.border = '2px solid #00b894';
+                    feedbackElement.style.color = '#00b894';
+                } else {
+                    feedbackElement.style.background = 'rgba(231, 76, 60, 0.2)';
+                    feedbackElement.style.border = '2px solid #e74c3c';
+                    feedbackElement.style.color = '#e74c3c';
+                }
+            }
+            
+            if (isCorrect) {
+                score++;
+                const scoreElement = document.getElementById('score');
+                if (scoreElement) scoreElement.textContent = score;
+            }
+        }
+
+        function resetQuiz() {
+            score = 0;
+            questionsAnswered.clear();
+            const scoreElement = document.getElementById('score');
+            if (scoreElement) scoreElement.textContent = score;
+            
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.className = 'quiz-option';
+                option.style.pointerEvents = 'auto';
+            });
+            
+            document.querySelectorAll('.feedback').forEach(feedback => {
+                feedback.style.display = 'none';
+            });
+        }
+
+        function showResults() {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 90) {
+                message = 'Outstanding! You have mastered the nature of matter!';
+                emoji = '🏆';
+            } else if (percentage >= 70) {
+                message = 'Great job! You understand matter classification well.';
+                emoji = '👍';
+            } else if (percentage >= 50) {
+                message = 'Good effort! Review particle behavior and classification.';
+                emoji = '📚';
+            } else {
+                message = 'Keep studying! Matter concepts need more practice.';
+                emoji = '💪';
+            }
+            
+            alert(`${emoji} Your Score: ${score}/${totalQuestions} (${percentage}%)\n\n${message}`);
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                initializeParticles();
+                setState('solid');
+                
+                // Add entrance animations
+                setTimeout(() => {
+                    document.querySelectorAll('.example-card').forEach((card, index) => {
+                        setTimeout(() => {
+                            card.style.transform = 'scale(1.05)';
+                            setTimeout(() => {
+                                card.style.transform = 'scale(1)';
+                            }, 300);
+                        }, index * 100);
+                    });
+                }, 1000);
+            }, 100);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (particles.length > 0) {
+                setTimeout(() => {
+                    initializeParticles();
+                    animateParticles();
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
