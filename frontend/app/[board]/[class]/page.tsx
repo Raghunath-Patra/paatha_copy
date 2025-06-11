@@ -1,32 +1,22 @@
-// frontend/app/[board]/[class]/[subject]/page.tsx
-// UPDATED: Navigate to chapter overview (sections) instead of direct questions
-
+// frontend/app/[board]/[class]/page.tsx - Enhanced with user token service
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Navigation from '../../../components/navigation/Navigation';
-import { getAuthHeaders } from '../../../utils/auth';
-import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
-import { userTokenService } from '../../../utils/userTokenService';
+import Navigation from '../../components/navigation/Navigation';
+import SubjectProgress from '../../components/progress/SubjectProgress';
+import { getAuthHeaders } from '../../utils/auth';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { userTokenService } from '../../utils/userTokenService';
+import { Home } from 'lucide-react';
 
-interface Chapter {
-  number: number;
+interface Subject {
   name: string;
-}
-
-interface ChapterProgress {
-  [chapterKey: string]: {
-    total_attempts: number;
-    average_score: number;
-    last_attempted?: string;
-  };
-}
-
-interface SubjectPageParams {
-  board: string;
-  class: string;
-  subject: string;
+  code: string;
+  chapters: Array<{
+    number: number;
+    name: string;
+  }>;
 }
 
 // Define a mapping for better display names
@@ -48,76 +38,137 @@ const CLASS_DISPLAY_NAMES: Record<string, string> = {
   'puc-2': 'PUC-II'
 };
 
-// Subject mapping
-const SUBJECT_CODE_TO_NAME: Record<string, string> = {
-  'iesc1dd': 'Science',
-  'hesc1dd': 'Science',
-  'jesc1dd': 'Science',
-  'iemh1dd': 'Mathematics',
-  'jemh1dd': 'Mathematics',
-  'kemh1dd': 'Mathematics',
-  'lemh1dd': 'Mathematics (Part I)',
-  'lemh2dd': 'Mathematics (Part II)',
-  'hemh1dd': 'Mathematics',
-  'keph1dd': 'Physics (Part I)',
-  'keph2dd': 'Physics (Part II)',
-  'leph1dd': 'Physics (Part I)',
-  'leph2dd': 'Physics (Part II)',
-  'kech1dd': 'Chemistry (Part I)',
-  'kech2dd': 'Chemistry (Part II)',
-  'lech1dd': 'Chemistry (Part I)',
-  'lech2dd': 'Chemistry (Part II)',
-  'kebo1dd': 'Biology',
-  'lebo1dd': 'Biology'
-};
+// Cache configuration
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 
-// Enhanced skeleton loading component
-const ChaptersSkeleton = () => (
-  <div className="space-y-6">
-    {[1, 2, 3, 4].map((i) => (
-      <div key={i} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
-        <div className="relative z-10 space-y-4">
-          {/* Chapter title skeleton */}
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full animate-pulse"></div>
-            <div className="space-y-2">
-              <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-48 animate-pulse" 
-                   style={{ animationDelay: `${i * 100}ms` }}></div>
-              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24 animate-pulse" 
-                   style={{ animationDelay: `${i * 150}ms` }}></div>
-            </div>
+interface CachedData {
+  subjects: Subject[];
+  progress: any;
+  timestamp: number;
+}
+
+// Enhanced skeleton loading component with theme
+const ThemedSkeletonLoader = ({ boardDisplayName, classDisplayName }: { boardDisplayName: string, classDisplayName: string }) => (
+  <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+    {/* Animated background decorations */}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
+           style={{animationDuration: '3s'}} />
+      <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+           style={{animationDuration: '4s'}} />
+      <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+           style={{animationDuration: '2s'}} />
+    </div>
+
+    <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
+      <div className="max-w-[1600px] mx-auto w-full">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-medium text-gray-800">
+              {boardDisplayName} {classDisplayName}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Loading your subjects...</p>
           </div>
-          
-          {/* Progress bar skeleton */}
-          <div className="space-y-2">
-            <div className="h-2 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-full animate-pulse" 
-                 style={{ animationDelay: `${i * 200}ms` }}></div>
-            <div className="flex justify-between">
-              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-20 animate-pulse" 
-                   style={{ animationDelay: `${i * 250}ms` }}></div>
-              <div className="h-4 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-16 animate-pulse" 
-                   style={{ animationDelay: `${i * 300}ms` }}></div>
-            </div>
+          <div className="flex items-center gap-4 relative z-[100]">
+            <Navigation />
           </div>
-          
-          {/* Action buttons skeleton */}
-          <div className="flex gap-3 pt-2">
-            <div className="h-9 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg flex-1 animate-pulse" 
-                 style={{ animationDelay: `${i * 350}ms` }}></div>
-            <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-24 animate-pulse" 
-                 style={{ animationDelay: `${i * 400}ms` }}></div>
+        </div>
+        
+        <div className="max-w-5xl mx-auto">
+          {/* Enhanced Skeleton Subject Cards */}
+          <div className="space-y-6 pb-6">
+            {[1, 2].map((subjectIndex) => (
+              <div key={subjectIndex} className="bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-white/50 relative overflow-hidden">
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
+                
+                <div className="relative z-10">
+                  {/* Skeleton Subject Title */}
+                  <div className="flex items-center mb-4 sm:mb-6">
+                    <div className="h-6 sm:h-7 bg-gradient-to-r from-red-200 to-orange-200 rounded-lg w-32 sm:w-40 animate-pulse"></div>
+                    <div className="ml-2 w-8 h-8 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full animate-pulse"></div>
+                  </div>
+                  
+                  {/* Skeleton Chapters */}
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4, 5].map((chapterIndex) => (
+                      <div key={chapterIndex} className="border border-gray-200/60 rounded-lg p-3 sm:p-4 bg-white/60 backdrop-blur-sm hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            {/* Skeleton Chapter Name */}
+                            <div className="flex items-center mb-2">
+                              <div className="h-3 sm:h-4 bg-gradient-to-r from-blue-200 to-purple-200 rounded w-4 sm:w-6 mr-2 animate-pulse" 
+                                   style={{ animationDelay: `${chapterIndex * 100}ms` }}></div>
+                              <div className="h-4 sm:h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-40 sm:w-48 animate-pulse"
+                                   style={{ animationDelay: `${chapterIndex * 150}ms` }}></div>
+                            </div>
+                            
+                            {/* Enhanced Progress Bar */}
+                            <div className="w-full bg-gray-200/80 rounded-full h-2.5 relative overflow-hidden">
+                              <div className="absolute inset-0 bg-gradient-to-r from-red-300 via-orange-300 to-yellow-300 rounded-full animate-pulse" 
+                                   style={{ 
+                                     width: `${Math.random() * 60 + 20}%`,
+                                     animationDelay: `${chapterIndex * 200}ms`,
+                                     animationDuration: '2s'
+                                   }}>
+                              </div>
+                              {/* Shimmer effect */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
+                            </div>
+                          </div>
+                          
+                          {/* Skeleton Dropdown Arrow */}
+                          <div className="ml-4 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full animate-pulse"
+                               style={{ animationDelay: `${chapterIndex * 250}ms` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    ))}
+    </div>
+    
+    {/* Enhanced CSS with shimmer and gradient effects */}
+    <style jsx>{`
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      
+      @keyframes gradientShift {
+        0%, 100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+      
+      .animate-shimmer {
+        animation: shimmer 2s infinite;
+      }
+      
+      .animate-pulse {
+        background-size: 200% 200%;
+        animation: gradientShift 2s ease infinite;
+      }
+    `}</style>
   </div>
 );
 
-export default function SubjectPage() {
-  const params = useParams() as unknown as SubjectPageParams;
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [chapterProgress, setChapterProgress] = useState<ChapterProgress>({});
+export default function ClassPage() {
+  const params = useParams();
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [progress, setProgress] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -125,171 +176,237 @@ export default function SubjectPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // Format subject name
-  const formatSubjectName = (subject: string) => {
-    if (!subject) return '';
-    
-    const mappedName = SUBJECT_CODE_TO_NAME[subject.toLowerCase()];
-    if (mappedName) {
-      return mappedName;
+  // Generate cache key based on board and class
+  const getCacheKey = (board: string, classLevel: string) => {
+    const originalBoard = typeof params.board === 'string' ? params.board : board;
+    const originalClass = typeof params.class === 'string' ? params.class : classLevel;
+    const cacheKey = `subjects_${originalBoard}_${originalClass}`;
+    console.log('🔍 Cache key generated:', { originalBoard, originalClass, cacheKey });
+    return cacheKey;
+  };
+  
+  // Get cached data if available and not expired
+  const getCachedData = (board: string, classLevel: string): { subjects: Subject[], progress: any } | null => {
+    try {
+      const cacheKey = getCacheKey(board, classLevel);
+      const cached = sessionStorage.getItem(cacheKey);
+      
+      console.log('🔍 Checking cache for key:', cacheKey, 'Found:', !!cached);
+      
+      if (cached) {
+        const parsedCache: CachedData = JSON.parse(cached);
+        const now = Date.now();
+        
+        // Check if cache is still valid (not expired)
+        if (now - parsedCache.timestamp < CACHE_DURATION) {
+          console.log('✅ Using cached subjects and progress data for:', { board, classLevel, cacheKey });
+          console.log('📚 Cached subjects:', parsedCache.subjects?.map(s => s.name));
+          return { 
+            subjects: parsedCache.subjects, 
+            progress: parsedCache.progress || {} 
+          };
+        } else {
+          // Cache expired, remove it
+          sessionStorage.removeItem(cacheKey);
+          console.log('⏰ Cache expired, removing cached data for:', cacheKey);
+        }
+      }
+    } catch (error) {
+      console.warn('❌ Error reading cache:', error);
+      // If there's an error reading cache, clear it
+      try {
+        const cacheKey = getCacheKey(board, classLevel);
+        sessionStorage.removeItem(cacheKey);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     }
     
-    const parts = subject.split('-');
-    return parts.map(part => {
-      if (/^[IVX]+$/i.test(part)) return part.toUpperCase();
-      return part.charAt(0).toUpperCase() + part.slice(1);
-    }).join(' ');
+    return null;
   };
-
-  // Get friendly display names
-  const boardDisplayName = BOARD_DISPLAY_NAMES[params.board?.toLowerCase()] || params.board?.toUpperCase() || '';
-  const classDisplayName = CLASS_DISPLAY_NAMES[params.class?.toLowerCase()] || params.class?.toUpperCase() || '';
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (authLoading) return;
-      if (!profile) {
-        console.log('No profile, redirecting to login');
-        router.push('/login');
-        return;
+  
+  // Save data to cache
+  const setCachedData = (board: string, classLevel: string, subjects: Subject[], progress: any = {}) => {
+    try {
+      const cacheKey = getCacheKey(board, classLevel);
+      const cacheData: CachedData = {
+        subjects,
+        progress,
+        timestamp: Date.now()
+      };
+      
+      sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      console.log('💾 Subjects and progress data cached successfully for:', { 
+        board, 
+        classLevel, 
+        cacheKey,
+        subjectCount: subjects.length,
+        subjectNames: subjects.map(s => s.name),
+        progressKeys: Object.keys(progress)
+      });
+    } catch (error) {
+      console.warn('❌ Error caching data:', error);
+      // If storage is full or there's another error, continue without caching
+    }
+  };
+  
+  // Clear all cached data (useful for logout or when switching users)
+  const clearAllCache = () => {
+    try {
+      // Clear all cache keys (subjects with progress)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('subjects_')) {
+          keysToRemove.push(key);
+        }
       }
-
+      
+      keysToRemove.forEach(key => {
+        sessionStorage.removeItem(key);
+      });
+      
+      console.log('All cache cleared');
+    } catch (error) {
+      console.warn('Error clearing cache:', error);
+    }
+  };
+  
+  // Clear cache when user changes or logs out
+  useEffect(() => {
+    // If no profile (user logged out), clear cache
+    if (!authLoading && !profile) {
+      clearAllCache();
+      userTokenService.clearCache(); // Also clear token cache
+    }
+  }, [profile, authLoading]);
+  
+  useEffect(() => {
+    const fetchSubjects = async () => {
       try {
+        if (authLoading) return;
+        if (!profile) {
+          console.log('No profile, redirecting to login');
+          router.push('/login');
+          return;
+        }
+
+        const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
+        const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
+        
+        // 🔍 DEBUG: Log the exact parameters being used
+        console.log('🔍 DEBUG - Fetching data for:', {
+          originalBoard: params.board,
+          originalClass: params.class,
+          normalizedBoard: board,
+          normalizedClass: classLevel,
+          fullUrl: `${API_URL}/api/subjects/${params.board}/${params.class}`
+        });
+        
+        // Check cache first
+        const cachedData = getCachedData(board, classLevel);
+        if (cachedData) {
+          console.log('✅ Using cached data for:', { board, classLevel });
+          setSubjects(cachedData.subjects);
+          setProgress(cachedData.progress);
+          setLoading(false);
+          
+          // INITIALIZE TOKEN SERVICE: Fetch user token status in background (no board/class needed)
+          userTokenService.fetchUserTokenStatus();
+          return; // Use cached data, no need to fetch
+        }
+
         setLoading(true);
         setError(null);
 
-        const { headers, isAuthorized } = await getAuthHeaders();
-        if (!isAuthorized) {
+        console.log('🌐 Making API calls for:', { board: params.board, class: params.class });
+        const authHeaders = await getAuthHeaders();
+        if (!authHeaders.isAuthorized) {
           console.log('No auth headers, redirecting to login');
           router.push('/login');
           return;
         }
 
-        // Sync user data
-        await fetch(`${API_URL}/api/auth/sync-user`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            email: profile?.email,
-            full_name: profile?.full_name,
-            board: profile?.board,
-            class_level: profile?.class_level
-          })
-        });
+        // 🔍 DEBUG: Log exact API URLs being called
+        const subjectsUrl = `${API_URL}/api/subjects/${params.board}/${params.class}`;
+        const progressUrl = `${API_URL}/api/progress/user/${params.board}/${params.class}`;
+        
+        console.log('🔍 API URLs:', { subjectsUrl, progressUrl });
 
-        console.log(`🌐 Fetching chapters for: ${params.board}/${params.class}/${params.subject}`);
+        // Only fetch subjects list
+        const subjectsResponse = await fetch(subjectsUrl, { headers: authHeaders.headers });
 
-        // Fetch chapters
-        const chaptersResponse = await fetch(
-          `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
-          { headers }
-        );
-
-        if (!chaptersResponse.ok) {
-          throw new Error(`Failed to fetch chapters. Status: ${chaptersResponse.status}`);
+        if (!subjectsResponse.ok) {
+          throw new Error(`Failed to fetch subjects. Status: ${subjectsResponse.status}, URL: ${subjectsUrl}`);
         }
 
-        const chaptersData = await chaptersResponse.json();
-        console.log('📚 Fetched chapters data:', chaptersData);
+        const subjectsData = await subjectsResponse.json();
+        console.log('📚 Fetched subjects data:', {
+          board: params.board,
+          class: params.class,
+          subjectCount: subjectsData.subjects?.length,
+          firstSubject: subjectsData.subjects?.[0],
+          allSubjectNames: subjectsData.subjects?.map((s: any) => s.name)
+        });
         
-        setChapters(chaptersData.chapters || []);
-
-        // Fetch chapter progress
+        // Keep the full subject data structure (with chapters)
+        setSubjects(subjectsData.subjects || []);
+        
+        // Fetch progress data
+        let progressData = {};
         try {
-          const progressResponse = await fetch(
-            `${API_URL}/api/progress/user/chapters/${params.board}/${params.class}/${params.subject}`,
-            { headers }
-          );
+          const progressResponse = await fetch(progressUrl, { headers: authHeaders.headers });
 
           if (progressResponse.ok) {
-            const progressData = await progressResponse.json();
-            console.log('📊 Fetched progress data:', progressData);
-            setChapterProgress(progressData.progress || {});
+            const progressResponse_data = await progressResponse.json();
+            console.log('📊 Fetched progress data:', {
+              board: params.board,
+              class: params.class,
+              progressKeys: Object.keys(progressResponse_data.progress || {}),
+              progressData: progressResponse_data.progress
+            });
+            progressData = progressResponse_data.progress || {};
+            setProgress(progressData);
           }
         } catch (progressError) {
           console.warn('Progress fetch error:', progressError);
-          setChapterProgress({});
+          setProgress({});
         }
-
-        // Initialize token service
+        
+        // Cache the fetched data (both subjects and progress)
+        setCachedData(board, classLevel, subjectsData.subjects || [], progressData);
+        
+        // INITIALIZE TOKEN SERVICE: Fetch user token status in background after successful data fetch
         userTokenService.fetchUserTokenStatus();
 
       } catch (error) {
-        console.error('❌ Error fetching subject data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load subject data');
+        console.error('❌ Error fetching subjects:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load subjects');
       } finally {
         setLoading(false);
       }
     };
 
-    if (params.board && params.class && params.subject) {
-      fetchData();
+    if (params.board && params.class) {
+      fetchSubjects();
     }
-  }, [params.board, params.class, params.subject, router, profile, authLoading, API_URL]);
+  }, [API_URL, params.board, params.class, router, profile, authLoading]);
 
-  // UPDATED: Handle chapter click - now goes to chapter overview (sections)
-  const handleChapterClick = (chapterNumber: number) => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/chapter-${chapterNumber}`);
-  };
-
-  // Handle performance click
-  const handlePerformanceClick = (chapterNumber: number) => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/chapter-${chapterNumber}/performance`);
-  };
-
-  // Get chapter progress
-  const getChapterProgress = (chapterNumber: number) => {
-    const key = `chapter_${chapterNumber}`;
-    return chapterProgress[key] || { total_attempts: 0, average_score: 0 };
-  };
-
-  // Get progress color
-  const getProgressColor = (averageScore: number) => {
-    if (averageScore >= 8) return 'bg-green-500';
-    if (averageScore >= 6) return 'bg-yellow-500';
-    if (averageScore > 0) return 'bg-orange-500';
-    return 'bg-gray-300';
-  };
+  const board = typeof params.board === 'string' ? params.board.toLowerCase() : '';
+  const classLevel = typeof params.class === 'string' ? params.class.toLowerCase() : '';
+  
+  // Get friendly display names for board and class
+  const boardDisplayName = BOARD_DISPLAY_NAMES[board] || board?.toUpperCase() || '';
+  const classDisplayName = CLASS_DISPLAY_NAMES[classLevel] || classLevel?.toUpperCase() || '';
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-        {/* Background decorations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
-               style={{animationDuration: '3s'}} />
-          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
-               style={{animationDuration: '4s'}} />
-          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
-               style={{animationDuration: '2s'}} />
-        </div>
-
-        <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
-          <div className="max-w-[1600px] mx-auto w-full">
-            <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-medium text-gray-800">
-                  {formatSubjectName(params.subject)}
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600 mt-1">Loading chapters...</p>
-              </div>
-              <div className="flex items-center gap-4 relative z-[100]">
-                <Navigation />
-              </div>
-            </div>
-            
-            <div className="max-w-5xl mx-auto">
-              <ChaptersSkeleton />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <ThemedSkeletonLoader boardDisplayName={boardDisplayName} classDisplayName={classDisplayName} />;
   }
 
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
+        {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-4 -right-4 w-24 h-24 bg-red-200/30 rounded-full animate-pulse" 
                style={{animationDuration: '3s'}} />
@@ -303,7 +420,7 @@ export default function SubjectPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 className="font-semibold text-red-800 mb-2">Error Loading Subject</h3>
+          <h3 className="font-semibold text-red-800 mb-2">Error Loading Data</h3>
           <p className="text-red-700 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()}
@@ -330,13 +447,13 @@ export default function SubjectPage() {
 
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto w-full">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
-                {formatSubjectName(params.subject)}
+              <h1 className="text-2xl sm:text-3xl font-medium text-gray-800">
+                {boardDisplayName} {classDisplayName}
               </h1>
-              <p className="text-sm sm:text-base text-gray-600">
-                {boardDisplayName} {classDisplayName} • Select a chapter to view sections
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
+                Select a subject to start your learning journey
               </p>
             </div>
             <div className="flex items-center gap-4 relative z-[100]">
@@ -345,88 +462,12 @@ export default function SubjectPage() {
           </div>
           
           <div className="max-w-5xl mx-auto">
-            <div className="space-y-6">
-              {chapters.map((chapter) => {
-                const progress = getChapterProgress(chapter.number);
-                const progressPercentage = progress.total_attempts > 0 ? Math.min((progress.average_score / 10) * 100, 100) : 0;
-                
-                return (
-                  <div key={chapter.number} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden hover:shadow-xl transition-all duration-300">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
-                    
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                            {chapter.number}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-800">Chapter {chapter.number}: {chapter.name}</h3>
-                            <p className="text-sm text-gray-600">Click to view sections and practice questions</p>
-                          </div>
-                        </div>
-                        
-                        {progress.total_attempts > 0 && (
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-700">
-                              Avg Score: {progress.average_score.toFixed(1)}/10
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {progress.total_attempts} attempts
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Progress Bar */}
-                      <div className="mb-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                          <div 
-                            className={`h-2.5 rounded-full transition-all duration-500 ${getProgressColor(progress.average_score)}`}
-                            style={{ width: `${progressPercentage}%` }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>Overall Progress</span>
-                          <span>{progressPercentage.toFixed(0)}%</span>
-                        </div>
-                      </div>
-                      
-                      {/* Action Buttons - UPDATED: Goes to chapter overview */}
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => handleChapterClick(chapter.number)}
-                          className="flex-1 py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
-                        >
-                          📖 View Sections
-                        </button>
-                        
-                        {progress.total_attempts > 0 && (
-                          <button
-                            onClick={() => handlePerformanceClick(chapter.number)}
-                            className="py-2 px-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-md hover:shadow-lg"
-                          >
-                            📊 Performance
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {chapters.length === 0 && (
-              <div className="bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/50 text-center">
-                <div className="text-4xl mb-4">📚</div>
-                <h3 className="text-lg font-medium text-gray-600 mb-2">
-                  No chapters available yet
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Chapters for this subject will be available soon
-                </p>
-              </div>
-            )}
+            <SubjectProgress
+              board={board}
+              classLevel={classLevel}
+              subjects={subjects}
+              progress={progress}
+            />
           </div>
         </div>
       </div>
