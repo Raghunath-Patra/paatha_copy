@@ -261,30 +261,6 @@ export default function SectionQuestionsPage() {
   const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
   const [isPrefetching, setIsPrefetching] = useState(false);
   const [prefetchError, setPrefetchError] = useState<string | null>(null);
-  const [question, setQuestion] = useState<Question | null>(null);
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sectionInfo, setSectionInfo] = useState<SectionInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [questionLoading, setQuestionLoading] = useState(false);
-  const [sectionInfoLoading, setSectionInfoLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [timeTaken, setTimeTaken] = useState<number>(0);
-  const [shouldStopTimer, setShouldStopTimer] = useState(false);
-  const [showUpgradeButton, setShowUpgradeButton] = useState(false);
-  const [showTokenWarning, setShowTokenWarning] = useState(false);
-  const [tokenWarningAllowClose, setTokenWarningAllowClose] = useState(true);
-  const [errorDisplayMode, setErrorDisplayMode] = useState<'none' | 'token-warning' | 'error-message'>('none');
-  const [showLimitPage, setShowLimitPage] = useState(false);
-  const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
-
-  const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
-  const [timerResetTrigger, setTimerResetTrigger] = useState(0);
-
-  // Prefetch system state
-  const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
-  const [isPrefetching, setIsPrefetching] = useState(false);
-  const [prefetchError, setPrefetchError] = useState<string | null>(null);
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const PREFETCH_VALIDITY_TIME = 15 * 60 * 1000; // 15 minutes
