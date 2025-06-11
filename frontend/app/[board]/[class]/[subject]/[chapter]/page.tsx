@@ -205,14 +205,18 @@ export default function ChapterOverviewPage() {
 
         if (sectionsResponse.ok) {
           const sectionsData = await sectionsResponse.json();
+          console.log('📋 Fetched sections data:', sectionsData);
           setSections(sectionsData.sections || []);
         } else {
           console.warn('Failed to fetch sections, using defaults');
-          setSections([
+          // Create default sections with proper structure
+          const defaultSections = [
             { number: 1, name: 'Section 1' },
             { number: 2, name: 'Section 2' },
             { number: 3, name: 'Section 3' }
-          ]);
+          ];
+          console.log('📋 Using default sections:', defaultSections);
+          setSections(defaultSections);
         }
 
         // Fetch section progress
@@ -249,16 +253,20 @@ export default function ChapterOverviewPage() {
 
   // ✅ UPDATED: Handle section click - now goes to content first
   const handleSectionClick = (sectionNumber: number) => {
+    console.log('🔗 Navigating to section:', sectionNumber);
+    console.log('🔗 Full URL will be:', `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
     router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
   };
 
   // ✅ NEW: Handle direct questions click (for "Practice Questions" button)
   const handleDirectQuestionsClick = (sectionNumber: number) => {
+    console.log('🔗 Navigating to section questions:', sectionNumber);
     router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
   };
 
   // Handle performance click
   const handlePerformanceClick = (sectionNumber: number) => {
+    console.log('🔗 Navigating to section performance:', sectionNumber);
     router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/performance`);
   };
 
@@ -417,6 +425,19 @@ export default function ChapterOverviewPage() {
                 const progress = getSectionProgress(section.number);
                 const progressPercentage = progress.total_attempts > 0 ? Math.min((progress.average_score / 10) * 100, 100) : 0;
                 
+                // Debug logging for each section
+                console.log('🔍 Rendering section:', {
+                  section,
+                  sectionNumber: section.number,
+                  sectionName: section.name
+                });
+                
+                // Validate section number
+                if (!section.number || isNaN(section.number)) {
+                  console.error('❌ Invalid section number:', section);
+                  return null;
+                }
+                
                 return (
                   <div key={section.number} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden hover:shadow-xl transition-all duration-300">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
@@ -459,10 +480,26 @@ export default function ChapterOverviewPage() {
                         </div>
                       </div>
                       
-                      {/* ✅ UPDATED: Action Buttons - Primary button now goes to content */}
+                      {/* ✅ UPDATED: Action Buttons with better error handling */}
                       <div className="flex gap-3">
                         <button
-                          onClick={() => handleSectionClick(section.number)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const sectionNum = section.number;
+                            console.log('🖱️ Learn Content clicked:', {
+                              section,
+                              sectionNumber: sectionNum,
+                              type: typeof sectionNum,
+                              isValid: !isNaN(Number(sectionNum))
+                            });
+                            
+                            if (sectionNum && !isNaN(Number(sectionNum))) {
+                              handleSectionClick(Number(sectionNum));
+                            } else {
+                              console.error('❌ Invalid section number for navigation:', sectionNum);
+                              alert(`Error: Invalid section number (${sectionNum}). Please refresh the page.`);
+                            }
+                          }}
                           className="flex-1 py-2 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,7 +509,22 @@ export default function ChapterOverviewPage() {
                         </button>
                         
                         <button
-                          onClick={() => handleDirectQuestionsClick(section.number)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const sectionNum = section.number;
+                            console.log('🖱️ Questions clicked:', {
+                              section,
+                              sectionNumber: sectionNum,
+                              type: typeof sectionNum
+                            });
+                            
+                            if (sectionNum && !isNaN(Number(sectionNum))) {
+                              handleDirectQuestionsClick(Number(sectionNum));
+                            } else {
+                              console.error('❌ Invalid section number for questions:', sectionNum);
+                              alert(`Error: Invalid section number (${sectionNum}). Please refresh the page.`);
+                            }
+                          }}
                           className="py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -483,7 +535,22 @@ export default function ChapterOverviewPage() {
                         
                         {progress.total_attempts > 0 && (
                           <button
-                            onClick={() => handlePerformanceClick(section.number)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const sectionNum = section.number;
+                              console.log('🖱️ Performance clicked:', {
+                                section,
+                                sectionNumber: sectionNum,
+                                type: typeof sectionNum
+                              });
+                              
+                              if (sectionNum && !isNaN(Number(sectionNum))) {
+                                handlePerformanceClick(Number(sectionNum));
+                              } else {
+                                console.error('❌ Invalid section number for performance:', sectionNum);
+                                alert(`Error: Invalid section number (${sectionNum}). Please refresh the page.`);
+                              }
+                            }}
                             className="py-2 px-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
