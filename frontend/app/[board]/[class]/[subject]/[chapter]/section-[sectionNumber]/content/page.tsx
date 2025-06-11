@@ -259,7 +259,7 @@ export default function SectionContentPage() {
         // ✅ Fetch HTML content from actual folder structure
         // Pattern: /interactive/[board]/[class]/[subject]/[subject_folder]/XX_section_[chapter]_[section].html
         // Example: /interactive/cbse/xii/lech1dd/lech101/06_section_1_2.html
-        
+        console.log(`🔍 Fetching content for: ${params.board}/${params.class}/${params.subject}/${chapterNumber}/section-${sectionNumber}`);
         // Extract first 5 letters of subject code for folder name base
         const subjectBase = params.subject.substring(0, 5); // e.g., "lech1" from "lech1dd"
         
