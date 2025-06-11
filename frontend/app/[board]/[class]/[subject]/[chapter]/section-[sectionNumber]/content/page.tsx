@@ -296,7 +296,7 @@ export default function SectionContentPage() {
         const filePrefixes = generateFilePrefixes();
         
         // Function to try loading a file
-        const tryLoadFile = async (folderSuffix, filePrefix) => {
+        const tryLoadFile = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
           const subjectFolder = `${subjectBase}${folderSuffix}`;
           const filename = filePrefix 
             ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
