@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/content/page.tsx
-// UPDATED: Minimal Section Content Page with Floating Navigation
+// UPDATED: Minimal Section Content Page with Floating Navigation and Improved HTML Fetching
 
 'use client';
 
@@ -325,17 +325,13 @@ export default function SectionContentPage() {
         }
       }
 
-      // Fetch HTML content
+      // ✅ FETCH HTML CONTENT using chapter-based folder suffix (same as chapter page)
       const subjectBase = params.subject.substring(0, 5);
-      const commonPatterns = [
-        { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '02', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '12', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '10', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '11', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-      ];
+      
+      // Derive folder suffix from chapter number (2-digit padded)
+      const folderSuffix = chapterNumber.toString().padStart(2, '0');
 
-      const tryPattern = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
+      const tryPattern = async (filePrefix: string): Promise<string | null> => {
         const subjectFolder = `${subjectBase}${folderSuffix}`;
         const filename = filePrefix 
           ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
@@ -346,7 +342,9 @@ export default function SectionContentPage() {
         try {
           const response = await fetch(htmlPath);
           if (response.ok) {
-            return await response.text();
+            const content = await response.text();
+            console.log(`✅ Found content from: ${htmlPath}`);
+            return content;
           }
         } catch (error) {
           // Silent fail
@@ -354,32 +352,32 @@ export default function SectionContentPage() {
         return null;
       };
 
+      // Search for HTML content
       let fetchedHtmlContent = '';
       let fileFound = false;
 
-      for (const pattern of commonPatterns) {
-        if (fileFound) break;
-        
-        for (const filePrefix of pattern.filePrefixes) {
-          const content = await tryPattern(pattern.folderSuffix, filePrefix);
-          if (content) {
-            fetchedHtmlContent = content;
-            fileFound = true;
-            break;
-          }
+      // Try file prefixes from '01' to '30'
+      for (let i = 1; i <= 30 && !fileFound; i++) {
+        const filePrefix = i.toString().padStart(2, '0');
+        const content = await tryPattern(filePrefix);
+        if (content) {
+          fetchedHtmlContent = content;
+          fileFound = true;
+          break;
         }
-        
-        if (!fileFound) {
-          const content = await tryPattern(pattern.folderSuffix, '');
-          if (content) {
-            fetchedHtmlContent = content;
-            fileFound = true;
-            break;
-          }
+      }
+      
+      // If no prefixed file found, try without prefix
+      if (!fileFound) {
+        const content = await tryPattern('');
+        if (content) {
+          fetchedHtmlContent = content;
+          fileFound = true;
         }
       }
 
       if (!fileFound) {
+        console.warn(`❌ No content found during normal loading for section ${sectionNumber}`);
         fetchedHtmlContent = `
           <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif; min-height: 50vh; display: flex; flex-direction: column; justify-content: center;">
             <h2 style="color: #dc2626; margin-bottom: 20px;">📁 Content Not Found</h2>
@@ -478,7 +476,7 @@ export default function SectionContentPage() {
 
   // Main content display
   return (
-    <div className="min-h-screen bg-white">
+    <>
       {/* Floating Navigation */}
       <FloatingNavigation 
         params={params} 
@@ -487,7 +485,7 @@ export default function SectionContentPage() {
         currentSectionIndex={currentSectionIndex}
       />
 
-      {/* Content */}
+      {/* Content - No wrapper div to preserve HTML body styles */}
       {isContentReady && htmlContent ? (
         <HTMLContentRenderer 
           htmlContent={htmlContent}
@@ -495,13 +493,13 @@ export default function SectionContentPage() {
           style={{}}
         />
       ) : (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             <p className="text-gray-600">Preparing interactive content...</p>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
