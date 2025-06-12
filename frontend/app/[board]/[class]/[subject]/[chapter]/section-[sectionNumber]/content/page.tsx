@@ -555,7 +555,7 @@ export default function SectionContentPage() {
         };
         
         // Efficient search
-        let htmlContent = '';
+        let fetchedHtmlContent = '';
         let fileFound = false;
         
         console.log(`🔍 Smart search for: Chapter ${chapterNumber}, Section ${finalSectionNumber}`);
@@ -567,7 +567,7 @@ export default function SectionContentPage() {
           for (const filePrefix of pattern.filePrefixes) {
             const content = await tryPattern(pattern.folderSuffix, filePrefix);
             if (content) {
-              htmlContent = content;
+              fetchedHtmlContent = content;
               fileFound = true;
               break;
             }
@@ -577,7 +577,7 @@ export default function SectionContentPage() {
           if (!fileFound) {
             const content = await tryPattern(pattern.folderSuffix, '');
             if (content) {
-              htmlContent = content;
+              fetchedHtmlContent = content;
               fileFound = true;
               break;
             }
@@ -586,7 +586,7 @@ export default function SectionContentPage() {
         
         if (!fileFound) {
           console.warn(`❌ No content found for: Chapter ${chapterNumber}, Section ${finalSectionNumber}`);
-          htmlContent = `
+          fetchedHtmlContent = `
             <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
               <h2 style="color: #dc2626;">📁 Content Not Found</h2>
               <p style="color: #6b7280; margin: 20px 0;">
@@ -611,7 +611,7 @@ export default function SectionContentPage() {
           `;
         }
         
-        setHtmlContent(htmlContent);
+        setHtmlContent(fetchedHtmlContent);
         console.log('✅ Content loaded successfully');
 
         // Initialize token service
