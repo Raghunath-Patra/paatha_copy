@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/questions/page.tsx
-// MOVED: Section Questions Page (previously at section-[sectionNumber]/page.tsx)
+// FIXED: Section Questions Page with improved debugging and token handling
 
 'use client';
 
@@ -20,7 +20,7 @@ import { getAuthHeaders } from '../../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../../../utils/userTokenService';
 
-// Interfaces (same as before)
+// Interfaces
 interface Question {
   id: string;
   question_text: string;
@@ -95,7 +95,7 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// ✅ NEW: Questions Navigation Component
+// Questions Navigation Component
 const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
   const router = useRouter();
   
@@ -166,7 +166,7 @@ const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
   );
 };
 
-// Skeleton components (same as before)
+// Skeleton components
 const SubmittingAnswerSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-4 border border-white/50 relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
@@ -268,8 +268,37 @@ export default function SectionQuestionsPage() {
   // Extract section number from params
   const sectionNumber = params.sectionNumber?.replace('section-', '') || '';
   const chapterNumber = params.chapter?.replace('chapter-', '') || '';
+
+  // DEBUG: Add comprehensive debugging useEffect
+  useEffect(() => {
+    console.log('🔍 SECTION QUESTIONS DEBUG:', {
+      url: window.location.href,
+      authLoading,
+      profile: !!profile,
+      showLimitPage,
+      isUsingPrefetch,
+      question: question ? { id: question.id, loaded: true } : null,
+      questionIdFromURL: searchParams?.get('q'),
+      sectionNumber,
+      chapterNumber,
+      tokenStatus: userTokenService.getTokenStatus(),
+      params: {
+        board: params.board,
+        class: params.class,
+        subject: params.subject,
+        chapter: params.chapter,
+        sectionNumber: params.sectionNumber
+      },
+      errorState: {
+        error,
+        errorDisplayMode,
+        showUpgradeButton,
+        showTokenWarning
+      }
+    });
+  }, [authLoading, profile, showLimitPage, isUsingPrefetch, question, searchParams, sectionNumber, chapterNumber, params, error, errorDisplayMode, showUpgradeButton, showTokenWarning]);
   
-  // Keep all your existing functions but add the missing ones
+  // Prefetch next question
   const prefetchNextQuestion = useCallback(async () => {
     if (isPrefetching || (prefetchedQuestion?.isValid && 
         Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME)) {
@@ -353,6 +382,7 @@ export default function SectionQuestionsPage() {
     }
   }, [API_URL, params.board, params.class, params.subject, chapterNumber, sectionNumber, isPrefetching, prefetchedQuestion]);
 
+  // Handle next question
   const handleNextQuestion = useCallback(async () => {
     console.log('🔄 Next section question requested');
     
@@ -472,18 +502,32 @@ export default function SectionQuestionsPage() {
     }
   }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage, sectionNumber, chapterNumber]);
 
+  // FIXED: Fetch question function with improved token handling
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
+      console.log('🚀 ATTEMPTING TO FETCH QUESTION:', {
+        specificQuestionId,
+        sectionNumber,
+        chapterNumber,
+        showLimitPage,
+        userCanFetchQuestion: userTokenService.canPerformAction('fetch_question')
+      });
+
       setError(null);
       setQuestionLoading(true);
       setErrorDisplayMode('none');
 
-      const actionCheck = userTokenService.canPerformAction('fetch_question');
-      if (!actionCheck.allowed) {
-        console.log('❌ Question fetch blocked:', actionCheck.reason);
-        setShowLimitPage(true);
-        setQuestionLoading(false);
-        return undefined;
+      // FIXED: Only check token limits for random questions, not specific question IDs
+      if (!specificQuestionId) {
+        const actionCheck = userTokenService.canPerformAction('fetch_question');
+        if (!actionCheck.allowed) {
+          console.log('❌ Random question fetch blocked:', actionCheck.reason);
+          setShowLimitPage(true);
+          setQuestionLoading(false);
+          return undefined;
+        }
+      } else {
+        console.log('🎯 Loading specific question, bypassing token check:', specificQuestionId);
       }
 
       const { headers, isAuthorized } = await getAuthHeaders();
@@ -495,21 +539,31 @@ export default function SectionQuestionsPage() {
       let url;
       if (specificQuestionId) {
         url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${chapterNumber}/section/${sectionNumber}/q/${specificQuestionId}`;
+        console.log('🔗 Fetching specific question URL:', url);
       } else {
         url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${chapterNumber}/section/${sectionNumber}/random`;
+        console.log('🎲 Fetching random question URL:', url);
       }
 
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
         if (response.status === 402) {
-          console.log('🚫 Server says limit reached, showing limit page');
+          console.log('🚫 Server says limit reached');
           setShowLimitPage(true);
           setQuestionLoading(false);
           return undefined;
         }
         
+        if (response.status === 404 && specificQuestionId) {
+          console.log('❌ Specific question not found, trying random question');
+          // Fallback to random question if specific question not found
+          return await fetchQuestion();
+        }
+        
         const responseText = await response.text();
+        console.error('❌ API Error:', response.status, responseText);
+        
         let isTokenLimitError = false;
         
         try {
@@ -534,17 +588,21 @@ export default function SectionQuestionsPage() {
           return undefined;
         }
         
-        throw new Error('Failed to fetch section question');
+        throw new Error(`HTTP ${response.status}: ${responseText}`);
       }
 
       const data = await response.json();
+      console.log('✅ Question loaded successfully:', data.id);
       setQuestion(data);
       
-      userTokenService.updateTokenUsage({ input: 50 });
+      // Only update token usage for random questions
+      if (!specificQuestionId) {
+        userTokenService.updateTokenUsage({ input: 50 });
+      }
       
       return data;
     } catch (err) {
-      console.error('Error fetching section question:', err);
+      console.error('💥 Error fetching question:', err);
       
       if (!showLimitPage) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -556,6 +614,7 @@ export default function SectionQuestionsPage() {
     }
   };
 
+  // Handle submit answer
   const handleSubmitAnswer = async (answer: string, imageData?: string) => {
     try {
       if (!profile) {
@@ -692,7 +751,7 @@ export default function SectionQuestionsPage() {
     }).join(' ');
   };
 
-  // ✅ All existing useEffects and initialization logic
+  // Prefetch initialization
   useEffect(() => {
     if (question && !questionLoading && !showLimitPage) {
       console.log('🎯 Current section question loaded, starting prefetch timer...');
@@ -712,9 +771,13 @@ export default function SectionQuestionsPage() {
     };
   }, []);
 
+  // Token status monitoring - FIXED: Separated from main init
   useEffect(() => {
+    console.log('🔍 Monitoring token status...');
+    
     const checkInitialTokenStatus = () => {
       const status = userTokenService.getTokenStatus();
+      console.log('📊 Initial token status:', status);
       setUserTokenStatus(status);
       
       if (status) {
@@ -729,6 +792,7 @@ export default function SectionQuestionsPage() {
     };
 
     const unsubscribe = userTokenService.onTokenUpdate((newStatus: any) => {
+      console.log('📊 Token status updated:', newStatus);
       setUserTokenStatus(newStatus);
       
       if (newStatus && newStatus.limit_reached && newStatus.questions_used_today > 0) {
@@ -740,13 +804,12 @@ export default function SectionQuestionsPage() {
     });
 
     const limitReached = checkInitialTokenStatus();
-    if (limitReached) {
-      return unsubscribe;
-    }
+    console.log('📊 Token limit check result:', limitReached);
 
     return unsubscribe;
-  }, []);
+  }, []); // Run once on mount
   
+  // Additional token status check
   useEffect(() => {
     const checkTokenStatus = async () => {
       try {
@@ -778,11 +841,53 @@ export default function SectionQuestionsPage() {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
 
+  // FIXED: Main initialization useEffect
   useEffect(() => {
-    const syncUserData = async () => {
+    const initializePage = async () => {
+      console.log('🚀 Starting page initialization...');
+      
+      if (authLoading) {
+        console.log('⏳ Auth still loading, waiting...');
+        return;
+      }
+      
+      if (!profile) {
+        console.log('❌ No profile found, redirecting to login');
+        router.push('/login');
+        return;
+      }
+
+      // Check for URL-based token limit flags first
+      if (searchParams?.get('token_limit') === 'true' || searchParams?.get('usage_limit') === 'true') {
+        console.log('🚫 Token limit flag in URL detected');
+        setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
+        setShowUpgradeButton(true);
+        setShowTokenWarning(true);
+        setErrorDisplayMode('token-warning');
+        setLoading(false);
+        return;
+      }
+
+      if (!sectionNumber || !chapterNumber) {
+        console.log('❌ Missing section or chapter number');
+        setError('Invalid section or chapter number');
+        setLoading(false);
+        return;
+      }
+
       try {
+        setLoading(true);
+        setError(null);
+        setErrorDisplayMode('none');
+
+        // Sync user data
+        console.log('🔄 Syncing user data...');
         const { headers, isAuthorized } = await getAuthHeaders();
-        if (!isAuthorized) return false;
+        if (!isAuthorized) {
+          console.log('❌ Not authorized, redirecting to login');
+          router.push('/login');
+          return;
+        }
 
         await fetch(`${API_URL}/api/auth/sync-user`, {
           method: 'POST',
@@ -794,64 +899,34 @@ export default function SectionQuestionsPage() {
             class_level: profile?.class_level
           })
         });
-        return true;
-      } catch (error) {
-        console.error('Error syncing user data:', error);
-        return false;
-      }
-    };
+        console.log('✅ User data synced');
 
-    const fetchSectionInfo = async () => {
-      try {
-        setSectionInfoLoading(true);
-        const { headers, isAuthorized } = await getAuthHeaders();
-        if (!isAuthorized) return;
-        
-        const response = await fetch(
-          `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
-          { headers }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          const section = data.sections?.find((s: any) => s.number === parseInt(sectionNumber));
-          if (section) {
-            setSectionInfo(section);
+        // Fetch section info
+        console.log('🔄 Fetching section info...');
+        try {
+          setSectionInfoLoading(true);
+          const response = await fetch(
+            `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
+            { headers }
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            const section = data.sections?.find((s: any) => s.number === parseInt(sectionNumber));
+            if (section) {
+              setSectionInfo(section);
+            }
           }
-        }
-      } catch (error) {
-        console.error('Error fetching section info:', error);
-      } finally {
-        setSectionInfoLoading(false);
-      }
-    };
-
-    const initializePage = async () => {
-      if (authLoading) return;
-      if (!profile) {
-        router.push('/login');
-        return;
-      }
-      
-      const synced = await syncUserData();
-      if (!synced) {
-        console.error('Failed to sync user data');
-      }
-
-      if (params.board && params.class && params.subject && params.chapter && params.sectionNumber) {
-        if (searchParams?.get('token_limit') === 'true' || searchParams?.get('usage_limit') === 'true') {
-          setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
-          setShowUpgradeButton(true);
-          setShowTokenWarning(true);
-          setErrorDisplayMode('token-warning');
-          setLoading(false);
-          return;
+        } catch (error) {
+          console.error('Error fetching section info:', error);
+        } finally {
+          setSectionInfoLoading(false);
         }
         
-        fetchSectionInfo();
-        
+        // Handle new question flag
         const isNewQuestion = searchParams?.get('newq') === '1';
         if (isNewQuestion) {
+          console.log('🆕 New question flag detected, resetting feedback');
           setFeedback(null);
           setShouldStopTimer(false);
           const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions?q=${searchParams?.get('q')}`;
@@ -859,41 +934,74 @@ export default function SectionQuestionsPage() {
         }
         
         const questionId = searchParams?.get('q');
+        console.log('🎯 Question ID from URL:', questionId);
+        
+        // Skip fetch if using prefetched data
         if (isUsingPrefetch) {
           console.log('📌 Skipping fetch - using prefetched section question');
           setLoading(false);
           return;
         }
 
-        if (question && question.id === questionId) {
+        // Skip fetch if question already loaded with same ID
+        if (question && question.id === questionId && questionId) {
           console.log('📌 Section question already loaded, skipping fetch');
           setLoading(false);
           return;
         }
 
+        console.log('🔄 Fetching question...');
         setShouldStopTimer(false);
 
-        fetchQuestion(questionId || undefined).then(newQuestion => {
-          if (!questionId && newQuestion?.id) {
-            const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions?q=${newQuestion.id}`;
-            window.history.replaceState({}, '', newUrl);
-          }
-        });
+        const newQuestion = await fetchQuestion(questionId || undefined);
+        
+        // Update URL with question ID if it wasn't provided
+        if (!questionId && newQuestion?.id) {
+          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions?q=${newQuestion.id}`;
+          window.history.replaceState({}, '', newUrl);
+          console.log('📝 Updated URL with question ID:', newQuestion.id);
+        }
+
+        // Initialize token service
+        userTokenService.fetchUserTokenStatus();
+
+      } catch (error) {
+        console.error('💥 Error in page initialization:', error);
+        setError(error instanceof Error ? error.message : 'Failed to initialize page');
+        setErrorDisplayMode('error-message');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
-    if (!showLimitPage) {
+    // Only initialize if we're not already showing the limit page
+    if (!showLimitPage && params.board && params.class && params.subject && params.chapter && params.sectionNumber) {
       initializePage();
+    } else {
+      console.log('⏸️ Skipping initialization:', { 
+        showLimitPage, 
+        hasRequiredParams: !!(params.board && params.class && params.subject && params.chapter && params.sectionNumber) 
+      });
     }
-  }, [params.board, params.class, params.subject, params.chapter, params.sectionNumber, router, profile, authLoading, searchParams, API_URL, showLimitPage, chapterNumber, sectionNumber]);
+  }, [
+    params.board, 
+    params.class, 
+    params.subject, 
+    params.chapter, 
+    params.sectionNumber, 
+    router, 
+    profile, 
+    authLoading, 
+    searchParams, 
+    API_URL, 
+    showLimitPage,  // This is important!
+    chapterNumber, 
+    sectionNumber,
+    isUsingPrefetch,
+    question?.id // Only depend on question.id, not entire question object
+  ]);
   
-  // ✅ NOTE: Keep all existing useEffects, fetch functions, etc. 
-  // Just update any URL constructions to include /questions path
-
-  // Keep loading and error screens the same...
-  
+  // Loading screen
   if (loading && !showLimitPage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
@@ -992,7 +1100,7 @@ export default function SectionQuestionsPage() {
 
         <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
           <div className="max-w-[1600px] mx-auto w-full">
-            {/* ✅ UPDATED: Header with new navigation */}
+            {/* Header with navigation */}
             <div className="flex justify-between mb-6">
               <div className="flex flex-col">
                 <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
@@ -1034,14 +1142,12 @@ export default function SectionQuestionsPage() {
                 )}
               </div>
 
-              {/* ✅ UPDATED: Navigation with new questions navigation */}
+              {/* Navigation */}
               <div className="flex flex-wrap gap-2 items-start relative z-[100]">
                 <QuestionsNavigation params={params} />
               </div>
             </div>
 
-            {/* Content with independent loading states - SAME AS BEFORE */}
-            
             {/* Token Warning */}
             {errorDisplayMode === 'token-warning' && (
               <TokenLimitWarning 
