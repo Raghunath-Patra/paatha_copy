@@ -316,9 +316,50 @@ export default function ChapterOverviewPage() {
   };
 
   // ✅ NEW: Handle direct questions click
-  const handleDirectQuestionsClick = (sectionNumber: number) => {
-    console.log('🔗 Navigating to section questions:', sectionNumber);
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
+  // const handleDirectQuestionsClick = (sectionNumber: number) => {//-------------------------------------------------------------------
+  //   console.log('🔗 Navigating to section questions:', sectionNumber);
+  //   router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
+  // };
+
+  const handleDirectQuestionsClick = async (sectionNumber: number) => {
+    try {
+      console.log(`Navigating to section ${sectionNumber}`);
+      
+      // Build the section URL - this is the key fix
+      const sectionUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}`;
+      
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) {
+        router.push('/login');
+        return;
+      }
+      
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      
+      // Try to get a random question for this section
+      try {
+        const response = await fetch(
+          `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/section/${sectionNumber}/random`,
+          { headers }
+        );
+        
+        if (response.ok) {
+          const question = await response.json();
+          console.log(`Got section question ${question.id}, navigating with question`);
+          router.push(`${sectionUrl}?q=${question.id}`);
+        } else {
+          console.log('No random section question available, going to section page');
+          router.push(sectionUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching initial section question:', error);
+        router.push(sectionUrl);
+      }
+    } catch (error) {
+      console.error('Error handling section click:', error);
+      // Fallback to chapter page
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`);
+    }
   };
 
   // Handle performance click
