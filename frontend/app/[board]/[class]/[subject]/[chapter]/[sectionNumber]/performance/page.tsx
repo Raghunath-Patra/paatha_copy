@@ -1,5 +1,5 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/performance/page.tsx
-// UPDATED: Section Performance Page with new navigation
+// frontend/app/[board]/[class]/[subject]/[chapter]/[sectionNumber]/performance/page.tsx
+// UPDATED: Section Performance Page with new navigation structure
 
 'use client';
 
@@ -114,16 +114,16 @@ interface PerformancePageParams {
   sectionNumber: string;
 }
 
-// ✅ NEW: Performance Navigation Component
+// ✅ UPDATED: Performance Navigation Component with new URL structure
 const PerformanceNavigation = ({ params }: { params: PerformancePageParams }) => {
   const router = useRouter();
   
   const handleContentClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${params.sectionNumber}/content`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/content`);
   };
 
   const handleQuestionsClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${params.sectionNumber}/questions`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/questions`);
   };
 
   const handleBackToChapter = () => {
@@ -287,7 +287,7 @@ export default function SectionPerformanceReport() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
   // Extract numbers from params
-  const sectionNumber = params.sectionNumber?.replace('section-', '') || '';
+  const sectionNumber = params.sectionNumber || '';
   const chapterNumber = params.chapter?.replace('chapter-', '') || '';
   
   const syncUserData = async () => {
@@ -696,7 +696,7 @@ export default function SectionPerformanceReport() {
               </div>
             )}
 
-            {/* Questions Section - SAME AS BEFORE but with expandable functionality */}
+            {/* Questions Section */}
             {questionsLoading ? (
               <QuestionsSkeleton />
             ) : questionsError ? (
@@ -733,9 +733,6 @@ export default function SectionPerformanceReport() {
                       )}
                     </div>
                   </div>
-                  
-                  {/* Rest of questions list - SAME AS EXISTING IMPLEMENTATION */}
-                  {/* (Keeping the existing detailed question display logic) */}
                   
                   {/* No questions message */}
                   {!questionsLoading && solvedQuestions.length === 0 && !questionsError && (

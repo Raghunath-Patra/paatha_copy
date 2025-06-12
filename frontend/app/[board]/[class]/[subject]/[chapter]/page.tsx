@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx
-// UPDATED: Chapter Overview Page with Section Content Prefetch
+// UPDATED: Chapter Overview Page with Section Content Prefetch and new URL structure
 
 'use client';
 
@@ -172,27 +172,7 @@ export default function ChapterOverviewPage() {
         return null;
       }
 
-      // Get section info
-      // const sectionsResponse = await fetch(
-      //   `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
-      //   { headers }
-      // );
-
       let sectionInfo: Section | null = null;
-      // if (sectionsResponse.ok) {
-      //   const sectionsData = await sectionsResponse.json();
-      //   sectionInfo = sectionsData.sections?.find(
-      //     (s: any) => s.number === sectionNumber
-      //   );
-      // }
-
-      // if (!sectionInfo) {
-      //   // Fallback section info
-      //   sectionInfo = {
-      //     number: sectionNumber,
-      //     name: `Section ${sectionNumber}`
-      //   };
-      // }
 
       sectionInfo = {
            number: sectionNumber,
@@ -287,7 +267,7 @@ export default function ChapterOverviewPage() {
     }
   };
 
-  // ✅ UPDATED: Handle section click with advance content loading
+  // ✅ UPDATED: Handle section click with advance content loading and new URL structure
   const handleSectionClick = async (sectionNumber: number, sectionName:string) => {
     try {
       console.log(`🔗 Section ${sectionNumber} clicked - loading content...`);
@@ -301,32 +281,27 @@ export default function ChapterOverviewPage() {
         
         console.log(`✅ Content cached, navigating to section ${sectionNumber}...`);
         
-        // Navigate normally (no prefetch indicators in URL)
-        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
+        // ✅ UPDATED: Navigate using new URL structure without "section-" prefix
+        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/content`);
       } else {
         // Fallback to normal navigation
         console.log(`⚠️ Content loading failed, using normal navigation...`);
-        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
+        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/content`);
       }
     } catch (error) {
       console.error('❌ Error in section click handler:', error);
       // Fallback to normal navigation
-      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/content`);
     }
   };
 
-  // ✅ NEW: Handle direct questions click
-  // const handleDirectQuestionsClick = (sectionNumber: number) => {//-------------------------------------------------------------------
-  //   console.log('🔗 Navigating to section questions:', sectionNumber);
-  //   router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
-  // };
-
+  // ✅ UPDATED: Handle direct questions click with new URL structure
   const handleDirectQuestionsClick = async (sectionNumber: number) => {
     try {
       console.log(`Navigating to section ${sectionNumber}`);
       
-      // Build the section URL - this is the key fix
-      const sectionUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}`;
+      // ✅ UPDATED: Build the section URL using new structure
+      const sectionUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}`;
       
       const { headers, isAuthorized } = await getAuthHeaders();
       if (!isAuthorized) {
@@ -362,10 +337,10 @@ export default function ChapterOverviewPage() {
     }
   };
 
-  // Handle performance click
+  // ✅ UPDATED: Handle performance click with new URL structure
   const handlePerformanceClick = (sectionNumber: number) => {
     console.log('🔗 Navigating to section performance:', sectionNumber);
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/performance`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/performance`);
   };
 
   // Handle exercise questions click

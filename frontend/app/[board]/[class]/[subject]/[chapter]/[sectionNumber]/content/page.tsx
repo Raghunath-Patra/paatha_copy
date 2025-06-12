@@ -1,5 +1,5 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/content/page.tsx
-// UPDATED: Minimal Section Content Page with Floating Navigation and Improved HTML Fetching
+// frontend/app/[board]/[class]/[subject]/[chapter]/[sectionNumber]/content/page.tsx
+// UPDATED: Section Content Page with new URL structure
 
 'use client';
 
@@ -59,7 +59,7 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// Floating Navigation Component
+// ✅ UPDATED: Floating Navigation Component with new URL structure
 const FloatingNavigation = ({ 
   params, 
   sectionNumber, 
@@ -78,20 +78,20 @@ const FloatingNavigation = ({
   };
 
   const handleQuestionsClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions`);
   };
 
   const handlePreviousSection = () => {
     if (currentSectionIndex > 0) {
       const prevSection = sections[currentSectionIndex - 1];
-      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${prevSection.number}/content`);
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${prevSection.number}/content`);
     }
   };
 
   const handleNextSection = () => {
     if (currentSectionIndex < sections.length - 1) {
       const nextSection = sections[currentSectionIndex + 1];
-      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${nextSection.number}/content`);
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${nextSection.number}/content`);
     }
   };
 
@@ -213,7 +213,7 @@ export default function SectionContentPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // Extract section and chapter numbers
+  // ✅ UPDATED: Extract section and chapter numbers without "section-" prefix
   const extractSectionNumber = (): string => {
     if (params.sectionNumber && params.sectionNumber !== 'undefined') {
       return params.sectionNumber.toString();
@@ -221,7 +221,8 @@ export default function SectionContentPage() {
     
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
-      const match = pathname.match(/\/section-(\d+)\//);
+      // Updated regex to match new URL structure without "section-" prefix
+      const match = pathname.match(/\/(\d+)\/content$/);
       if (match && match[1]) {
         return match[1];
       }
@@ -252,7 +253,7 @@ export default function SectionContentPage() {
   // Get current section index for navigation
   const currentSectionIndex = sections.findIndex(s => s.number === parseInt(sectionNumber));
 
-  // Load from cached data
+  // ✅ UPDATED: Load from cached data with new cache key structure
   const loadFromCachedData = (): boolean => {
     try {
       const cacheKey = `section_content_${params.board}_${params.class}_${params.subject}_${chapterNumber}_${sectionNumber}`;

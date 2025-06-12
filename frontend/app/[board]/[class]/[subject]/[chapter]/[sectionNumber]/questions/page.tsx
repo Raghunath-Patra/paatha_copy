@@ -1,5 +1,5 @@
-// frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/questions/page.tsx
-// FIXED: Section Questions Page with improved debugging and token handling
+// frontend/app/[board]/[class]/[subject]/[chapter]/[sectionNumber]/questions/page.tsx
+// FIXED: Section Questions Page with new URL structure and improved debugging
 
 'use client';
 
@@ -95,16 +95,16 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// Questions Navigation Component
+// ✅ UPDATED: Questions Navigation Component with new URL structure
 const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
   const router = useRouter();
   
   const handleContentClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${params.sectionNumber}/content`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/content`);
   };
 
   const handlePerformanceClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${params.sectionNumber}/performance`);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/performance`);
   };
 
   const handleBackToChapter = () => {
@@ -265,26 +265,27 @@ export default function SectionQuestionsPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const PREFETCH_VALIDITY_TIME = 15 * 60 * 1000; // 15 minutes
   
-  // Extract section number from params - FIXED: Parse from URL since Next.js doesn't support prefixed dynamic segments
+  // ✅ UPDATED: Extract section number from params with new URL structure
   const extractSectionNumber = (): string => {
-    console.log('🔧 Extracting section number:', {
+    console.log('🔧 Extracting section number from new URL structure:', {
       'params.sectionNumber': params.sectionNumber,
       'window.location.pathname': typeof window !== 'undefined' ? window.location.pathname : 'SSR'
     });
 
-    // Try params first (in case route structure changes)
+    // Try params first (should work with new structure)
     if (params.sectionNumber && params.sectionNumber !== 'undefined') {
-      const extracted = params.sectionNumber.toString().replace('section-', '');
+      const extracted = params.sectionNumber.toString();
       console.log('✅ Extracted from params:', extracted);
       return extracted;
     }
     
-    // Fallback: Parse from URL path
+    // Fallback: Parse from URL path with updated regex for new structure
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
-      const match = pathname.match(/\/section-(\d+)\//);
+      // Updated regex to match new URL structure: /chapter-X/Y/questions
+      const match = pathname.match(/\/chapter-\d+\/(\d+)\/questions/);
       if (match && match[1]) {
-        console.log('✅ Extracted from URL:', match[1]);
+        console.log('✅ Extracted from URL (new structure):', match[1]);
         return match[1];
       }
     }
@@ -300,7 +301,7 @@ export default function SectionQuestionsPage() {
 
   // DEBUG: Add comprehensive debugging useEffect
   useEffect(() => {
-    console.log('🔍 SECTION QUESTIONS DEBUG:', {
+    console.log('🔍 SECTION QUESTIONS DEBUG (NEW URL STRUCTURE):', {
       url: window.location.href,
       authLoading,
       profile: !!profile,
@@ -411,7 +412,7 @@ export default function SectionQuestionsPage() {
     }
   }, [API_URL, params.board, params.class, params.subject, chapterNumber, sectionNumber, isPrefetching, prefetchedQuestion]);
 
-  // Handle next question
+  // ✅ UPDATED: Handle next question with new URL structure
   const handleNextQuestion = useCallback(async () => {
     console.log('🔄 Next section question requested');
     
@@ -429,7 +430,8 @@ export default function SectionQuestionsPage() {
       setQuestion(prefetchedQuestion.question);
       resetTimer();
       
-      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions?q=${prefetchedQuestion.question.id}`;
+      // ✅ UPDATED: Use new URL structure
+      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${prefetchedQuestion.question.id}`;
       window.history.replaceState({}, '', newUrl);
       
       userTokenService.updateTokenUsage({ input: 50 });
@@ -514,7 +516,8 @@ export default function SectionQuestionsPage() {
       const data = await response.json();
       setQuestion(data);
       
-      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions?q=${data.id}`;
+      // ✅ UPDATED: Use new URL structure
+      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${data.id}`;
       window.history.replaceState({}, '', newUrl);
       
       userTokenService.updateTokenUsage({ input: 50 });
@@ -870,10 +873,10 @@ export default function SectionQuestionsPage() {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
 
-  // FIXED: Main initialization useEffect
+  // ✅ UPDATED: Main initialization useEffect with new URL structure
   useEffect(() => {
     const initializePage = async () => {
-      console.log('🚀 Starting page initialization...');
+      console.log('🚀 Starting page initialization with new URL structure...');
       
       if (authLoading) {
         console.log('⏳ Auth still loading, waiting...');
@@ -958,7 +961,8 @@ export default function SectionQuestionsPage() {
           console.log('🆕 New question flag detected, resetting feedback');
           setFeedback(null);
           setShouldStopTimer(false);
-          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions?q=${searchParams?.get('q')}`;
+          // ✅ UPDATED: Use new URL structure
+          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${searchParams?.get('q')}`;
           window.history.replaceState({}, '', newUrl);
         }
         
@@ -984,9 +988,9 @@ export default function SectionQuestionsPage() {
 
         const newQuestion = await fetchQuestion(questionId || undefined);
         
-        // Update URL with question ID if it wasn't provided
+        // ✅ UPDATED: Update URL with question ID using new structure
         if (!questionId && newQuestion?.id) {
-          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions?q=${newQuestion.id}`;
+          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${newQuestion.id}`;
           window.history.replaceState({}, '', newUrl);
           console.log('📝 Updated URL with question ID:', newQuestion.id);
         }
@@ -1072,7 +1076,8 @@ export default function SectionQuestionsPage() {
           router.push('/upgrade');
         }}
         onGoBack={() => {
-          router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
+          // ✅ UPDATED: Use new URL structure for back navigation
+          router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/content`);
         }}
         showStats={true}
       />
