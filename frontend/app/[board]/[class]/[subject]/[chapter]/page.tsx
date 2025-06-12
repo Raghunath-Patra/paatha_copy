@@ -134,7 +134,7 @@ export default function ChapterOverviewPage() {
   const [sectionProgress, setSectionProgress] = useState<SectionProgress>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [prefetchingSection, setPrefetchingSection] = useState<number | null>(null);
+  const [loadingSection, setLoadingSection] = useState<number | null>(null);
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -160,15 +160,15 @@ export default function ChapterOverviewPage() {
   const boardDisplayName = BOARD_DISPLAY_NAMES[params.board?.toLowerCase()] || params.board?.toUpperCase() || '';
   const classDisplayName = CLASS_DISPLAY_NAMES[params.class?.toLowerCase()] || params.class?.toUpperCase() || '';
 
-  // ✅ NEW: Prefetch section content function
+  // ✅ NEW: Load section content in advance
   const prefetchSectionContent = async (sectionNumber: number): Promise<SectionContentData | null> => {
     try {
-      console.log(`🔄 Prefetching content for section ${sectionNumber}...`);
-      setPrefetchingSection(sectionNumber);
+      console.log(`🔄 Loading content for section ${sectionNumber}...`);
+      setLoadingSection(sectionNumber);
 
       const { headers, isAuthorized } = await getAuthHeaders();
       if (!isAuthorized) {
-        console.error('❌ Not authorized for prefetch');
+        console.error('❌ Not authorized for content loading');
         return null;
       }
 
@@ -194,7 +194,7 @@ export default function ChapterOverviewPage() {
         };
       }
 
-      // ✅ PREFETCH HTML CONTENT using the same logic as content page
+      // ✅ LOAD HTML CONTENT using the same logic as content page
       const subjectBase = params.subject.substring(0, 5);
       const commonPatterns = [
         { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
@@ -216,7 +216,7 @@ export default function ChapterOverviewPage() {
           const response = await fetch(htmlPath);
           if (response.ok) {
             const content = await response.text();
-            console.log(`✅ Prefetched content from: ${htmlPath}`);
+            console.log(`✅ Found content from: ${htmlPath}`);
             return content;
           }
         } catch (error) {
@@ -252,7 +252,7 @@ export default function ChapterOverviewPage() {
       }
 
       if (!fileFound) {
-        console.warn(`❌ No content found during prefetch for section ${sectionNumber}`);
+        console.warn(`❌ No content found during loading for section ${sectionNumber}`);
         htmlContent = `
           <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
             <h2 style="color: #dc2626;">📁 Content Not Found</h2>
@@ -277,36 +277,36 @@ export default function ChapterOverviewPage() {
         timestamp: Date.now()
       };
 
-      console.log(`✅ Prefetch completed for section ${sectionNumber}`);
+      console.log(`✅ Content loading completed for section ${sectionNumber}`);
       return contentData;
 
     } catch (error) {
-      console.error(`❌ Prefetch error for section ${sectionNumber}:`, error);
+      console.error(`❌ Content loading error for section ${sectionNumber}:`, error);
       return null;
     } finally {
-      setPrefetchingSection(null);
+      setLoadingSection(null);
     }
   };
 
-  // ✅ UPDATED: Handle section click with prefetch
+  // ✅ UPDATED: Handle section click with advance content loading
   const handleSectionClick = async (sectionNumber: number) => {
     try {
-      console.log(`🔗 Section ${sectionNumber} clicked - starting prefetch...`);
+      console.log(`🔗 Section ${sectionNumber} clicked - loading content...`);
       
       const contentData = await prefetchSectionContent(sectionNumber);
       
       if (contentData) {
-        // Store the prefetched data in sessionStorage
+        // Store the loaded data in sessionStorage
         const cacheKey = `section_content_${params.board}_${params.class}_${params.subject}_${chapterNumber}_${sectionNumber}`;
         sessionStorage.setItem(cacheKey, JSON.stringify(contentData));
         
         console.log(`✅ Content cached, navigating to section ${sectionNumber}...`);
         
-        // Navigate with a cache indicator
-        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content?prefetched=1`);
+        // Navigate normally (no prefetch indicators in URL)
+        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
       } else {
         // Fallback to normal navigation
-        console.log(`⚠️ Prefetch failed, using normal navigation...`);
+        console.log(`⚠️ Content loading failed, using normal navigation...`);
         router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
       }
     } catch (error) {
@@ -582,7 +582,7 @@ export default function ChapterOverviewPage() {
               {sections.map((section) => {
                 const progress = getSectionProgress(section.number);
                 const progressPercentage = progress.total_attempts > 0 ? Math.min((progress.average_score / 10) * 100, 100) : 0;
-                const isCurrentlyPrefetching = prefetchingSection === section.number;
+                const isCurrentlyLoading = loadingSection === section.number;
                 
                 return (
                   <div key={section.number} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden hover:shadow-xl transition-all duration-300">
@@ -630,14 +630,14 @@ export default function ChapterOverviewPage() {
                       <div className="flex gap-3">
                         <button
                           onClick={() => handleSectionClick(section.number)}
-                          disabled={isCurrentlyPrefetching}
+                          disabled={isCurrentlyLoading}
                           className={`flex-1 py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2 ${
-                            isCurrentlyPrefetching 
+                            isCurrentlyLoading 
                               ? 'bg-gray-400 text-white cursor-not-allowed' 
                               : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
                           }`}
                         >
-                          {isCurrentlyPrefetching ? (
+                          {isCurrentlyLoading ? (
                             <>
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                               Loading Content...

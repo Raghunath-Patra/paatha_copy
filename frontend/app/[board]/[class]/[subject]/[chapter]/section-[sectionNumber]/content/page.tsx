@@ -4,7 +4,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Navigation from '../../../../../../components/navigation/Navigation';
 import { getAuthHeaders } from '../../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../../contexts/SupabaseAuthContext';
@@ -28,7 +28,7 @@ interface PerformancePageParams {
   sectionNumber: string;
 }
 
-// ✅ Interface for prefetched data
+// ✅ Interface for cached data
 interface SectionContentData {
   sectionInfo: SectionInfo;
   htmlContent: string;
@@ -171,7 +171,6 @@ const ContentLoadingSkeleton = () => (
 export default function SectionContentPage() {
   const params = useParams() as unknown as PerformancePageParams;
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { profile, loading: authLoading } = useSupabaseAuth();
   
   const [sectionInfo, setSectionInfo] = useState<SectionInfo | null>(null);
@@ -179,7 +178,6 @@ export default function SectionContentPage() {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loadingMethod, setLoadingMethod] = useState<'prefetch' | 'api' | 'fallback'>('prefetch');
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -225,17 +223,16 @@ export default function SectionContentPage() {
     'params': params,
     'extractedSectionNumber': sectionNumber,
     'extractedChapterNumber': chapterNumber,
-    'searchParams prefetched': searchParams?.get('prefetched'),
     'URL': typeof window !== 'undefined' ? window.location.pathname : 'SSR'
   });
 
-  // ✅ Function to try loading from prefetched data
-  const loadFromPrefetchedData = (): boolean => {
+  // ✅ Function to try loading from cached data
+  const loadFromCachedData = (): boolean => {
     try {
       const cacheKey = `section_content_${params.board}_${params.class}_${params.subject}_${chapterNumber}_${sectionNumber}`;
       const cachedData = sessionStorage.getItem(cacheKey);
       
-      console.log(`🔍 Looking for prefetched data with key: ${cacheKey}`);
+      console.log(`🔍 Looking for cached data with key: ${cacheKey}`);
       
       if (cachedData) {
         const contentData: SectionContentData = JSON.parse(cachedData);
@@ -260,16 +257,16 @@ export default function SectionContentPage() {
           
           return true;
         } else {
-          console.log('⏰ Prefetched data is too old, removing from cache');
+          console.log('⏰ Cached data is too old, removing from cache');
           sessionStorage.removeItem(cacheKey);
         }
       } else {
-        console.log('❌ No prefetched data found');
+        console.log('❌ No cached data found');
       }
       
       return false;
     } catch (error) {
-      console.error('❌ Error loading prefetched data:', error);
+      console.error('❌ Error loading cached data:', error);
       return false;
     }
   };
@@ -277,8 +274,7 @@ export default function SectionContentPage() {
   // ✅ Function to fetch data normally (fallback)
   const fetchDataNormally = async (): Promise<void> => {
     try {
-      console.log('🔄 Loading data normally (fallback method)...');
-      setLoadingMethod('api');
+      console.log('🔄 Loading data normally...');
 
       const { headers, isAuthorized } = await getAuthHeaders();
       if (!isAuthorized) {
@@ -447,7 +443,7 @@ export default function SectionContentPage() {
   const boardDisplayName = BOARD_DISPLAY_NAMES[params.board?.toLowerCase()] || params.board?.toUpperCase() || '';
   const classDisplayName = CLASS_DISPLAY_NAMES[params.class?.toLowerCase()] || params.class?.toUpperCase() || '';
 
-  // ✅ Main useEffect - Handle both prefetched and normal loading
+  // ✅ Main useEffect - Try cache first, then fallback to normal loading
   useEffect(() => {
     const initializeContent = async () => {
       if (authLoading) return;
@@ -466,22 +462,16 @@ export default function SectionContentPage() {
         setLoading(true);
         setError(null);
 
-        // ✅ STEP 1: Try to load from prefetched data first
-        const wasPrefetched = searchParams?.get('prefetched') === '1';
-        console.log(`🔍 Initialization - prefetched flag: ${wasPrefetched}`);
-        
-        if (wasPrefetched) {
-          const prefetchSuccess = loadFromPrefetchedData();
-          if (prefetchSuccess) {
-            console.log('✅ Successfully loaded from prefetch cache');
-            setLoading(false);
-            return;
-          } else {
-            console.log('⚠️ Prefetch cache failed, falling back to normal loading');
-          }
+        // ✅ STEP 1: Try to load from cache first (invisible to user)
+        const cacheSuccess = loadFromCachedData();
+        if (cacheSuccess) {
+          console.log('✅ Successfully loaded from cache');
+          setLoading(false);
+          return;
         }
 
-        // ✅ STEP 2: Fallback to normal API loading
+        // ✅ STEP 2: Fallback to normal loading
+        console.log('⚠️ No cache found, loading normally...');
         await fetchDataNormally();
 
         // Initialize token service
@@ -498,7 +488,7 @@ export default function SectionContentPage() {
     if (params.board && params.class && params.subject && params.chapter) {
       initializeContent();
     }
-  }, [params, router, profile, authLoading, sectionNumber, chapterNumber, searchParams, API_URL]);
+  }, [params, router, profile, authLoading, sectionNumber, chapterNumber, API_URL]);
 
   // Early return for invalid parameters
   if (!sectionNumber || !chapterNumber) {
@@ -542,16 +532,7 @@ export default function SectionContentPage() {
                 <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
                   {formatSubjectName(params.subject)} - Chapter {chapterNumber}, Section {sectionNumber}
                 </h1>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm sm:text-base text-gray-600">
-                    Loading learning content via {loadingMethod}...
-                  </p>
-                  {loadingMethod === 'prefetch' && (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                      ⚡ Fast Load
-                    </span>
-                  )}
-                </div>
+                <p className="text-sm sm:text-base text-gray-600">Loading learning content...</p>
               </div>
               <div className="flex gap-4 items-center relative z-[100] justify-end">
                 <ContentNavigation params={params} sectionNumber={sectionNumber} />
@@ -621,16 +602,9 @@ export default function SectionContentPage() {
                   </span>
                 )}
               </h1>
-              <div className="flex items-center gap-2">
-                <p className="text-sm sm:text-base text-gray-600">
-                  {boardDisplayName} {classDisplayName} • Learning Content
-                </p>
-                {loadingMethod === 'prefetch' && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                    ⚡ Preloaded
-                  </span>
-                )}
-              </div>
+              <p className="text-sm sm:text-base text-gray-600">
+                {boardDisplayName} {classDisplayName} • Learning Content
+              </p>
             </div>
             <div className="flex gap-4 items-center relative z-[100] justify-end">
               <ContentNavigation params={params} sectionNumber={sectionNumber} />
