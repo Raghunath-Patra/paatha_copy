@@ -1,10 +1,10 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/content/page.tsx
-// FIXED: Section Content Page - Proper parameter extraction and scope handling
+// UPDATED: Section Content Page with Prefetch Support
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '../../../../../../components/navigation/Navigation';
 import { getAuthHeaders } from '../../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../../contexts/SupabaseAuthContext';
@@ -26,6 +26,14 @@ interface PerformancePageParams {
   subject: string;
   chapter: string;
   sectionNumber: string;
+}
+
+// ✅ Interface for prefetched data
+interface SectionContentData {
+  sectionInfo: SectionInfo;
+  htmlContent: string;
+  chapterNumber: string;
+  timestamp: number;
 }
 
 // Subject mapping
@@ -70,7 +78,7 @@ const CLASS_DISPLAY_NAMES: Record<string, string> = {
   'puc-2': 'PUC-II'
 };
 
-// ✅ FIXED: Content Navigation Component with proper props
+// Content Navigation Component
 const ContentNavigation = ({ params, sectionNumber }: { 
   params: PerformancePageParams; 
   sectionNumber: string;
@@ -163,6 +171,7 @@ const ContentLoadingSkeleton = () => (
 export default function SectionContentPage() {
   const params = useParams() as unknown as PerformancePageParams;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { profile, loading: authLoading } = useSupabaseAuth();
   
   const [sectionInfo, setSectionInfo] = useState<SectionInfo | null>(null);
@@ -170,158 +179,37 @@ export default function SectionContentPage() {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastNavigation, setLastNavigation] = useState<string>('');
+  const [loadingMethod, setLoadingMethod] = useState<'prefetch' | 'api' | 'fallback'>('prefetch');
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  console.log('🔍 NAVIGATION TRACKING:', {
-    'current URL': typeof window !== 'undefined' ? window.location.pathname : 'SSR',
-    'lastNavigation': lastNavigation,
-    'isNavigationChange': lastNavigation !== (typeof window !== 'undefined' ? window.location.pathname : ''),
-    'timestamp': new Date().toISOString()
-  });
-
-  // ✅ DETECT NAVIGATION CHANGES and reset state
-  useEffect(() => {
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-    if (currentPath !== lastNavigation && currentPath) {
-      console.log('🔄 NAVIGATION DETECTED - Resetting component state');
-      console.log(`📍 Navigation: ${lastNavigation} → ${currentPath}`);
-      
-      // Reset all state on navigation
-      setSectionInfo(null);
-      setChapterInfo(null);
-      setHtmlContent('');
-      setLoading(true);
-      setError(null);
-      
-      // Update navigation tracking
-      setLastNavigation(currentPath);
-    }
-  }, [typeof window !== 'undefined' ? window.location.pathname : '', lastNavigation]);
-
-  // ✅ PATHNAME CHANGE DETECTION (App Router compatible)
-  useEffect(() => {
-    const currentUrl = `${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}`;
-    console.log('🔍 PARAMS CHANGE DETECTED:', {
-      currentUrl,
-      lastNavigation,
-      paramsChanged: !lastNavigation.includes(currentUrl)
-    });
-    
-    // If params changed significantly, reset state
-    if (lastNavigation && !lastNavigation.includes(currentUrl)) {
-      console.log('🔄 PARAMS CHANGED - Resetting state');
-      setSectionInfo(null);
-      setChapterInfo(null);
-      setHtmlContent('');
-      setLoading(true);
-      setError(null);
-    }
-  }, [params.board, params.class, params.subject, params.chapter, params.sectionNumber, lastNavigation]);
-
-  // ✅ COMPREHENSIVE DEBUGGING: Let's see what we actually get
-  useEffect(() => {
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-    if (currentPath !== lastNavigation && currentPath) {
-      console.log('🔄 NAVIGATION DETECTED - Resetting component state');
-      
-      // Reset all state on navigation
-      setSectionInfo(null);
-      setChapterInfo(null);
-      setHtmlContent('');
-      setLoading(true);
-      setError(null);
-      
-      // Update navigation tracking
-      setLastNavigation(currentPath);
-    }
-  }, [typeof window !== 'undefined' ? window.location.pathname : '', lastNavigation]);
-
-  // ✅ COMPREHENSIVE DEBUGGING: Let's see what we actually get
-  console.log('🔍 COMPREHENSIVE ROUTE ANALYSIS:', {
-    'typeof window': typeof window,
-    'window.location.pathname': typeof window !== 'undefined' ? window.location.pathname : 'SSR',
-    'window.location.href': typeof window !== 'undefined' ? window.location.href : 'SSR',
-    'useParams() full result': params,
-    'Object.keys(params)': Object.keys(params),
-    'Object.entries(params)': Object.entries(params),
-    'params.sectionNumber': params.sectionNumber,
-    'params.chapter': params.chapter,
-    'typeof params.sectionNumber': typeof params.sectionNumber,
-    'JSON.stringify(params)': JSON.stringify(params, null, 2)
-  });
-
-  // ✅ MULTIPLE EXTRACTION METHODS
-  const extractSectionNumber = (): { method: string; value: string } => {
-    // Method 1: Direct from params
-    const directParam = params.sectionNumber;
-    if (directParam && directParam !== 'undefined') {
-      const cleaned = directParam.toString();
-      if (!isNaN(Number(cleaned))) {
-        console.log('✅ Method 1 - Direct param:', cleaned);
-        return { method: 'direct_param', value: cleaned };
-      }
+  // ✅ Extract section number with multiple fallback methods
+  const extractSectionNumber = (): string => {
+    // Method 1: From useParams
+    if (params.sectionNumber && params.sectionNumber !== 'undefined') {
+      return params.sectionNumber.toString();
     }
     
-    // Method 2: Parse from URL pathname
+    // Method 2: From URL pathname
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
-      const pathParts = pathname.split('/').filter(Boolean);
-      
-      console.log('🔍 URL path parts:', pathParts);
-      
-      // Look for section-X pattern
-      const sectionPart = pathParts.find(part => part.startsWith('section-'));
-      if (sectionPart) {
-        const extractedNumber = sectionPart.replace('section-', '');
-        if (!isNaN(Number(extractedNumber))) {
-          console.log('✅ Method 2 - URL parsing:', extractedNumber);
-          return { method: 'url_parsing', value: extractedNumber };
-        }
-      }
-      
-      // Method 3: Look for pattern /chapter-X/section-Y/
-      const regex = /\/chapter-\d+\/section-(\d+)/;
-      const match = pathname.match(regex);
+      const match = pathname.match(/\/section-(\d+)\//);
       if (match && match[1]) {
-        console.log('✅ Method 3 - Regex pattern:', match[1]);
-        return { method: 'regex_pattern', value: match[1] };
-      }
-      
-      // Method 4: Position-based extraction (assuming fixed URL structure)
-      // /board/class/subject/chapter-X/section-Y/content
-      if (pathParts.length >= 6) {
-        const sectionPart = pathParts[4]; // Should be section-Y
-        if (sectionPart && sectionPart.startsWith('section-')) {
-          const extractedNumber = sectionPart.replace('section-', '');
-          if (!isNaN(Number(extractedNumber))) {
-            console.log('✅ Method 4 - Position-based:', extractedNumber);
-            return { method: 'position_based', value: extractedNumber };
-          }
-        }
+        return match[1];
       }
     }
     
-    console.error('❌ All extraction methods failed');
-    return { method: 'failed', value: '' };
+    return '';
   };
 
   const extractChapterNumber = (): string => {
-    // First try params
-    const rawChapter = params.chapter;
-    if (rawChapter) {
-      const cleaned = rawChapter.toString().replace('chapter-', '');
-      if (!isNaN(Number(cleaned))) {
-        return cleaned;
-      }
+    if (params.chapter) {
+      return params.chapter.toString().replace('chapter-', '');
     }
     
-    // Fallback: URL parsing
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
-      const regex = /\/chapter-(\d+)/;
-      const match = pathname.match(regex);
+      const match = pathname.match(/\/chapter-(\d+)\//);
       if (match && match[1]) {
         return match[1];
       }
@@ -330,100 +218,215 @@ export default function SectionContentPage() {
     return '';
   };
   
-  const sectionExtraction = extractSectionNumber();
-  const finalSectionNumber = sectionExtraction.value;
+  const sectionNumber = extractSectionNumber();
   const chapterNumber = extractChapterNumber();
   
-  console.log('🔍 EXTRACTION RESULTS:', {
-    sectionMethod: sectionExtraction.method,
-    sectionNumber: finalSectionNumber,
-    chapterNumber: chapterNumber,
-    isValidSection: !isNaN(Number(finalSectionNumber)) && finalSectionNumber !== '',
-    isValidChapter: !isNaN(Number(chapterNumber)) && chapterNumber !== ''
+  console.log('🔍 SECTION CONTENT PAGE - Parameter extraction:', {
+    'params': params,
+    'extractedSectionNumber': sectionNumber,
+    'extractedChapterNumber': chapterNumber,
+    'searchParams prefetched': searchParams?.get('prefetched'),
+    'URL': typeof window !== 'undefined' ? window.location.pathname : 'SSR'
   });
-  
-  // Early return if section number is invalid
-  if (!finalSectionNumber || finalSectionNumber === 'undefined') {
-    console.error('❌ Section number extraction failed:', {
-      params,
-      finalSectionNumber,
-      extractionMethod: sectionExtraction.method,
-      urlPath: typeof window !== 'undefined' ? window.location.pathname : 'N/A',
-      allUrlParts: typeof window !== 'undefined' ? window.location.pathname.split('/') : []
-    });
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-red-200/30 rounded-full animate-pulse" 
-               style={{animationDuration: '3s'}} />
-          <div className="absolute bottom-1/4 right-1/4 w-16 h-16 bg-yellow-200/25 rounded-full animate-bounce" 
-               style={{animationDuration: '4s'}} />
-        </div>
+
+  // ✅ Function to try loading from prefetched data
+  const loadFromPrefetchedData = (): boolean => {
+    try {
+      const cacheKey = `section_content_${params.board}_${params.class}_${params.subject}_${chapterNumber}_${sectionNumber}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      console.log(`🔍 Looking for prefetched data with key: ${cacheKey}`);
+      
+      if (cachedData) {
+        const contentData: SectionContentData = JSON.parse(cachedData);
         
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-2xl text-center border border-red-200 relative z-10">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="font-semibold text-red-800 mb-2">Section Parameter Issue</h3>
-          <p className="text-red-700 mb-4">Unable to extract section number from the URL.</p>
+        // Check if data is not too old (within 30 minutes)
+        const dataAge = Date.now() - contentData.timestamp;
+        const maxAge = 30 * 60 * 1000; // 30 minutes
+        
+        if (dataAge < maxAge) {
+          console.log('✅ Using prefetched data:', {
+            sectionName: contentData.sectionInfo.name,
+            contentLength: contentData.htmlContent.length,
+            dataAge: Math.round(dataAge / 1000) + 's'
+          });
           
-          <div className="bg-gray-100 p-4 rounded mb-4 text-left text-sm">
-            <div className="grid grid-cols-1 gap-2">
-              <div>
-                <strong>Current URL:</strong>
-                <code className="block text-xs bg-gray-200 p-1 rounded mt-1 break-all">
-                  {typeof window !== 'undefined' ? window.location.pathname : 'N/A'}
-                </code>
-              </div>
-              <div>
-                <strong>Expected format:</strong>
-                <code className="block text-xs bg-gray-200 p-1 rounded mt-1">
-                  /board/class/subject/chapter-X/section-Y/content
-                </code>
-              </div>
-              <div>
-                <strong>useParams() result:</strong>
-                <code className="block text-xs bg-gray-200 p-1 rounded mt-1 break-all">
-                  {JSON.stringify(params, null, 2)}
-                </code>
-              </div>
-              <div>
-                <strong>Extraction method tried:</strong>
-                <code className="block text-xs bg-gray-200 p-1 rounded mt-1">
-                  {sectionExtraction.method}
-                </code>
-              </div>
-              <div>
-                <strong>URL parts:</strong>
-                <code className="block text-xs bg-gray-200 p-1 rounded mt-1 break-all">
-                  {typeof window !== 'undefined' ? JSON.stringify(window.location.pathname.split('/')) : 'N/A'}
-                </code>
-              </div>
+          setSectionInfo(contentData.sectionInfo);
+          setHtmlContent(contentData.htmlContent);
+          setLoadingMethod('prefetch');
+          
+          // Clear the cached data after use
+          sessionStorage.removeItem(cacheKey);
+          
+          return true;
+        } else {
+          console.log('⏰ Prefetched data is too old, removing from cache');
+          sessionStorage.removeItem(cacheKey);
+        }
+      } else {
+        console.log('❌ No prefetched data found');
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error loading prefetched data:', error);
+      return false;
+    }
+  };
+
+  // ✅ Function to fetch data normally (fallback)
+  const fetchDataNormally = async (): Promise<void> => {
+    try {
+      console.log('🔄 Loading data normally (fallback method)...');
+      setLoadingMethod('api');
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) {
+        router.push('/login');
+        return;
+      }
+
+      // Sync user data
+      await fetch(`${API_URL}/api/auth/sync-user`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          email: profile?.email,
+          full_name: profile?.full_name,
+          board: profile?.board,
+          class_level: profile?.class_level
+        })
+      });
+
+      // Fetch chapter info
+      const chaptersResponse = await fetch(
+        `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
+        { headers }
+      );
+      
+      if (chaptersResponse.ok) {
+        const chaptersData = await chaptersResponse.json();
+        const chapter = chaptersData.chapters?.find(
+          (ch: any) => ch.number === parseInt(chapterNumber)
+        );
+        if (chapter) {
+          setChapterInfo(chapter);
+        }
+      }
+
+      // Fetch section info
+      const sectionsResponse = await fetch(
+        `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
+        { headers }
+      );
+      
+      if (sectionsResponse.ok) {
+        const sectionsData = await sectionsResponse.json();
+        const section = sectionsData.sections?.find(
+          (s: any) => s.number === parseInt(sectionNumber)
+        );
+        if (section) {
+          setSectionInfo(section);
+        } else {
+          // Fallback section info
+          setSectionInfo({
+            number: parseInt(sectionNumber),
+            name: `Section ${sectionNumber}`
+          });
+        }
+      }
+
+      // Fetch HTML content using the same logic as prefetch
+      const subjectBase = params.subject.substring(0, 5);
+      const commonPatterns = [
+        { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '02', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '12', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '10', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '11', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+      ];
+
+      const tryPattern = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
+        const subjectFolder = `${subjectBase}${folderSuffix}`;
+        const filename = filePrefix 
+          ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
+          : `section_${chapterNumber}_${sectionNumber}.html`;
+        
+        const htmlPath = `/interactive/${params.board}/${params.class}/${params.subject}/${subjectFolder}/${filename}`;
+        
+        try {
+          const response = await fetch(htmlPath);
+          if (response.ok) {
+            const content = await response.text();
+            console.log(`✅ Found content at: ${htmlPath}`);
+            return content;
+          }
+        } catch (error) {
+          // Silent fail
+        }
+        return null;
+      };
+
+      // Search for HTML content
+      let fetchedHtmlContent = '';
+      let fileFound = false;
+
+      for (const pattern of commonPatterns) {
+        if (fileFound) break;
+        
+        for (const filePrefix of pattern.filePrefixes) {
+          const content = await tryPattern(pattern.folderSuffix, filePrefix);
+          if (content) {
+            fetchedHtmlContent = content;
+            fileFound = true;
+            break;
+          }
+        }
+        
+        if (!fileFound) {
+          const content = await tryPattern(pattern.folderSuffix, '');
+          if (content) {
+            fetchedHtmlContent = content;
+            fileFound = true;
+            break;
+          }
+        }
+      }
+
+      if (!fileFound) {
+        console.warn(`❌ No content found for section ${sectionNumber}`);
+        fetchedHtmlContent = `
+          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+            <h2 style="color: #dc2626;">📁 Content Not Found</h2>
+            <p style="color: #6b7280; margin: 20px 0;">
+              Unable to locate learning content for Chapter ${chapterNumber}, Section ${sectionNumber}.
+            </p>
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="color: #6b7280; font-size: 14px;">
+                <strong>Subject:</strong> ${params.subject}<br>
+                <strong>Chapter:</strong> ${chapterNumber}<br>
+                <strong>Section:</strong> ${sectionNumber}
+              </p>
             </div>
-          </div>
-          
-          <div className="flex gap-3 justify-center">
             <button 
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+              onclick="window.location.reload()" 
+              style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;"
             >
               🔄 Retry
             </button>
-            <button 
-              onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md"
-            >
-              ← Back to Chapter
-            </button>
           </div>
-        </div>
-      </div>
-    );
-  }
-  
+        `;
+      }
+
+      setHtmlContent(fetchedHtmlContent);
+      console.log('✅ Normal data fetch completed');
+
+    } catch (error) {
+      console.error('❌ Error in normal data fetch:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load section content');
+    }
+  };
+
   // Format subject name
   const formatSubjectName = (subject: string) => {
     if (!subject) return '';
@@ -444,216 +447,81 @@ export default function SectionContentPage() {
   const boardDisplayName = BOARD_DISPLAY_NAMES[params.board?.toLowerCase()] || params.board?.toUpperCase() || '';
   const classDisplayName = CLASS_DISPLAY_NAMES[params.class?.toLowerCase()] || params.class?.toUpperCase() || '';
 
+  // ✅ Main useEffect - Handle both prefetched and normal loading
   useEffect(() => {
-    const fetchData = async () => {
+    const initializeContent = async () => {
       if (authLoading) return;
       if (!profile) {
         router.push('/login');
         return;
       }
 
-      try {
-        console.log('🚀 STARTING DATA FETCH - useEffect triggered');
-        console.log('📊 Current state:', {
-          loading,
-          finalSectionNumber,
-          chapterNumber,
-          htmlContent: htmlContent ? 'exists' : 'empty',
-          lastNavigation
-        });
+      if (!sectionNumber || !chapterNumber) {
+        setError('Invalid section or chapter number');
+        setLoading(false);
+        return;
+      }
 
+      try {
         setLoading(true);
         setError(null);
 
-        const { headers, isAuthorized } = await getAuthHeaders();
-        if (!isAuthorized) {
-          router.push('/login');
-          return;
-        }
-
-        // Sync user data
-        await fetch(`${API_URL}/api/auth/sync-user`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            email: profile?.email,
-            full_name: profile?.full_name,
-            board: profile?.board,
-            class_level: profile?.class_level
-          })
-        });
-
-        // Fetch chapter info
-        const chaptersResponse = await fetch(
-          `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
-          { headers }
-        );
+        // ✅ STEP 1: Try to load from prefetched data first
+        const wasPrefetched = searchParams?.get('prefetched') === '1';
+        console.log(`🔍 Initialization - prefetched flag: ${wasPrefetched}`);
         
-        if (chaptersResponse.ok) {
-          const chaptersData = await chaptersResponse.json();
-          const chapter = chaptersData.chapters?.find(
-            (ch: any) => ch.number === parseInt(chapterNumber)
-          );
-          if (chapter) {
-            setChapterInfo(chapter);
-            console.log('✅ Chapter info loaded:', chapter.name);
+        if (wasPrefetched) {
+          const prefetchSuccess = loadFromPrefetchedData();
+          if (prefetchSuccess) {
+            console.log('✅ Successfully loaded from prefetch cache');
+            setLoading(false);
+            return;
+          } else {
+            console.log('⚠️ Prefetch cache failed, falling back to normal loading');
           }
         }
 
-        // Fetch section info
-        const sectionsResponse = await fetch(
-          `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
-          { headers }
-        );
-        
-        if (sectionsResponse.ok) {
-          const sectionsData = await sectionsResponse.json();
-          const section = sectionsData.sections?.find(
-            (s: any) => s.number === parseInt(finalSectionNumber)
-          );
-          if (section) {
-            setSectionInfo(section);
-            console.log('✅ Section info loaded:', section.name);
-          }
-        }
-
-        // ✅ ENHANCED: HTML content fetching with detailed logging
-        console.log(`🔍 Fetching content for: Chapter ${chapterNumber}, Section ${finalSectionNumber}`);
-        console.log(`🔍 Subject breakdown: ${params.subject} → base: ${params.subject.substring(0, 5)}`);
-        
-        const subjectBase = params.subject.substring(0, 5); // e.g., "lech1" from "lech1dd"
-        
-        // Common patterns for efficient search
-        const commonPatterns = [
-          { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-          { folderSuffix: '02', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-          { folderSuffix: '12', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-          { folderSuffix: '10', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-          { folderSuffix: '11', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        ];
-        
-        // Try pattern function
-        const tryPattern = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
-          const subjectFolder = `${subjectBase}${folderSuffix}`;
-          const filename = filePrefix 
-            ? `${filePrefix}_section_${chapterNumber}_${finalSectionNumber}.html`
-            : `section_${chapterNumber}_${finalSectionNumber}.html`;
-          
-          const htmlPath = `/interactive/${params.board}/${params.class}/${params.subject}/${subjectFolder}/${filename}`;
-          
-          try {
-            const response = await fetch(htmlPath);
-            if (response.ok) {
-              const content = await response.text();
-              console.log(`✅ Found content at: ${htmlPath}`);
-              return content;
-            }
-          } catch (error) {
-            // Silent fail, continue trying
-          }
-          return null;
-        };
-        
-        // Efficient search
-        let fetchedHtmlContent = '';
-        let fileFound = false;
-        
-        console.log(`🔍 Smart search for: Chapter ${chapterNumber}, Section ${finalSectionNumber}`);
-        
-        // Try common patterns first
-        for (const pattern of commonPatterns) {
-          if (fileFound) break;
-          
-          for (const filePrefix of pattern.filePrefixes) {
-            const content = await tryPattern(pattern.folderSuffix, filePrefix);
-            if (content) {
-              fetchedHtmlContent = content;
-              fileFound = true;
-              break;
-            }
-          }
-          
-          // Also try without prefix
-          if (!fileFound) {
-            const content = await tryPattern(pattern.folderSuffix, '');
-            if (content) {
-              fetchedHtmlContent = content;
-              fileFound = true;
-              break;
-            }
-          }
-        }
-        
-        if (!fileFound) {
-          console.warn(`❌ No content found for: Chapter ${chapterNumber}, Section ${finalSectionNumber}`);
-          fetchedHtmlContent = `
-            <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-              <h2 style="color: #dc2626;">📁 Content Not Found</h2>
-              <p style="color: #6b7280; margin: 20px 0;">
-                Unable to locate learning content for Chapter ${chapterNumber}, Section ${finalSectionNumber}.
-              </p>
-              <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
-                <h3 style="color: #374151; margin-top: 0;">Search Details:</h3>
-                <p style="color: #6b7280; font-size: 14px; margin: 10px 0;">
-                  <strong>Subject:</strong> ${params.subject} (${subjectBase}XX)<br>
-                  <strong>Chapter:</strong> ${chapterNumber}<br>
-                  <strong>Section:</strong> ${finalSectionNumber}<br>
-                  <strong>Pattern:</strong> /interactive/${params.board}/${params.class}/${params.subject}/${subjectBase}XX/YY_section_${chapterNumber}_${finalSectionNumber}.html
-                </p>
-              </div>
-              <button 
-                onclick="window.location.reload()" 
-                style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;"
-              >
-                🔄 Retry Search
-              </button>
-            </div>
-          `;
-        }
-        
-        setHtmlContent(fetchedHtmlContent);
-        console.log('✅ Content loaded successfully');
+        // ✅ STEP 2: Fallback to normal API loading
+        await fetchDataNormally();
 
         // Initialize token service
         userTokenService.fetchUserTokenStatus();
 
       } catch (error) {
-        console.error('❌ Error fetching data:', error);
+        console.error('❌ Error in content initialization:', error);
         setError(error instanceof Error ? error.message : 'Failed to load section content');
       } finally {
         setLoading(false);
-        console.log('🏁 Data fetch completed');
       }
     };
 
-    // ✅ CRITICAL: Only fetch if we have valid parameters and no content yet
-    if (params.board && params.class && params.subject && params.chapter && finalSectionNumber) {
-      console.log('🔄 useEffect dependencies changed, fetching data...');
-      fetchData();
-    } else {
-      console.log('⏳ Waiting for valid parameters...', {
-        board: !!params.board,
-        class: !!params.class,
-        subject: !!params.subject,
-        chapter: !!params.chapter,
-        finalSectionNumber: !!finalSectionNumber
-      });
+    if (params.board && params.class && params.subject && params.chapter) {
+      initializeContent();
     }
-  }, [
-    // ✅ CRITICAL DEPENDENCIES: These should trigger re-fetch
-    params.board, 
-    params.class, 
-    params.subject, 
-    params.chapter, 
-    params.sectionNumber, // Add this to detect section changes
-    finalSectionNumber, 
-    chapterNumber,
-    router, 
-    profile, 
-    authLoading, 
-    API_URL,
-    lastNavigation // Add this to detect navigation
-  ]);
+  }, [params, router, profile, authLoading, sectionNumber, chapterNumber, searchParams, API_URL]);
+
+  // Early return for invalid parameters
+  if (!sectionNumber || !chapterNumber) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="font-semibold text-red-800 mb-2">Invalid Parameters</h3>
+          <p className="text-red-700 mb-4">Section or chapter number is missing from the URL.</p>
+          <button 
+            onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+          >
+            Back to Chapter
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -672,12 +540,21 @@ export default function SectionContentPage() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
-                  {formatSubjectName(params.subject)} - Chapter {chapterNumber}, Section {finalSectionNumber}
+                  {formatSubjectName(params.subject)} - Chapter {chapterNumber}, Section {sectionNumber}
                 </h1>
-                <p className="text-sm sm:text-base text-gray-600">Loading learning content...</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm sm:text-base text-gray-600">
+                    Loading learning content via {loadingMethod}...
+                  </p>
+                  {loadingMethod === 'prefetch' && (
+                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                      ⚡ Fast Load
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex gap-4 items-center relative z-[100] justify-end">
-                <ContentNavigation params={params} sectionNumber={finalSectionNumber} />
+                <ContentNavigation params={params} sectionNumber={sectionNumber} />
               </div>
             </div>
 
@@ -720,10 +597,7 @@ export default function SectionContentPage() {
   }
 
   return (
-    <div 
-      key={`section-content-${params.board}-${params.class}-${params.subject}-${params.chapter}-${finalSectionNumber}`}
-      className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative"
-    >
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
       {/* Animated background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
@@ -740,19 +614,26 @@ export default function SectionContentPage() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
             <div>
               <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
-                {formatSubjectName(params.subject)} - Chapter {chapterNumber}, Section {finalSectionNumber}
+                {formatSubjectName(params.subject)} - Chapter {chapterNumber}, Section {sectionNumber}
                 {sectionInfo?.name && (
                   <span className="block sm:inline sm:ml-2 text-orange-600 text-lg sm:text-xl lg:text-2xl mt-1 sm:mt-0">
                     : {sectionInfo.name}
                   </span>
                 )}
               </h1>
-              <p className="text-sm sm:text-base text-gray-600">
-                {boardDisplayName} {classDisplayName} • Learning Content
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm sm:text-base text-gray-600">
+                  {boardDisplayName} {classDisplayName} • Learning Content
+                </p>
+                {loadingMethod === 'prefetch' && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    ⚡ Preloaded
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex gap-4 items-center relative z-[100] justify-end">
-              <ContentNavigation params={params} sectionNumber={finalSectionNumber} />
+              <ContentNavigation params={params} sectionNumber={sectionNumber} />
             </div>
           </div>
 
@@ -778,7 +659,7 @@ export default function SectionContentPage() {
             {/* Quick Action Buttons */}
             <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${finalSectionNumber}/questions`)}
+                onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`)}
                 className="flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

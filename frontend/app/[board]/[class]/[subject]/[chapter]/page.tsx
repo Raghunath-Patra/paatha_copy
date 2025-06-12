@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/page.tsx
-// UPDATED: Chapter Overview Page - Now links to content first, then questions
+// UPDATED: Chapter Overview Page with Section Content Prefetch
 
 'use client';
 
@@ -33,6 +33,14 @@ interface PerformancePageParams {
   class: string;
   subject: string;
   chapter: string;
+}
+
+// ✅ NEW: Section content data interface
+interface SectionContentData {
+  sectionInfo: Section;
+  htmlContent: string;
+  chapterNumber: string;
+  timestamp: number;
 }
 
 // Subject mapping
@@ -126,6 +134,7 @@ export default function ChapterOverviewPage() {
   const [sectionProgress, setSectionProgress] = useState<SectionProgress>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [prefetchingSection, setPrefetchingSection] = useState<number | null>(null);
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -150,6 +159,193 @@ export default function ChapterOverviewPage() {
   // Get friendly display names
   const boardDisplayName = BOARD_DISPLAY_NAMES[params.board?.toLowerCase()] || params.board?.toUpperCase() || '';
   const classDisplayName = CLASS_DISPLAY_NAMES[params.class?.toLowerCase()] || params.class?.toUpperCase() || '';
+
+  // ✅ NEW: Prefetch section content function
+  const prefetchSectionContent = async (sectionNumber: number): Promise<SectionContentData | null> => {
+    try {
+      console.log(`🔄 Prefetching content for section ${sectionNumber}...`);
+      setPrefetchingSection(sectionNumber);
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) {
+        console.error('❌ Not authorized for prefetch');
+        return null;
+      }
+
+      // Get section info
+      const sectionsResponse = await fetch(
+        `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
+        { headers }
+      );
+
+      let sectionInfo: Section | null = null;
+      if (sectionsResponse.ok) {
+        const sectionsData = await sectionsResponse.json();
+        sectionInfo = sectionsData.sections?.find(
+          (s: any) => s.number === sectionNumber
+        );
+      }
+
+      if (!sectionInfo) {
+        // Fallback section info
+        sectionInfo = {
+          number: sectionNumber,
+          name: `Section ${sectionNumber}`
+        };
+      }
+
+      // ✅ PREFETCH HTML CONTENT using the same logic as content page
+      const subjectBase = params.subject.substring(0, 5);
+      const commonPatterns = [
+        { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '02', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '12', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '10', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+        { folderSuffix: '11', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
+      ];
+
+      const tryPattern = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
+        const subjectFolder = `${subjectBase}${folderSuffix}`;
+        const filename = filePrefix 
+          ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
+          : `section_${chapterNumber}_${sectionNumber}.html`;
+        
+        const htmlPath = `/interactive/${params.board}/${params.class}/${params.subject}/${subjectFolder}/${filename}`;
+        
+        try {
+          const response = await fetch(htmlPath);
+          if (response.ok) {
+            const content = await response.text();
+            console.log(`✅ Prefetched content from: ${htmlPath}`);
+            return content;
+          }
+        } catch (error) {
+          // Silent fail
+        }
+        return null;
+      };
+
+      // Search for HTML content
+      let htmlContent = '';
+      let fileFound = false;
+
+      for (const pattern of commonPatterns) {
+        if (fileFound) break;
+        
+        for (const filePrefix of pattern.filePrefixes) {
+          const content = await tryPattern(pattern.folderSuffix, filePrefix);
+          if (content) {
+            htmlContent = content;
+            fileFound = true;
+            break;
+          }
+        }
+        
+        if (!fileFound) {
+          const content = await tryPattern(pattern.folderSuffix, '');
+          if (content) {
+            htmlContent = content;
+            fileFound = true;
+            break;
+          }
+        }
+      }
+
+      if (!fileFound) {
+        console.warn(`❌ No content found during prefetch for section ${sectionNumber}`);
+        htmlContent = `
+          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+            <h2 style="color: #dc2626;">📁 Content Not Found</h2>
+            <p style="color: #6b7280; margin: 20px 0;">
+              Unable to locate learning content for Chapter ${chapterNumber}, Section ${sectionNumber}.
+            </p>
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="color: #6b7280; font-size: 14px;">
+                <strong>Subject:</strong> ${params.subject}<br>
+                <strong>Chapter:</strong> ${chapterNumber}<br>
+                <strong>Section:</strong> ${sectionNumber}
+              </p>
+            </div>
+          </div>
+        `;
+      }
+
+      const contentData: SectionContentData = {
+        sectionInfo,
+        htmlContent,
+        chapterNumber,
+        timestamp: Date.now()
+      };
+
+      console.log(`✅ Prefetch completed for section ${sectionNumber}`);
+      return contentData;
+
+    } catch (error) {
+      console.error(`❌ Prefetch error for section ${sectionNumber}:`, error);
+      return null;
+    } finally {
+      setPrefetchingSection(null);
+    }
+  };
+
+  // ✅ UPDATED: Handle section click with prefetch
+  const handleSectionClick = async (sectionNumber: number) => {
+    try {
+      console.log(`🔗 Section ${sectionNumber} clicked - starting prefetch...`);
+      
+      const contentData = await prefetchSectionContent(sectionNumber);
+      
+      if (contentData) {
+        // Store the prefetched data in sessionStorage
+        const cacheKey = `section_content_${params.board}_${params.class}_${params.subject}_${chapterNumber}_${sectionNumber}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify(contentData));
+        
+        console.log(`✅ Content cached, navigating to section ${sectionNumber}...`);
+        
+        // Navigate with a cache indicator
+        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content?prefetched=1`);
+      } else {
+        // Fallback to normal navigation
+        console.log(`⚠️ Prefetch failed, using normal navigation...`);
+        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
+      }
+    } catch (error) {
+      console.error('❌ Error in section click handler:', error);
+      // Fallback to normal navigation
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
+    }
+  };
+
+  // ✅ NEW: Handle direct questions click
+  const handleDirectQuestionsClick = (sectionNumber: number) => {
+    console.log('🔗 Navigating to section questions:', sectionNumber);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
+  };
+
+  // Handle performance click
+  const handlePerformanceClick = (sectionNumber: number) => {
+    console.log('🔗 Navigating to section performance:', sectionNumber);
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/performance`);
+  };
+
+  // Handle exercise questions click
+  const handleExerciseClick = () => {
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise`);
+  };
+
+  // Get section progress
+  const getSectionProgress = (sectionNumber: number) => {
+    const key = `section_${sectionNumber}`;
+    return sectionProgress[key] || { total_attempts: 0, average_score: 0 };
+  };
+
+  // Get progress color
+  const getProgressColor = (averageScore: number) => {
+    if (averageScore >= 8) return 'bg-green-500';
+    if (averageScore >= 6) return 'bg-yellow-500';
+    if (averageScore > 0) return 'bg-orange-500';
+    return 'bg-gray-300';
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -250,44 +446,6 @@ export default function ChapterOverviewPage() {
       fetchData();
     }
   }, [params, router, profile, authLoading, API_URL, chapterNumber]);
-
-  // ✅ UPDATED: Handle section click - now goes to content first
-  const handleSectionClick = (sectionNumber: number) => {
-    console.log('🔗 Navigating to section:', sectionNumber);
-    console.log('🔗 Full URL will be:', `/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/content`);
-  };
-
-  // ✅ NEW: Handle direct questions click (for "Practice Questions" button)
-  const handleDirectQuestionsClick = (sectionNumber: number) => {
-    console.log('🔗 Navigating to section questions:', sectionNumber);
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
-  };
-
-  // Handle performance click
-  const handlePerformanceClick = (sectionNumber: number) => {
-    console.log('🔗 Navigating to section performance:', sectionNumber);
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/performance`);
-  };
-
-  // Handle exercise questions click
-  const handleExerciseClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise`);
-  };
-
-  // Get section progress
-  const getSectionProgress = (sectionNumber: number) => {
-    const key = `section_${sectionNumber}`;
-    return sectionProgress[key] || { total_attempts: 0, average_score: 0 };
-  };
-
-  // Get progress color
-  const getProgressColor = (averageScore: number) => {
-    if (averageScore >= 8) return 'bg-green-500';
-    if (averageScore >= 6) return 'bg-yellow-500';
-    if (averageScore > 0) return 'bg-orange-500';
-    return 'bg-gray-300';
-  };
 
   if (loading) {
     return (
@@ -424,19 +582,7 @@ export default function ChapterOverviewPage() {
               {sections.map((section) => {
                 const progress = getSectionProgress(section.number);
                 const progressPercentage = progress.total_attempts > 0 ? Math.min((progress.average_score / 10) * 100, 100) : 0;
-                
-                // Debug logging for each section
-                console.log('🔍 Rendering section:', {
-                  section,
-                  sectionNumber: section.number,
-                  sectionName: section.name
-                });
-                
-                // Validate section number
-                if (!section.number || isNaN(section.number)) {
-                  console.error('❌ Invalid section number:', section);
-                  return null;
-                }
+                const isCurrentlyPrefetching = prefetchingSection === section.number;
                 
                 return (
                   <div key={section.number} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50 relative overflow-hidden hover:shadow-xl transition-all duration-300">
@@ -480,51 +626,34 @@ export default function ChapterOverviewPage() {
                         </div>
                       </div>
                       
-                      {/* ✅ UPDATED: Action Buttons with better error handling */}
+                      {/* ✅ UPDATED: Action Buttons with prefetch loading */}
                       <div className="flex gap-3">
                         <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const sectionNum = section.number;
-                            console.log('🖱️ Learn Content clicked:', {
-                              section,
-                              sectionNumber: sectionNum,
-                              type: typeof sectionNum,
-                              isValid: !isNaN(Number(sectionNum))
-                            });
-                            
-                            if (sectionNum && !isNaN(Number(sectionNum))) {
-                              handleSectionClick(Number(sectionNum));
-                            } else {
-                              console.error('❌ Invalid section number for navigation:', sectionNum);
-                              alert(`Error: Invalid section number (${sectionNum}). Please refresh the page.`);
-                            }
-                          }}
-                          className="flex-1 py-2 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2"
+                          onClick={() => handleSectionClick(section.number)}
+                          disabled={isCurrentlyPrefetching}
+                          className={`flex-1 py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2 ${
+                            isCurrentlyPrefetching 
+                              ? 'bg-gray-400 text-white cursor-not-allowed' 
+                              : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
+                          }`}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z" />
-                          </svg>
-                          Learn Content
+                          {isCurrentlyPrefetching ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Loading Content...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z" />
+                              </svg>
+                              Learn Content
+                            </>
+                          )}
                         </button>
                         
                         <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const sectionNum = section.number;
-                            console.log('🖱️ Questions clicked:', {
-                              section,
-                              sectionNumber: sectionNum,
-                              type: typeof sectionNum
-                            });
-                            
-                            if (sectionNum && !isNaN(Number(sectionNum))) {
-                              handleDirectQuestionsClick(Number(sectionNum));
-                            } else {
-                              console.error('❌ Invalid section number for questions:', sectionNum);
-                              alert(`Error: Invalid section number (${sectionNum}). Please refresh the page.`);
-                            }
-                          }}
+                          onClick={() => handleDirectQuestionsClick(section.number)}
                           className="py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -535,22 +664,7 @@ export default function ChapterOverviewPage() {
                         
                         {progress.total_attempts > 0 && (
                           <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              const sectionNum = section.number;
-                              console.log('🖱️ Performance clicked:', {
-                                section,
-                                sectionNumber: sectionNum,
-                                type: typeof sectionNum
-                              });
-                              
-                              if (sectionNum && !isNaN(Number(sectionNum))) {
-                                handlePerformanceClick(Number(sectionNum));
-                              } else {
-                                console.error('❌ Invalid section number for performance:', sectionNum);
-                                alert(`Error: Invalid section number (${sectionNum}). Please refresh the page.`);
-                              }
-                            }}
+                            onClick={() => handlePerformanceClick(section.number)}
                             className="py-2 px-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
