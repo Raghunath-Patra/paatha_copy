@@ -9,7 +9,7 @@ import Navigation from '../../../../../../components/navigation/Navigation';
 import { getAuthHeaders } from '../../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../../../utils/userTokenService';
-import HTMLContentRenderer from '../../../../../../components/HTMLContentRenderer'; // Import the enhanced component
+import HTMLContentRenderer from '../../../../../../components/questions/HTMLContentRenderer'; // Import the enhanced component
 
 interface SectionInfo {
   number: number;
