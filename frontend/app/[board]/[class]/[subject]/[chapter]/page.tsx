@@ -350,8 +350,13 @@ export default function ChapterOverviewPage() {
 
   // Get section progress
   const getSectionProgress = (sectionNumber: number) => {
-    const key = `section_${sectionNumber}`;
-    return sectionProgress[key] || { total_attempts: 0, average_score: 0 };
+    const key = `${sectionNumber}`;
+    return sectionProgress[key]
+      ? {
+          total_attempts: sectionProgress[key].total_attempts ?? 0,
+          average_score: sectionProgress[key].average_score ?? 0
+        }
+      : { total_attempts: 0, average_score: 0 };
   };
 
   // Get progress color
