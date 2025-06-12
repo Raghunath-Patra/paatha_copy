@@ -346,7 +346,7 @@ export default function ChapterOverviewPage() {
         if (response.ok) {
           const question = await response.json();
           console.log(`Got section question ${question.id}, navigating with question`);
-          router.push(`${sectionUrl}?q=${question.id}`);
+          router.push(`${sectionUrl}/questions/?q=${question.id}`);
         } else {
           console.log('No random section question available, going to section page');
           router.push(sectionUrl);
