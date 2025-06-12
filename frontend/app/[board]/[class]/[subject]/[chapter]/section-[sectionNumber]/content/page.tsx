@@ -170,9 +170,77 @@ export default function SectionContentPage() {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastNavigation, setLastNavigation] = useState<string>('');
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
+  console.log('🔍 NAVIGATION TRACKING:', {
+    'current URL': typeof window !== 'undefined' ? window.location.pathname : 'SSR',
+    'lastNavigation': lastNavigation,
+    'isNavigationChange': lastNavigation !== (typeof window !== 'undefined' ? window.location.pathname : ''),
+    'timestamp': new Date().toISOString()
+  });
+
+  // ✅ ROUTER EVENT LISTENERS to detect navigation
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      console.log('🔄 ROUTER: Navigation detected to:', url);
+      
+      // Reset component state on navigation
+      setSectionInfo(null);
+      setChapterInfo(null);
+      setHtmlContent('');
+      setLoading(true);
+      setError(null);
+      
+      setLastNavigation(url);
+    };
+
+    const handleRouteChangeStart = (url: string) => {
+      console.log('🚀 ROUTER: Navigation starting to:', url);
+      setLoading(true);
+    };
+
+    const handleRouteChangeComplete = (url: string) => {
+      console.log('✅ ROUTER: Navigation completed to:', url);
+    };
+
+    const handleRouteChangeError = (err: any, url: string) => {
+      console.error('❌ ROUTER: Navigation error to:', url, err);
+      setLoading(false);
+    };
+
+    // Add router event listeners
+    router.events?.on('routeChangeStart', handleRouteChangeStart);
+    router.events?.on('routeChangeComplete', handleRouteChangeComplete);
+    router.events?.on('routeChangeError', handleRouteChangeError);
+
+    return () => {
+      // Cleanup event listeners
+      router.events?.off('routeChangeStart', handleRouteChangeStart);
+      router.events?.off('routeChangeComplete', handleRouteChangeComplete);
+      router.events?.off('routeChangeError', handleRouteChangeError);
+    };
+  }, [router]);
+
+  // ✅ DETECT NAVIGATION CHANGES and reset state
+  useEffect(() => {
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (currentPath !== lastNavigation && currentPath) {
+      console.log('🔄 NAVIGATION DETECTED - Resetting component state');
+      
+      // Reset all state on navigation
+      setSectionInfo(null);
+      setChapterInfo(null);
+      setHtmlContent('');
+      setLoading(true);
+      setError(null);
+      
+      // Update navigation tracking
+      setLastNavigation(currentPath);
+    }
+  }, [typeof window !== 'undefined' ? window.location.pathname : '', lastNavigation]);
+
   // ✅ COMPREHENSIVE DEBUGGING: Let's see what we actually get
   console.log('🔍 COMPREHENSIVE ROUTE ANALYSIS:', {
     'typeof window': typeof window,
@@ -388,6 +456,15 @@ export default function SectionContentPage() {
       }
 
       try {
+        console.log('🚀 STARTING DATA FETCH - useEffect triggered');
+        console.log('📊 Current state:', {
+          loading,
+          finalSectionNumber,
+          chapterNumber,
+          htmlContent: htmlContent ? 'exists' : 'empty',
+          lastNavigation
+        });
+
         setLoading(true);
         setError(null);
 
@@ -422,6 +499,7 @@ export default function SectionContentPage() {
           );
           if (chapter) {
             setChapterInfo(chapter);
+            console.log('✅ Chapter info loaded:', chapter.name);
           }
         }
 
@@ -438,6 +516,7 @@ export default function SectionContentPage() {
           );
           if (section) {
             setSectionInfo(section);
+            console.log('✅ Section info loaded:', section.name);
           }
         }
 
@@ -536,22 +615,48 @@ export default function SectionContentPage() {
         }
         
         setHtmlContent(htmlContent);
+        console.log('✅ Content loaded successfully');
 
         // Initialize token service
         userTokenService.fetchUserTokenStatus();
 
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('❌ Error fetching data:', error);
         setError(error instanceof Error ? error.message : 'Failed to load section content');
       } finally {
         setLoading(false);
+        console.log('🏁 Data fetch completed');
       }
     };
 
+    // ✅ CRITICAL: Only fetch if we have valid parameters and no content yet
     if (params.board && params.class && params.subject && params.chapter && finalSectionNumber) {
+      console.log('🔄 useEffect dependencies changed, fetching data...');
       fetchData();
+    } else {
+      console.log('⏳ Waiting for valid parameters...', {
+        board: !!params.board,
+        class: !!params.class,
+        subject: !!params.subject,
+        chapter: !!params.chapter,
+        finalSectionNumber: !!finalSectionNumber
+      });
     }
-  }, [params, router, profile, authLoading, API_URL, chapterNumber, finalSectionNumber]);
+  }, [
+    // ✅ CRITICAL DEPENDENCIES: These should trigger re-fetch
+    params.board, 
+    params.class, 
+    params.subject, 
+    params.chapter, 
+    params.sectionNumber, // Add this to detect section changes
+    finalSectionNumber, 
+    chapterNumber,
+    router, 
+    profile, 
+    authLoading, 
+    API_URL,
+    lastNavigation // Add this to detect navigation
+  ]);
 
   if (loading) {
     return (
@@ -618,7 +723,10 @@ export default function SectionContentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
+    <div 
+      key={`section-content-${params.board}-${params.class}-${params.subject}-${params.chapter}-${finalSectionNumber}`}
+      className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative"
+    >
       {/* Animated background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
