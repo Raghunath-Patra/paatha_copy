@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/content/page.tsx
-// UPDATED: Section Content Page with Prefetch Support
+// UPDATED: Section Content Page with Enhanced HTML Content Support
 
 'use client';
 
@@ -9,6 +9,7 @@ import Navigation from '../../../../../../components/navigation/Navigation';
 import { getAuthHeaders } from '../../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../../../utils/userTokenService';
+import HTMLContentRenderer from '../../../../../../components/questions/HTMLContentRenderer'; // Import the enhanced component
 
 interface SectionInfo {
   number: number;
@@ -178,6 +179,7 @@ export default function SectionContentPage() {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isContentReady, setIsContentReady] = useState(false);
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -460,11 +462,13 @@ export default function SectionContentPage() {
       try {
         setLoading(true);
         setError(null);
+        setIsContentReady(false);
 
         // ✅ STEP 1: Try to load from cache first (invisible to user)
         const cacheSuccess = loadFromCachedData();
         if (cacheSuccess) {
           console.log('✅ Successfully loaded from cache');
+          setIsContentReady(true);
           setLoading(false);
           return;
         }
@@ -472,6 +476,7 @@ export default function SectionContentPage() {
         // ✅ STEP 2: Fallback to normal loading
         console.log('⚠️ No cache found, loading normally...');
         await fetchDataNormally();
+        setIsContentReady(true);
 
         // Initialize token service
         userTokenService.fetchUserTokenStatus();
@@ -616,16 +621,19 @@ export default function SectionContentPage() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-50/20 to-transparent opacity-30"></div>
               
               <div className="relative z-10">
-                {/* ✅ HTML Content Display */}
-                <div 
-                  className="prose prose-lg max-w-none p-6 sm:p-8"
-                  dangerouslySetInnerHTML={{ __html: htmlContent }}
-                  style={{
-                    // Override prose styles for better integration
-                    // color: 'inherit',
-                    lineHeight: '1.6'
-                  }}
-                />
+                {/* ✅ UPDATED: Enhanced HTML Content Display with Script/Style Support */}
+                {isContentReady && htmlContent ? (
+                  <HTMLContentRenderer 
+                    htmlContent={htmlContent}
+                    className="prose prose-lg max-w-none p-6 sm:p-8"
+                    style={{ lineHeight: '1.6' }}
+                  />
+                ) : (
+                  <div className="p-6 sm:p-8 text-center text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto mb-4"></div>
+                    Preparing interactive content...
+                  </div>
+                )}
               </div>
             </div>
 
