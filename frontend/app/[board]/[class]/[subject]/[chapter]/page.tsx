@@ -161,7 +161,7 @@ export default function ChapterOverviewPage() {
   const classDisplayName = CLASS_DISPLAY_NAMES[params.class?.toLowerCase()] || params.class?.toUpperCase() || '';
 
   // ✅ NEW: Load section content in advance
-  const prefetchSectionContent = async (sectionNumber: number): Promise<SectionContentData | null> => {
+  const prefetchSectionContent = async (sectionNumber: number, sectionName: string): Promise<SectionContentData | null> => {
     try {
       console.log(`🔄 Loading content for section ${sectionNumber}...`);
       setLoadingSection(sectionNumber);
@@ -196,7 +196,7 @@ export default function ChapterOverviewPage() {
 
       sectionInfo = {
            number: sectionNumber,
-           name: `Section ${sectionNumber}`
+           name: sectionName
       };
 
       // ✅ LOAD HTML CONTENT using chapter-based folder suffix
@@ -288,11 +288,11 @@ export default function ChapterOverviewPage() {
   };
 
   // ✅ UPDATED: Handle section click with advance content loading
-  const handleSectionClick = async (sectionNumber: number) => {
+  const handleSectionClick = async (sectionNumber: number, sectionName:string) => {
     try {
       console.log(`🔗 Section ${sectionNumber} clicked - loading content...`);
       
-      const contentData = await prefetchSectionContent(sectionNumber);
+      const contentData = await prefetchSectionContent(sectionNumber, sectionName);
       
       if (contentData) {
         // Store the loaded data in sessionStorage
@@ -628,7 +628,7 @@ export default function ChapterOverviewPage() {
                       {/* ✅ UPDATED: Action Buttons with prefetch loading */}
                       <div className="flex gap-3">
                         <button
-                          onClick={() => handleSectionClick(section.number)}
+                          onClick={() => handleSectionClick(section.number, section.name)}
                           disabled={isCurrentlyLoading}
                           className={`flex-1 py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2 ${
                             isCurrentlyLoading 
