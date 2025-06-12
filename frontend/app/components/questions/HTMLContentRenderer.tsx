@@ -9,8 +9,8 @@ interface HTMLContentRendererProps {
 
 const HTMLContentRenderer: React.FC<HTMLContentRendererProps> = ({
   htmlContent,
-  className = "prose prose-lg max-w-none p-6 sm:p-8",
-  style = { lineHeight: '1.6' }
+  className = "",
+  style = {}
 }: HTMLContentRendererProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const stylesRef = useRef<Set<string>>(new Set());

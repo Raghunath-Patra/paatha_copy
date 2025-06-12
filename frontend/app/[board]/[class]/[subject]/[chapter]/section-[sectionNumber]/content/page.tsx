@@ -9,7 +9,7 @@ import Navigation from '../../../../../../components/navigation/Navigation';
 import { getAuthHeaders } from '../../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../../../utils/userTokenService';
-import HTMLContentRenderer from '../../../../../../components/questions/HTMLContentRenderer'; // Import the enhanced component
+import HTMLContentRenderer from '../../../../../../components/HTMLContentRenderer'; // Import the enhanced component
 
 interface SectionInfo {
   number: number;
@@ -617,16 +617,14 @@ export default function SectionContentPage() {
 
           {/* HTML Content Container */}
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-50/20 to-transparent opacity-30"></div>
-              
+            <div className="bg-white rounded-xl shadow-lg relative overflow-hidden">
               <div className="relative z-10">
-                {/* ✅ UPDATED: Enhanced HTML Content Display with Script/Style Support */}
+                {/* ✅ UPDATED: Enhanced HTML Content Display with Minimal Styling */}
                 {isContentReady && htmlContent ? (
                   <HTMLContentRenderer 
                     htmlContent={htmlContent}
-                    className="prose prose-lg max-w-none p-6 sm:p-8"
-                    style={{ lineHeight: '1.6' }}
+                    className=""
+                    style={{}}
                   />
                 ) : (
                   <div className="p-6 sm:p-8 text-center text-gray-500">
