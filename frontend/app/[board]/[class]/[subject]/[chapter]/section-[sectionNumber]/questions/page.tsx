@@ -265,9 +265,38 @@ export default function SectionQuestionsPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const PREFETCH_VALIDITY_TIME = 15 * 60 * 1000; // 15 minutes
   
-  // Extract section number from params
-  const sectionNumber = params.sectionNumber?.replace('section-', '') || '';
+  // Extract section number from params - FIXED: Parse from URL since Next.js doesn't support prefixed dynamic segments
+  const extractSectionNumber = (): string => {
+    console.log('🔧 Extracting section number:', {
+      'params.sectionNumber': params.sectionNumber,
+      'window.location.pathname': typeof window !== 'undefined' ? window.location.pathname : 'SSR'
+    });
+
+    // Try params first (in case route structure changes)
+    if (params.sectionNumber && params.sectionNumber !== 'undefined') {
+      const extracted = params.sectionNumber.toString().replace('section-', '');
+      console.log('✅ Extracted from params:', extracted);
+      return extracted;
+    }
+    
+    // Fallback: Parse from URL path
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const match = pathname.match(/\/section-(\d+)\//);
+      if (match && match[1]) {
+        console.log('✅ Extracted from URL:', match[1]);
+        return match[1];
+      }
+    }
+    
+    console.log('❌ Could not extract section number');
+    return '';
+  };
+
+  const sectionNumber = extractSectionNumber();
   const chapterNumber = params.chapter?.replace('chapter-', '') || '';
+
+  console.log('📊 Final extracted values:', { sectionNumber, chapterNumber });
 
   // DEBUG: Add comprehensive debugging useEffect
   useEffect(() => {
