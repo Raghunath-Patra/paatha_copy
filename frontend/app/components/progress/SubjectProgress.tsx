@@ -1,4 +1,4 @@
-// frontend/app/components/progress/SubjectProgress.tsx - Enhanced with theme
+// frontend/app/components/progress/SubjectProgress.tsx - Fixed chapter navigation
 'use client';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -156,6 +156,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
     };
   }, [subjects, progress, board, classLevel]);
 
+  // ✅ FIXED: Simplified chapter click handler - no more question fetching
   const handleChapterClick = async (subject: string, chapterNum: number) => {
     try {
       // Get the subject code if available, otherwise use the display name
@@ -165,34 +166,14 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
       // Use code if available, otherwise use the normalized name
       const subjectParam = subjectObj?.code || normalizedSubject;
       
-      console.log(`Navigating to chapter with subject: ${subjectParam}`);
+      console.log(`✅ Navigating to chapter overview: ${subjectParam}, chapter ${chapterNum}`);
+      
+      // ✅ FIXED: Direct navigation to chapter overview page (no question ID)
       const chapterUrl = `/${board}/${classLevel}/${subjectParam}/chapter-${chapterNum}`;
       
-      const { headers, isAuthorized } = await getAuthHeaders();
-      if (!isAuthorized) {
-        router.push('/login');
-        return;
-      }
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-      // First try to get a random question for this chapter
-      try {
-        const response = await fetch(
-          `${API_URL}/api/questions/${board}/${classLevel}/${subjectParam}/chapter-${chapterNum}/random`,
-          { headers }
-        );
-        
-        if (response.ok) {
-          const question = await response.json();
-          router.push(`${chapterUrl}?q=${question.id}`);
-        } else {
-          console.log('No random question available, going to chapter page');
-          router.push(chapterUrl);
-        }
-      } catch (error) {
-        console.error('Error fetching initial question:', error);
-        router.push(chapterUrl);
-      }
+      console.log(`🔗 Chapter URL: ${chapterUrl}`);
+      router.push(chapterUrl);
+      
     } catch (error) {
       console.error('Error handling chapter click:', error);
       router.push(`/${board}/${classLevel}`);
