@@ -173,38 +173,39 @@ export default function ChapterOverviewPage() {
       }
 
       // Get section info
-      const sectionsResponse = await fetch(
-        `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
-        { headers }
-      );
+      // const sectionsResponse = await fetch(
+      //   `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
+      //   { headers }
+      // );
 
       let sectionInfo: Section | null = null;
-      if (sectionsResponse.ok) {
-        const sectionsData = await sectionsResponse.json();
-        sectionInfo = sectionsData.sections?.find(
-          (s: any) => s.number === sectionNumber
-        );
-      }
+      // if (sectionsResponse.ok) {
+      //   const sectionsData = await sectionsResponse.json();
+      //   sectionInfo = sectionsData.sections?.find(
+      //     (s: any) => s.number === sectionNumber
+      //   );
+      // }
 
-      if (!sectionInfo) {
-        // Fallback section info
-        sectionInfo = {
-          number: sectionNumber,
-          name: `Section ${sectionNumber}`
-        };
-      }
+      // if (!sectionInfo) {
+      //   // Fallback section info
+      //   sectionInfo = {
+      //     number: sectionNumber,
+      //     name: `Section ${sectionNumber}`
+      //   };
+      // }
 
-      // ✅ LOAD HTML CONTENT using the same logic as content page
+      sectionInfo = {
+           number: sectionNumber,
+           name: `Section ${sectionNumber}`
+      };
+
+      // ✅ LOAD HTML CONTENT using chapter-based folder suffix
       const subjectBase = params.subject.substring(0, 5);
-      const commonPatterns = [
-        { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '02', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '12', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '10', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-        { folderSuffix: '11', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
-      ];
+      
+      // Derive folder suffix from chapter number (2-digit padded)
+      const folderSuffix = chapterNumber.toString().padStart(2, '0');
 
-      const tryPattern = async (folderSuffix: string, filePrefix: string): Promise<string | null> => {
+      const tryPattern = async (filePrefix: string): Promise<string | null> => {
         const subjectFolder = `${subjectBase}${folderSuffix}`;
         const filename = filePrefix 
           ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
@@ -229,25 +230,23 @@ export default function ChapterOverviewPage() {
       let htmlContent = '';
       let fileFound = false;
 
-      for (const pattern of commonPatterns) {
-        if (fileFound) break;
-        
-        for (const filePrefix of pattern.filePrefixes) {
-          const content = await tryPattern(pattern.folderSuffix, filePrefix);
-          if (content) {
-            htmlContent = content;
-            fileFound = true;
-            break;
-          }
+      // Try file prefixes from '01' to '30'
+      for (let i = 1; i <= 30 && !fileFound; i++) {
+        const filePrefix = i.toString().padStart(2, '0');
+        const content = await tryPattern(filePrefix);
+        if (content) {
+          htmlContent = content;
+          fileFound = true;
+          break;
         }
-        
-        if (!fileFound) {
-          const content = await tryPattern(pattern.folderSuffix, '');
-          if (content) {
-            htmlContent = content;
-            fileFound = true;
-            break;
-          }
+      }
+      
+      // If no prefixed file found, try without prefix
+      if (!fileFound) {
+        const content = await tryPattern('');
+        if (content) {
+          htmlContent = content;
+          fileFound = true;
         }
       }
 
