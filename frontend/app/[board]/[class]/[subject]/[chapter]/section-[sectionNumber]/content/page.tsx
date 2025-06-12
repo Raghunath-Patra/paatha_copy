@@ -250,7 +250,6 @@ export default function SectionContentPage() {
           
           setSectionInfo(contentData.sectionInfo);
           setHtmlContent(contentData.htmlContent);
-          setLoadingMethod('prefetch');
           
           // Clear the cached data after use
           sessionStorage.removeItem(cacheKey);
