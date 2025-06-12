@@ -616,10 +616,8 @@ export default function SectionContentPage() {
           </div>
 
           {/* HTML Content Container */}
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg relative overflow-hidden">
-              <div className="relative z-10">
-                {/* ✅ UPDATED: Enhanced HTML Content Display with Minimal Styling */}
+
+          {/* ✅ UPDATED: Enhanced HTML Content Display with Minimal Styling */}
                 {isContentReady && htmlContent ? (
                   <HTMLContentRenderer 
                     htmlContent={htmlContent}
@@ -632,10 +630,14 @@ export default function SectionContentPage() {
                     Preparing interactive content...
                   </div>
                 )}
+          {/* <div className="max-w-6xl mx-auto">
+            <div className="bg-white rounded-xl shadow-lg relative overflow-hidden">
+              <div className="relative z-10">
+                
               </div>
             </div>
 
-            {/* Quick Action Buttons */}
+            {/* Quick Action Buttons }
             <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`)}
@@ -657,7 +659,7 @@ export default function SectionContentPage() {
                 Back to Chapter
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
