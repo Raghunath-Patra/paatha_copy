@@ -733,6 +733,179 @@ export default function SectionPerformanceReport() {
                       )}
                     </div>
                   </div>
+
+                  {/* Questions list */}
+                  {solvedQuestions.length > 0 && (
+                    <div className="divide-y divide-orange-100">
+                      {solvedQuestions.map((attempt, index) => {
+                        const questionKey = `${attempt.question_id}-${attempt.timestamp}`;
+                        const isExpanded = expandedQuestions.has(questionKey);
+                        
+                        return (
+                          <div key={questionKey} className="p-4 sm:p-6 space-y-4">
+                            {/* Question header */}
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                              <div className="space-y-2 flex-1">
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                  <span className="text-sm font-medium text-gray-700">
+                                    Q{attempt.metadata.questionNumber}
+                                  </span>
+                                  <span className={`px-2 py-1 rounded-full text-xs border ${getScoreColor(attempt.score)}`}>
+                                    Score: {attempt.score}/10
+                                  </span>
+                                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs border border-blue-200">
+                                    {formatTime(attempt.time_taken)}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {formatDate(attempt.timestamp)}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex flex-wrap gap-1 sm:gap-2">
+                                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                                    {attempt.metadata.source}
+                                  </span>
+                                  <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                                    {attempt.metadata.level}
+                                  </span>
+                                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
+                                    {attempt.metadata.type}
+                                  </span>
+                                  <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">
+                                    Bloom: {attempt.metadata.bloomLevel}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <button
+                                onClick={() => toggleQuestionExpansion(questionKey)}
+                                className="px-3 py-2 bg-gradient-to-r from-orange-100 to-yellow-100 hover:from-orange-200 hover:to-yellow-200 text-orange-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+                              >
+                                {isExpanded ? 'Hide Details' : 'View Details'}
+                                <svg 
+                                  className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                            </div>
+                            
+                            {/* Question text preview */}
+                            <div className="space-y-2">
+                              <p className="text-gray-800 font-medium line-clamp-2">
+                                {attempt.question_text}
+                              </p>
+                            </div>
+
+                            {/* Expanded details */}
+                            {isExpanded && (
+                              <div className="mt-4 space-y-4 bg-gradient-to-r from-orange-50/50 to-yellow-50/50 rounded-lg p-4 border border-orange-100">
+                                {/* Full question */}
+                                <div>
+                                  <h4 className="font-semibold text-gray-800 mb-2">Question:</h4>
+                                  <p className="text-gray-700 whitespace-pre-wrap">{attempt.question_text}</p>
+                                </div>
+
+                                {/* User answer */}
+                                <div>
+                                  <h4 className="font-semibold text-gray-800 mb-2">Your Answer:</h4>
+                                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                    <p className="text-gray-700 whitespace-pre-wrap">{attempt.user_answer}</p>
+                                    {attempt.transcribed_text && (
+                                      <div className="mt-2 pt-2 border-t border-blue-200">
+                                        <p className="text-xs text-blue-600 font-medium mb-1">Transcribed from voice:</p>
+                                        <p className="text-sm text-gray-600 italic">{attempt.transcribed_text}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Correct answer */}
+                                <div>
+                                  <h4 className="font-semibold text-gray-800 mb-2">Correct Answer:</h4>
+                                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                    <p className="text-gray-700 whitespace-pre-wrap">{attempt.correct_answer}</p>
+                                  </div>
+                                </div>
+
+                                {/* Explanation */}
+                                {attempt.explanation && (
+                                  <div>
+                                    <h4 className="font-semibold text-gray-800 mb-2">Explanation:</h4>
+                                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                                      <p className="text-gray-700 whitespace-pre-wrap">{attempt.explanation}</p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Feedback */}
+                                {attempt.feedback && (
+                                  <div>
+                                    <h4 className="font-semibold text-gray-800 mb-2">AI Feedback:</h4>
+                                    <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                                      <p className="text-gray-700 whitespace-pre-wrap">{attempt.feedback}</p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Question metadata */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-orange-200">
+                                  <div>
+                                    <h5 className="font-medium text-gray-700 mb-1">Question Stats:</h5>
+                                    <p className="text-sm text-gray-600">
+                                      Total attempts: {attempt.metadata.statistics.totalAttempts}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                      Average score: {attempt.metadata.statistics.averageScore}/10
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h5 className="font-medium text-gray-700 mb-1">Performance:</h5>
+                                    <p className="text-sm text-gray-600">
+                                      Time taken: {formatTime(attempt.time_taken)}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                      Your score: {attempt.score}/10
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Load more button */}
+                      {pagination?.has_more && (
+                        <div className="p-6 text-center border-t border-orange-100">
+                          <button
+                            onClick={loadMoreQuestions}
+                            disabled={loadingMore}
+                            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                          >
+                            {loadingMore ? (
+                              <>
+                                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Loading...
+                              </>
+                            ) : (
+                              <>
+                                Load More Questions
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   {/* No questions message */}
                   {!questionsLoading && solvedQuestions.length === 0 && !questionsError && (
