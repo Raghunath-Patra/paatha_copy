@@ -439,8 +439,8 @@ export default function ChapterOverviewPage() {
 
           if (progressResponse.ok) {
             const progressData = await progressResponse.json();
-            setSectionProgress(progressData.progress || {});
-            console.log('📊 Fetched section progress:', progressData.progress);
+            setSectionProgress(progressData.sections_progress || {});
+            console.log('📊 Fetched section progress:', progressData.sections_progress);
           }
         } catch (progressError) {
           console.warn('Progress fetch error:', progressError);
