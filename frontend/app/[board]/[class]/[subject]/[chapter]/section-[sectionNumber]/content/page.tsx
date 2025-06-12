@@ -173,64 +173,118 @@ export default function SectionContentPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // ✅ FIXED: Proper parameter extraction
-  console.log('🔍 Route parameter analysis:', {
-    'params': params,
+  // ✅ COMPREHENSIVE DEBUGGING: Let's see what we actually get
+  console.log('🔍 COMPREHENSIVE ROUTE ANALYSIS:', {
+    'typeof window': typeof window,
+    'window.location.pathname': typeof window !== 'undefined' ? window.location.pathname : 'SSR',
+    'window.location.href': typeof window !== 'undefined' ? window.location.href : 'SSR',
+    'useParams() full result': params,
+    'Object.keys(params)': Object.keys(params),
+    'Object.entries(params)': Object.entries(params),
     'params.sectionNumber': params.sectionNumber,
     'params.chapter': params.chapter,
     'typeof params.sectionNumber': typeof params.sectionNumber,
-    'URL pathname': typeof window !== 'undefined' ? window.location.pathname : 'SSR'
+    'JSON.stringify(params)': JSON.stringify(params, null, 2)
   });
 
-  // ✅ FIXED: Simplified parameter extraction
-  const rawSectionNumber = params.sectionNumber;
-  const rawChapter = params.chapter;
-  
-  // For Next.js dynamic routes, params.sectionNumber should already be just the number
-  // No need to remove 'section-' prefix as it's already extracted by Next.js
-  const sectionNumber = rawSectionNumber ? rawSectionNumber.toString() : '';
-  const chapterNumber = rawChapter ? rawChapter.toString().replace('chapter-', '') : '';
-  
-  console.log('🔍 Parameter extraction result:', {
-    rawSectionNumber,
-    rawChapter,
-    finalSectionNumber: sectionNumber,
-    finalChapterNumber: chapterNumber
-  });
-  
-  // ✅ FIXED: Better validation with fallback
-  const validateAndExtractSectionNumber = (): string => {
-    // First try the direct parameter
-    if (sectionNumber && !isNaN(Number(sectionNumber))) {
-      console.log('✅ Using direct parameter:', sectionNumber);
-      return sectionNumber;
-    }
-    
-    // Fallback: parse from URL if parameter is missing or invalid
-    if (typeof window !== 'undefined') {
-      const pathParts = window.location.pathname.split('/').filter(Boolean);
-      const sectionPart = pathParts.find(part => part.startsWith('section-'));
-      const extractedNumber = sectionPart?.replace('section-', '');
-      
-      if (extractedNumber && !isNaN(Number(extractedNumber))) {
-        console.log('✅ Using URL fallback:', extractedNumber);
-        return extractedNumber;
+  // ✅ MULTIPLE EXTRACTION METHODS
+  const extractSectionNumber = (): { method: string; value: string } => {
+    // Method 1: Direct from params
+    const directParam = params.sectionNumber;
+    if (directParam && directParam !== 'undefined') {
+      const cleaned = directParam.toString();
+      if (!isNaN(Number(cleaned))) {
+        console.log('✅ Method 1 - Direct param:', cleaned);
+        return { method: 'direct_param', value: cleaned };
       }
     }
     
-    console.error('❌ No valid section number found');
+    // Method 2: Parse from URL pathname
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const pathParts = pathname.split('/').filter(Boolean);
+      
+      console.log('🔍 URL path parts:', pathParts);
+      
+      // Look for section-X pattern
+      const sectionPart = pathParts.find(part => part.startsWith('section-'));
+      if (sectionPart) {
+        const extractedNumber = sectionPart.replace('section-', '');
+        if (!isNaN(Number(extractedNumber))) {
+          console.log('✅ Method 2 - URL parsing:', extractedNumber);
+          return { method: 'url_parsing', value: extractedNumber };
+        }
+      }
+      
+      // Method 3: Look for pattern /chapter-X/section-Y/
+      const regex = /\/chapter-\d+\/section-(\d+)/;
+      const match = pathname.match(regex);
+      if (match && match[1]) {
+        console.log('✅ Method 3 - Regex pattern:', match[1]);
+        return { method: 'regex_pattern', value: match[1] };
+      }
+      
+      // Method 4: Position-based extraction (assuming fixed URL structure)
+      // /board/class/subject/chapter-X/section-Y/content
+      if (pathParts.length >= 6) {
+        const sectionPart = pathParts[4]; // Should be section-Y
+        if (sectionPart && sectionPart.startsWith('section-')) {
+          const extractedNumber = sectionPart.replace('section-', '');
+          if (!isNaN(Number(extractedNumber))) {
+            console.log('✅ Method 4 - Position-based:', extractedNumber);
+            return { method: 'position_based', value: extractedNumber };
+          }
+        }
+      }
+    }
+    
+    console.error('❌ All extraction methods failed');
+    return { method: 'failed', value: '' };
+  };
+
+  const extractChapterNumber = (): string => {
+    // First try params
+    const rawChapter = params.chapter;
+    if (rawChapter) {
+      const cleaned = rawChapter.toString().replace('chapter-', '');
+      if (!isNaN(Number(cleaned))) {
+        return cleaned;
+      }
+    }
+    
+    // Fallback: URL parsing
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const regex = /\/chapter-(\d+)/;
+      const match = pathname.match(regex);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
     return '';
   };
   
-  const finalSectionNumber = validateAndExtractSectionNumber();
+  const sectionExtraction = extractSectionNumber();
+  const finalSectionNumber = sectionExtraction.value;
+  const chapterNumber = extractChapterNumber();
+  
+  console.log('🔍 EXTRACTION RESULTS:', {
+    sectionMethod: sectionExtraction.method,
+    sectionNumber: finalSectionNumber,
+    chapterNumber: chapterNumber,
+    isValidSection: !isNaN(Number(finalSectionNumber)) && finalSectionNumber !== '',
+    isValidChapter: !isNaN(Number(chapterNumber)) && chapterNumber !== ''
+  });
   
   // Early return if section number is invalid
-  if (!finalSectionNumber) {
-    console.error('❌ Section number is missing or invalid:', {
+  if (!finalSectionNumber || finalSectionNumber === 'undefined') {
+    console.error('❌ Section number extraction failed:', {
       params,
-      sectionNumber,
       finalSectionNumber,
-      urlPath: typeof window !== 'undefined' ? window.location.pathname : 'N/A'
+      extractionMethod: sectionExtraction.method,
+      urlPath: typeof window !== 'undefined' ? window.location.pathname : 'N/A',
+      allUrlParts: typeof window !== 'undefined' ? window.location.pathname.split('/') : []
     });
     
     return (
@@ -242,26 +296,64 @@ export default function SectionContentPage() {
                style={{animationDuration: '4s'}} />
         </div>
         
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10">
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-2xl text-center border border-red-200 relative z-10">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 className="font-semibold text-red-800 mb-2">Invalid Section</h3>
-          <p className="text-red-700 mb-4">Section number is missing or invalid in the URL.</p>
-          <div className="bg-gray-100 p-3 rounded mb-4 text-left">
-            <p className="text-sm text-gray-600 mb-2"><strong>Current URL:</strong></p>
-            <code className="text-xs break-all">{typeof window !== 'undefined' ? window.location.pathname : 'N/A'}</code>
-            <p className="text-sm text-gray-600 mt-2 mb-1"><strong>Expected format:</strong></p>
-            <code className="text-xs">/board/class/subject/chapter-X/section-Y/content</code>
+          <h3 className="font-semibold text-red-800 mb-2">Section Parameter Issue</h3>
+          <p className="text-red-700 mb-4">Unable to extract section number from the URL.</p>
+          
+          <div className="bg-gray-100 p-4 rounded mb-4 text-left text-sm">
+            <div className="grid grid-cols-1 gap-2">
+              <div>
+                <strong>Current URL:</strong>
+                <code className="block text-xs bg-gray-200 p-1 rounded mt-1 break-all">
+                  {typeof window !== 'undefined' ? window.location.pathname : 'N/A'}
+                </code>
+              </div>
+              <div>
+                <strong>Expected format:</strong>
+                <code className="block text-xs bg-gray-200 p-1 rounded mt-1">
+                  /board/class/subject/chapter-X/section-Y/content
+                </code>
+              </div>
+              <div>
+                <strong>useParams() result:</strong>
+                <code className="block text-xs bg-gray-200 p-1 rounded mt-1 break-all">
+                  {JSON.stringify(params, null, 2)}
+                </code>
+              </div>
+              <div>
+                <strong>Extraction method tried:</strong>
+                <code className="block text-xs bg-gray-200 p-1 rounded mt-1">
+                  {sectionExtraction.method}
+                </code>
+              </div>
+              <div>
+                <strong>URL parts:</strong>
+                <code className="block text-xs bg-gray-200 p-1 rounded mt-1 break-all">
+                  {typeof window !== 'undefined' ? JSON.stringify(window.location.pathname.split('/')) : 'N/A'}
+                </code>
+              </div>
+            </div>
           </div>
-          <button 
-            onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-          >
-            Back to Chapter
-          </button>
+          
+          <div className="flex gap-3 justify-center">
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+            >
+              🔄 Retry
+            </button>
+            <button 
+              onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md"
+            >
+              ← Back to Chapter
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -349,8 +441,9 @@ export default function SectionContentPage() {
           }
         }
 
-        // ✅ FIXED: HTML content fetching with better error handling
+        // ✅ ENHANCED: HTML content fetching with detailed logging
         console.log(`🔍 Fetching content for: Chapter ${chapterNumber}, Section ${finalSectionNumber}`);
+        console.log(`🔍 Subject breakdown: ${params.subject} → base: ${params.subject.substring(0, 5)}`);
         
         const subjectBase = params.subject.substring(0, 5); // e.g., "lech1" from "lech1dd"
         
