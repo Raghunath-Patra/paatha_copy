@@ -622,7 +622,7 @@ export default function SectionContentPage() {
                   dangerouslySetInnerHTML={{ __html: htmlContent }}
                   style={{
                     // Override prose styles for better integration
-                    color: 'inherit',
+                    // color: 'inherit',
                     lineHeight: '1.6'
                   }}
                 />
