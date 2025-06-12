@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/section-[sectionNumber]/content/page.tsx
-// UPDATED: Section Content Page with Enhanced HTML Content Support
+// UPDATED: Minimal Section Content Page with Floating Navigation
 
 'use client';
 
@@ -9,7 +9,7 @@ import Navigation from '../../../../../../components/navigation/Navigation';
 import { getAuthHeaders } from '../../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../../../utils/userTokenService';
-import HTMLContentRenderer from '../../../../../../components/questions/HTMLContentRenderer'; // Import the enhanced component
+import HTMLContentRenderer from '../../../../../../components/questions/HTMLContentRenderer';
 
 interface SectionInfo {
   number: number;
@@ -29,7 +29,6 @@ interface PerformancePageParams {
   sectionNumber: string;
 }
 
-// ✅ Interface for cached data
 interface SectionContentData {
   sectionInfo: SectionInfo;
   htmlContent: string;
@@ -60,111 +59,141 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// Board and class display names
-const BOARD_DISPLAY_NAMES: Record<string, string> = {
-  'cbse': 'CBSE',
-  'karnataka': 'Karnataka State Board'
-};
-
-const CLASS_DISPLAY_NAMES: Record<string, string> = {
-  'viii': 'Class VIII',
-  'ix': 'Class IX',
-  'x': 'Class X',
-  'xi': 'Class XI',
-  'xii': 'Class XII',
-  '8th': '8th Class',
-  '9th': '9th Class',
-  '10th': '10th Class',
-  'puc-1': 'PUC-I',
-  'puc-2': 'PUC-II'
-};
-
-// Content Navigation Component
-const ContentNavigation = ({ params, sectionNumber }: { 
+// Floating Navigation Component
+const FloatingNavigation = ({ 
+  params, 
+  sectionNumber, 
+  sections,
+  currentSectionIndex 
+}: { 
   params: PerformancePageParams; 
   sectionNumber: string;
+  sections: SectionInfo[];
+  currentSectionIndex: number;
 }) => {
   const router = useRouter();
   
-  const handleQuestionsClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
-  };
-
-  const handlePerformanceClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/performance`);
-  };
-
   const handleBackToChapter = () => {
     router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`);
   };
 
-  return (
-    <div className="flex flex-wrap gap-2 items-center">
-      {/* Back to Chapter */}
-      <button
-        onClick={handleBackToChapter}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="Back to Chapter"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span className="hidden sm:inline">Chapter</span>
-      </button>
+  const handleQuestionsClick = () => {
+    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`);
+  };
 
-      {/* Content Icon (Current Page) */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-md">
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-        </svg>
-        <span className="hidden sm:inline">Learning</span>
+  const handlePreviousSection = () => {
+    if (currentSectionIndex > 0) {
+      const prevSection = sections[currentSectionIndex - 1];
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${prevSection.number}/content`);
+    }
+  };
+
+  const handleNextSection = () => {
+    if (currentSectionIndex < sections.length - 1) {
+      const nextSection = sections[currentSectionIndex + 1];
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${nextSection.number}/content`);
+    }
+  };
+
+  const hasPrevious = currentSectionIndex > 0;
+  const hasNext = currentSectionIndex < sections.length - 1;
+
+  return (
+    <>
+      {/* Top Left - Back to Chapter */}
+      <div className="fixed top-4 left-4 z-50">
+        <button
+          onClick={handleBackToChapter}
+          className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-700 rounded-lg hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200"
+          title="Back to Chapter"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span className="font-medium">Chapter</span>
+        </button>
       </div>
 
-      {/* Questions Icon */}
-      <button
-        onClick={handleQuestionsClick}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-lg hover:from-blue-200 hover:to-indigo-200 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="Practice Questions"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="hidden sm:inline">Questions</span>
-      </button>
+      {/* Top Right - Main Navigation */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200">
+          <Navigation />
+        </div>
+      </div>
 
-      {/* Performance Icon */}
-      <button
-        onClick={handlePerformanceClick}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-lg hover:from-purple-200 hover:to-pink-200 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="View Performance"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <span className="hidden sm:inline">Performance</span>
-      </button>
+      {/* Bottom Left - Section Navigation */}
+      <div className="fixed bottom-4 left-4 z-50 flex gap-2">
+        {hasPrevious && (
+          <button
+            onClick={handlePreviousSection}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500/90 backdrop-blur-sm text-white rounded-lg hover:bg-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+            title="Previous Section"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="font-medium">Previous</span>
+          </button>
+        )}
+        
+        {hasNext && (
+          <button
+            onClick={handleNextSection}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500/90 backdrop-blur-sm text-white rounded-lg hover:bg-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+            title="Next Section"
+          >
+            <span className="font-medium">Next</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
+      </div>
 
-      {/* Main Navigation */}
-      <Navigation />
-    </div>
+      {/* Bottom Right - Questions Button */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <button
+          onClick={handleQuestionsClick}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500/90 backdrop-blur-sm text-white rounded-lg hover:bg-green-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+          title="Practice Questions"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="font-medium">Questions</span>
+        </button>
+      </div>
+    </>
   );
 };
 
-// Loading skeleton
-const ContentLoadingSkeleton = () => (
-  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-50/30 to-transparent opacity-50"></div>
-    
-    <div className="relative z-10 p-6 space-y-4">
-      <div className="h-8 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-2/3 animate-pulse"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 animate-pulse" style={{animationDelay: '0.1s'}}></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-5/6 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-      
-      <div className="space-y-3 pt-4">
-        <div className="h-32 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg animate-pulse" style={{animationDelay: '0.3s'}}></div>
-        <div className="h-24 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg animate-pulse" style={{animationDelay: '0.4s'}}></div>
+// Simple loading spinner
+const SimpleLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="flex flex-col items-center gap-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <p className="text-gray-600">Loading content...</p>
+    </div>
+  </div>
+);
+
+// Simple error display
+const SimpleError = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
+  <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="text-center p-6 max-w-md">
+      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
       </div>
+      <h3 className="font-semibold text-red-800 mb-2">Error Loading Content</h3>
+      <p className="text-red-700 mb-4">{error}</p>
+      <button 
+        onClick={onRetry}
+        className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+      >
+        Retry
+      </button>
     </div>
   </div>
 );
@@ -175,6 +204,7 @@ export default function SectionContentPage() {
   const { profile, loading: authLoading } = useSupabaseAuth();
   
   const [sectionInfo, setSectionInfo] = useState<SectionInfo | null>(null);
+  const [sections, setSections] = useState<SectionInfo[]>([]);
   const [chapterInfo, setChapterInfo] = useState<ChapterInfo | null>(null);
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -183,14 +213,12 @@ export default function SectionContentPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
-  // ✅ Extract section number with multiple fallback methods
+  // Extract section and chapter numbers
   const extractSectionNumber = (): string => {
-    // Method 1: From useParams
     if (params.sectionNumber && params.sectionNumber !== 'undefined') {
       return params.sectionNumber.toString();
     }
     
-    // Method 2: From URL pathname
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
       const match = pathname.match(/\/section-(\d+)\//);
@@ -220,63 +248,42 @@ export default function SectionContentPage() {
   
   const sectionNumber = extractSectionNumber();
   const chapterNumber = extractChapterNumber();
-  
-  console.log('🔍 SECTION CONTENT PAGE - Parameter extraction:', {
-    'params': params,
-    'extractedSectionNumber': sectionNumber,
-    'extractedChapterNumber': chapterNumber,
-    'URL': typeof window !== 'undefined' ? window.location.pathname : 'SSR'
-  });
 
-  // ✅ Function to try loading from cached data
+  // Get current section index for navigation
+  const currentSectionIndex = sections.findIndex(s => s.number === parseInt(sectionNumber));
+
+  // Load from cached data
   const loadFromCachedData = (): boolean => {
     try {
       const cacheKey = `section_content_${params.board}_${params.class}_${params.subject}_${chapterNumber}_${sectionNumber}`;
       const cachedData = sessionStorage.getItem(cacheKey);
       
-      console.log(`🔍 Looking for cached data with key: ${cacheKey}`);
-      
       if (cachedData) {
         const contentData: SectionContentData = JSON.parse(cachedData);
         
-        // Check if data is not too old (within 30 minutes)
         const dataAge = Date.now() - contentData.timestamp;
         const maxAge = 30 * 60 * 1000; // 30 minutes
         
         if (dataAge < maxAge) {
-          console.log('✅ Using prefetched data:', {
-            sectionName: contentData.sectionInfo.name,
-            contentLength: contentData.htmlContent.length,
-            dataAge: Math.round(dataAge / 1000) + 's'
-          });
-          
           setSectionInfo(contentData.sectionInfo);
           setHtmlContent(contentData.htmlContent);
-          
-          // Clear the cached data after use
           sessionStorage.removeItem(cacheKey);
-          
           return true;
         } else {
-          console.log('⏰ Cached data is too old, removing from cache');
           sessionStorage.removeItem(cacheKey);
         }
-      } else {
-        console.log('❌ No cached data found');
       }
       
       return false;
     } catch (error) {
-      console.error('❌ Error loading cached data:', error);
+      console.error('Error loading cached data:', error);
       return false;
     }
   };
 
-  // ✅ Function to fetch data normally (fallback)
+  // Fetch data normally
   const fetchDataNormally = async (): Promise<void> => {
     try {
-      console.log('🔄 Loading data normally...');
-
       const { headers, isAuthorized } = await getAuthHeaders();
       if (!isAuthorized) {
         router.push('/login');
@@ -295,23 +302,7 @@ export default function SectionContentPage() {
         })
       });
 
-      // Fetch chapter info
-      const chaptersResponse = await fetch(
-        `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/chapters`,
-        { headers }
-      );
-      
-      if (chaptersResponse.ok) {
-        const chaptersData = await chaptersResponse.json();
-        const chapter = chaptersData.chapters?.find(
-          (ch: any) => ch.number === parseInt(chapterNumber)
-        );
-        if (chapter) {
-          setChapterInfo(chapter);
-        }
-      }
-
-      // Fetch section info
+      // Fetch sections for navigation
       const sectionsResponse = await fetch(
         `${API_URL}/api/subjects/${params.board}/${params.class}/${params.subject}/${chapterNumber}/sections`,
         { headers }
@@ -319,13 +310,14 @@ export default function SectionContentPage() {
       
       if (sectionsResponse.ok) {
         const sectionsData = await sectionsResponse.json();
+        setSections(sectionsData.sections || []);
+        
         const section = sectionsData.sections?.find(
           (s: any) => s.number === parseInt(sectionNumber)
         );
         if (section) {
           setSectionInfo(section);
         } else {
-          // Fallback section info
           setSectionInfo({
             number: parseInt(sectionNumber),
             name: `Section ${sectionNumber}`
@@ -333,7 +325,7 @@ export default function SectionContentPage() {
         }
       }
 
-      // Fetch HTML content using the same logic as prefetch
+      // Fetch HTML content
       const subjectBase = params.subject.substring(0, 5);
       const commonPatterns = [
         { folderSuffix: '01', filePrefixes: ['06', '01', '02', '03', '04', '05'] },
@@ -354,9 +346,7 @@ export default function SectionContentPage() {
         try {
           const response = await fetch(htmlPath);
           if (response.ok) {
-            const content = await response.text();
-            console.log(`✅ Found content at: ${htmlPath}`);
-            return content;
+            return await response.text();
           }
         } catch (error) {
           // Silent fail
@@ -364,7 +354,6 @@ export default function SectionContentPage() {
         return null;
       };
 
-      // Search for HTML content
       let fetchedHtmlContent = '';
       let fileFound = false;
 
@@ -391,60 +380,32 @@ export default function SectionContentPage() {
       }
 
       if (!fileFound) {
-        console.warn(`❌ No content found for section ${sectionNumber}`);
         fetchedHtmlContent = `
-          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-            <h2 style="color: #dc2626;">📁 Content Not Found</h2>
-            <p style="color: #6b7280; margin: 20px 0;">
+          <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif; min-height: 50vh; display: flex; flex-direction: column; justify-content: center;">
+            <h2 style="color: #dc2626; margin-bottom: 20px;">📁 Content Not Found</h2>
+            <p style="color: #6b7280; margin: 20px 0; font-size: 16px;">
               Unable to locate learning content for Chapter ${chapterNumber}, Section ${sectionNumber}.
             </p>
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p style="color: #6b7280; font-size: 14px;">
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px auto; max-width: 400px; border: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0;">
                 <strong>Subject:</strong> ${params.subject}<br>
                 <strong>Chapter:</strong> ${chapterNumber}<br>
                 <strong>Section:</strong> ${sectionNumber}
               </p>
             </div>
-            <button 
-              onclick="window.location.reload()" 
-              style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;"
-            >
-              🔄 Retry
-            </button>
           </div>
         `;
       }
 
       setHtmlContent(fetchedHtmlContent);
-      console.log('✅ Normal data fetch completed');
 
     } catch (error) {
-      console.error('❌ Error in normal data fetch:', error);
+      console.error('Error in normal data fetch:', error);
       setError(error instanceof Error ? error.message : 'Failed to load section content');
     }
   };
 
-  // Format subject name
-  const formatSubjectName = (subject: string) => {
-    if (!subject) return '';
-    
-    const mappedName = SUBJECT_CODE_TO_NAME[subject.toLowerCase()];
-    if (mappedName) {
-      return mappedName;
-    }
-    
-    const parts = subject.split('-');
-    return parts.map(part => {
-      if (/^[IVX]+$/i.test(part)) return part.toUpperCase();
-      return part.charAt(0).toUpperCase() + part.slice(1);
-    }).join(' ');
-  };
-
-  // Get friendly display names
-  const boardDisplayName = BOARD_DISPLAY_NAMES[params.board?.toLowerCase()] || params.board?.toUpperCase() || '';
-  const classDisplayName = CLASS_DISPLAY_NAMES[params.class?.toLowerCase()] || params.class?.toUpperCase() || '';
-
-  // ✅ Main useEffect - Try cache first, then fallback to normal loading
+  // Main useEffect
   useEffect(() => {
     const initializeContent = async () => {
       if (authLoading) return;
@@ -464,17 +425,15 @@ export default function SectionContentPage() {
         setError(null);
         setIsContentReady(false);
 
-        // ✅ STEP 1: Try to load from cache first (invisible to user)
+        // Try cache first
         const cacheSuccess = loadFromCachedData();
         if (cacheSuccess) {
-          console.log('✅ Successfully loaded from cache');
           setIsContentReady(true);
           setLoading(false);
           return;
         }
 
-        // ✅ STEP 2: Fallback to normal loading
-        console.log('⚠️ No cache found, loading normally...');
+        // Fallback to normal loading
         await fetchDataNormally();
         setIsContentReady(true);
 
@@ -482,7 +441,7 @@ export default function SectionContentPage() {
         userTokenService.fetchUserTokenStatus();
 
       } catch (error) {
-        console.error('❌ Error in content initialization:', error);
+        console.error('Error in content initialization:', error);
         setError(error instanceof Error ? error.message : 'Failed to load section content');
       } finally {
         setLoading(false);
@@ -494,174 +453,55 @@ export default function SectionContentPage() {
     }
   }, [params, router, profile, authLoading, sectionNumber, chapterNumber, API_URL]);
 
-  // Early return for invalid parameters
+  // Handle retry
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
+  // Early returns for invalid parameters, loading, and error states
   if (!sectionNumber || !chapterNumber) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="font-semibold text-red-800 mb-2">Invalid Parameters</h3>
-          <p className="text-red-700 mb-4">Section or chapter number is missing from the URL.</p>
-          <button 
-            onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-          >
-            Back to Chapter
-          </button>
-        </div>
-      </div>
+      <SimpleError 
+        error="Section or chapter number is missing from the URL." 
+        onRetry={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
+      />
     );
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
-               style={{animationDuration: '3s'}} />
-          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
-               style={{animationDuration: '4s'}} />
-          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
-               style={{animationDuration: '2s'}} />
-        </div>
-
-        <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
-          <div className="max-w-[1600px] mx-auto">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
-                  {formatSubjectName(params.subject)} - {chapterNumber}.{sectionNumber}
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600">Loading learning content...</p>
-              </div>
-              <div className="flex gap-4 items-center relative z-[100] justify-end">
-                <ContentNavigation params={params} sectionNumber={sectionNumber} />
-              </div>
-            </div>
-
-            <div className="max-w-5xl mx-auto">
-              <ContentLoadingSkeleton />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <SimpleLoader />;
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-red-200/30 rounded-full animate-pulse" 
-               style={{animationDuration: '3s'}} />
-          <div className="absolute bottom-1/4 right-1/4 w-16 h-16 bg-yellow-200/25 rounded-full animate-bounce" 
-               style={{animationDuration: '4s'}} />
-        </div>
-        
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-md text-center border border-red-200 relative z-10">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="font-semibold text-red-800 mb-2">Error Loading Content</h3>
-          <p className="text-red-700 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-md"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
+    return <SimpleError error={error} onRetry={handleRetry} />;
   }
 
+  // Main content display
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-      {/* Animated background decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
-             style={{animationDuration: '3s'}} />
-        <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
-             style={{animationDuration: '4s'}} />
-        <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
-             style={{animationDuration: '2s'}} />
-      </div>
+    <div className="min-h-screen bg-white">
+      {/* Floating Navigation */}
+      <FloatingNavigation 
+        params={params} 
+        sectionNumber={sectionNumber}
+        sections={sections}
+        currentSectionIndex={currentSectionIndex}
+      />
 
-      <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
-        <div className="max-w-[1600px] mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-medium mb-2 text-gray-800">
-                {formatSubjectName(params.subject)}
-                {sectionInfo?.name && (
-                  <span className="block sm:inline sm:ml-2 text-orange-600 text-lg sm:text-xl lg:text-2xl mt-1 sm:mt-0">
-                    : {sectionInfo.name}
-                  </span>
-                )}
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600">
-                {boardDisplayName} {classDisplayName} • Learning Content
-              </p>
-            </div>
-            <div className="flex gap-4 items-center relative z-[100] justify-end">
-              <ContentNavigation params={params} sectionNumber={sectionNumber} />
-            </div>
+      {/* Content */}
+      {isContentReady && htmlContent ? (
+        <HTMLContentRenderer 
+          htmlContent={htmlContent}
+          className=""
+          style={{}}
+        />
+      ) : (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <p className="text-gray-600">Preparing interactive content...</p>
           </div>
-
-          {/* HTML Content Container */}
-
-          {/* ✅ UPDATED: Enhanced HTML Content Display with Minimal Styling */}
-                {isContentReady && htmlContent ? (
-                  <HTMLContentRenderer 
-                    htmlContent={htmlContent}
-                    className=""
-                    style={{}}
-                  />
-                ) : (
-                  <div className="p-6 sm:p-8 text-center text-gray-500">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto mb-4"></div>
-                    Preparing interactive content...
-                  </div>
-                )}
-          {/* <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg relative overflow-hidden">
-              <div className="relative z-10">
-                
-              </div>
-            </div>
-
-            {/* Quick Action Buttons }
-            <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/section-${sectionNumber}/questions`)}
-                className="flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Practice Questions
-              </button>
-
-              <button
-                onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`)}
-                className="flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Chapter
-              </button>
-            </div>
-          </div> */}
         </div>
-      </div>
+      )}
     </div>
   );
 }
