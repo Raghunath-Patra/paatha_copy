@@ -181,49 +181,46 @@ export default function SectionContentPage() {
     'timestamp': new Date().toISOString()
   });
 
-  // ✅ ROUTER EVENT LISTENERS to detect navigation
+  // ✅ DETECT NAVIGATION CHANGES and reset state
   useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      console.log('🔄 ROUTER: Navigation detected to:', url);
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (currentPath !== lastNavigation && currentPath) {
+      console.log('🔄 NAVIGATION DETECTED - Resetting component state');
+      console.log(`📍 Navigation: ${lastNavigation} → ${currentPath}`);
       
-      // Reset component state on navigation
+      // Reset all state on navigation
       setSectionInfo(null);
       setChapterInfo(null);
       setHtmlContent('');
       setLoading(true);
       setError(null);
       
-      setLastNavigation(url);
-    };
+      // Update navigation tracking
+      setLastNavigation(currentPath);
+    }
+  }, [typeof window !== 'undefined' ? window.location.pathname : '', lastNavigation]);
 
-    const handleRouteChangeStart = (url: string) => {
-      console.log('🚀 ROUTER: Navigation starting to:', url);
+  // ✅ PATHNAME CHANGE DETECTION (App Router compatible)
+  useEffect(() => {
+    const currentUrl = `${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}`;
+    console.log('🔍 PARAMS CHANGE DETECTED:', {
+      currentUrl,
+      lastNavigation,
+      paramsChanged: !lastNavigation.includes(currentUrl)
+    });
+    
+    // If params changed significantly, reset state
+    if (lastNavigation && !lastNavigation.includes(currentUrl)) {
+      console.log('🔄 PARAMS CHANGED - Resetting state');
+      setSectionInfo(null);
+      setChapterInfo(null);
+      setHtmlContent('');
       setLoading(true);
-    };
+      setError(null);
+    }
+  }, [params.board, params.class, params.subject, params.chapter, params.sectionNumber, lastNavigation]);
 
-    const handleRouteChangeComplete = (url: string) => {
-      console.log('✅ ROUTER: Navigation completed to:', url);
-    };
-
-    const handleRouteChangeError = (err: any, url: string) => {
-      console.error('❌ ROUTER: Navigation error to:', url, err);
-      setLoading(false);
-    };
-
-    // Add router event listeners
-    router.events?.on('routeChangeStart', handleRouteChangeStart);
-    router.events?.on('routeChangeComplete', handleRouteChangeComplete);
-    router.events?.on('routeChangeError', handleRouteChangeError);
-
-    return () => {
-      // Cleanup event listeners
-      router.events?.off('routeChangeStart', handleRouteChangeStart);
-      router.events?.off('routeChangeComplete', handleRouteChangeComplete);
-      router.events?.off('routeChangeError', handleRouteChangeError);
-    };
-  }, [router]);
-
-  // ✅ DETECT NAVIGATION CHANGES and reset state
+  // ✅ COMPREHENSIVE DEBUGGING: Let's see what we actually get
   useEffect(() => {
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     if (currentPath !== lastNavigation && currentPath) {
