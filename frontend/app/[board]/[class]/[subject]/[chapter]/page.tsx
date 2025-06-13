@@ -22,9 +22,10 @@ interface ChapterInfo {
 
 interface SectionProgress {
   [sectionKey: string]: {
-    total_attempts: number;
-    average_score: number;
-    last_attempted?: string;
+    attempted: number;
+    averageScore: number;
+    section_name: string;
+    total: number;
   };
 }
 
@@ -351,11 +352,12 @@ export default function ChapterOverviewPage() {
   // Get section progress
   const getSectionProgress = (sectionNumber: number) => {
     const key = `${sectionNumber}`;
-    return sectionProgress[key]
+    const sectionData = sectionProgress[key];
+    return sectionData
       ? {
-          total_attempts: sectionProgress[key].attempted ?? 0,
-          average_score: sectionProgress[key].averageScore ?? 0,
-          total_questions: sectionProgress[key].total ?? 0,
+          total_attempts: sectionData.attempted ?? 0,
+          average_score: sectionData.averageScore ?? 0,
+          total_questions: sectionData.total ?? 0,
         }
       : { total_attempts: 0, average_score: 0, total_questions: 0};
   };
@@ -447,6 +449,11 @@ export default function ChapterOverviewPage() {
             const progressData = await progressResponse.json();
             setSectionProgress(progressData.sections_progress || {});
             console.log('📊 Fetched section progress:', progressData.sections_progress);
+            
+            // Debug: Log progress data structure
+            Object.entries(progressData.sections_progress || {}).forEach(([key, value]) => {
+              console.log(`Section ${key} progress:`, value);
+            });
           }
         } catch (progressError) {
           console.warn('Progress fetch error:', progressError);
@@ -603,7 +610,9 @@ export default function ChapterOverviewPage() {
               
               {sections.map((section) => {
                 const progress = getSectionProgress(section.number);
-                const progressPercentage = progress.total_attempts / progress.total_questions * 100 || 0;
+                const progressPercentage = progress.total_questions > 0 
+                  ? (progress.total_attempts / progress.total_questions) * 100 
+                  : 0;
                 const isCurrentlyLoading = loadingSection === section.number;
                 
                 return (
@@ -639,12 +648,17 @@ export default function ChapterOverviewPage() {
                         <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                           <div 
                             className={`h-2.5 rounded-full transition-all duration-500 ${getProgressColor(progress.average_score)}`}
-                            style={{ width: `${progressPercentage}%` }}
+                            style={{ width: `${Math.min(progressPercentage, 100)}%` }}
                           ></div>
                         </div>
                         <div className="flex justify-between text-xs text-gray-500">
-                          <span>Progress</span>
-                          <span>{progressPercentage.toFixed(0)}%</span>
+                          <span>
+                            {progress.total_questions > 0 
+                              ? `${progress.total_attempts}/${progress.total_questions} attempted`
+                              : 'No questions yet'
+                            }
+                          </span>
+                          <span>{Math.round(progressPercentage)}%</span>
                         </div>
                       </div>
                       
