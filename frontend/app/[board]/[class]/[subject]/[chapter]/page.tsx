@@ -721,7 +721,7 @@ export default function ChapterOverviewPage() {
                                 </span>
                                 {progress.total_attempts > 0 && (
                                   <span className="font-medium text-gray-700">
-                                    Score: {progress.average_score.toFixed(1)}/10
+                                    Avg Score: {progress.average_score.toFixed(1)}/10
                                   </span>
                                 )}
                               </div>
