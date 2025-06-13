@@ -93,7 +93,7 @@ const SectionProgressSkeleton = () => (
     </div>
     <div className="flex justify-between text-xs">
       <div className="h-3 bg-gray-200 rounded w-24"></div>
-      <div className="h-3 bg-gray-200 rounded w-8"></div>
+      <div className="h-3 bg-gray-200 rounded w-16"></div>
     </div>
   </div>
 );
@@ -680,21 +680,8 @@ export default function ChapterOverviewPage() {
                               </div>
                               <div>
                                 <h3 className="text-lg font-semibold text-gray-800">{section.name}</h3>
-                                <p className="text-sm text-gray-600">Section {section.number}</p>
                               </div>
                             </div>
-                            
-                            {/* ✅ Show progress info only if progress is loaded and there are attempts */}
-                            {!progressLoading && progress.total_attempts > 0 && (
-                              <div className="text-right">
-                                <div className="text-sm font-medium text-gray-700">
-                                  Avg Score: {progress.average_score.toFixed(1)}/10
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {progress.total_attempts} attempts
-                                </div>
-                              </div>
-                            )}
                           </div>
                           
                           {/* ✅ UPDATED: Progress Bar with loading state */}
@@ -715,7 +702,11 @@ export default function ChapterOverviewPage() {
                                     : 'No questions yet'
                                   }
                                 </span>
-                                <span>{Math.round(progressPercentage)}%</span>
+                                {progress.total_attempts > 0 && (
+                                  <span className="font-medium text-gray-700">
+                                    Score: {progress.average_score.toFixed(1)}/10
+                                  </span>
+                                )}
                               </div>
                             </div>
                           )}
