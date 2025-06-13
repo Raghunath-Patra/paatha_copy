@@ -87,7 +87,7 @@ const CLASS_DISPLAY_NAMES: Record<string, string> = {
 
 // ✅ NEW: Progress skeleton for individual sections
 const SectionProgressSkeleton = () => (
-  <div className="space-y-2 animate-pulse">
+  <div className="space-y-2 animate-pulse mb-4">
     <div className="w-full bg-gray-200 rounded-full h-2.5">
       <div className="h-2.5 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full w-0 animate-pulse"></div>
     </div>
@@ -147,6 +147,7 @@ export default function ChapterOverviewPage() {
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [progressLoading, setProgressLoading] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true); // For auth and basic setup
+  const [animateProgressBars, setAnimateProgressBars] = useState(false); // For progress bar animations
   
   const [error, setError] = useState<string | null>(null);
   const [loadingSection, setLoadingSection] = useState<number | null>(null);
@@ -368,6 +369,17 @@ export default function ChapterOverviewPage() {
     return 'bg-gray-300';
   };
 
+  // ✅ NEW: Trigger progress bar animations after progress loads
+  useEffect(() => {
+    if (!progressLoading && !sectionsLoading) {
+      const timer = setTimeout(() => {
+        setAnimateProgressBars(true);
+      }, 200); // Small delay for smooth effect
+
+      return () => clearTimeout(timer);
+    }
+  }, [progressLoading, sectionsLoading]);
+
   // ✅ NEW: Load sections first (independent of progress)
   const loadSections = async (headers: HeadersInit) => {
     try {
@@ -412,6 +424,7 @@ export default function ChapterOverviewPage() {
   const loadProgress = async (headers: HeadersInit) => {
     try {
       console.log('🔄 Loading section progress...');
+      setAnimateProgressBars(false); // Reset animation
       
       const progressResponse = await fetch(
         `${API_URL}/api/progress/user/sections/${params.board}/${params.class}/${params.subject}/${chapterNumber}`,
@@ -691,8 +704,12 @@ export default function ChapterOverviewPage() {
                             <div className="mb-4">
                               <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                                 <div 
-                                  className={`h-2.5 rounded-full transition-all duration-500 ${getProgressColor(progress.average_score)}`}
-                                  style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                                  className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${getProgressColor(progress.average_score)}`}
+                                  style={{ 
+                                    width: animateProgressBars 
+                                      ? `${Math.min(progressPercentage, 100)}%` 
+                                      : '0%'
+                                  }}
                                 ></div>
                               </div>
                               <div className="flex justify-between text-xs text-gray-500">
