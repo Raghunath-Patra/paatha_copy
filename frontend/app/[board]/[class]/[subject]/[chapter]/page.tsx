@@ -369,7 +369,7 @@ export default function ChapterOverviewPage() {
   };
 
   // ✅ NEW: Load sections first (independent of progress)
-  const loadSections = async (headers: Record<string, string>) => {
+  const loadSections = async (headers: HeadersInit) => {
     try {
       console.log('🔄 Loading sections...');
       
@@ -409,7 +409,7 @@ export default function ChapterOverviewPage() {
   };
 
   // ✅ NEW: Load progress separately (after sections are shown)
-  const loadProgress = async (headers: Record<string, string>) => {
+  const loadProgress = async (headers: HeadersInit) => {
     try {
       console.log('🔄 Loading section progress...');
       
