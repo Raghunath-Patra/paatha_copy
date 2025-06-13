@@ -353,10 +353,11 @@ export default function ChapterOverviewPage() {
     const key = `${sectionNumber}`;
     return sectionProgress[key]
       ? {
-          total_attempts: sectionProgress[key].total_attempts ?? 0,
-          average_score: sectionProgress[key].average_score ?? 0
+          total_attempts: sectionProgress[key].attempted ?? 0,
+          average_score: sectionProgress[key].averageScore ?? 0,
+          total_questions: sectionProgress[key].total ?? 0,
         }
-      : { total_attempts: 0, average_score: 0 };
+      : { total_attempts: 0, average_score: 0, total_questions: 0};
   };
 
   // Get progress color
@@ -602,7 +603,7 @@ export default function ChapterOverviewPage() {
               
               {sections.map((section) => {
                 const progress = getSectionProgress(section.number);
-                const progressPercentage = progress.total_attempts > 0 ? Math.min((progress.average_score / 10) * 100, 100) : 0;
+                const progressPercentage = progress.total_attempts / progress.total_questions * 100 || 0;
                 const isCurrentlyLoading = loadingSection === section.number;
                 
                 return (
