@@ -196,11 +196,9 @@ export default function ChapterOverviewPage() {
       const subjectBase = params.subject.substring(0, 5);
       const folderSuffix = chapterNumber.toString().padStart(2, '0');
 
-      const tryPattern = async (filePrefix: string): Promise<string | null> => {
+      const tryPattern = async (): Promise<string | null> => {
         const subjectFolder = `${subjectBase}${folderSuffix}`;
-        const filename = filePrefix 
-          ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
-          : `section_${chapterNumber}_${sectionNumber}.html`;
+        const filename = `section_${chapterNumber}_${sectionNumber}.html`;
         
         const htmlPath = `/interactive/${params.board}/${params.class}/${params.subject}/${subjectFolder}/${filename}`;
         
@@ -220,23 +218,24 @@ export default function ChapterOverviewPage() {
       let htmlContent = '';
       let fileFound = false;
 
-      for (let i = 1; i <= 30 && !fileFound; i++) {
-        const filePrefix = i.toString().padStart(2, '0');
-        const content = await tryPattern(filePrefix);
+      // for (let i = 1; i <= 30 && !fileFound; i++) {
+      //   const filePrefix = i.toString().padStart(2, '0');
+        
+      // }
+
+      const content = await tryPattern();
         if (content) {
           htmlContent = content;
           fileFound = true;
-          break;
         }
-      }
       
-      if (!fileFound) {
-        const content = await tryPattern('');
-        if (content) {
-          htmlContent = content;
-          fileFound = true;
-        }
-      }
+      // if (!fileFound) {
+      //   const content = await tryPattern('');
+      //   if (content) {
+      //     htmlContent = content;
+      //     fileFound = true;
+      //   }
+      // }
 
       if (!fileFound) {
         console.warn(`❌ No content found during loading for section ${sectionNumber}`);
