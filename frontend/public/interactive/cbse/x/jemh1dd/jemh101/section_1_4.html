@@ -285,88 +285,105 @@
             50% { transform: translateY(-5px); }
         }
 
-        .formula-calculator {
+        .enhanced-calculator {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border: 3px solid #0891b2;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .calc-section {
             background: white;
-            border: 2px solid #0891b2;
             border-radius: 15px;
             padding: 20px;
+            margin: 15px 0;
+            border: 2px solid #e5e7eb;
+        }
+
+        .calc-input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
             margin: 20px 0;
+            flex-wrap: wrap;
         }
 
         .calc-input {
-            width: 100px;
-            padding: 8px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            width: 80px;
+            height: 50px;
+            padding: 10px;
+            border: 3px solid #0891b2;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
             text-align: center;
-            margin: 5px;
+            transition: all 0.3s ease;
         }
 
         .calc-input:focus {
-            border-color: #0891b2;
+            border-color: #22d3ee;
             outline: none;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
         }
 
         .calc-result {
-            background: #ecfdf5;
-            border: 2px solid #10b981;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .concept-network {
-            background: #1f2937;
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border: 3px solid #10b981;
             border-radius: 15px;
             padding: 25px;
             margin: 20px 0;
-            min-height: 300px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .concept-node {
-            position: absolute;
-            background: #0891b2;
-            color: white;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 3px solid #22d3ee;
-            font-size: 12px;
             text-align: center;
         }
 
-        .concept-node:hover {
-            transform: scale(1.2);
-            background: #22d3ee;
+        .result-section {
+            background: #f0fdf4;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #22c55e;
         }
 
-        .concept-node.active {
-            background: #dc2626;
-            border-color: #fbbf24;
-            animation: pulse 1s infinite;
+        .step-by-step {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px dashed #6b7280;
         }
 
-        .concept-line {
-            position: absolute;
-            height: 2px;
-            background: #22d3ee;
-            transform-origin: left center;
+        .step {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #0891b2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .example-card {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(245, 158, 11, 0.3);
         }
 
         .paatha-tip {
@@ -429,6 +446,11 @@
             
             .quiz-options {
                 grid-template-columns: 1fr;
+            }
+
+            .calc-input-group {
+                flex-direction: column;
+                gap: 10px;
             }
         }
     </style>
@@ -541,76 +563,88 @@
         </div>
 
         <div class="section">
-            <h2>Advanced HCF & LCM Formulas</h2>
+            <h2>Advanced HCF & LCM Calculator</h2>
             
-            <div class="formula-showcase">
-                <h3 style="color: #22d3ee; text-align: center; margin-bottom: 20px;">📐 Formulas for Three Numbers</h3>
+            <div class="enhanced-calculator">
+                <h3 style="color: #0891b2; text-align: center; margin-bottom: 20px;">🧮 Formulas for Three Numbers</h3>
                 
-                <div class="paatha-tip" style="margin-bottom: 20px;">
-                    <strong>🎯 Important Note:</strong> For three numbers p, q, r: 
+                <div class="paatha-tip" style="margin-bottom: 25px;">
+                    <strong>🎯 Important Discovery:</strong> For three numbers p, q, r: 
                     <span class="highlight">HCF(p, q, r) × LCM(p, q, r) ≠ p × q × r</span>
-                    <br>But we have special formulas that relate them!
+                    <br><br>But we have special formulas that connect them! These advanced formulas are used in competitive mathematics and computer science.
                 </div>
                 
-                <div class="formula-box">
-                    LCM(p, q, r) = [p × q × r × HCF(p, q, r)] / [HCF(p, q) × HCF(q, r) × HCF(p, r)]
-                </div>
-                
-                <div class="formula-box">
-                    HCF(p, q, r) = [p × q × r × LCF(p, q, r)] / [LCM(p, q) × LCM(q, r) × LCM(p, r)]
-                </div>
-                
-                <div class="formula-calculator">
-                    <h4 style="color: #0891b2; text-align: center; margin-bottom: 15px;">🧮 Test the Formulas</h4>
-                    <div style="text-align: center;">
-                        <label>Enter three numbers:</label><br>
-                        <input type="number" id="p" class="calc-input" placeholder="p" min="1" max="100">
-                        <input type="number" id="q" class="calc-input" placeholder="q" min="1" max="100">
-                        <input type="number" id="r" class="calc-input" placeholder="r" min="1" max="100">
-                        <br>
-                        <button class="btn" onclick="calculateThreeNumbers()">🔍 Calculate & Verify</button>
-                    </div>
-                    <div id="calculationResult" class="calc-result" style="display: none;">
-                        Results will appear here
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Concept Network</h2>
-            
-            <div class="interactive-area">
-                <h3>🌐 How Everything Connects</h3>
-                <p>Click on any concept to see how it connects to others in this chapter!</p>
-                
-                <div class="concept-network" id="conceptNetwork">
-                    <div class="concept-node" style="left: 100px; top: 100px;" onclick="activateConcept('euclid')">
-                        Euclid's Division
-                    </div>
-                    <div class="concept-node" style="left: 300px; top: 50px;" onclick="activateConcept('fundamental')">
-                        Fundamental Theorem
-                    </div>
-                    <div class="concept-node" style="left: 500px; top: 100px;" onclick="activateConcept('hcf-lcm')">
-                        HCF & LCM
-                    </div>
-                    <div class="concept-node" style="left: 200px; top: 200px;" onclick="activateConcept('prime')">
-                        Prime Numbers
-                    </div>
-                    <div class="concept-node" style="left: 400px; top: 200px;" onclick="activateConcept('irrational')">
-                        Irrational Proofs
+                <div class="calc-section">
+                    <h4 style="color: #0891b2; text-align: center; margin-bottom: 15px;">📐 Advanced Formulas</h4>
+                    
+                    <div class="formula-box">
+                        LCM(p, q, r) = [p × q × r × HCF(p, q, r)] / [HCF(p, q) × HCF(q, r) × HCF(p, r)]
                     </div>
                     
-                    <!-- Connection lines -->
-                    <div class="concept-line" style="left: 180px; top: 125px; width: 120px; transform: rotate(-20deg);"></div>
-                    <div class="concept-line" style="left: 380px; top: 75px; width: 120px; transform: rotate(20deg);"></div>
-                    <div class="concept-line" style="left: 250px; top: 175px; width: 150px; transform: rotate(0deg);"></div>
-                    <div class="concept-line" style="left: 350px; top: 125px; width: 100px; transform: rotate(45deg);"></div>
+                    <div class="formula-explanation">
+                        This formula connects the LCM of three numbers to their individual HCFs and overall HCF
+                    </div>
+                </div>
+
+                <div class="calc-section">
+                    <h4 style="color: #0891b2; text-align: center; margin-bottom: 15px;">🎲 Try Some Examples First!</h4>
+                    
+                    <div class="example-grid">
+                        <div class="example-card" onclick="loadExample(12, 18, 24)">
+                            <h5>Example 1</h5>
+                            <p>12, 18, 24</p>
+                            <small>Common multiples</small>
+                        </div>
+                        <div class="example-card" onclick="loadExample(15, 25, 35)">
+                            <h5>Example 2</h5>
+                            <p>15, 25, 35</p>
+                            <small>All divisible by 5</small>
+                        </div>
+                        <div class="example-card" onclick="loadExample(8, 12, 16)">
+                            <h5>Example 3</h5>
+                            <p>8, 12, 16</p>
+                            <small>Powers of 2</small>
+                        </div>
+                        <div class="example-card" onclick="loadExample(21, 28, 35)">
+                            <h5>Example 4</h5>
+                            <p>21, 28, 35</p>
+                            <small>Mixed factors</small>
+                        </div>
+                    </div>
                 </div>
                 
-                <div id="conceptExplanation" style="margin-top: 20px; padding: 15px; background: #f0fdfa; border-radius: 10px; display: none;">
-                    <h4 id="conceptTitle">Concept Connection</h4>
-                    <p id="conceptDescription">Click on a concept above to see how it connects to others.</p>
+                <div class="calc-section">
+                    <h4 style="color: #0891b2; text-align: center; margin-bottom: 15px;">🔢 Enter Your Numbers</h4>
+                    
+                    <div class="calc-input-group">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">First Number (p)</label>
+                            <input type="number" id="p" class="calc-input" placeholder="p" min="1" max="1000">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Second Number (q)</label>
+                            <input type="number" id="q" class="calc-input" placeholder="q" min="1" max="1000">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Third Number (r)</label>
+                            <input type="number" id="r" class="calc-input" placeholder="r" min="1" max="1000">
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 20px 0;">
+                        <button class="btn success" onclick="calculateAdvanced()">🔍 Calculate & Show Steps</button>
+                        <button class="btn secondary" onclick="clearCalculator()">🗑️ Clear</button>
+                    </div>
+                </div>
+                
+                <div id="calculationResult" class="calc-result" style="display: none;">
+                    <h4 style="color: #059669; margin-bottom: 15px;">📊 Calculation Results</h4>
+                    <div id="resultContent"></div>
+                </div>
+                
+                <div id="stepByStep" class="step-by-step" style="display: none;">
+                    <h4 style="color: #374151; text-align: center; margin-bottom: 15px;">🔬 Step-by-Step Calculation</h4>
+                    <div id="stepsContent"></div>
                 </div>
             </div>
         </div>
@@ -645,7 +679,7 @@
                     <li><span class="highlight">Prime numbers are the building blocks</span> of all natural numbers</li>
                     <li><span class="highlight">Every composite number has a unique prime factorization</span></li>
                     <li><span class="highlight">√2, √3, √5 are irrational</span> and can't be written as fractions</li>
-                    <li><span class="highlight">HCF and LCM are related</span> by the formula HCF × LCM = a × b</li>
+                    <li><span class="highlight">HCF and LCM are related</span> by the formula HCF × LCM = a × b (for two numbers)</li>
                     <li><span class="highlight">Proof by contradiction</span> is a powerful mathematical technique</li>
                     <li><span class="highlight">Number theory has practical applications</span> in cryptography and computing</li>
                 </ul>
@@ -733,30 +767,6 @@
             }
         ];
 
-        // Concept connections
-        const conceptConnections = {
-            euclid: {
-                title: "Euclid's Division Algorithm",
-                description: "Forms the foundation for finding HCF efficiently. Connects to the Fundamental Theorem by helping us understand divisibility patterns and prime factorization methods."
-            },
-            fundamental: {
-                title: "Fundamental Theorem of Arithmetic",
-                description: "Central theorem connecting to all other concepts. Provides the theoretical foundation for HCF/LCM calculations and is essential for proving irrationality of square roots."
-            },
-            'hcf-lcm': {
-                title: "HCF & LCM",
-                description: "Practical applications of the Fundamental Theorem. Uses prime factorization and connects to Euclid's algorithm for efficient computation."
-            },
-            prime: {
-                title: "Prime Numbers",
-                description: "The building blocks of all numbers according to the Fundamental Theorem. Essential for understanding uniqueness of factorization and proving irrationality."
-            },
-            irrational: {
-                title: "Irrational Number Proofs",
-                description: "Uses both the Fundamental Theorem and prime divisibility theorem. Demonstrates the power of proof by contradiction and connects to the completeness of real numbers."
-            }
-        };
-
         // Quiz state
         let currentQuestionIndex = 0;
         let quizScore = 0;
@@ -767,7 +777,7 @@
         let completedActivities = new Set();
 
         function updateProgress() {
-            const totalActivities = 5; // Adjust based on activities
+            const totalActivities = 4; // Adjust based on activities
             const completed = completedActivities.size;
             const percentage = Math.round((completed / totalActivities) * 100);
             
@@ -782,11 +792,14 @@
             if (completed >= 1) {
                 achievementsDiv.innerHTML += '<span class="achievement-badge">🌟 Explorer</span>';
             }
-            if (completed >= 3) {
+            if (completed >= 2) {
                 achievementsDiv.innerHTML += '<span class="achievement-badge">🔥 Scholar</span>';
             }
-            if (completed >= 5) {
+            if (completed >= 3) {
                 achievementsDiv.innerHTML += '<span class="achievement-badge">🏆 Master</span>';
+            }
+            if (completed >= 4) {
+                achievementsDiv.innerHTML += '<span class="achievement-badge">💎 Expert</span>';
             }
         }
 
@@ -803,22 +816,31 @@
             completedActivities.add('review_' + concept);
             updateProgress();
             
-            // Could expand to show detailed review content
             console.log('Reviewing concept:', concept);
         }
 
-        function calculateThreeNumbers() {
+        function loadExample(p, q, r) {
+            document.getElementById('p').value = p;
+            document.getElementById('q').value = q;
+            document.getElementById('r').value = r;
+            
+            // Auto-calculate
+            setTimeout(() => {
+                calculateAdvanced();
+            }, 500);
+        }
+
+        function calculateAdvanced() {
             const p = parseInt(document.getElementById('p').value);
             const q = parseInt(document.getElementById('q').value);
             const r = parseInt(document.getElementById('r').value);
             
             if (!p || !q || !r || p < 1 || q < 1 || r < 1) {
-                document.getElementById('calculationResult').innerHTML = 'Please enter three valid positive numbers!';
-                document.getElementById('calculationResult').style.display = 'block';
+                alert('Please enter three valid positive numbers!');
                 return;
             }
             
-            // Calculate GCD and LCM
+            // Calculate GCD and LCM using Euclidean algorithm
             function gcd(a, b) {
                 while (b !== 0) {
                     [a, b] = [b, a % b];
@@ -830,63 +852,126 @@
                 return (a * b) / gcd(a, b);
             }
             
+            // Calculate all pairwise HCFs and LCMs
             const hcf_pq = gcd(p, q);
             const hcf_qr = gcd(q, r);
             const hcf_pr = gcd(p, r);
-            const hcf_pqr = gcd(hcf_pq, r);
+            const hcf_pqr = gcd(gcd(p, q), r);
             
             const lcm_pq = lcm(p, q);
             const lcm_qr = lcm(q, r);
             const lcm_pr = lcm(p, r);
-            const lcm_pqr = lcm(lcm_pq, r);
+            const lcm_pqr = lcm(lcm(p, q), r);
+            
+            // Prime factorizations
+            function primeFactorization(n) {
+                const factors = {};
+                let d = 2;
+                while (d * d <= n) {
+                    while (n % d === 0) {
+                        factors[d] = (factors[d] || 0) + 1;
+                        n /= d;
+                    }
+                    d++;
+                }
+                if (n > 1) factors[n] = (factors[n] || 0) + 1;
+                return factors;
+            }
+            
+            const factorsP = primeFactorization(p);
+            const factorsQ = primeFactorization(q);
+            const factorsR = primeFactorization(r);
             
             // Verify the formula
             const leftSide = (p * q * r * hcf_pqr);
             const rightSide = (hcf_pq * hcf_qr * hcf_pr);
             const calculatedLCM = leftSide / rightSide;
             
+            // Display results
             const resultDiv = document.getElementById('calculationResult');
-            resultDiv.innerHTML = `
-                <h5>Results for ${p}, ${q}, ${r}:</h5>
-                <p><strong>HCF(${p}, ${q}, ${r}) = ${hcf_pqr}</strong></p>
-                <p><strong>LCM(${p}, ${q}, ${r}) = ${lcm_pqr}</strong></p>
-                <hr style="margin: 10px 0;">
-                <p><strong>Formula Verification:</strong></p>
-                <p>Calculated LCM using formula: ${calculatedLCM}</p>
-                <p>Direct LCM calculation: ${lcm_pqr}</p>
-                <p style="color: ${Math.abs(calculatedLCM - lcm_pqr) < 0.001 ? '#10b981' : '#dc2626'};">
-                    ${Math.abs(calculatedLCM - lcm_pqr) < 0.001 ? '✅ Formula verified!' : '❌ Calculation error'}
-                </p>
+            const resultContent = document.getElementById('resultContent');
+            
+            resultContent.innerHTML = `
+                <div class="result-section">
+                    <h5>📊 Basic Results for ${p}, ${q}, ${r}:</h5>
+                    <p><strong>HCF(${p}, ${q}, ${r}) = ${hcf_pqr}</strong></p>
+                    <p><strong>LCM(${p}, ${q}, ${r}) = ${lcm_pqr}</strong></p>
+                </div>
+                
+                <div class="result-section">
+                    <h5>🔍 Pairwise Calculations:</h5>
+                    <p>HCF(${p}, ${q}) = ${hcf_pq} &nbsp;&nbsp; LCM(${p}, ${q}) = ${lcm_pq}</p>
+                    <p>HCF(${q}, ${r}) = ${hcf_qr} &nbsp;&nbsp; LCM(${q}, ${r}) = ${lcm_qr}</p>
+                    <p>HCF(${p}, ${r}) = ${hcf_pr} &nbsp;&nbsp; LCM(${p}, ${r}) = ${lcm_pr}</p>
+                </div>
+                
+                <div class="result-section">
+                    <h5>🧮 Formula Verification:</h5>
+                    <p><strong>Calculated LCM using formula:</strong> ${calculatedLCM}</p>
+                    <p><strong>Direct LCM calculation:</strong> ${lcm_pqr}</p>
+                    <p style="color: ${Math.abs(calculatedLCM - lcm_pqr) < 0.001 ? '#10b981' : '#dc2626'}; font-weight: bold;">
+                        ${Math.abs(calculatedLCM - lcm_pqr) < 0.001 ? '✅ Formula verified successfully!' : '❌ Calculation error detected'}
+                    </p>
+                </div>
+                
+                <div class="result-section">
+                    <h5>🏗️ Prime Factorizations:</h5>
+                    <p><strong>${p} =</strong> ${Object.entries(factorsP).map(([prime, exp]) => exp > 1 ? `${prime}^${exp}` : prime).join(' × ')}</p>
+                    <p><strong>${q} =</strong> ${Object.entries(factorsQ).map(([prime, exp]) => exp > 1 ? `${prime}^${exp}` : prime).join(' × ')}</p>
+                    <p><strong>${r} =</strong> ${Object.entries(factorsR).map(([prime, exp]) => exp > 1 ? `${prime}^${exp}` : prime).join(' × ')}</p>
+                </div>
             `;
+            
             resultDiv.style.display = 'block';
             
-            completedActivities.add('formula_test');
+            // Show step-by-step calculation
+            showSteps(p, q, r, hcf_pq, hcf_qr, hcf_pr, hcf_pqr, lcm_pqr);
+            
+            completedActivities.add('calculator_used');
             updateProgress();
         }
 
-        function activateConcept(concept) {
-            // Remove active class from all nodes
-            document.querySelectorAll('.concept-node').forEach(node => {
-                node.classList.remove('active');
-            });
+        function showSteps(p, q, r, hcf_pq, hcf_qr, hcf_pr, hcf_pqr, lcm_pqr) {
+            const stepsDiv = document.getElementById('stepByStep');
+            const stepsContent = document.getElementById('stepsContent');
             
-            // Add active class to clicked node
-            event.target.classList.add('active');
+            stepsContent.innerHTML = `
+                <div class="step">
+                    <h5>Step 1: Find pairwise HCFs</h5>
+                    <p>Using Euclidean algorithm:</p>
+                    <p>HCF(${p}, ${q}) = ${hcf_pq}</p>
+                    <p>HCF(${q}, ${r}) = ${hcf_qr}</p>
+                    <p>HCF(${p}, ${r}) = ${hcf_pr}</p>
+                </div>
+                
+                <div class="step">
+                    <h5>Step 2: Find overall HCF</h5>
+                    <p>HCF(${p}, ${q}, ${r}) = HCF(HCF(${p}, ${q}), ${r}) = HCF(${hcf_pq}, ${r}) = ${hcf_pqr}</p>
+                </div>
+                
+                <div class="step">
+                    <h5>Step 3: Apply the formula</h5>
+                    <p>LCM(p, q, r) = [p × q × r × HCF(p, q, r)] / [HCF(p, q) × HCF(q, r) × HCF(p, r)]</p>
+                    <p>= [${p} × ${q} × ${r} × ${hcf_pqr}] / [${hcf_pq} × ${hcf_qr} × ${hcf_pr}]</p>
+                    <p>= [${p * q * r * hcf_pqr}] / [${hcf_pq * hcf_qr * hcf_pr}] = ${lcm_pqr}</p>
+                </div>
+                
+                <div class="step">
+                    <h5>Step 4: Verify with direct calculation</h5>
+                    <p>LCM(${p}, ${q}, ${r}) = LCM(LCM(${p}, ${q}), ${r})</p>
+                    <p>This matches our formula result: ${lcm_pqr} ✅</p>
+                </div>
+            `;
             
-            // Show explanation
-            const explanationDiv = document.getElementById('conceptExplanation');
-            const titleEl = document.getElementById('conceptTitle');
-            const descEl = document.getElementById('conceptDescription');
-            
-            const connection = conceptConnections[concept];
-            if (connection) {
-                titleEl.textContent = connection.title;
-                descEl.textContent = connection.description;
-                explanationDiv.style.display = 'block';
-            }
-            
-            completedActivities.add('concept_' + concept);
-            updateProgress();
+            stepsDiv.style.display = 'block';
+        }
+
+        function clearCalculator() {
+            document.getElementById('p').value = '';
+            document.getElementById('q').value = '';
+            document.getElementById('r').value = '';
+            document.getElementById('calculationResult').style.display = 'none';
+            document.getElementById('stepByStep').style.display = 'none';
         }
 
         function startQuiz() {
@@ -1020,7 +1105,7 @@
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             updateProgress();
-            console.log('Chapter Summary Tool Loaded');
+            console.log('Enhanced Chapter Summary Tool Loaded');
         });
     </script>
 </body>

@@ -1004,70 +1004,6 @@
         let molecularCanvas, molecularCtx;
         let comparisonCanvas, comparisonCtx;
 
-        // Quiz questions - 10 comprehensive questions
-        const quizQuestions = [
-            {
-                question: "What is the mass percentage of NaCl in a solution containing 5g NaCl in 95g water?",
-                options: ["5%", "10%", "15%", "20%"],
-                correct: 0,
-                explanation: "Mass % = (5g NaCl / 100g total solution) × 100 = 5%"
-            },
-            {
-                question: "Which concentration unit is temperature independent?",
-                options: ["Molarity", "Volume percentage", "Molality", "All of the above"],
-                correct: 2,
-                explanation: "Molality is temperature independent because it uses mass of solvent, not volume which changes with temperature"
-            },
-            {
-                question: "If χ_A = 0.3 in a binary mixture, what is χ_B?",
-                options: ["0.3", "0.7", "1.0", "Cannot determine"],
-                correct: 1,
-                explanation: "In any solution, sum of all mole fractions = 1, so χ_B = 1 - 0.3 = 0.7"
-            },
-            {
-                question: "Which unit is most commonly used for trace concentrations?",
-                options: ["Molarity", "Molality", "PPM", "Mass percentage"],
-                correct: 2,
-                explanation: "Parts per million (PPM) is used for very small concentrations like pollutants in water"
-            },
-            {
-                question: "Calculate the molarity of a solution containing 0.5 moles of glucose in 2 liters of solution:",
-                options: ["0.25 M", "0.5 M", "1.0 M", "2.0 M"],
-                correct: 0,
-                explanation: "Molarity = moles of solute / volume in liters = 0.5 mol / 2 L = 0.25 M"
-            },
-            {
-                question: "What happens to molarity when temperature increases?",
-                options: ["Increases", "Decreases", "Remains constant", "Depends on solute"],
-                correct: 1,
-                explanation: "As temperature increases, volume expands, so molarity (moles/volume) decreases"
-            },
-            {
-                question: "In a 20% (w/w) ethylene glycol solution, what is the mass of water in 100g solution?",
-                options: ["20g", "80g", "100g", "120g"],
-                correct: 1,
-                explanation: "20% ethylene glycol means 20g solute in 100g solution, so water = 100g - 20g = 80g"
-            },
-            {
-                question: "Which concentration unit is best for studying colligative properties?",
-                options: ["Molarity", "Molality", "Mass percentage", "Volume percentage"],
-                correct: 1,
-                explanation: "Molality is used for colligative properties because it's temperature independent"
-            },
-            {
-                question: "Calculate mole fraction of benzene in a solution of 30g benzene (C₆H₆) and 42g toluene (C₇H₈). [Molar mass: C₆H₆ = 78 g/mol, C₇H₈ = 92 g/mol]",
-                options: ["0.30", "0.46", "0.54", "0.70"],
-                correct: 1,
-                explanation: "Moles of benzene = 30/78 = 0.385 mol, Moles of toluene = 42/92 = 0.457 mol. χ_benzene = 0.385/(0.385+0.457) = 0.46"
-            },
-            {
-                question: "A solution contains 5.8 ppm of dissolved oxygen. This means:",
-                options: ["5.8g O₂ in 1000g solution", "5.8mg O₂ in 1000g solution", "5.8g O₂ in 1000000g solution", "5.8kg O₂ in 1000g solution"],
-                correct: 2,
-                explanation: "PPM means parts per million. 5.8 ppm = 5.8g of O₂ in 1,000,000g (10⁶g) of solution"
-            }
-        ];
-
         // Tab switching functionality
         function showTab(tabName) {
             const tabContents = document.querySelectorAll('.tab-content');
@@ -1078,11 +1014,6 @@
             
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
-            
-            // Load quiz when practice tab is clicked
-            if (tabName === 'practice') {
-                loadQuiz();
-            }
         }
 
         // Calculator functions
@@ -1544,7 +1475,70 @@
             }
         }
 
-        // Quiz functionality
+        // Quiz functionality - 10 comprehensive questions
+        const quizQuestions = [
+            {
+                question: "What is the mass percentage of NaCl in a solution containing 5g NaCl in 95g water?",
+                options: ["5%", "10%", "15%", "20%"],
+                correct: 0,
+                explanation: "Mass % = (5g NaCl / 100g total solution) × 100 = 5%"
+            },
+            {
+                question: "Which concentration unit is temperature independent?",
+                options: ["Molarity", "Volume percentage", "Molality", "All of the above"],
+                correct: 2,
+                explanation: "Molality is temperature independent because it uses mass of solvent, not volume which changes with temperature"
+            },
+            {
+                question: "If χ_A = 0.3 in a binary mixture, what is χ_B?",
+                options: ["0.3", "0.7", "1.0", "Cannot determine"],
+                correct: 1,
+                explanation: "In any solution, sum of all mole fractions = 1, so χ_B = 1 - 0.3 = 0.7"
+            },
+            {
+                question: "Which unit is most commonly used for trace concentrations?",
+                options: ["Molarity", "Molality", "PPM", "Mass percentage"],
+                correct: 2,
+                explanation: "Parts per million (PPM) is used for very small concentrations like pollutants in water"
+            },
+            {
+                question: "Calculate the molarity of a solution containing 0.5 moles of glucose in 2 liters of solution:",
+                options: ["0.25 M", "0.5 M", "1.0 M", "2.0 M"],
+                correct: 0,
+                explanation: "Molarity = moles of solute / volume in liters = 0.5 mol / 2 L = 0.25 M"
+            },
+            {
+                question: "What happens to molarity when temperature increases?",
+                options: ["Increases", "Decreases", "Remains constant", "Depends on solute"],
+                correct: 1,
+                explanation: "As temperature increases, volume expands, so molarity (moles/volume) decreases"
+            },
+            {
+                question: "In a 20% (w/w) ethylene glycol solution, what is the mass of water in 100g solution?",
+                options: ["20g", "80g", "100g", "120g"],
+                correct: 1,
+                explanation: "20% ethylene glycol means 20g solute in 100g solution, so water = 100g - 20g = 80g"
+            },
+            {
+                question: "Which concentration unit is best for studying colligative properties?",
+                options: ["Molarity", "Molality", "Mass percentage", "Volume percentage"],
+                correct: 1,
+                explanation: "Molality is used for colligative properties because it's temperature independent"
+            },
+            {
+                question: "Calculate mole fraction of benzene in a solution of 30g benzene (C₆H₆) and 42g toluene (C₇H₈). [Molar mass: C₆H₆ = 78 g/mol, C₇H₈ = 92 g/mol]",
+                options: ["0.30", "0.46", "0.54", "0.70"],
+                correct: 1,
+                explanation: "Moles of benzene = 30/78 = 0.385 mol, Moles of toluene = 42/92 = 0.457 mol. χ_benzene = 0.385/(0.385+0.457) = 0.46"
+            },
+            {
+                question: "A solution contains 5.8 ppm of dissolved oxygen. This means:",
+                options: ["5.8g O₂ in 1000g solution", "5.8mg O₂ in 1000g solution", "5.8g O₂ in 1000000g solution", "5.8kg O₂ in 1000g solution"],
+                correct: 2,
+                explanation: "PPM means parts per million. 5.8 ppm = 5.8g of O₂ in 1,000,000g (10⁶g) of solution"
+            }
+        ];
+
         function loadQuiz() {
             const quizContainer = document.getElementById('quiz-questions');
             if (!quizContainer) return;
@@ -1638,20 +1632,11 @@
             updateVisualization();
         }
 
-        // Check if document is already loaded, or wait for it
-        function initializeApp() {
-            initializeEnhancedVisualizer();
-            // Load quiz immediately since it might be needed
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
             loadQuiz();
-        }
-
-        // Initialize immediately since we're in a dynamically loaded context
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeApp);
-        } else {
-            // Document is already loaded, initialize immediately
-            initializeApp();
-        }
+            initializeEnhancedVisualizer();
+        });
     </script>
 </body>
 </html>

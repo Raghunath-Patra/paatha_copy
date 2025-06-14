@@ -162,17 +162,93 @@
             opacity: 0;
         }
 
-        .precipitate {
-            width: 40px;
-            height: 40px;
-            background: #fbbf24;
+        /* ENHANCED Activity 1.2 Animations */
+        .solution-left {
             position: absolute;
-            bottom: 20px;
+            top: 30px;
+            left: 30px;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(29, 78, 216, 0.6));
+            border-radius: 50%;
+            border: 3px solid #3b82f6;
+            opacity: 1;
+            transition: all 2.5s ease;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .solution-right {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.6));
+            border-radius: 50%;
+            border: 3px solid #10b981;
+            opacity: 1;
+            transition: all 2.5s ease;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .solution-left.mixing {
+            transform: translateX(150px) scale(0.7);
+            opacity: 0.6;
+        }
+
+        .solution-right.mixing {
+            transform: translateX(-150px) scale(0.7);
+            opacity: 0.6;
+        }
+
+        .mixing-swirl {
+            position: absolute;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            transform: translate(-50%, -50%);
+            border: 5px solid transparent;
+            border-top: 5px solid #8b5cf6;
+            border-right: 5px solid #ec4899;
             border-radius: 50%;
             opacity: 0;
-            transition: all 1.5s ease;
+            transition: opacity 0.5s ease;
+        }
+
+        .mixing-swirl.active {
+            opacity: 1;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .precipitate {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #fbbf24 40%, #f59e0b 80%);
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            border-radius: 50%;
+            opacity: 0;
+            transition: all 2s ease;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
+            border: 2px solid #d97706;
+        }
+
+        .precipitate.forming {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+            animation: precipitateGrow 3s ease-out forwards;
+        }
+
+        .reaction-particles {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #fbbf24;
+            border-radius: 50%;
+            opacity: 0;
         }
 
         .observation-panel {
@@ -325,6 +401,7 @@
             font-weight: bold;
         }
 
+        /* Animation Keyframes */
         @keyframes burn {
             0% { transform: scale(1) rotate(0deg); }
             50% { transform: scale(1.2) rotate(5deg); }
@@ -332,8 +409,66 @@
         }
 
         @keyframes bubble {
-            0% { transform: translateY(0px) scale(1); opacity: 0.7; }
-            100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+            0% { 
+                transform: translateY(0px) scale(1); 
+                opacity: 0.8; 
+            }
+            50% {
+                transform: translateY(-25px) scale(1.2); 
+                opacity: 0.6;
+            }
+            100% { 
+                transform: translateY(-60px) scale(0.5); 
+                opacity: 0; 
+            }
+        }
+
+        @keyframes precipitateGrow {
+            0% { 
+                transform: translateX(-50%) scale(0) rotate(0deg);
+                opacity: 0;
+                box-shadow: 0 0 0px rgba(251, 191, 36, 0);
+            }
+            25% {
+                transform: translateX(-50%) scale(0.4) rotate(90deg);
+                opacity: 0.6;
+                box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            }
+            50% {
+                transform: translateX(-50%) scale(0.7) rotate(180deg);
+                opacity: 0.8;
+                box-shadow: 0 0 25px rgba(251, 191, 36, 0.8);
+            }
+            75% {
+                transform: translateX(-50%) scale(0.9) rotate(270deg);
+                opacity: 0.9;
+                box-shadow: 0 0 35px rgba(251, 191, 36, 0.9);
+            }
+            100% { 
+                transform: translateX(-50%) scale(1) rotate(360deg);
+                opacity: 1;
+                box-shadow: 0 0 40px rgba(251, 191, 36, 1);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes particleFloat {
+            0% { 
+                transform: translate(0, 0) scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translate(var(--x), var(--y)) scale(1.2);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(calc(var(--x) * 2), calc(var(--y) * 2)) scale(0.5);
+                opacity: 0;
+            }
         }
 
         .burning {
@@ -509,7 +644,7 @@
                 </div>
             </div>
 
-            <!-- Activity 1.2: Lead Nitrate + Potassium Iodide -->
+            <!-- Activity 1.2: ENHANCED Lead Nitrate + Potassium Iodide -->
             <div class="experiment-box">
                 <div class="experiment-title">
                     <span>⚗️</span>
@@ -517,20 +652,40 @@
                 </div>
                 
                 <div class="simulation-area" id="precipitateExperiment" style="background: linear-gradient(to bottom, #e5e7eb, #f3f4f6); color: #374151;">
-                    <div style="position: absolute; top: 20px; left: 20px; font-weight: bold; color: #1f2937;">
-                        💧 Lead Nitrate Solution (Clear)
+                    <div class="solution-left" id="leadSolution">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: bold; color: #1e40af; text-align: center;">
+                            Pb(NO₃)₂<br><span style="font-size: 8px;">Lead Nitrate<br>(Clear Solution)</span>
+                        </div>
                     </div>
-                    <div style="position: absolute; top: 20px; right: 20px; font-weight: bold; color: #1f2937;">
-                        💧 Potassium Iodide Solution (Clear)
-                    </div>
-                    <div class="precipitate" id="precipitate"></div>
                     
-                    <div style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); color: #6b7280; font-size: 11px; text-align: center;">
-                        Pb(NO₃)₂ + 2KI → PbI₂ (yellow precipitate) + 2KNO₃
+                    <div class="solution-right" id="iodideSolution">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: bold; color: #047857; text-align: center;">
+                            2KI<br><span style="font-size: 8px;">Potassium Iodide<br>(Clear Solution)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mixing-swirl" id="mixingSwirl"></div>
+                    
+                    <div class="precipitate" id="precipitate">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: bold; color: #92400e; text-align: center;">
+                            PbI₂<br><span style="font-size: 7px;">Yellow Precipitate</span>
+                        </div>
+                    </div>
+                    
+                    <div style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); color: #6b7280; font-size: 11px; text-align: center; opacity: 0; transition: opacity 1s ease;" id="equation">
+                        Pb(NO₃)₂(aq) + 2KI(aq) → PbI₂(s) ↓ + 2KNO₃(aq)
                     </div>
                     <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: #0891b2; font-weight: bold; font-size: 12px;">
                         🧪 Double Displacement Reaction
                     </div>
+                    
+                    <!-- Progress indicators -->
+                    <div style="position: absolute; top: 10px; right: 15px; font-size: 10px; color: #6b7280; background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 4px;" id="reactionStatus">
+                        Ready to mix solutions
+                    </div>
+                    
+                    <!-- Particle container for enhanced effects -->
+                    <div id="particleContainer"></div>
                 </div>
                 
                 <button class="btn" onclick="startPrecipitateExperiment()">⚗️ Mix Solutions</button>
@@ -539,7 +694,8 @@
                 <div class="observation-panel">
                     <h4>📋 Observations:</h4>
                     <ul class="observation-list" id="precipitateObservations">
-                        <li>A yellow precipitate is formed</li>
+                        <li>Two clear solutions are mixed together</li>
+                        <li>A bright yellow precipitate forms immediately</li>
                         <li>The precipitate is lead iodide (PbI₂)</li>
                         <li>Formation of precipitate indicates chemical reaction</li>
                         <li>Chemical equation: Pb(NO₃)₂(aq) + 2KI(aq) → PbI₂(s) + 2KNO₃(aq)</li>
@@ -760,40 +916,143 @@
             observations.forEach(obs => obs.classList.remove('show'));
         }
 
-        // Precipitate experiment
+        // ENHANCED Precipitate experiment for Activity 1.2
         function startPrecipitateExperiment() {
             const precipitate = document.getElementById('precipitate');
+            const leadSolution = document.getElementById('leadSolution');
+            const iodideSolution = document.getElementById('iodideSolution');
+            const mixingSwirl = document.getElementById('mixingSwirl');
+            const equation = document.getElementById('equation');
+            const status = document.getElementById('reactionStatus');
+            const particleContainer = document.getElementById('particleContainer');
             const observations = document.querySelectorAll('#precipitateObservations li');
             
-            if (!precipitate) return;
+            if (!precipitate || !leadSolution || !iodideSolution) return;
             
-            // Reset first
+            // Reset everything first
             precipitate.classList.remove('forming');
             precipitate.style.opacity = '0';
             precipitate.style.transform = 'translateX(-50%) scale(0)';
+            leadSolution.classList.remove('mixing');
+            iodideSolution.classList.remove('mixing');
+            mixingSwirl.classList.remove('active');
+            equation.style.opacity = '0';
+            particleContainer.innerHTML = '';
             
+            // Phase 1: Solutions start mixing (0.5s)
             setTimeout(() => {
-                precipitate.classList.add('forming');
-                precipitate.style.opacity = '1';
+                status.textContent = "Pouring solutions together...";
+                status.style.background = "rgba(59, 130, 246, 0.2)";
+                status.style.color = "#1e40af";
+                leadSolution.classList.add('mixing');
+                iodideSolution.classList.add('mixing');
             }, 500);
             
+            // Phase 2: Show mixing effect (1.5s)
+            setTimeout(() => {
+                status.textContent = "Solutions mixing & reacting...";
+                status.style.background = "rgba(139, 92, 246, 0.2)";
+                status.style.color = "#7c3aed";
+                mixingSwirl.classList.add('active');
+                
+                // Create reaction particles
+                createReactionParticles(particleContainer);
+            }, 1500);
+            
+            // Phase 3: Start precipitate formation (2.5s)
+            setTimeout(() => {
+                status.textContent = "Yellow precipitate forming!";
+                status.style.background = "rgba(251, 191, 36, 0.2)";
+                status.style.color = "#92400e";
+                precipitate.classList.add('forming');
+                mixingSwirl.classList.remove('active');
+            }, 2500);
+            
+            // Phase 4: Show chemical equation (4.5s)
+            setTimeout(() => {
+                status.textContent = "Reaction complete!";
+                status.style.background = "rgba(16, 185, 129, 0.2)";
+                status.style.color = "#047857";
+                equation.style.opacity = '1';
+            }, 4500);
+            
+            // Show observations progressively starting earlier
             observations.forEach((obs, index) => {
                 setTimeout(() => {
                     obs.classList.add('show');
-                }, 800 + (index * 600));
+                }, 1500 + (index * 700));
             });
+        }
+
+        function createReactionParticles(container) {
+            // Create multiple particles to show reaction happening
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'reaction-particles';
+                    
+                    // Random position around the center
+                    const centerX = container.parentElement.offsetWidth / 2;
+                    const centerY = container.parentElement.offsetHeight / 2;
+                    const angle = (i / 15) * 2 * Math.PI;
+                    const radius = 30 + Math.random() * 40;
+                    
+                    const startX = centerX + Math.cos(angle) * 20;
+                    const startY = centerY + Math.sin(angle) * 20;
+                    const endX = centerX + Math.cos(angle) * radius;
+                    const endY = centerY + Math.sin(angle) * radius;
+                    
+                    particle.style.left = startX + 'px';
+                    particle.style.top = startY + 'px';
+                    particle.style.setProperty('--x', (endX - startX) + 'px');
+                    particle.style.setProperty('--y', (endY - startY) + 'px');
+                    
+                    particle.style.animation = 'particleFloat 1.5s ease-out forwards';
+                    particle.style.opacity = '1';
+                    
+                    container.appendChild(particle);
+                    
+                    // Clean up
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 1500);
+                }, i * 100);
+            }
         }
 
         function resetPrecipitateExperiment() {
             const precipitate = document.getElementById('precipitate');
+            const leadSolution = document.getElementById('leadSolution');
+            const iodideSolution = document.getElementById('iodideSolution');
+            const mixingSwirl = document.getElementById('mixingSwirl');
+            const equation = document.getElementById('equation');
+            const status = document.getElementById('reactionStatus');
+            const particleContainer = document.getElementById('particleContainer');
             const observations = document.querySelectorAll('#precipitateObservations li');
             
-            if (!precipitate) return;
+            if (!precipitate || !leadSolution || !iodideSolution) return;
             
             precipitate.classList.remove('forming');
             precipitate.style.opacity = '0';
             precipitate.style.transform = 'translateX(-50%) scale(0)';
             precipitate.style.animation = 'none';
+            
+            leadSolution.classList.remove('mixing');
+            leadSolution.style.transform = 'none';
+            
+            iodideSolution.classList.remove('mixing');
+            iodideSolution.style.transform = 'none';
+            
+            mixingSwirl.classList.remove('active');
+            
+            equation.style.opacity = '0';
+            status.textContent = "Ready to mix solutions";
+            status.style.background = "rgba(255,255,255,0.8)";
+            status.style.color = "#6b7280";
+            
+            particleContainer.innerHTML = '';
             
             observations.forEach(obs => obs.classList.remove('show'));
         }
@@ -832,14 +1091,15 @@
             
             // Random starting position along the bottom
             const startX = 80 + Math.random() * 200;
+            const drift = (Math.random() - 0.5) * 40;
+            
             bubble.style.left = startX + 'px';
             bubble.style.bottom = '80px';
             bubble.style.opacity = '0.8';
             bubble.style.animation = 'bubble 2.5s ease-out forwards';
             
-            // Add some random horizontal drift
-            const drift = (Math.random() - 0.5) * 40;
-            bubble.style.setProperty('--drift', drift + 'px');
+            // Add horizontal drift during animation
+            bubble.style.setProperty('transform', `translateX(${drift}px)`);
             
             container.appendChild(bubble);
             

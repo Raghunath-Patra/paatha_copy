@@ -126,66 +126,6 @@
             margin-bottom: 10px;
         }
 
-        .journey-path {
-            background: #1f2937;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 20px 0;
-            min-height: 200px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .path-step {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #0891b2;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 3px solid #22d3ee;
-        }
-
-        .path-step:hover {
-            transform: scale(1.2);
-            background: #22d3ee;
-        }
-
-        .path-step.completed {
-            background: #10b981;
-            border-color: #34d399;
-        }
-
-        .path-line {
-            position: absolute;
-            height: 3px;
-            background: linear-gradient(to right, #0891b2, #22d3ee);
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .step-description {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            text-align: center;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .step-description.active {
-            opacity: 1;
-        }
-
         .btn {
             background: linear-gradient(45deg, #0891b2, #06b6d4);
             color: white;
@@ -331,6 +271,14 @@
             border-top: 4px solid #f59e0b;
         }
 
+        .number-type.natural {
+            border-top: 4px solid #3b82f6;
+        }
+
+        .number-type.decimal {
+            border-top: 4px solid #8b5cf6;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -462,26 +410,7 @@
                 <div id="previewContent"></div>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn" onclick="showLearningPath()">📚 View Learning Path</button>
                     <button class="btn secondary" onclick="startInteractiveDemo()">▶️ Try Interactive Demo</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Your Learning Journey</h2>
-            
-            <div class="journey-path" id="learningPath">
-                <div class="path-step" style="left: 50px; top: 50%;" data-step="1" onclick="showStep(1)">1</div>
-                <div class="path-line" style="left: 110px; width: 150px;"></div>
-                <div class="path-step" style="left: 260px; top: 30%;" data-step="2" onclick="showStep(2)">2</div>
-                <div class="path-line" style="left: 320px; width: 150px; top: 35%; transform: rotate(10deg) translateY(-50%);"></div>
-                <div class="path-step" style="left: 470px; top: 60%;" data-step="3" onclick="showStep(3)">3</div>
-                <div class="path-line" style="left: 530px; width: 150px; top: 65%; transform: rotate(-15deg) translateY(-50%);"></div>
-                <div class="path-step" style="left: 680px; top: 40%;" data-step="4" onclick="showStep(4)">4</div>
-                
-                <div class="step-description" id="stepDescription">
-                    Click on any step to see what you'll learn!
                 </div>
             </div>
         </div>
@@ -649,26 +578,6 @@
             }
         };
 
-        // Learning steps
-        const learningSteps = [
-            {
-                title: "Start with Division",
-                description: "Learn Euclid's algorithm for division and finding remainders"
-            },
-            {
-                title: "Discover Prime Building Blocks", 
-                description: "Understand how every number is built from prime factors"
-            },
-            {
-                title: "Explore Irrational Numbers",
-                description: "Prove that √2, √3 cannot be written as fractions"
-            },
-            {
-                title: "Apply to Real World",
-                description: "Use these concepts in practical problems and applications"
-            }
-        ];
-
         function exploreChapter(topic) {
             // Remove active class from all cards
             document.querySelectorAll('.topic-card').forEach(card => {
@@ -694,38 +603,6 @@
             
             // Scroll to details
             detailsSection.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function showStep(stepNumber) {
-            const step = learningSteps[stepNumber - 1];
-            const description = document.getElementById('stepDescription');
-            
-            // Update description
-            description.innerHTML = `
-                <h4>${step.title}</h4>
-                <p>${step.description}</p>
-            `;
-            description.classList.add('active');
-            
-            // Mark step as completed
-            document.querySelector(`[data-step="${stepNumber}"]`).classList.add('completed');
-            
-            // Remove active class from other descriptions
-            setTimeout(() => {
-                description.classList.remove('active');
-            }, 5000);
-        }
-
-        function showLearningPath() {
-            document.getElementById('learningPath').scrollIntoView({ behavior: 'smooth' });
-            
-            // Highlight the learning path
-            const pathElement = document.getElementById('learningPath');
-            pathElement.style.boxShadow = '0 0 20px rgba(34, 211, 238, 0.5)';
-            
-            setTimeout(() => {
-                pathElement.style.boxShadow = 'none';
-            }, 3000);
         }
 
         function startInteractiveDemo() {

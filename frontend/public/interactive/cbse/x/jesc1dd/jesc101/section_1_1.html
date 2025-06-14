@@ -224,45 +224,60 @@
 
         .molecule.clickable {
             background: #e0f2fe;
-            border: 2px solid #0891b2;
+            border: 3px solid #0891b2;
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 10px 15px;
             display: inline-block;
             margin: 2px;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
+            user-select: none;
+            font-weight: bold;
         }
 
         .molecule.clickable:hover {
             background: #b3e5fc;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(8, 145, 178, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(8, 145, 178, 0.4);
+            border-color: #0369a1;
         }
 
         .molecule.clickable:active {
-            transform: scale(0.95);
+            transform: scale(0.95) translateY(-1px);
+            box-shadow: 0 2px 4px rgba(8, 145, 178, 0.3);
         }
 
-        .molecule.clickable::before {
-            content: "Click to change state";
+        .molecule.clickable::after {
+            content: "Click to cycle states";
             position: absolute;
-            bottom: -25px;
+            bottom: -35px;
             left: 50%;
             transform: translateX(-50%);
             background: #1f2937;
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: normal;
             white-space: nowrap;
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
+            z-index: 10;
         }
 
-        .molecule.clickable:hover::before {
+        .molecule.clickable:hover::after {
             opacity: 1;
+        }
+
+        .molecule .state {
+            color: #dc2626;
+            font-weight: bold;
+            background: rgba(220, 38, 38, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-left: 2px;
         }
 
         .plus-sign {
@@ -374,6 +389,16 @@
             .state-symbols {
                 grid-template-columns: 1fr;
             }
+        }
+
+        .pulse-animation {
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -586,19 +611,38 @@
                 
                 <div class="practice-area">
                     <h4>🎯 Practice: Add Physical States</h4>
-                    <p>Click on each compound to cycle through its possible physical states:</p>
+                    <p><strong>Instructions:</strong> Click on each compound below to cycle through different physical states. Find the most appropriate state for each compound in this reaction!</p>
                     
                     <div id="statesPractice" class="practice-equation">
-                        <span class="molecule clickable" data-states="['(s)']" onclick="cycleState(this)">Zn<span class="state">(s)</span></span>
+                        <span class="molecule clickable" data-molecule="Zn" onclick="cycleState(this)">
+                            Zn<span class="state">(s)</span>
+                        </span>
                         <span class="plus-sign">+</span>
-                        <span class="molecule clickable" data-states="['(aq)', '(l)']" onclick="cycleState(this)">2HCl<span class="state">(aq)</span></span>
+                        <span class="molecule clickable" data-molecule="2HCl" onclick="cycleState(this)">
+                            2HCl<span class="state">(aq)</span>
+                        </span>
                         <span class="arrow">→</span>
-                        <span class="molecule clickable" data-states="['(aq)', '(s)']" onclick="cycleState(this)">ZnCl₂<span class="state">(aq)</span></span>
+                        <span class="molecule clickable" data-molecule="ZnCl₂" onclick="cycleState(this)">
+                            ZnCl₂<span class="state">(aq)</span>
+                        </span>
                         <span class="plus-sign">+</span>
-                        <span class="molecule clickable" data-states="['(g)']" onclick="cycleState(this)">H₂<span class="state">(g)</span></span>
+                        <span class="molecule clickable" data-molecule="H₂" onclick="cycleState(this)">
+                            H₂<span class="state">(g)</span>
+                        </span>
+                    </div>
+                    
+                    <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 15px 0; border: 2px solid #bbf7d0;">
+                        <p><strong>💡 Hint:</strong> Think about the typical states:</p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li><strong>Metals</strong> are usually solids at room temperature</li>
+                            <li><strong>Acids in water</strong> form aqueous solutions</li>
+                            <li><strong>Salt solutions</strong> are typically aqueous</li>
+                            <li><strong>Hydrogen</strong> is a gas at room temperature</li>
+                        </ul>
                     </div>
                     
                     <button class="btn" onclick="checkStates()">✅ Check My States</button>
+                    <button class="btn secondary" onclick="resetStates()">🔄 Reset</button>
                     <div id="statesResult"></div>
                 </div>
             </div>
@@ -710,8 +754,24 @@
             }
         };
 
+        // Physical states data
+        const moleculeStates = {
+            'Zn': ['(s)', '(l)', '(aq)'],
+            '2HCl': ['(aq)', '(l)', '(g)'],
+            'ZnCl₂': ['(aq)', '(s)', '(l)'],
+            'H₂': ['(g)', '(l)', '(s)']
+        };
+
+        const correctStates = {
+            'Zn': '(s)',
+            '2HCl': '(aq)',
+            'ZnCl₂': '(aq)',
+            'H₂': '(g)'
+        };
+
         let currentEquationKey = '';
         let currentStep = 0;
+        let currentStateIndices = {};
 
         function showAtomCounting() {
             const display = document.getElementById('atomCountDisplay');
@@ -859,23 +919,25 @@
                 `<div class="feedback success">📖 Solution loaded! Click "Check Balance" to verify.</div>`;
         }
 
-        // Physical states practice
-        let currentStateIndex = {};
-
+        // Physical states practice - FIXED VERSION
         function cycleState(element) {
             try {
-                const states = JSON.parse(element.dataset.states);
-                const fullText = element.textContent.trim();
-                const molecule = fullText.split('(')[0].trim();
+                const molecule = element.getAttribute('data-molecule');
+                const states = moleculeStates[molecule];
+                
+                if (!states || states.length === 0) {
+                    console.warn('No states defined for molecule:', molecule);
+                    return;
+                }
                 
                 // Initialize index if not exists
-                if (!currentStateIndex[molecule]) {
-                    currentStateIndex[molecule] = 0;
+                if (currentStateIndices[molecule] === undefined) {
+                    currentStateIndices[molecule] = 0;
                 }
                 
                 // Cycle to next state
-                currentStateIndex[molecule] = (currentStateIndex[molecule] + 1) % states.length;
-                const newState = states[currentStateIndex[molecule]];
+                currentStateIndices[molecule] = (currentStateIndices[molecule] + 1) % states.length;
+                const newState = states[currentStateIndices[molecule]];
                 
                 // Update the state span
                 const stateSpan = element.querySelector('.state');
@@ -883,32 +945,36 @@
                     stateSpan.textContent = newState;
                     
                     // Add visual feedback
-                    element.style.transform = 'scale(1.1)';
+                    element.classList.add('pulse-animation');
+                    element.style.background = '#bbf7d0';
+                    element.style.borderColor = '#16a34a';
+                    
                     setTimeout(() => {
-                        element.style.transform = 'scale(1)';
-                    }, 200);
+                        element.classList.remove('pulse-animation');
+                        element.style.background = '#e0f2fe';
+                        element.style.borderColor = '#0891b2';
+                    }, 600);
                 }
+                
+                console.log(`${molecule} state changed to ${newState}`);
             } catch (error) {
                 console.error('Error cycling state:', error);
             }
         }
 
         function checkStates() {
-            // Correct states: Zn(s) + 2HCl(aq) → ZnCl₂(aq) + H₂(g)
-            const correctStates = {
-                'Zn': '(s)',
-                '2HCl': '(aq)',
-                'ZnCl₂': '(aq)',
-                'H₂': '(g)'
-            };
-            
             let correct = 0;
             let total = 0;
             let results = [];
             
+            // Reset all molecule backgrounds first
             document.querySelectorAll('.clickable').forEach(element => {
-                const fullText = element.textContent.trim();
-                const molecule = fullText.split('(')[0].trim();
+                element.style.background = '#e0f2fe';
+                element.style.borderColor = '#0891b2';
+            });
+            
+            document.querySelectorAll('.clickable').forEach(element => {
+                const molecule = element.getAttribute('data-molecule');
                 const stateSpan = element.querySelector('.state');
                 const currentState = stateSpan ? stateSpan.textContent : '';
                 total++;
@@ -936,12 +1002,34 @@
                 feedback += '<div class="feedback error">📚 Keep trying! Remember: solids are (s), solutions are (aq), gases are (g).</div>';
             }
             
-            feedback += `<div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px;">
+            feedback += `<div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 10px; border: 2px solid #e2e8f0;">
                 <strong>Results (${correct}/${total} correct):</strong><br>
                 ${results.join('<br>')}
             </div></div>`;
             
             document.getElementById('statesResult').innerHTML = feedback;
+        }
+
+        function resetStates() {
+            // Reset all state indices
+            currentStateIndices = {};
+            
+            // Reset all molecules to their initial states
+            document.querySelectorAll('.clickable').forEach(element => {
+                const molecule = element.getAttribute('data-molecule');
+                const stateSpan = element.querySelector('.state');
+                
+                if (stateSpan && correctStates[molecule]) {
+                    stateSpan.textContent = correctStates[molecule];
+                }
+                
+                // Reset visual styling
+                element.style.background = '#e0f2fe';
+                element.style.borderColor = '#0891b2';
+            });
+            
+            // Clear results
+            document.getElementById('statesResult').innerHTML = '';
         }
 
         // Step-by-step balancing tutorial
@@ -974,26 +1062,24 @@
             nextButton.disabled = false;
         }
 
-        // Add click listeners for molecules with states
+        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize clickable molecules
-            document.querySelectorAll('.clickable').forEach(molecule => {
-                molecule.style.cursor = 'pointer';
-                molecule.style.transition = 'all 0.3s ease';
+            // Initialize state indices
+            currentStateIndices = {};
+            
+            // Set initial states
+            document.querySelectorAll('.clickable').forEach(element => {
+                const molecule = element.getAttribute('data-molecule');
+                const stateSpan = element.querySelector('.state');
                 
-                // Ensure state span exists
-                if (!molecule.querySelector('.state')) {
-                    const stateSpan = document.createElement('span');
-                    stateSpan.className = 'state';
-                    stateSpan.textContent = molecule.getAttribute('data-initial-state') || '(s)';
-                    molecule.appendChild(stateSpan);
+                if (stateSpan && correctStates[molecule]) {
+                    stateSpan.textContent = correctStates[molecule];
                 }
             });
             
-            // Initialize state indices
-            currentStateIndex = {};
-            
             console.log('Chemical Equations Tool Loaded');
+            console.log('Available states:', moleculeStates);
+            console.log('Correct states:', correctStates);
         });
     </script>
 </body>

@@ -1120,9 +1120,20 @@
         }
 
         function resetGame() {
+            // Define the original placeholder texts
+            const originalTexts = [
+                "1. Broadest Category",
+                "2. Major Groups", 
+                "3. Related Orders",
+                "4. Similar Families",
+                "5. Related Genera",
+                "6. Closely Related Species",
+                "7. Most Specific"
+            ];
+            
             // Reset drop zones
-            document.querySelectorAll('.drop-zone').forEach(zone => {
-                zone.innerHTML = zone.innerHTML.split('<div')[0]; // Keep original text
+            document.querySelectorAll('.drop-zone').forEach((zone, index) => {
+                zone.innerHTML = originalTexts[index];
                 zone.classList.remove('correct');
                 zone.style.background = '';
                 zone.style.borderColor = '';

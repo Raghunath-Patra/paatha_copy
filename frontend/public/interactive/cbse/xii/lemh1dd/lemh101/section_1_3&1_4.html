@@ -430,7 +430,6 @@
         <div class="nav-tabs">
             <button class="tab-btn active" onclick="showTab('intro')">📚 Introduction</button>
             <button class="tab-btn" onclick="showTab('types')">🔍 Function Types</button>
-            <button class="tab-btn" onclick="showTab('builder')">🛠️ Function Builder</button>
             <button class="tab-btn" onclick="showTab('composition')">🔗 Composition</button>
             <button class="tab-btn" onclick="showTab('inverse')">🔄 Inverse Functions</button>
             <button class="tab-btn" onclick="showTab('examples')">💡 Examples</button>
@@ -487,7 +486,7 @@
 
             <div class="highlight-box">
                 <h3>🎯 Learning Journey</h3>
-                <p>Master function types → Build your own functions → Explore composition → Discover inverse functions → Practice with real examples!</p>
+                <p>Master function types → Explore composition → Discover inverse functions → Practice with real examples!</p>
             </div>
         </div>
 
@@ -543,66 +542,6 @@
                 <div class="step-indicator">
                     <strong>Bijective:</strong> Function that is both one-one and onto
                     <br><em>Perfect one-to-one correspondence</em>
-                </div>
-            </div>
-        </div>
-
-        <!-- Function Builder Section -->
-        <div id="builder" class="content-section">
-            <h2>🛠️ Interactive Function Builder</h2>
-            
-            <div class="interactive-panel">
-                <h3>🎨 Build Your Own Function</h3>
-                <p>Click elements in Domain, then in Codomain to create mappings!</p>
-                
-                <div class="controls">
-                    <button class="btn" onclick="resetFunction()">🔄 Reset</button>
-                    <button class="btn secondary" onclick="generateRandomFunction()">🎲 Random Function</button>
-                    <button class="btn success" onclick="analyzeFunction()">🔍 Analyze Properties</button>
-                    <button class="btn warning" onclick="showMappingTable()">📋 Show Mappings</button>
-                </div>
-
-                <div class="visual-container">
-                    <div class="function-diagram" id="functionBuilder">
-                        <div class="set-container domain">
-                            <h4 style="text-align: center; margin: 10px; font-size: 0.9em; color: #2c3e50;">Domain X</h4>
-                            <div id="domainElements"></div>
-                        </div>
-                        
-                        <div class="set-container codomain">
-                            <h4 style="text-align: center; margin: 10px; font-size: 0.9em; color: #2c3e50;">Codomain Y</h4>
-                            <div id="codomainElements"></div>
-                        </div>
-                        
-                        <svg id="functionArrows" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
-                            <defs>
-                                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
-                                        refX="9" refY="3.5" orient="auto">
-                                    <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c" />
-                                </marker>
-                            </defs>
-                        </svg>
-                    </div>
-                    
-                    <div style="flex: 1;">
-                        <div id="builderProperties" class="properties-panel">
-                            <h3>🎯 Function Analysis</h3>
-                            <div id="builderPropertyDisplay">
-                                <div class="property-indicator unknown">One-One: ?</div>
-                                <div class="property-indicator unknown">Onto: ?</div>
-                                <div class="property-indicator unknown">Bijective: ?</div>
-                            </div>
-                            
-                            <div id="builderExplanation" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
-                                <strong>Instructions:</strong> Click a domain element, then click a codomain element to create a mapping!
-                            </div>
-                        </div>
-                        
-                        <div id="mappingDisplay" class="mapping-display" style="display: none;">
-                            <h4>📊 Current Mappings</h4>
-                            <div id="mappingList"></div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -776,15 +715,9 @@
     <script>
         // Global variables
         let currentTab = 'intro';
-        let functionMappings = new Map();
-        let selectedDomainElement = null;
         let currentQuizQuestion = 0;
         let quizAnswers = [];
         let quizStarted = false;
-
-        // Define sets for function builder
-        const domainSet = ['1', '2', '3', '4'];
-        const codomainSet = ['a', 'b', 'c', 'd', 'e'];
 
         // Quiz questions
         const quizQuestions = [
@@ -861,11 +794,6 @@
                 
                 currentTab = tabName;
                 updateProgress();
-                
-                // Initialize tab-specific content
-                if (tabName === 'builder') {
-                    setTimeout(() => initializeFunctionBuilder(), 100);
-                }
             } catch (error) {
                 console.error('Error in showTab:', error);
             }
@@ -1081,235 +1009,6 @@
                 `;
             } catch (error) {
                 console.error('Error in loadFunctionType:', error);
-            }
-        }
-
-        // Function builder
-        function initializeFunctionBuilder() {
-            try {
-                functionMappings.clear();
-                selectedDomainElement = null;
-                
-                createBuilderElements();
-                updateBuilderVisualization();
-            } catch (error) {
-                console.error('Error in initializeFunctionBuilder:', error);
-            }
-        }
-
-        function createBuilderElements() {
-            try {
-                const domainContainer = document.getElementById('domainElements');
-                const codomainContainer = document.getElementById('codomainElements');
-                
-                if (!domainContainer || !codomainContainer) return;
-                
-                domainContainer.innerHTML = '';
-                codomainContainer.innerHTML = '';
-                
-                domainSet.forEach((element, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'element domain-element';
-                    div.textContent = element;
-                    div.style.top = (40 + index * 60) + 'px';
-                    div.onclick = () => selectDomainElement(element);
-                    div.dataset.element = element;
-                    domainContainer.appendChild(div);
-                });
-                
-                codomainSet.forEach((element, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'element codomain-element';
-                    div.textContent = element;
-                    div.style.top = (30 + index * 50) + 'px';
-                    div.onclick = () => selectCodomainElement(element);
-                    div.dataset.element = element;
-                    codomainContainer.appendChild(div);
-                });
-            } catch (error) {
-                console.error('Error in createBuilderElements:', error);
-            }
-        }
-
-        function selectDomainElement(element) {
-            try {
-                // Clear previous selection
-                document.querySelectorAll('.domain-element').forEach(el => {
-                    el.classList.remove('selected');
-                });
-                
-                selectedDomainElement = element;
-                const elementDiv = document.querySelector(`[data-element="${element}"].domain-element`);
-                if (elementDiv) {
-                    elementDiv.classList.add('selected');
-                }
-            } catch (error) {
-                console.error('Error in selectDomainElement:', error);
-            }
-        }
-
-        function selectCodomainElement(element) {
-            try {
-                if (selectedDomainElement) {
-                    functionMappings.set(selectedDomainElement, element);
-                    selectedDomainElement = null;
-                    
-                    // Clear all selections
-                    document.querySelectorAll('.element').forEach(el => {
-                        el.classList.remove('selected');
-                    });
-                    
-                    updateBuilderVisualization();
-                    analyzeFunction();
-                }
-            } catch (error) {
-                console.error('Error in selectCodomainElement:', error);
-            }
-        }
-
-        function updateBuilderVisualization() {
-            try {
-                const svg = document.getElementById('functionArrows');
-                if (!svg) return;
-                
-                svg.innerHTML = `
-                    <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" 
-                                refX="9" refY="3.5" orient="auto">
-                            <polygon points="0 0, 10 3.5, 0 7" fill="#e74c3c" />
-                        </marker>
-                    </defs>
-                `;
-                
-                functionMappings.forEach((codomain, domain) => {
-                    const domainIndex = domainSet.indexOf(domain);
-                    const codomainIndex = codomainSet.indexOf(codomain);
-                    
-                    const fromY = 90 + domainIndex * 60;
-                    const toY = 80 + codomainIndex * 50;
-                    
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', '150');
-                    line.setAttribute('y1', fromY);
-                    line.setAttribute('x2', '250');
-                    line.setAttribute('y2', toY);
-                    line.setAttribute('stroke', '#e74c3c');
-                    line.setAttribute('stroke-width', '2');
-                    line.setAttribute('marker-end', 'url(#arrowhead)');
-                    
-                    svg.appendChild(line);
-                });
-            } catch (error) {
-                console.error('Error in updateBuilderVisualization:', error);
-            }
-        }
-
-        function resetFunction() {
-            try {
-                functionMappings.clear();
-                selectedDomainElement = null;
-                document.querySelectorAll('.element').forEach(el => {
-                    el.classList.remove('selected');
-                });
-                updateBuilderVisualization();
-                analyzeFunction();
-                
-                const mappingDisplay = document.getElementById('mappingDisplay');
-                if (mappingDisplay) {
-                    mappingDisplay.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error in resetFunction:', error);
-            }
-        }
-
-        function generateRandomFunction() {
-            try {
-                functionMappings.clear();
-                
-                domainSet.forEach(domainElement => {
-                    const randomCodomain = codomainSet[Math.floor(Math.random() * codomainSet.length)];
-                    functionMappings.set(domainElement, randomCodomain);
-                });
-                
-                updateBuilderVisualization();
-                analyzeFunction();
-            } catch (error) {
-                console.error('Error in generateRandomFunction:', error);
-            }
-        }
-
-        function analyzeFunction() {
-            try {
-                const builderPropertyDisplay = document.getElementById('builderPropertyDisplay');
-                const builderExplanation = document.getElementById('builderExplanation');
-                
-                if (!builderPropertyDisplay || !builderExplanation) return;
-                
-                if (functionMappings.size === 0) {
-                    builderPropertyDisplay.innerHTML = `
-                        <div class="property-indicator unknown">One-One: ?</div>
-                        <div class="property-indicator unknown">Onto: ?</div>
-                        <div class="property-indicator unknown">Bijective: ?</div>
-                    `;
-                    builderExplanation.innerHTML = '<strong>Instructions:</strong> Click a domain element, then click a codomain element to create a mapping!';
-                    return;
-                }
-                
-                const mappingValues = Array.from(functionMappings.values());
-                const uniqueValues = new Set(mappingValues);
-                
-                const isOneOne = mappingValues.length === uniqueValues.size;
-                const isOnto = functionMappings.size === domainSet.length && uniqueValues.size === codomainSet.length;
-                const isBijective = isOneOne && isOnto;
-                
-                builderPropertyDisplay.innerHTML = `
-                    <div class="property-indicator ${isOneOne ? 'true' : 'false'}">One-One: ${isOneOne ? '✓' : '✗'}</div>
-                    <div class="property-indicator ${isOnto ? 'true' : 'false'}">Onto: ${isOnto ? '✓' : '✗'}</div>
-                    <div class="property-indicator ${isBijective ? 'true' : 'false'}">Bijective: ${isBijective ? '✓' : '✗'}</div>
-                `;
-                
-                let explanation = '<strong>Analysis:</strong> ';
-                if (!isOneOne) {
-                    explanation += 'Not one-one because some codomain elements are mapped to by multiple domain elements. ';
-                }
-                if (!isOnto) {
-                    explanation += 'Not onto because not all codomain elements are reached. ';
-                }
-                if (isBijective) {
-                    explanation = '<strong>Perfect!</strong> This is a bijective function - it has an inverse!';
-                }
-                
-                builderExplanation.innerHTML = explanation;
-            } catch (error) {
-                console.error('Error in analyzeFunction:', error);
-            }
-        }
-
-        function showMappingTable() {
-            try {
-                const display = document.getElementById('mappingDisplay');
-                const list = document.getElementById('mappingList');
-                
-                if (!display || !list) return;
-                
-                if (functionMappings.size === 0) {
-                    list.innerHTML = '<em>No mappings created yet</em>';
-                } else {
-                    let html = '<table style="width: 100%; border-collapse: collapse;">';
-                    html += '<tr><th style="border: 1px solid #ddd; padding: 8px; background: #f8f9fa;">Domain</th><th style="border: 1px solid #ddd; padding: 8px; background: #f8f9fa;">Codomain</th></tr>';
-                    
-                    functionMappings.forEach((codomain, domain) => {
-                        html += `<tr><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${domain}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${codomain}</td></tr>`;
-                    });
-                    
-                    html += '</table>';
-                    list.innerHTML = html;
-                }
-                
-                display.style.display = display.style.display === 'none' ? 'block' : 'none';
-            } catch (error) {
-                console.error('Error in showMappingTable:', error);
             }
         }
 
@@ -1817,7 +1516,7 @@
                     message = 'Good job! Review function properties once more. 👍';
                     color = '#f39c12';
                 } else {
-                    message = 'Keep studying! Practice more with the function builder. 💪';
+                    message = 'Keep studying! Practice more with the examples. 💪';
                     color = '#e74c3c';
                 }
                 
@@ -1858,7 +1557,7 @@
 
         function updateProgress() {
             try {
-                const tabs = ['intro', 'types', 'builder', 'composition', 'inverse', 'examples', 'quiz'];
+                const tabs = ['intro', 'types', 'composition', 'inverse', 'examples', 'quiz'];
                 const currentIndex = tabs.indexOf(currentTab);
                 const progress = ((currentIndex + 1) / tabs.length) * 100;
                 const progressBar = document.getElementById('overallProgress');
