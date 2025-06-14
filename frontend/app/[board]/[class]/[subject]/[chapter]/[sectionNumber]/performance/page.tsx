@@ -582,10 +582,11 @@ export default function SectionPerformanceReport() {
       </div>
 
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
-        <div className="max-w-[1600px] mx-auto">
-          {/* ✅ UPDATED: Header with new navigation */}
-          <div className="flex flex-col gap-4 mb-8">
-            <div>
+      <div className="max-w-[1600px] mx-auto">
+        {/* ✅ UPDATED: Header with navigation at same level as title */}
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium mb-2 text-gray-800">
                 Performance Report :
                 {sectionNameLoading ? (
@@ -598,14 +599,15 @@ export default function SectionPerformanceReport() {
                   </span>
                 )}
               </h1>
-              <p className="text-sm sm:text-base text-gray-600">
-                {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
-              </p>
             </div>
-            <div className="flex gap-4 items-center relative z-[100] justify-end">
+            <div className="flex gap-4 items-center relative z-[100]">
               <Navigation />
             </div>
           </div>
+          <p className="text-sm sm:text-base text-gray-600">
+            {params.board?.toUpperCase()} Class {params.class?.toUpperCase()}
+          </p>
+        </div>
 
           {/* Content with independent loading states - SAME AS BEFORE */}
           <div className="space-y-6">
