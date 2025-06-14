@@ -124,7 +124,7 @@ export default function BottomNavigation() {
   };
 
   // ✅ UPDATED: Navigate to chapters/subjects list (back from chapter overview)
-  const goToChapters = () => {
+  const goToSubjects = () => {
     if (isNavigating || isLoading) return;
     safeNavigate(`/${board}/${classLevel}`);
   };
@@ -135,12 +135,12 @@ export default function BottomNavigation() {
     safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}`);
   };
 
-  // ✅ UPDATED: Navigate to performance page (chapter-level or section-level)
+  // ✅ UPDATED: Navigate to performance page (section-level based on current context)
   const goToPerformance = () => {
     if (isNavigating || isLoading) return;
     
-    if (isInSectionView && sectionNumber) {
-      // If we're in a section view, go to section performance
+    if ((isSectionContentPage || isSectionQuestionsPage) && sectionNumber) {
+      // If we're in a section content or questions view, go to section performance
       safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/${sectionNumber}/performance`);
     } else {
       // Otherwise go to chapter performance
@@ -157,8 +157,8 @@ export default function BottomNavigation() {
         return;
       }
       
-      // For section performance pages, go to section questions
-      if (isSectionPerformancePage && sectionNumber) {
+      // For section content or performance pages, go to section questions
+      if ((isSectionContentPage || isSectionPerformancePage) && sectionNumber) {
         safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/${sectionNumber}/questions`);
         return;
       }
@@ -390,10 +390,10 @@ export default function BottomNavigation() {
         {/* For simple pages (legal, upgrade), we only show the Home button */}
         {!isSimplePage && (
           <>
-            {/* ✅ UPDATED: Back to Chapters button - shown on chapter overview page */}
-            {isChapterOverviewPage && (
+            {/* ✅ UPDATED: Subjects button - shown on chapter overview and section pages */}
+            {(isChapterOverviewPage || isInSectionView || isExerciseQuestionsPage || isChapterPerformancePage) && (
               <button
-                onClick={goToChapters}
+                onClick={goToSubjects}
                 className="p-2 text-gray-600 flex flex-col items-center justify-center"
                 title="Back to Subjects"
                 aria-label="Back to Subject List"
@@ -404,8 +404,8 @@ export default function BottomNavigation() {
               </button>
             )}
 
-            {/* ✅ NEW: Back to Chapter button - shown when in section views */}
-            {isInSectionView && (
+            {/* ✅ UPDATED: Chapter button - shown when in section views, exercise, or chapter performance */}
+            {(isInSectionView || isExerciseQuestionsPage || isChapterPerformancePage) && (
               <button
                 onClick={goToChapter}
                 className="p-2 text-gray-600 flex flex-col items-center justify-center"
@@ -418,11 +418,11 @@ export default function BottomNavigation() {
               </button>
             )}
 
-            {/* ✅ UPDATED: Performance button - shown appropriately based on context */}
-            {(isExerciseQuestionsPage || isChapterPerformancePage || isInSectionView) && (
+            {/* ✅ UPDATED: Performance button - shown on section content and questions pages */}
+            {(isSectionContentPage || isSectionQuestionsPage) && (
               <button
                 onClick={goToPerformance}
-                className={`p-2 ${(isChapterPerformancePage || isSectionPerformancePage) ? 'text-green-600' : 'text-gray-600'} flex flex-col items-center justify-center`}
+                className="p-2 text-gray-600 flex flex-col items-center justify-center"
                 title="Performance"
                 aria-label="View Performance Report"
                 disabled={isLoading || isNavigating}
@@ -432,14 +432,14 @@ export default function BottomNavigation() {
               </button>
             )}
             
-            {/* ✅ UPDATED: Questions button - shown on performance pages */}
-            {(isChapterPerformancePage || isSectionPerformancePage) && (
+            {/* ✅ UPDATED: Questions button - shown on section content and performance pages */}
+            {(isSectionContentPage || isSectionPerformancePage || isChapterPerformancePage) && (
               <button
                 onClick={goToQuestions}
                 disabled={isLoading || isNavigating}
                 className="p-2 text-blue-600 flex flex-col items-center justify-center min-w-[60px]"
                 title="Questions"
-                aria-label="Back to Questions"
+                aria-label="Questions"
               >
                 <FileQuestion size={20} />
                 <span className="text-xs mt-1 whitespace-nowrap">
@@ -452,7 +452,7 @@ export default function BottomNavigation() {
             {isLegacyChapterPage && (
               <>
                 <button
-                  onClick={goToChapters}
+                  onClick={goToSubjects}
                   className="p-2 text-gray-600 flex flex-col items-center justify-center"
                   title="Chapters"
                   aria-label="Back to Chapter List"
