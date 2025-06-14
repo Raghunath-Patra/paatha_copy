@@ -95,69 +95,7 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// Enhanced Questions Navigation Component (same as before)
-const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
-  const router = useRouter();
-  
-  const handleContentClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/content`);
-  };
-
-  const handlePerformanceClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/performance`);
-  };
-
-  const handleBackToChapter = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`);
-  };
-
-  return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <button
-        onClick={handleBackToChapter}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="Back to Chapter"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span className="hidden sm:inline">Chapter</span>
-      </button>
-
-      <button
-        onClick={handleContentClick}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg hover:from-green-200 hover:to-emerald-200 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="Learning Content"
-      >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-        </svg>
-        <span className="hidden sm:inline">Learning</span>
-      </button>
-
-      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-md">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="hidden sm:inline">Questions</span>
-      </div>
-
-      <button
-        onClick={handlePerformanceClick}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-lg hover:from-purple-200 hover:to-pink-200 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="View Performance"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <span className="hidden sm:inline">Performance</span>
-      </button>
-
-      <QuestionLimitIndicator />
-      <Navigation />
-    </div>
-  );
-};
+// Removed the complex QuestionsNavigation component to match exercise page layout
 
 // Enhanced skeleton components (same as before)
 const SubmittingAnswerSkeleton = () => (
@@ -1053,9 +991,10 @@ export default function SectionQuestionsPage() {
                 )}
               </div>
 
-              {/* Navigation */}
+              {/* Navigation - Simplified to match exercise page layout */}
               <div className="flex flex-wrap gap-2 items-start relative z-[100]">
-                <QuestionsNavigation params={params} />
+                <Navigation />
+                <QuestionLimitIndicator />
               </div>
             </div>
 
