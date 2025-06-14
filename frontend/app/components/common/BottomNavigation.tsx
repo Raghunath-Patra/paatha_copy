@@ -367,7 +367,7 @@ export default function BottomNavigation() {
   
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 flex justify-around items-center z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-1 sm:p-2 flex justify-around items-center z-50">
         {/* Loading indicator overlay */}
         {(isLoading || isNavigating) && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
@@ -378,13 +378,13 @@ export default function BottomNavigation() {
         {/* Home button - shown on all pages */}
         <button
           onClick={goToHome}
-          className={`p-2 ${isHomePage ? 'text-blue-600' : 'text-gray-600'} flex flex-col items-center justify-center`}
+          className={`p-1 sm:p-2 ${isHomePage ? 'text-blue-600' : 'text-gray-600'} flex flex-col items-center justify-center min-w-0 flex-1`}
           title="Home"
           aria-label="Home"
           disabled={isLoading || isNavigating}
         >
-          <Home size={20} />
-          <span className="text-xs mt-1">Home</span>
+          <Home size={16} className="sm:w-5 sm:h-5" />
+          <span className="text-xs mt-0.5 hidden sm:block">Home</span>
         </button>
         
         {/* For simple pages (legal, upgrade), we only show the Home button */}
@@ -394,13 +394,13 @@ export default function BottomNavigation() {
             {(isChapterOverviewPage || isInSectionView || isExerciseQuestionsPage || isChapterPerformancePage) && (
               <button
                 onClick={goToSubjects}
-                className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                className="p-1 sm:p-2 text-gray-600 flex flex-col items-center justify-center min-w-0 flex-1"
                 title="Back to Subjects"
                 aria-label="Back to Subject List"
                 disabled={isLoading || isNavigating}
               >
-                <TableOfContents size={20} />
-                <span className="text-xs mt-1">Subjects</span>
+                <TableOfContents size={16} className="sm:w-5 sm:h-5" />
+                <span className="text-xs mt-0.5 hidden sm:block">Subjects</span>
               </button>
             )}
 
@@ -408,13 +408,13 @@ export default function BottomNavigation() {
             {(isInSectionView || isExerciseQuestionsPage || isChapterPerformancePage) && (
               <button
                 onClick={goToChapter}
-                className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                className="p-1 sm:p-2 text-gray-600 flex flex-col items-center justify-center min-w-0 flex-1"
                 title="Back to Chapter"
                 aria-label="Back to Chapter Overview"
                 disabled={isLoading || isNavigating}
               >
-                <BookOpen size={20} />
-                <span className="text-xs mt-1">Chapter</span>
+                <BookOpen size={16} className="sm:w-5 sm:h-5" />
+                <span className="text-xs mt-0.5 hidden sm:block">Chapter</span>
               </button>
             )}
 
@@ -422,13 +422,13 @@ export default function BottomNavigation() {
             {(isSectionContentPage || isSectionQuestionsPage) && (
               <button
                 onClick={goToPerformance}
-                className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                className="p-1 sm:p-2 text-gray-600 flex flex-col items-center justify-center min-w-0 flex-1"
                 title="Performance"
                 aria-label="View Performance Report"
                 disabled={isLoading || isNavigating}
               >
-                <BarChart2 size={20} />
-                <span className="text-xs mt-1">Performance</span>
+                <BarChart2 size={16} className="sm:w-5 sm:h-5" />
+                <span className="text-xs mt-0.5 hidden sm:block">Performance</span>
               </button>
             )}
             
@@ -437,12 +437,12 @@ export default function BottomNavigation() {
               <button
                 onClick={goToQuestions}
                 disabled={isLoading || isNavigating}
-                className="p-2 text-blue-600 flex flex-col items-center justify-center min-w-[60px]"
+                className="p-1 sm:p-2 text-blue-600 flex flex-col items-center justify-center min-w-0 flex-1"
                 title="Questions"
                 aria-label="Questions"
               >
-                <FileQuestion size={20} />
-                <span className="text-xs mt-1 whitespace-nowrap">
+                <FileQuestion size={16} className="sm:w-5 sm:h-5" />
+                <span className="text-xs mt-0.5 hidden sm:block whitespace-nowrap">
                   {isLoading ? "Loading..." : "Questions"}
                 </span>
               </button>
@@ -453,24 +453,24 @@ export default function BottomNavigation() {
               <>
                 <button
                   onClick={goToSubjects}
-                  className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                  className="p-1 sm:p-2 text-gray-600 flex flex-col items-center justify-center min-w-0 flex-1"
                   title="Chapters"
                   aria-label="Back to Chapter List"
                   disabled={isLoading || isNavigating}
                 >
-                  <TableOfContents size={20} />
-                  <span className="text-xs mt-1">Chapters</span>
+                  <TableOfContents size={16} className="sm:w-5 sm:h-5" />
+                  <span className="text-xs mt-0.5 hidden sm:block">Chapters</span>
                 </button>
                 
                 <button
                   onClick={goToPerformance}
-                  className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                  className="p-1 sm:p-2 text-gray-600 flex flex-col items-center justify-center min-w-0 flex-1"
                   title="Performance"
                   aria-label="View Performance Report"
                   disabled={isLoading || isNavigating}
                 >
-                  <BarChart2 size={20} />
-                  <span className="text-xs mt-1">Performance</span>
+                  <BarChart2 size={16} className="sm:w-5 sm:h-5" />
+                  <span className="text-xs mt-0.5 hidden sm:block">Performance</span>
                 </button>
               </>
             )}
@@ -479,7 +479,7 @@ export default function BottomNavigation() {
       </div>
       
       {/* Add padding at the bottom to prevent content from being hidden behind the navigation bar */}
-      <div className="h-16"></div>
+      <div className="h-12 sm:h-16"></div>
     </>
   );
 }
