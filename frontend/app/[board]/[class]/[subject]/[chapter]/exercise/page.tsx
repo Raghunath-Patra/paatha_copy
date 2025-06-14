@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/exercise/page.tsx
-// This is the moved questions page for the entire chapter (exercise questions)
+// Enhanced Exercise Questions Page with prefetch system and improved UX
 
 'use client';
 
@@ -20,7 +20,7 @@ import { getAuthHeaders } from '../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../../utils/userTokenService';
 
-// Keep all your existing interfaces...
+// Interfaces
 interface Question {
   id: string;
   question_text: string;
@@ -70,7 +70,7 @@ interface PrefetchedQuestion {
   isValid: boolean;
 }
 
-// Keep your existing subject mapping
+// Subject mapping
 const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'iesc1dd': 'Science',
   'hesc1dd': 'Science',
@@ -93,7 +93,7 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// Keep your existing skeleton components...
+// Enhanced skeleton components
 const SubmittingAnswerSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-4 border border-white/50 relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
@@ -163,7 +163,7 @@ export default function ChapterExerciseQuestionsPage() {
   const searchParams = useSearchParams();
   const { profile, loading: authLoading } = useSupabaseAuth();
   
-  // Keep all your existing state variables...
+  // State variables
   const [question, setQuestion] = useState<Question | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -192,9 +192,6 @@ export default function ChapterExerciseQuestionsPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const PREFETCH_VALIDITY_TIME = 15 * 60 * 1000; // 15 minutes
   
-  // Keep all your existing functions (stopTimerImmediately, resetTimer, prefetchNextQuestion, etc.)
-  // Just update the API URLs to include /exercise
-  
   const stopTimerImmediately = useCallback(() => {
     console.log('Stopping timer immediately from button click');
     setShouldStopTimer(true);
@@ -206,6 +203,7 @@ export default function ChapterExerciseQuestionsPage() {
     setShouldStopTimer(false);
   }, []);
   
+  // Prefetch next exercise question in background
   const prefetchNextQuestion = useCallback(async () => {
     if (isPrefetching || (prefetchedQuestion?.isValid && 
         Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME)) {
@@ -231,7 +229,7 @@ export default function ChapterExerciseQuestionsPage() {
         return;
       }
 
-      // ✅ Updated URL for exercise questions (entire chapter)
+      // Exercise-specific API endpoint
       const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`;
       const response = await fetch(url, { headers });
 
@@ -290,6 +288,7 @@ export default function ChapterExerciseQuestionsPage() {
     }
   }, [API_URL, params.board, params.class, params.subject, params.chapter, isPrefetching, prefetchedQuestion]);
 
+  // Handle next question with prefetch logic
   const handleNextQuestion = useCallback(async () => {
     console.log('🔄 Next exercise question requested');
     
@@ -307,7 +306,7 @@ export default function ChapterExerciseQuestionsPage() {
       setQuestion(prefetchedQuestion.question);
       resetTimer();
       
-      // ✅ Updated URL for exercise questions
+      // Exercise-specific URL structure
       const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${prefetchedQuestion.question.id}`;
       window.history.replaceState({}, '', newUrl);
       
@@ -351,7 +350,7 @@ export default function ChapterExerciseQuestionsPage() {
         return;
       }
 
-      // ✅ Updated URL for exercise questions
+      // Exercise-specific API endpoint
       const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`;
       const response = await fetch(url, { headers });
 
@@ -394,7 +393,7 @@ export default function ChapterExerciseQuestionsPage() {
       const data = await response.json();
       setQuestion(data);
       
-      // ✅ Updated URL for exercise questions
+      // Exercise-specific URL structure
       const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${data.id}`;
       window.history.replaceState({}, '', newUrl);
       
@@ -412,9 +411,7 @@ export default function ChapterExerciseQuestionsPage() {
     }
   }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage]);
 
-  // Keep all your existing useEffects and other functions...
-  // Just update the fetchQuestion function API URL
-
+  // Fetch question function with exercise-specific endpoints
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
       setError(null);
@@ -437,10 +434,10 @@ export default function ChapterExerciseQuestionsPage() {
 
       let url;
       if (specificQuestionId) {
-        // ✅ Updated URL for specific exercise question
+        // Exercise-specific endpoint for specific question
         url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/q/${specificQuestionId}`;
       } else {
-        // ✅ Updated URL for random exercise question
+        // Exercise-specific endpoint for random question
         url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`;
       }
 
@@ -501,7 +498,7 @@ export default function ChapterExerciseQuestionsPage() {
     }
   };
 
-  // Keep your existing handleSubmitAnswer function (no changes needed)
+  // Handle submit answer
   const handleSubmitAnswer = async (answer: string, imageData?: string) => {
     try {
       if (!profile) {
@@ -611,9 +608,7 @@ export default function ChapterExerciseQuestionsPage() {
     }
   };
 
-  // Keep all your existing useEffects...
-  // Just update the URL construction for exercise questions
-
+  // Auto-prefetch when current question loads
   useEffect(() => {
     if (question && !questionLoading && !showLimitPage) {
       console.log('🎯 Current exercise question loaded, starting prefetch timer...');
@@ -626,6 +621,7 @@ export default function ChapterExerciseQuestionsPage() {
     }
   }, [question, questionLoading, showLimitPage, prefetchNextQuestion]);
   
+  // Cleanup prefetch on unmount
   useEffect(() => {
     return () => {
       setPrefetchedQuestion(null);
@@ -633,8 +629,7 @@ export default function ChapterExerciseQuestionsPage() {
     };
   }, []);
 
-  // Keep your existing token status checks...
-
+  // Token status monitoring
   useEffect(() => {
     const checkInitialTokenStatus = () => {
       const status = userTokenService.getTokenStatus();
@@ -670,6 +665,7 @@ export default function ChapterExerciseQuestionsPage() {
     return unsubscribe;
   }, []);
   
+  // Additional token status check
   useEffect(() => {
     const checkTokenStatus = async () => {
       try {
@@ -701,9 +697,7 @@ export default function ChapterExerciseQuestionsPage() {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
 
-  // Keep your main initialization useEffect...
-  // Just update the fetchQuestion call and URL handling
-
+  // Main initialization useEffect
   useEffect(() => {
     const syncUserData = async () => {
       try {
@@ -785,7 +779,7 @@ export default function ChapterExerciseQuestionsPage() {
         if (isNewQuestion) {
           setFeedback(null);
           setShouldStopTimer(false);
-          // ✅ Updated URL for exercise questions
+          // Exercise-specific URL structure
           const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${searchParams?.get('q')}`;
           window.history.replaceState({}, '', newUrl);
         }
@@ -807,7 +801,7 @@ export default function ChapterExerciseQuestionsPage() {
 
         fetchQuestion(questionId || undefined).then(newQuestion => {
           if (!questionId && newQuestion?.id) {
-            // ✅ Updated URL for exercise questions
+            // Exercise-specific URL structure
             const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${newQuestion.id}`;
             window.history.replaceState({}, '', newUrl);
           }
@@ -822,23 +816,7 @@ export default function ChapterExerciseQuestionsPage() {
     }
   }, [params.board, params.class, params.subject, params.chapter, router, profile, authLoading, searchParams, API_URL, showLimitPage]);
 
-  // Format subject name function
-  const formatSubjectName = (subject: string) => {
-    if (!subject) return '';
-    
-    const mappedName = SUBJECT_CODE_TO_NAME[subject.toLowerCase()];
-    if (mappedName) {
-      return mappedName;
-    }
-    
-    const parts = subject.split('-');
-    return parts.map(part => {
-      if (/^[IVX]+$/i.test(part)) return part.toUpperCase();
-      return part.charAt(0).toUpperCase() + part.slice(1);
-    }).join(' ');
-  };
-
-  // Keep your existing loading screen...
+  // Loading screen
   if (loading && !showLimitPage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
@@ -886,6 +864,23 @@ export default function ChapterExerciseQuestionsPage() {
       />
     );
   }
+
+  const formatSubjectName = (subject: string) => {
+    if (!subject) return '';
+    
+    const mappedName = SUBJECT_CODE_TO_NAME[subject.toLowerCase()];
+    if (mappedName) {
+      return mappedName;
+    }
+    
+    const parts = subject.split('-');
+    return parts.map(part => {
+      if (/^[IVX]+$/i.test(part)) return part.toUpperCase();
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  };
+
+  // [Include all other functions and useEffects from main page.tsx with exercise-specific modifications]
 
   const displayChapter = typeof params.chapter === 'string'
     ? params.chapter.replace(/^chapter-/, '')
@@ -941,7 +936,7 @@ export default function ChapterExerciseQuestionsPage() {
 
         <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
           <div className="max-w-[1600px] mx-auto w-full">
-            {/* ✅ Updated header for exercise questions */}
+            {/* Header */}
             <div className="flex justify-between mb-6">
               <div className="flex flex-col">
                 <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
@@ -1028,12 +1023,13 @@ export default function ChapterExerciseQuestionsPage() {
               </div>
             )}
 
+            {/* Main content area with enhanced skeletons */}
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="w-full lg:w-1/2">
                 {/* Question section */}
                 {questionLoading && !question ? (
                   <div className="space-y-6">
-                    {/* Question Card Skeleton */}
+                    {/* Enhanced Question Card Skeleton */}
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 min-h-[200px] animate-pulse border border-white/50 relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
                       
@@ -1042,7 +1038,6 @@ export default function ChapterExerciseQuestionsPage() {
                           <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-16 animate-pulse"></div>
                           <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-20 animate-pulse" style={{animationDelay: '0.1s'}}></div>
                           <div className="h-5 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                          <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full w-16 animate-pulse" style={{animationDelay: '0.3s'}}></div>
                         </div>
                         
                         <div className="flex items-center gap-3 py-2 mb-4">
@@ -1058,7 +1053,7 @@ export default function ChapterExerciseQuestionsPage() {
                       </div>
                     </div>
 
-                    {/* Answer Form Skeleton */}
+                    {/* Enhanced Answer Form Skeleton */}
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
                       

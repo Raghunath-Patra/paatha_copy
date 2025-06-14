@@ -1,5 +1,5 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/[sectionNumber]/questions/page.tsx
-// FIXED: Section Questions Page with new URL structure and improved debugging
+// Enhanced Section Questions Page with prefetch system and improved UX
 
 'use client';
 
@@ -95,7 +95,7 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// ✅ UPDATED: Questions Navigation Component with new URL structure
+// Enhanced Questions Navigation Component
 const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
   const router = useRouter();
   
@@ -113,7 +113,6 @@ const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      {/* Back to Chapter */}
       <button
         onClick={handleBackToChapter}
         className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -125,7 +124,6 @@ const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
         <span className="hidden sm:inline">Chapter</span>
       </button>
 
-      {/* Content Icon */}
       <button
         onClick={handleContentClick}
         className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg hover:from-green-200 hover:to-emerald-200 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -137,7 +135,6 @@ const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
         <span className="hidden sm:inline">Learning</span>
       </button>
 
-      {/* Questions Icon (Current Page) */}
       <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-md">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -145,7 +142,6 @@ const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
         <span className="hidden sm:inline">Questions</span>
       </div>
 
-      {/* Performance Icon */}
       <button
         onClick={handlePerformanceClick}
         className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-lg hover:from-purple-200 hover:to-pink-200 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -157,16 +153,13 @@ const QuestionsNavigation = ({ params }: { params: PerformancePageParams }) => {
         <span className="hidden sm:inline">Performance</span>
       </button>
 
-      {/* Question Limit Indicator */}
       <QuestionLimitIndicator />
-
-      {/* Main Navigation */}
       <Navigation />
     </div>
   );
 };
 
-// Skeleton components
+// Enhanced skeleton components
 const SubmittingAnswerSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-4 border border-white/50 relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
@@ -265,27 +258,24 @@ export default function SectionQuestionsPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const PREFETCH_VALIDITY_TIME = 15 * 60 * 1000; // 15 minutes
   
-  // ✅ UPDATED: Extract section number from params with new URL structure
+  // Extract section number from params
   const extractSectionNumber = (): string => {
-    console.log('🔧 Extracting section number from new URL structure:', {
+    console.log('🔧 Extracting section number from URL structure:', {
       'params.sectionNumber': params.sectionNumber,
       'window.location.pathname': typeof window !== 'undefined' ? window.location.pathname : 'SSR'
     });
 
-    // Try params first (should work with new structure)
     if (params.sectionNumber && params.sectionNumber !== 'undefined') {
       const extracted = params.sectionNumber.toString();
       console.log('✅ Extracted from params:', extracted);
       return extracted;
     }
     
-    // Fallback: Parse from URL path with updated regex for new structure
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
-      // Updated regex to match new URL structure: /chapter-X/Y/questions
       const match = pathname.match(/\/chapter-\d+\/(\d+)\/questions/);
       if (match && match[1]) {
-        console.log('✅ Extracted from URL (new structure):', match[1]);
+        console.log('✅ Extracted from URL:', match[1]);
         return match[1];
       }
     }
@@ -297,38 +287,18 @@ export default function SectionQuestionsPage() {
   const sectionNumber = extractSectionNumber();
   const chapterNumber = params.chapter?.replace('chapter-', '') || '';
 
-  console.log('📊 Final extracted values:', { sectionNumber, chapterNumber });
+  const stopTimerImmediately = useCallback(() => {
+    console.log('Stopping timer immediately from button click');
+    setShouldStopTimer(true);
+  }, []);
 
-  // DEBUG: Add comprehensive debugging useEffect
-  useEffect(() => {
-    console.log('🔍 SECTION QUESTIONS DEBUG (NEW URL STRUCTURE):', {
-      url: window.location.href,
-      authLoading,
-      profile: !!profile,
-      showLimitPage,
-      isUsingPrefetch,
-      question: question ? { id: question.id, loaded: true } : null,
-      questionIdFromURL: searchParams?.get('q'),
-      sectionNumber,
-      chapterNumber,
-      tokenStatus: userTokenService.getTokenStatus(),
-      params: {
-        board: params.board,
-        class: params.class,
-        subject: params.subject,
-        chapter: params.chapter,
-        sectionNumber: params.sectionNumber
-      },
-      errorState: {
-        error,
-        errorDisplayMode,
-        showUpgradeButton,
-        showTokenWarning
-      }
-    });
-  }, [authLoading, profile, showLimitPage, isUsingPrefetch, question, searchParams, sectionNumber, chapterNumber, params, error, errorDisplayMode, showUpgradeButton, showTokenWarning]);
+  const resetTimer = useCallback(() => {
+    console.log('Resetting timer');
+    setTimerResetTrigger(prev => prev + 1);
+    setShouldStopTimer(false);
+  }, []);
   
-  // Prefetch next question
+  // Prefetch next section question in background
   const prefetchNextQuestion = useCallback(async () => {
     if (isPrefetching || (prefetchedQuestion?.isValid && 
         Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME)) {
@@ -354,6 +324,7 @@ export default function SectionQuestionsPage() {
         return;
       }
 
+      // Section-specific API endpoint
       const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${chapterNumber}/section/${sectionNumber}/random`;
       const response = await fetch(url, { headers });
 
@@ -412,7 +383,7 @@ export default function SectionQuestionsPage() {
     }
   }, [API_URL, params.board, params.class, params.subject, chapterNumber, sectionNumber, isPrefetching, prefetchedQuestion]);
 
-  // ✅ UPDATED: Handle next question with new URL structure
+  // Handle next question with prefetch logic
   const handleNextQuestion = useCallback(async () => {
     console.log('🔄 Next section question requested');
     
@@ -430,7 +401,7 @@ export default function SectionQuestionsPage() {
       setQuestion(prefetchedQuestion.question);
       resetTimer();
       
-      // ✅ UPDATED: Use new URL structure
+      // Section-specific URL structure
       const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${prefetchedQuestion.question.id}`;
       window.history.replaceState({}, '', newUrl);
       
@@ -474,6 +445,7 @@ export default function SectionQuestionsPage() {
         return;
       }
 
+      // Section-specific API endpoint
       const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${chapterNumber}/section/${sectionNumber}/random`;
       const response = await fetch(url, { headers });
 
@@ -516,7 +488,7 @@ export default function SectionQuestionsPage() {
       const data = await response.json();
       setQuestion(data);
       
-      // ✅ UPDATED: Use new URL structure
+      // Section-specific URL structure
       const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${data.id}`;
       window.history.replaceState({}, '', newUrl);
       
@@ -534,10 +506,10 @@ export default function SectionQuestionsPage() {
     }
   }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage, sectionNumber, chapterNumber]);
 
-  // FIXED: Fetch question function with improved token handling
+  // Fetch question function with section-specific endpoints
   const fetchQuestion = async (specificQuestionId?: string) => {
     try {
-      console.log('🚀 ATTEMPTING TO FETCH QUESTION:', {
+      console.log('🚀 ATTEMPTING TO FETCH SECTION QUESTION:', {
         specificQuestionId,
         sectionNumber,
         chapterNumber,
@@ -549,7 +521,6 @@ export default function SectionQuestionsPage() {
       setQuestionLoading(true);
       setErrorDisplayMode('none');
 
-      // FIXED: Only check token limits for random questions, not specific question IDs
       if (!specificQuestionId) {
         const actionCheck = userTokenService.canPerformAction('fetch_question');
         if (!actionCheck.allowed) {
@@ -570,11 +541,13 @@ export default function SectionQuestionsPage() {
 
       let url;
       if (specificQuestionId) {
+        // Section-specific endpoint for specific question
         url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${chapterNumber}/section/${sectionNumber}/q/${specificQuestionId}`;
-        console.log('🔗 Fetching specific question URL:', url);
+        console.log('🔗 Fetching specific section question URL:', url);
       } else {
+        // Section-specific endpoint for random question
         url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${chapterNumber}/section/${sectionNumber}/random`;
-        console.log('🎲 Fetching random question URL:', url);
+        console.log('🎲 Fetching random section question URL:', url);
       }
 
       const response = await fetch(url, { headers });
@@ -589,7 +562,6 @@ export default function SectionQuestionsPage() {
         
         if (response.status === 404 && specificQuestionId) {
           console.log('❌ Specific question not found, trying random question');
-          // Fallback to random question if specific question not found
           return await fetchQuestion();
         }
         
@@ -624,17 +596,16 @@ export default function SectionQuestionsPage() {
       }
 
       const data = await response.json();
-      console.log('✅ Question loaded successfully:', data.id);
+      console.log('✅ Section question loaded successfully:', data.id);
       setQuestion(data);
       
-      // Only update token usage for random questions
       if (!specificQuestionId) {
         userTokenService.updateTokenUsage({ input: 50 });
       }
       
       return data;
     } catch (err) {
-      console.error('💥 Error fetching question:', err);
+      console.error('💥 Error fetching section question:', err);
       
       if (!showLimitPage) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -756,17 +727,6 @@ export default function SectionQuestionsPage() {
     }
   };
   
-  const stopTimerImmediately = useCallback(() => {
-    console.log('Stopping timer immediately from button click');
-    setShouldStopTimer(true);
-  }, []);
-
-  const resetTimer = useCallback(() => {
-    console.log('Resetting timer');
-    setTimerResetTrigger(prev => prev + 1);
-    setShouldStopTimer(false);
-  }, []);
-  
   // Format subject name function
   const formatSubjectName = (subject: string) => {
     if (!subject) return '';
@@ -783,7 +743,7 @@ export default function SectionQuestionsPage() {
     }).join(' ');
   };
 
-  // Prefetch initialization
+  // Auto-prefetch when current question loads
   useEffect(() => {
     if (question && !questionLoading && !showLimitPage) {
       console.log('🎯 Current section question loaded, starting prefetch timer...');
@@ -796,6 +756,7 @@ export default function SectionQuestionsPage() {
     }
   }, [question, questionLoading, showLimitPage, prefetchNextQuestion]);
   
+  // Cleanup prefetch on unmount
   useEffect(() => {
     return () => {
       setPrefetchedQuestion(null);
@@ -803,7 +764,7 @@ export default function SectionQuestionsPage() {
     };
   }, []);
 
-  // Token status monitoring - FIXED: Separated from main init
+  // Token status monitoring
   useEffect(() => {
     console.log('🔍 Monitoring token status...');
     
@@ -839,7 +800,7 @@ export default function SectionQuestionsPage() {
     console.log('📊 Token limit check result:', limitReached);
 
     return unsubscribe;
-  }, []); // Run once on mount
+  }, []);
   
   // Additional token status check
   useEffect(() => {
@@ -873,10 +834,10 @@ export default function SectionQuestionsPage() {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
 
-  // ✅ UPDATED: Main initialization useEffect with new URL structure
+  // Main initialization useEffect
   useEffect(() => {
     const initializePage = async () => {
-      console.log('🚀 Starting page initialization with new URL structure...');
+      console.log('🚀 Starting section page initialization...');
       
       if (authLoading) {
         console.log('⏳ Auth still loading, waiting...');
@@ -889,7 +850,6 @@ export default function SectionQuestionsPage() {
         return;
       }
 
-      // Check for URL-based token limit flags first
       if (searchParams?.get('token_limit') === 'true' || searchParams?.get('usage_limit') === 'true') {
         console.log('🚫 Token limit flag in URL detected');
         setError("You've reached your daily usage limit. Please upgrade or try again tomorrow.");
@@ -961,7 +921,6 @@ export default function SectionQuestionsPage() {
           console.log('🆕 New question flag detected, resetting feedback');
           setFeedback(null);
           setShouldStopTimer(false);
-          // ✅ UPDATED: Use new URL structure
           const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${searchParams?.get('q')}`;
           window.history.replaceState({}, '', newUrl);
         }
@@ -969,14 +928,12 @@ export default function SectionQuestionsPage() {
         const questionId = searchParams?.get('q');
         console.log('🎯 Question ID from URL:', questionId);
         
-        // Skip fetch if using prefetched data
         if (isUsingPrefetch) {
           console.log('📌 Skipping fetch - using prefetched section question');
           setLoading(false);
           return;
         }
 
-        // Skip fetch if question already loaded with same ID
         if (question && question.id === questionId && questionId) {
           console.log('📌 Section question already loaded, skipping fetch');
           setLoading(false);
@@ -988,14 +945,12 @@ export default function SectionQuestionsPage() {
 
         const newQuestion = await fetchQuestion(questionId || undefined);
         
-        // ✅ UPDATED: Update URL with question ID using new structure
         if (!questionId && newQuestion?.id) {
           const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/questions?q=${newQuestion.id}`;
           window.history.replaceState({}, '', newUrl);
           console.log('📝 Updated URL with question ID:', newQuestion.id);
         }
 
-        // Initialize token service
         userTokenService.fetchUserTokenStatus();
 
       } catch (error) {
@@ -1007,7 +962,6 @@ export default function SectionQuestionsPage() {
       }
     };
 
-    // Only initialize if we're not already showing the limit page
     if (!showLimitPage && params.board && params.class && params.subject && params.chapter && params.sectionNumber) {
       initializePage();
     } else {
@@ -1027,11 +981,11 @@ export default function SectionQuestionsPage() {
     authLoading, 
     searchParams, 
     API_URL, 
-    showLimitPage,  // This is important!
+    showLimitPage,
     chapterNumber, 
     sectionNumber,
     isUsingPrefetch,
-    question?.id // Only depend on question.id, not entire question object
+    question?.id
   ]);
   
   // Loading screen
@@ -1076,269 +1030,9 @@ export default function SectionQuestionsPage() {
           router.push('/upgrade');
         }}
         onGoBack={() => {
-          // ✅ UPDATED: Use new URL structure for back navigation
           router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}/content`);
         }}
         showStats={true}
       />
     );
   }
-
-  return (
-    <>
-      <style jsx>{`
-        @keyframes timer-pulse {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
-            transform: scale(1);
-          }
-          50% { 
-            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
-            transform: scale(1.02);
-          }
-        }
-        
-        @keyframes shimmer-slide {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-        
-        @keyframes clock-tick {
-          0%, 50%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-5deg); }
-          75% { transform: rotate(5deg); }
-        }
-        
-        .timer-active {
-          animation: timer-pulse 3s infinite;
-        }
-        
-        .shimmer-effect {
-          animation: shimmer-slide 3s infinite;
-        }
-        
-        .clock-icon {
-          animation: clock-tick 2s infinite;
-        }
-      `}</style>
-
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
-               style={{animationDuration: '3s'}} />
-          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
-               style={{animationDuration: '4s'}} />
-          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
-               style={{animationDuration: '2s'}} />
-        </div>
-
-        <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
-          <div className="max-w-[1600px] mx-auto w-full">
-            {/* Header with navigation */}
-            <div className="flex justify-between mb-6">
-              <div className="flex flex-col">
-                <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
-                  {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {chapterNumber}, Section {sectionNumber}
-                  {sectionInfoLoading ? (
-                    <div className="inline-block ml-2">
-                      <div className="h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse inline-block"></div>
-                    </div>
-                  ) : sectionInfo?.name && (
-                    <span className="ml-2 text-gray-600">
-                      : {sectionInfo.name}
-                    </span>
-                  )}
-                </h1>
-                
-                <p className="text-sm text-gray-600 mb-2">
-                  {params.board?.toUpperCase()} Class {params.class?.toUpperCase()} • Section Questions
-                </p>
-                
-                {/* Timer */}
-                {questionLoading && !question ? (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit">
-                    <div className="h-6 w-16 bg-gradient-to-r from-blue-200 to-indigo-200 rounded animate-pulse"></div>
-                  </div>
-                ) : question && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-blue-200/50 w-fit relative overflow-hidden timer-active">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-100/30 to-blue-100/0 shimmer-effect"></div>
-                    <div className="relative flex items-center gap-2 text-blue-700 font-medium">
-                      <svg className="w-4 h-4 clock-icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                      <QuestionTimer 
-                        onTimeUpdate={setTimeTaken}
-                        shouldStop={shouldStopTimer}
-                        resetTrigger={timerResetTrigger}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Navigation */}
-              <div className="flex flex-wrap gap-2 items-start relative z-[100]">
-                <QuestionsNavigation params={params} />
-              </div>
-            </div>
-
-            {/* Token Warning */}
-            {errorDisplayMode === 'token-warning' && (
-              <TokenLimitWarning 
-                isVisible={showTokenWarning}
-                onClose={tokenWarningAllowClose ? () => {
-                  setShowTokenWarning(false);
-                  setErrorDisplayMode('none');
-                } : undefined}
-                isPremium={!!profile?.is_premium}
-                allowClose={tokenWarningAllowClose}
-              />
-            )}
-
-            {/* Error Message */}
-            {errorDisplayMode === 'error-message' && error && (
-              <div className="bg-red-50/90 backdrop-blur-sm text-red-600 p-4 rounded-xl mb-6 border border-red-200 shadow-sm">
-                {error}
-                {showUpgradeButton && !profile?.is_premium && (
-                  <div className="mt-4">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.location.href = '/upgrade';
-                      }}
-                      className="w-full py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                    >
-                      Upgrade to Premium
-                    </button>
-                  </div>
-                )}
-                {showUpgradeButton && profile?.is_premium && (
-                  <div className="mt-4 text-sm">
-                    <p>Your daily usage limit will reset at midnight UTC. Thank you for being a premium member!</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="w-full lg:w-1/2">
-                {/* Question section */}
-                {questionLoading && !question ? (
-                  <div className="space-y-6">
-                    {/* Question Card Skeleton */}
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 sm:p-6 min-h-[200px] animate-pulse border border-white/50 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/30 to-transparent opacity-50"></div>
-                      
-                      <div className="relative z-10">
-                        <div className="flex flex-wrap gap-1.5 mb-2">
-                          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-16 animate-pulse"></div>
-                          <div className="h-5 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-full w-20 animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                          <div className="h-5 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                          <div className="h-5 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full w-16 animate-pulse" style={{animationDelay: '0.3s'}}></div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3 py-2 mb-4">
-                          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 animate-pulse"></div>
-                          <div className="h-5 bg-gradient-to-r from-green-200 to-emerald-200 rounded w-24 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse"></div>
-                          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                          <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Answer Form Skeleton */}
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-3 border border-white/50 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
-                      
-                      <div className="relative z-10">
-                        <div className="h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg w-full animate-pulse"></div>
-                        
-                        <div className="flex gap-2 mt-3">
-                          <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse"></div>
-                          <div className="h-10 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-lg w-32 animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                        </div>
-                        
-                        <div className="h-10 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-lg w-full mt-3 animate-pulse"></div>
-                      </div>
-                    </div>
-                  </div>
-                ) : question && (
-                  <div className="space-y-6">
-                    <QuestionCard
-                      question={question.question_text}
-                      difficulty={question.difficulty}
-                      type={question.type}
-                      bloomLevel={question.metadata?.bloom_level}
-                      category={question.metadata?.category}
-                      questionNumber={question.metadata?.question_number}
-                      statistics={question.statistics}
-                    />
-
-                    {isSubmitting ? (
-                      <SubmittingAnswerSkeleton />
-                    ) : (
-                      <AnswerForm
-                        onSubmit={handleSubmitAnswer}
-                        isSubmitting={isSubmitting}
-                        questionType={question.type}
-                        options={question.options}
-                        isDisabled={!!feedback}
-                        stopTimer={stopTimerImmediately}
-                        errorMessage={error || undefined}
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="w-full lg:w-1/2 mt-6 lg:mt-0">
-                {/* Feedback section */}
-                {isSubmitting ? (
-                  <AnalyzingFeedbackSkeleton />
-                ) : feedback ? (
-                  <FeedbackCard
-                    score={feedback.score}
-                    feedback={feedback.feedback}
-                    modelAnswer={feedback.model_answer}
-                    explanation={feedback.explanation}
-                    transcribedText={feedback.transcribed_text}
-                    userAnswer={feedback.user_answer}
-                    className="feedback-card"
-                    questionId={question?.id}
-                    followUpQuestions={feedback.follow_up_questions}
-                  />
-                ) : (
-                  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center border border-white/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-50/30 to-transparent opacity-50"></div>
-                    
-                    <div className="relative z-10 py-8">
-                      <div className="text-4xl mb-4">📝</div>
-                      <h3 className="text-lg font-medium text-gray-600 mb-2">
-                        Feedback will appear here
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Submit your answer to see feedback and explanation
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <FloatingNextQuestionButton
-          onNextQuestion={handleNextQuestion}
-        />
-        
-        <SwipeToNextQuestion
-          onNextQuestion={handleNextQuestion}
-        />
-      </div>
-    </>
-  );
-}
