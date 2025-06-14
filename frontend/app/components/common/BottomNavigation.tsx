@@ -4,7 +4,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Home, TableOfContents, BarChart2, FileQuestion } from 'lucide-react';
+import { Home, TableOfContents, BarChart2, FileQuestion, BookOpen } from 'lucide-react';
 import { getAuthHeaders } from '../../utils/auth';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 
@@ -24,12 +24,35 @@ export default function BottomNavigation() {
   const classLevel = params?.class as string;
   const subject = params?.subject as string;
   const chapter = params?.chapter as string;
+  const sectionNumber = params?.sectionNumber as string;
   
-  // Determine current page type
+  // ✅ UPDATED: Enhanced page type detection for new section structure
   const isHomePage = pathname === '/';
   const isSubjectsPage = pathname.match(/\/[^\/]+\/[^\/]+$/) !== null;
-  const isChapterPage = pathname.match(/\/[^\/]+\/[^\/]+\/[^\/]+\/[^\/]+$/) !== null && !pathname.includes('/performance');
-  const isPerformancePage = pathname.includes('/performance');
+  
+  // Chapter overview page (shows list of sections) - NO performance button here
+  const isChapterOverviewPage = pathname.match(/\/[^\/]+\/[^\/]+\/[^\/]+\/chapter-\d+$/) !== null;
+  
+  // Section-based pages
+  const isSectionContentPage = pathname.match(/\/chapter-\d+\/\d+\/content$/) !== null;
+  const isSectionQuestionsPage = pathname.match(/\/chapter-\d+\/\d+\/questions$/) !== null;
+  const isSectionPerformancePage = pathname.match(/\/chapter-\d+\/\d+\/performance$/) !== null;
+  
+  // Exercise and chapter performance pages
+  const isExerciseQuestionsPage = pathname.match(/\/chapter-\d+\/exercise$/) !== null;
+  const isChapterPerformancePage = pathname.match(/\/chapter-\d+\/performance$/) !== null && !isSectionPerformancePage;
+  
+  // Any section-related page (content, questions, or performance for a specific section)
+  const isInSectionView = isSectionContentPage || isSectionQuestionsPage || isSectionPerformancePage;
+  
+  // Legacy chapter page (old structure) - keep for backward compatibility
+  const isLegacyChapterPage = pathname.match(/\/[^\/]+\/[^\/]+\/[^\/]+\/[^\/]+$/) !== null && 
+                              !pathname.includes('/performance') && 
+                              !pathname.includes('/exercise') && 
+                              !pathname.includes('/content') && 
+                              !pathname.includes('/questions') &&
+                              !isChapterOverviewPage;
+  
   const isProfilePage = pathname === '/profile';
   const isUpgradePage = pathname === '/upgrade' || pathname.includes('/upgrade/');
   const isLegalPage = pathname === '/privacy' || pathname === '/terms' || pathname === '/refund' || pathname === '/about';
@@ -100,19 +123,32 @@ export default function BottomNavigation() {
     window.location.href = '/';
   };
 
-  // Navigate to chapters/subjects list
+  // ✅ UPDATED: Navigate to chapters/subjects list (back from chapter overview)
   const goToChapters = () => {
     if (isNavigating || isLoading) return;
     safeNavigate(`/${board}/${classLevel}`);
   };
 
-  // Navigate to performance page
-  const goToPerformance = () => {
+  // ✅ NEW: Navigate back to chapter overview (from section pages)
+  const goToChapter = () => {
     if (isNavigating || isLoading) return;
-    safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/performance`);
+    safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}`);
   };
 
-  // Navigate to chapter page with question ID preserved or fetched
+  // ✅ UPDATED: Navigate to performance page (chapter-level or section-level)
+  const goToPerformance = () => {
+    if (isNavigating || isLoading) return;
+    
+    if (isInSectionView && sectionNumber) {
+      // If we're in a section view, go to section performance
+      safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/${sectionNumber}/performance`);
+    } else {
+      // Otherwise go to chapter performance
+      safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/performance`);
+    }
+  };
+
+  // ✅ UPDATED: Navigate to questions (section-specific or exercise)
   const goToQuestions = async () => {
     try {
       // If already navigating, don't do anything
@@ -121,80 +157,89 @@ export default function BottomNavigation() {
         return;
       }
       
-      // Only show loading state if we need to fetch a question
-      const currentQuestionId = searchParams?.get('q');
-      if (currentQuestionId) {
-        // If we already have a question ID in the URL, just use it
-        safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}?q=${currentQuestionId}`);
+      // For section performance pages, go to section questions
+      if (isSectionPerformancePage && sectionNumber) {
+        safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/${sectionNumber}/questions`);
         return;
       }
       
-      // If no question ID in URL, we need to fetch one
-      console.log('No question ID found, fetching a random question');
-      setIsLoading(true);
-      
-      // Don't proceed if we don't have the required parameters
-      if (!board || !classLevel || !subject || !chapter) {
-        console.error("Missing route parameters");
-        setIsLoading(false);
-        router.push('/');
-        return;
-      }
-      
-      // If auth is loading, refresh first then continue
-      if (authLoading) {
-        await refreshSession();
-      }
-      
-      try {
-        // Fetch a random question to ensure we have a question ID
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
-        const { headers, isAuthorized } = await getAuthHeaders();
-        
-        if (!isAuthorized) {
-          console.error("Not authorized");
-          setIsLoading(false);
-          router.push('/login');
+      // For chapter performance page, go to exercise questions
+      if (isChapterPerformancePage) {
+        // Only show loading state if we need to fetch a question
+        const currentQuestionId = searchParams?.get('q');
+        if (currentQuestionId) {
+          // If we already have a question ID in the URL, just use it
+          safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/exercise?q=${currentQuestionId}`);
           return;
         }
         
-        const url = `${API_URL}/api/questions/${board}/${classLevel}/${subject}/${chapter}/random`;
-        console.log(`Fetching random question from: ${url}`);
-        const response = await fetch(url, { headers });
+        // If no question ID in URL, we need to fetch one
+        console.log('No question ID found, fetching a random exercise question');
+        setIsLoading(true);
         
-        // Handle usage limit errors
-        if (response.status === 402) {
+        // Don't proceed if we don't have the required parameters
+        if (!board || !classLevel || !subject || !chapter) {
+          console.error("Missing route parameters");
           setIsLoading(false);
-          // Instead of directly navigating, we'll update the URL with a token_limit=true parameter
-          // This will allow the chapter page to display the appropriate message
-          const tokenLimitUrl = `/${board}/${classLevel}/${subject}/${chapter}?token_limit=true`;
-          window.location.href = tokenLimitUrl;
+          router.push('/');
           return;
         }
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch question');
+        // If auth is loading, refresh first then continue
+        if (authLoading) {
+          await refreshSession();
         }
         
-        const data = await response.json();
-        
-        if (data && data.id) {
-          // Navigate to the new question URL
-          const newUrl = `/${board}/${classLevel}/${subject}/${chapter}?q=${data.id}`;
-          console.log(`Question fetched, navigating to: ${newUrl}`);
-          safeNavigate(newUrl);
-        } else {
-          // Fallback in case of error
-          console.warn('No question ID in response, using fallback navigation');
-          safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}`);
+        try {
+          // Fetch a random question to ensure we have a question ID
+          const API_URL = process.env.NEXT_PUBLIC_API_URL;
+          const { headers, isAuthorized } = await getAuthHeaders();
+          
+          if (!isAuthorized) {
+            console.error("Not authorized");
+            setIsLoading(false);
+            router.push('/login');
+            return;
+          }
+          
+          const url = `${API_URL}/api/questions/${board}/${classLevel}/${subject}/${chapter}/exercise/random`;
+          console.log(`Fetching random exercise question from: ${url}`);
+          const response = await fetch(url, { headers });
+          
+          // Handle usage limit errors
+          if (response.status === 402) {
+            setIsLoading(false);
+            // Instead of directly navigating, we'll update the URL with a token_limit=true parameter
+            // This will allow the exercise page to display the appropriate message
+            const tokenLimitUrl = `/${board}/${classLevel}/${subject}/${chapter}/exercise?token_limit=true`;
+            window.location.href = tokenLimitUrl;
+            return;
+          }
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch question');
+          }
+          
+          const data = await response.json();
+          
+          if (data && data.id) {
+            // Navigate to the new question URL
+            const newUrl = `/${board}/${classLevel}/${subject}/${chapter}/exercise?q=${data.id}`;
+            console.log(`Question fetched, navigating to: ${newUrl}`);
+            safeNavigate(newUrl);
+          } else {
+            // Fallback in case of error
+            console.warn('No question ID in response, using fallback navigation');
+            safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/exercise`);
+          }
+        } catch (error) {
+          console.error('Error navigating to exercise questions:', error);
+          // Fallback to base URL
+          safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}/exercise`);
+        } finally {
+          // Always ensure loading state is reset
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Error navigating to questions:', error);
-        // Fallback to base URL
-        safeNavigate(`/${board}/${classLevel}/${subject}/${chapter}`);
-      } finally {
-        // Always ensure loading state is reset
-        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error in goToQuestions:', error);
@@ -258,8 +303,16 @@ export default function BottomNavigation() {
           }
         }
         
-        // Fetch a random question
-        const url = `${API_URL}/api/questions/${board}/${classLevel}/${subject}/${chapter}/random`;
+        // Determine the correct API endpoint based on current page
+        let url;
+        if (isSectionQuestionsPage && sectionNumber) {
+          // For section questions, fetch section-specific questions
+          url = `${API_URL}/api/questions/${board}/${classLevel}/${subject}/${chapter}/section/${sectionNumber}/random`;
+        } else {
+          // For exercise questions, fetch chapter-wide questions
+          url = `${API_URL}/api/questions/${board}/${classLevel}/${subject}/${chapter}/exercise/random`;
+        }
+        
         console.log(`Fetching random question from: ${url}`);
         const response = await fetch(url, { headers });
         
@@ -286,10 +339,15 @@ export default function BottomNavigation() {
         const data = await response.json();
         
         if (data && data.id) {
-          // Navigate to the new question URL with a specific flag to indicate new question
-          const newUrl = `/${board}/${classLevel}/${subject}/${chapter}?q=${data.id}&newq=1`;
-          console.log(`Question fetched, navigating to: ${newUrl}`);
+          // Navigate to the new question URL based on current context
+          let newUrl;
+          if (isSectionQuestionsPage && sectionNumber) {
+            newUrl = `/${board}/${classLevel}/${subject}/${chapter}/${sectionNumber}/questions?q=${data.id}&newq=1`;
+          } else {
+            newUrl = `/${board}/${classLevel}/${subject}/${chapter}/exercise?q=${data.id}&newq=1`;
+          }
           
+          console.log(`Question fetched, navigating to: ${newUrl}`);
           safeNavigate(newUrl);
         } else {
           console.error("No question ID in response");
@@ -332,25 +390,39 @@ export default function BottomNavigation() {
         {/* For simple pages (legal, upgrade), we only show the Home button */}
         {!isSimplePage && (
           <>
-            {/* Chapters button - shown on chapter and performance pages */}
-            {(isChapterPage || isPerformancePage) && (
+            {/* ✅ UPDATED: Back to Chapters button - shown on chapter overview page */}
+            {isChapterOverviewPage && (
               <button
                 onClick={goToChapters}
                 className="p-2 text-gray-600 flex flex-col items-center justify-center"
-                title="Chapters"
-                aria-label="Back to Chapter List"
+                title="Back to Subjects"
+                aria-label="Back to Subject List"
                 disabled={isLoading || isNavigating}
               >
                 <TableOfContents size={20} />
-                <span className="text-xs mt-1">Chapters</span>
+                <span className="text-xs mt-1">Subjects</span>
               </button>
             )}
-            
-            {/* Performance button - shown on chapter and performance pages */}
-            {(isChapterPage || isPerformancePage) && (
+
+            {/* ✅ NEW: Back to Chapter button - shown when in section views */}
+            {isInSectionView && (
+              <button
+                onClick={goToChapter}
+                className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                title="Back to Chapter"
+                aria-label="Back to Chapter Overview"
+                disabled={isLoading || isNavigating}
+              >
+                <BookOpen size={20} />
+                <span className="text-xs mt-1">Chapter</span>
+              </button>
+            )}
+
+            {/* ✅ UPDATED: Performance button - shown appropriately based on context */}
+            {(isExerciseQuestionsPage || isChapterPerformancePage || isInSectionView) && (
               <button
                 onClick={goToPerformance}
-                className={`p-2 ${isPerformancePage ? 'text-green-600' : 'text-gray-600'} flex flex-col items-center justify-center`}
+                className={`p-2 ${(isChapterPerformancePage || isSectionPerformancePage) ? 'text-green-600' : 'text-gray-600'} flex flex-col items-center justify-center`}
                 title="Performance"
                 aria-label="View Performance Report"
                 disabled={isLoading || isNavigating}
@@ -360,8 +432,8 @@ export default function BottomNavigation() {
               </button>
             )}
             
-            {/* Questions button - shown only on performance page */}
-            {isPerformancePage && (
+            {/* ✅ UPDATED: Questions button - shown on performance pages */}
+            {(isChapterPerformancePage || isSectionPerformancePage) && (
               <button
                 onClick={goToQuestions}
                 disabled={isLoading || isNavigating}
@@ -374,6 +446,33 @@ export default function BottomNavigation() {
                   {isLoading ? "Loading..." : "Questions"}
                 </span>
               </button>
+            )}
+
+            {/* ✅ LEGACY: Support for old chapter structure */}
+            {isLegacyChapterPage && (
+              <>
+                <button
+                  onClick={goToChapters}
+                  className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                  title="Chapters"
+                  aria-label="Back to Chapter List"
+                  disabled={isLoading || isNavigating}
+                >
+                  <TableOfContents size={20} />
+                  <span className="text-xs mt-1">Chapters</span>
+                </button>
+                
+                <button
+                  onClick={goToPerformance}
+                  className="p-2 text-gray-600 flex flex-col items-center justify-center"
+                  title="Performance"
+                  aria-label="View Performance Report"
+                  disabled={isLoading || isNavigating}
+                >
+                  <BarChart2 size={20} />
+                  <span className="text-xs mt-1">Performance</span>
+                </button>
+              </>
             )}
           </>
         )}
