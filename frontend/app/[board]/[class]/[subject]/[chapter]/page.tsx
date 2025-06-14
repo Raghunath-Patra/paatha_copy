@@ -151,6 +151,9 @@ export default function ChapterOverviewPage() {
   
   const [error, setError] = useState<string | null>(null);
   const [loadingSection, setLoadingSection] = useState<number | null>(null);
+
+  const [exerciseLoading, setExerciseLoading] = useState(false);
+  const [sectionLoading, setSectionLoading] = useState<number | null>(null);  
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const chapterNumber = params.chapter?.replace('chapter-', '') || '';
@@ -298,9 +301,10 @@ export default function ChapterOverviewPage() {
   };
 
   // Handle direct questions click
-  const handleDirectQuestionsClick = async (sectionNumber: number) => {
+    const handleDirectQuestionsClick = async (sectionNumber: number) => {
     try {
-      console.log(`Navigating to section ${sectionNumber}`);
+      setSectionLoading(sectionNumber);
+      console.log(`Navigating to section ${sectionNumber} questions`);
       
       const sectionUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/${sectionNumber}`;
       
@@ -321,18 +325,23 @@ export default function ChapterOverviewPage() {
         if (response.ok) {
           const question = await response.json();
           console.log(`Got section question ${question.id}, navigating with question`);
-          router.push(`${sectionUrl}/questions/?q=${question.id}`);
+          // ✅ FIXED: Removed extra slash before query parameter
+          router.push(`${sectionUrl}/questions?q=${question.id}`);
         } else {
-          console.log('No random section question available, going to section page');
-          router.push(sectionUrl);
+          console.log('No random section question available, going to questions page without specific question');
+          // ✅ ENHANCED: Navigate to questions page instead of section page
+          router.push(`${sectionUrl}/questions`);
         }
       } catch (error) {
         console.error('Error fetching initial section question:', error);
-        router.push(sectionUrl);
+        // ✅ ENHANCED: Navigate to questions page instead of section page
+        router.push(`${sectionUrl}/questions`);
       }
     } catch (error) {
-      console.error('Error handling section click:', error);
+      console.error('Error handling section questions click:', error);
       router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`);
+    }finally {
+      setSectionLoading(null);
     }
   };
 
@@ -343,8 +352,45 @@ export default function ChapterOverviewPage() {
   };
 
   // Handle exercise questions click
-  const handleExerciseClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise`);
+    const handleExerciseClick = async () => {
+    try {
+      setExerciseLoading(true);
+
+      console.log('Navigating to exercise questions');
+      
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) {
+        router.push('/login');
+        return;
+      }
+      
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      
+      // ✅ ENHANCED: Try to prefetch a random exercise question for better UX
+      try {
+        const response = await fetch(
+          `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`,
+          { headers }
+        );
+        
+        if (response.ok) {
+          const question = await response.json();
+          console.log(`Got exercise question ${question.id}, navigating with question`);
+          router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${question.id}`);
+        } else {
+          console.log('No random exercise question available, going to exercise page');
+          router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise`);
+        }
+      } catch (error) {
+        console.error('Error fetching initial exercise question:', error);
+        router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise`);
+      }
+    } catch (error) {
+      console.error('Error handling exercise click:', error);
+      router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`);
+    }finally {
+      setExerciseLoading(false);
+    }
   };
 
   // Get section progress
@@ -664,9 +710,21 @@ export default function ChapterOverviewPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={handleExerciseClick}
-                      className="px-6 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                      disabled={exerciseLoading}
+                      className={`px-6 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 ${
+                        exerciseLoading 
+                          ? 'bg-gray-400 text-white cursor-not-allowed' 
+                          : 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700'
+                      }`}
                     >
-                      Start Practice
+                      {exerciseLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        'Start Exercise Questions'
+                      )}
                     </button>
                     <button
                       onClick={() => router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/performance`)}
@@ -770,12 +828,26 @@ export default function ChapterOverviewPage() {
                             
                             <button
                               onClick={() => handleDirectQuestionsClick(section.number)}
-                              className="flex-1 py-2 px-3 sm:px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base"
+                              disabled={sectionLoading === section.number}
+                              className={`flex-1 py-2 px-3 sm:px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base ${
+                                sectionLoading === section.number
+                                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                                  : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
+                              }`}
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Questions
+                              {sectionLoading === section.number ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  Loading...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Practice Questions
+                                </>
+                              )}
                             </button>
                             
                             {/* ✅ Show performance button only if progress is loaded and there are attempts */}
