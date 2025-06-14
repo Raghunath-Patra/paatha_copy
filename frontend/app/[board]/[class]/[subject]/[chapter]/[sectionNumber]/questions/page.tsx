@@ -953,10 +953,12 @@ export default function SectionQuestionsPage() {
             <div className="flex justify-between mb-6">
               <div className="flex flex-col">
                 <h1 className="text-xl sm:text-2xl font-medium mb-2 text-gray-800">
-                  {params.subject ? formatSubjectName(params.subject) : ''} - Chapter {displayChapter}, Section {sectionNumber}
+                  {params.subject ? formatSubjectName(params.subject) : ''}
                   {sectionInfoLoading ? (
                     <div className="inline-block ml-2">
-                      <div className="h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse inline-block"></div>
+                      <div className="h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse inline-block">
+                        Chapter {displayChapter}, Section {sectionNumber} :
+                      </div>
                     </div>
                   ) : sectionInfo && (
                     <span className="ml-2 text-gray-600">
