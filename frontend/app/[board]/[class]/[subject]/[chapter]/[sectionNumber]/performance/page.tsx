@@ -584,7 +584,7 @@ export default function SectionPerformanceReport() {
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
       <div className="max-w-[1600px] mx-auto">
         {/* ✅ UPDATED: Header with navigation at same level as title */}
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-2 mb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium mb-2 text-gray-800">
