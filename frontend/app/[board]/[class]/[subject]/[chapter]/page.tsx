@@ -364,7 +364,8 @@ export default function ChapterOverviewPage() {
   const getProgressColor = (averageScore: number) => {
     if (averageScore >= 8) return 'bg-green-500';
     if (averageScore >= 6) return 'bg-yellow-500';
-    if (averageScore >= 0) return 'bg-orange-500';
+    if (averageScore >= 4) return 'bg-orange-500';
+    if (averageScore >= 0) return 'bg-red-500';
     return 'bg-gray-300';
   };
 
