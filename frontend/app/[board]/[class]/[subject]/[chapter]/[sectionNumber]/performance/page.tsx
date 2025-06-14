@@ -115,72 +115,72 @@ interface PerformancePageParams {
 }
 
 // ✅ UPDATED: Performance Navigation Component with new URL structure
-const PerformanceNavigation = ({ params }: { params: PerformancePageParams }) => {
-  const router = useRouter();
+// const PerformanceNavigation = ({ params }: { params: PerformancePageParams }) => {
+//   const router = useRouter();
   
-  const handleContentClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/content`);
-  };
+//   const handleContentClick = () => {
+//     router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/content`);
+//   };
 
-  const handleQuestionsClick = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/questions`);
-  };
+//   const handleQuestionsClick = () => {
+//     router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}/${params.sectionNumber}/questions`);
+//   };
 
-  const handleBackToChapter = () => {
-    router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`);
-  };
+//   const handleBackToChapter = () => {
+//     router.push(`/${params.board}/${params.class}/${params.subject}/${params.chapter}`);
+//   };
 
-  return (
-    <div className="flex flex-wrap gap-2 items-center">
-      {/* Back to Chapter */}
-      <button
-        onClick={handleBackToChapter}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="Back to Chapter"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span className="hidden sm:inline">Chapter</span>
-      </button>
+//   return (
+//     <div className="flex flex-wrap gap-2 items-center">
+//       {/* Back to Chapter */}
+//       <button
+//         onClick={handleBackToChapter}
+//         className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 shadow-sm hover:shadow-md"
+//         title="Back to Chapter"
+//       >
+//         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+//         </svg>
+//         <span className="hidden sm:inline">Chapter</span>
+//       </button>
 
-      {/* Content Icon */}
-      <button
-        onClick={handleContentClick}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg hover:from-green-200 hover:to-emerald-200 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="Learning Content"
-      >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-        </svg>
-        <span className="hidden sm:inline">Learning</span>
-      </button>
+//       {/* Content Icon */}
+//       <button
+//         onClick={handleContentClick}
+//         className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg hover:from-green-200 hover:to-emerald-200 transition-all duration-300 shadow-sm hover:shadow-md"
+//         title="Learning Content"
+//       >
+//         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+//           <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+//         </svg>
+//         <span className="hidden sm:inline">Learning</span>
+//       </button>
 
-      {/* Questions Icon */}
-      <button
-        onClick={handleQuestionsClick}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-lg hover:from-blue-200 hover:to-indigo-200 transition-all duration-300 shadow-sm hover:shadow-md"
-        title="Practice Questions"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="hidden sm:inline">Questions</span>
-      </button>
+//       {/* Questions Icon */}
+//       <button
+//         onClick={handleQuestionsClick}
+//         className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-lg hover:from-blue-200 hover:to-indigo-200 transition-all duration-300 shadow-sm hover:shadow-md"
+//         title="Practice Questions"
+//       >
+//         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+//         </svg>
+//         <span className="hidden sm:inline">Questions</span>
+//       </button>
 
-      {/* Performance Icon (Current Page) */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg shadow-md">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <span className="hidden sm:inline">Performance</span>
-      </div>
+//       {/* Performance Icon (Current Page) */}
+//       <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg shadow-md">
+//         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+//         </svg>
+//         <span className="hidden sm:inline">Performance</span>
+//       </div>
 
-      {/* Main Navigation */}
-      <Navigation />
-    </div>
-  );
-};
+//       {/* Main Navigation */}
+//       <Navigation />
+//     </div>
+//   );
+// };
 
 // Skeleton Components (same as before)
 const PerformanceSummarySkeleton = () => (
@@ -587,7 +587,7 @@ export default function SectionPerformanceReport() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium mb-2 text-gray-800">
-                Chapter {chapterNumber}, Section {sectionNumber} Performance Report
+                Performance Report
                 {sectionNameLoading ? (
                   <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0">
                     <span className="inline-block h-5 sm:h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></span>
@@ -603,7 +603,7 @@ export default function SectionPerformanceReport() {
               </p>
             </div>
             <div className="flex gap-4 items-center relative z-[100] justify-end">
-              <PerformanceNavigation params={params} />
+              <Navigation />
             </div>
           </div>
 
@@ -614,7 +614,7 @@ export default function SectionPerformanceReport() {
               <PerformanceSummarySkeleton />
             ) : summaryError ? (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-                <p className="text-red-700">Failed to load section performance summary</p>
+                <p className="text-red-700">Failed to load performance summary</p>
                 <button 
                   onClick={fetchPerformanceSummary}
                   className="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
@@ -675,7 +675,7 @@ export default function SectionPerformanceReport() {
               <AnalyticsSkeleton />
             ) : analyticsError ? (
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
-                <p className="text-orange-700">Failed to load section analytics data</p>
+                <p className="text-orange-700">Failed to load analytics data</p>
                 <button 
                   onClick={fetchAnalyticsData}
                   className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
@@ -701,7 +701,7 @@ export default function SectionPerformanceReport() {
               <QuestionsSkeleton />
             ) : questionsError ? (
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-                <p className="text-yellow-700">Failed to load section question details</p>
+                <p className="text-yellow-700">Failed to load question details</p>
                 <button 
                   onClick={() => fetchSolvedQuestions()}
                   className="mt-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
@@ -716,7 +716,7 @@ export default function SectionPerformanceReport() {
                 <div className="relative z-10">
                   {/* Section header */}
                   <div className="p-4 sm:p-6 pb-0 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                    <h3 className="text-lg font-semibold text-gray-800">Section Question Attempts</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">Question Attempts</h3>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       {solvedQuestions.length > 0 && (
                         <button
