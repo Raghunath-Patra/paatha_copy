@@ -1,9 +1,9 @@
 // frontend/app/[board]/[class]/[subject]/[chapter]/exercise/page.tsx
-// Enhanced Exercise Questions Page with prefetch system and improved UX
+// FIXED: Question loading issues resolved - parallel to section questions fixes
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '../../../../../components/navigation/Navigation';
 import QuestionCard from '../../../../../components/questions/QuestionCard';
@@ -20,7 +20,7 @@ import { getAuthHeaders } from '../../../../../utils/auth';
 import { useSupabaseAuth } from '../../../../../contexts/SupabaseAuthContext';
 import { userTokenService } from '../../../../../utils/userTokenService';
 
-// Interfaces
+// Interfaces (same as before)
 interface Question {
   id: string;
   question_text: string;
@@ -70,7 +70,7 @@ interface PrefetchedQuestion {
   isValid: boolean;
 }
 
-// Subject mapping
+// Subject mapping (same as before)
 const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'iesc1dd': 'Science',
   'hesc1dd': 'Science',
@@ -93,7 +93,7 @@ const SUBJECT_CODE_TO_NAME: Record<string, string> = {
   'lebo1dd': 'Biology'
 };
 
-// Enhanced skeleton components
+// Enhanced skeleton components (same as before)
 const SubmittingAnswerSkeleton = () => (
   <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-sm p-4 space-y-4 border border-white/50 relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-50/30 to-transparent opacity-50"></div>
@@ -181,8 +181,11 @@ export default function ChapterExerciseQuestionsPage() {
   const [showLimitPage, setShowLimitPage] = useState(false);
   const [userTokenStatus, setUserTokenStatus] = useState<any>(null);
 
+  // ✅ FIXED: Simplified question loading state
   const [isUsingPrefetch, setIsUsingPrefetch] = useState(false);
+  const [isLoadingSpecificQuestion, setIsLoadingSpecificQuestion] = useState(false);
   const [timerResetTrigger, setTimerResetTrigger] = useState(0);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
 
   // Prefetch system state
   const [prefetchedQuestion, setPrefetchedQuestion] = useState<PrefetchedQuestion | null>(null);
@@ -191,6 +194,11 @@ export default function ChapterExerciseQuestionsPage() {
   
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const PREFETCH_VALIDITY_TIME = 15 * 60 * 1000; // 15 minutes
+
+  // ✅ FIXED: Simplified chapter number extraction with useMemo
+  const chapterNumber = useMemo(() => {
+    return params.chapter?.replace('chapter-', '') || '';
+  }, [params.chapter]);
   
   const stopTimerImmediately = useCallback(() => {
     console.log('Stopping timer immediately from button click');
@@ -205,8 +213,8 @@ export default function ChapterExerciseQuestionsPage() {
   
   // Prefetch next exercise question in background
   const prefetchNextQuestion = useCallback(async () => {
-    if (isPrefetching || (prefetchedQuestion?.isValid && 
-        Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME)) {
+    if (isPrefetching || isLoadingSpecificQuestion || 
+        (prefetchedQuestion?.isValid && Date.now() - prefetchedQuestion.timestamp < PREFETCH_VALIDITY_TIME)) {
       return;
     }
     
@@ -229,7 +237,6 @@ export default function ChapterExerciseQuestionsPage() {
         return;
       }
 
-      // Exercise-specific API endpoint
       const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`;
       const response = await fetch(url, { headers });
 
@@ -286,7 +293,123 @@ export default function ChapterExerciseQuestionsPage() {
     } finally {
       setIsPrefetching(false);
     }
-  }, [API_URL, params.board, params.class, params.subject, params.chapter, isPrefetching, prefetchedQuestion]);
+  }, [API_URL, params.board, params.class, params.subject, params.chapter, isPrefetching, prefetchedQuestion, isLoadingSpecificQuestion]);
+
+  // ✅ FIXED: Consolidated question loading function
+  const loadQuestion = useCallback(async (
+    specificQuestionId?: string,
+    source: 'url' | 'random' | 'prefetch' = 'random'
+  ) => {
+    console.log(`🔄 Loading exercise question: ${specificQuestionId || 'random'} from ${source}`);
+    
+    // Check if we already have this question loaded
+    if (specificQuestionId && question?.id === specificQuestionId) {
+      console.log('✅ Question already loaded:', specificQuestionId);
+      return question;
+    }
+
+    if (source === 'url' && specificQuestionId) {
+      setIsLoadingSpecificQuestion(true);
+      setCurrentQuestionId(specificQuestionId);
+    }
+
+    try {
+      setError(null);
+      setQuestionLoading(true);
+      setErrorDisplayMode('none');
+
+      if (!specificQuestionId && source === 'random') {
+        const actionCheck = userTokenService.canPerformAction('fetch_question');
+        if (!actionCheck.allowed) {
+          console.log('❌ Random question fetch blocked:', actionCheck.reason);
+          setShowLimitPage(true);
+          return undefined;
+        }
+      }
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) {
+        router.push('/login');
+        return;
+      }
+
+      let url;
+      if (specificQuestionId) {
+        url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/q/${specificQuestionId}`;
+        console.log('🔗 Fetching specific exercise question URL:', url);
+      } else {
+        url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`;
+        console.log('🎲 Fetching random exercise question URL:', url);
+      }
+
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        if (response.status === 402) {
+          console.log('🚫 Server says limit reached');
+          setShowLimitPage(true);
+          return undefined;
+        }
+        
+        if (response.status === 404 && specificQuestionId) {
+          console.log('❌ Specific question not found, trying random question');
+          return await loadQuestion(undefined, 'random');
+        }
+        
+        const responseText = await response.text();
+        console.error('❌ API Error:', response.status, responseText);
+        
+        let isTokenLimitError = false;
+        
+        try {
+          const errorData = JSON.parse(responseText);
+          isTokenLimitError = 
+            (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
+            (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
+            (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
+            (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
+        } catch (e) {
+          isTokenLimitError = 
+            responseText.toLowerCase().includes('token limit') ||
+            responseText.toLowerCase().includes('usage limit') ||
+            responseText.toLowerCase().includes('daily limit') ||
+            responseText.toLowerCase().includes('limit reached');
+        }
+        
+        if (isTokenLimitError) {
+          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
+          setShowLimitPage(true);
+          return undefined;
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${responseText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Exercise question loaded successfully:', data.id);
+      setQuestion(data);
+      setCurrentQuestionId(data.id);
+      
+      if (!specificQuestionId && source === 'random') {
+        userTokenService.updateTokenUsage({ input: 50 });
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('💥 Error loading exercise question:', err);
+      
+      if (!showLimitPage) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setErrorDisplayMode('error-message');
+      }
+      return undefined;
+    } finally {
+      setQuestionLoading(false);
+      if (source === 'url') {
+        setIsLoadingSpecificQuestion(false);
+      }
+    }
+  }, [API_URL, params.board, params.class, params.subject, params.chapter, question, router, showLimitPage]);
 
   // Handle next question with prefetch logic
   const handleNextQuestion = useCallback(async () => {
@@ -304,9 +427,9 @@ export default function ChapterExerciseQuestionsPage() {
       
       setIsUsingPrefetch(true);
       setQuestion(prefetchedQuestion.question);
+      setCurrentQuestionId(prefetchedQuestion.question.id);
       resetTimer();
       
-      // Exercise-specific URL structure
       const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${prefetchedQuestion.question.id}`;
       window.history.replaceState({}, '', newUrl);
       
@@ -330,173 +453,20 @@ export default function ChapterExerciseQuestionsPage() {
       }
     }
     
-    console.log('⚠️ Fallback: No prefetch available, fetching exercise question normally...');
+    console.log('⚠️ Fallback: No prefetch available, loading exercise question normally...');
     
     setQuestion(null);
-    setQuestionLoading(true);
+    setCurrentQuestionId(null);
     
-    try {
-      const actionCheck = userTokenService.canPerformAction('fetch_question');
-      if (!actionCheck.allowed) {
-        console.log('❌ Question fetch blocked:', actionCheck.reason);
-        setShowLimitPage(true);
-        setQuestionLoading(false);
-        return;
-      }
-
-      const { headers, isAuthorized } = await getAuthHeaders();
-      if (!isAuthorized) {
-        router.push('/login');
-        return;
-      }
-
-      // Exercise-specific API endpoint
-      const url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`;
-      const response = await fetch(url, { headers });
-
-      if (!response.ok) {
-        if (response.status === 402) {
-          console.log('🚫 Server says limit reached, showing limit page');
-          setShowLimitPage(true);
-          setQuestionLoading(false);
-          return;
-        }
-        
-        const responseText = await response.text();
-        let isTokenLimitError = false;
-        
-        try {
-          const errorData = JSON.parse(responseText);
-          isTokenLimitError = 
-            (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
-            (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
-            (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
-            (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
-        } catch (e) {
-          isTokenLimitError = 
-            responseText.toLowerCase().includes('token limit') ||
-            responseText.toLowerCase().includes('usage limit') ||
-            responseText.toLowerCase().includes('daily limit') ||
-            responseText.toLowerCase().includes('limit reached');
-        }
-        
-        if (isTokenLimitError) {
-          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
-          setShowLimitPage(true);
-          setQuestionLoading(false);
-          return;
-        }
-        
-        throw new Error('Failed to fetch exercise question');
-      }
-
-      const data = await response.json();
-      setQuestion(data);
-      
-      // Exercise-specific URL structure
-      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${data.id}`;
+    const newQuestion = await loadQuestion(undefined, 'random');
+    
+    if (newQuestion) {
+      const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${newQuestion.id}`;
       window.history.replaceState({}, '', newUrl);
       
-      userTokenService.updateTokenUsage({ input: 50 });
       setTimeout(() => prefetchNextQuestion(), 1000);
-      
-    } catch (error) {
-      console.error('Error in fallback fetch:', error);
-      if (!showLimitPage) {
-        setError(error instanceof Error ? error.message : 'An unknown error occurred');
-        setErrorDisplayMode('error-message');
-      }
-    } finally {
-      setQuestionLoading(false);
     }
-  }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, router, API_URL, showLimitPage]);
-
-  // Fetch question function with exercise-specific endpoints
-  const fetchQuestion = async (specificQuestionId?: string) => {
-    try {
-      setError(null);
-      setQuestionLoading(true);
-      setErrorDisplayMode('none');
-
-      const actionCheck = userTokenService.canPerformAction('fetch_question');
-      if (!actionCheck.allowed) {
-        console.log('❌ Question fetch blocked:', actionCheck.reason);
-        setShowLimitPage(true);
-        setQuestionLoading(false);
-        return undefined;
-      }
-
-      const { headers, isAuthorized } = await getAuthHeaders();
-      if (!isAuthorized) {
-        router.push('/login');
-        return;
-      }
-
-      let url;
-      if (specificQuestionId) {
-        // Exercise-specific endpoint for specific question
-        url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/q/${specificQuestionId}`;
-      } else {
-        // Exercise-specific endpoint for random question
-        url = `${API_URL}/api/questions/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise/random`;
-      }
-
-      const response = await fetch(url, { headers });
-
-      if (!response.ok) {
-        if (response.status === 402) {
-          console.log('🚫 Server says limit reached, showing limit page');
-          setShowLimitPage(true);
-          setQuestionLoading(false);
-          return undefined;
-        }
-        
-        const responseText = await response.text();
-        let isTokenLimitError = false;
-        
-        try {
-          const errorData = JSON.parse(responseText);
-          isTokenLimitError = 
-            (errorData.detail && errorData.detail.toLowerCase().includes('token limit')) ||
-            (errorData.detail && errorData.detail.toLowerCase().includes('usage limit')) ||
-            (errorData.detail && errorData.detail.toLowerCase().includes('daily limit')) ||
-            (errorData.detail && errorData.detail.toLowerCase().includes('limit reached'));
-        } catch (e) {
-          isTokenLimitError = 
-            responseText.toLowerCase().includes('token limit') ||
-            responseText.toLowerCase().includes('usage limit') ||
-            responseText.toLowerCase().includes('daily limit') ||
-            responseText.toLowerCase().includes('limit reached');
-        }
-        
-        if (isTokenLimitError) {
-          userTokenService.updateTokenUsage({ input: 1000, output: 1000 });
-          setShowLimitPage(true);
-          setQuestionLoading(false);
-          return undefined;
-        }
-        
-        throw new Error('Failed to fetch exercise question');
-      }
-
-      const data = await response.json();
-      setQuestion(data);
-      
-      userTokenService.updateTokenUsage({ input: 50 });
-      
-      return data;
-    } catch (err) {
-      console.error('Error fetching exercise question:', err);
-      
-      if (!showLimitPage) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setErrorDisplayMode('error-message');
-      }
-      return undefined;
-    } finally {
-      setQuestionLoading(false);
-    }
-  };
+  }, [prefetchedQuestion, prefetchError, prefetchNextQuestion, params, loadQuestion, resetTimer]);
 
   // Handle submit answer
   const handleSubmitAnswer = async (answer: string, imageData?: string) => {
@@ -610,7 +580,7 @@ export default function ChapterExerciseQuestionsPage() {
 
   // Auto-prefetch when current question loads
   useEffect(() => {
-    if (question && !questionLoading && !showLimitPage) {
+    if (question && !questionLoading && !showLimitPage && !isLoadingSpecificQuestion) {
       console.log('🎯 Current exercise question loaded, starting prefetch timer...');
       
       const prefetchTimer = setTimeout(() => {
@@ -619,7 +589,7 @@ export default function ChapterExerciseQuestionsPage() {
       
       return () => clearTimeout(prefetchTimer);
     }
-  }, [question, questionLoading, showLimitPage, prefetchNextQuestion]);
+  }, [question, questionLoading, showLimitPage, isLoadingSpecificQuestion, prefetchNextQuestion]);
   
   // Cleanup prefetch on unmount
   useEffect(() => {
@@ -697,7 +667,7 @@ export default function ChapterExerciseQuestionsPage() {
     return () => clearInterval(interval);
   }, [API_URL, searchParams]);
 
-  // Main initialization useEffect
+  // ✅ FIXED: Main initialization useEffect with simplified dependencies
   useEffect(() => {
     const syncUserData = async () => {
       try {
@@ -734,9 +704,7 @@ export default function ChapterExerciseQuestionsPage() {
         
         if (response.ok) {
           const data = await response.json();
-          const chapterNum = typeof params.chapter === 'string'
-            ? parseInt(params.chapter.replace(/^chapter-/, '') || '0')
-            : 0;
+          const chapterNum = parseInt(chapterNumber);
           const chapterInfo = data.chapters.find(
             (ch: ChapterInfo) => ch.number === chapterNum
           );
@@ -775,23 +743,26 @@ export default function ChapterExerciseQuestionsPage() {
         
         fetchChapterName();
         
+        // ✅ FIXED: Simplified question loading logic
+        const questionId = searchParams?.get('q');
+        console.log('🎯 Question ID from URL:', questionId);
+        
         const isNewQuestion = searchParams?.get('newq') === '1';
         if (isNewQuestion) {
           setFeedback(null);
           setShouldStopTimer(false);
-          // Exercise-specific URL structure
-          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${searchParams?.get('q')}`;
+          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${questionId}`;
           window.history.replaceState({}, '', newUrl);
         }
         
-        const questionId = searchParams?.get('q');
         if (isUsingPrefetch) {
           console.log('📌 Skipping fetch - using prefetched exercise question');
           setLoading(false);
           return;
         }
 
-        if (question && question.id === questionId) {
+        // ✅ FIXED: Simplified condition - only skip if we have the exact question loaded
+        if (questionId && currentQuestionId === questionId && question?.id === questionId) {
           console.log('📌 Exercise question already loaded, skipping fetch');
           setLoading(false);
           return;
@@ -799,13 +770,12 @@ export default function ChapterExerciseQuestionsPage() {
 
         setShouldStopTimer(false);
 
-        fetchQuestion(questionId || undefined).then(newQuestion => {
-          if (!questionId && newQuestion?.id) {
-            // Exercise-specific URL structure
-            const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${newQuestion.id}`;
-            window.history.replaceState({}, '', newUrl);
-          }
-        });
+        const newQuestion = await loadQuestion(questionId || undefined, questionId ? 'url' : 'random');
+        
+        if (!questionId && newQuestion?.id) {
+          const newUrl = `/${params.board}/${params.class}/${params.subject}/${params.chapter}/exercise?q=${newQuestion.id}`;
+          window.history.replaceState({}, '', newUrl);
+        }
       }
       
       setLoading(false);
@@ -814,9 +784,38 @@ export default function ChapterExerciseQuestionsPage() {
     if (!showLimitPage) {
       initializePage();
     }
-  }, [params.board, params.class, params.subject, params.chapter, router, profile, authLoading, searchParams, API_URL, showLimitPage]);
+  }, [
+    // ✅ FIXED: Reduced dependencies to essential ones only
+    params.board, 
+    params.class, 
+    params.subject, 
+    params.chapter, 
+    router, 
+    profile?.id, // Use profile.id instead of entire profile object
+    authLoading, 
+    API_URL, 
+    showLimitPage,
+    chapterNumber
+    // Removed: searchParams, isUsingPrefetch, question?.id, currentQuestionId
+    // These are accessed inside the effect instead
+  ]);
 
-  // Loading screen
+  const formatSubjectName = (subject: string) => {
+    if (!subject) return '';
+    
+    const mappedName = SUBJECT_CODE_TO_NAME[subject.toLowerCase()];
+    if (mappedName) {
+      return mappedName;
+    }
+    
+    const parts = subject.split('-');
+    return parts.map(part => {
+      if (/^[IVX]+$/i.test(part)) return part.toUpperCase();
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  };
+
+  // Loading screen (same as before)
   if (loading && !showLimitPage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center relative">
@@ -864,23 +863,6 @@ export default function ChapterExerciseQuestionsPage() {
       />
     );
   }
-
-  const formatSubjectName = (subject: string) => {
-    if (!subject) return '';
-    
-    const mappedName = SUBJECT_CODE_TO_NAME[subject.toLowerCase()];
-    if (mappedName) {
-      return mappedName;
-    }
-    
-    const parts = subject.split('-');
-    return parts.map(part => {
-      if (/^[IVX]+$/i.test(part)) return part.toUpperCase();
-      return part.charAt(0).toUpperCase() + part.slice(1);
-    }).join(' ');
-  };
-
-  // [Include all other functions and useEffects from main page.tsx with exercise-specific modifications]
 
   const displayChapter = typeof params.chapter === 'string'
     ? params.chapter.replace(/^chapter-/, '')
