@@ -584,17 +584,17 @@ export default function SectionPerformanceReport() {
       <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
         <div className="max-w-[1600px] mx-auto">
           {/* ✅ UPDATED: Header with new navigation */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+          <div className="flex flex-col sm:flex-col sm:justify-between sm:items-center gap-4 mb-8">
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium mb-2 text-gray-800">
-                Performance Report
+                Performance Report :
                 {sectionNameLoading ? (
                   <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0">
                     <span className="inline-block h-5 sm:h-6 w-32 sm:w-48 bg-gradient-to-r from-red-200 to-orange-200 rounded animate-pulse"></span>
                   </span>
                 ) : sectionName && (
                   <span className="block sm:inline sm:ml-2 text-orange-600 text-lg sm:text-xl lg:text-2xl mt-1 sm:mt-0">
-                    : {sectionName}
+                    {sectionName}
                   </span>
                 )}
               </h1>
