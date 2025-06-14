@@ -453,7 +453,7 @@ export default function ChapterOverviewPage() {
     }
   };
 
-  // ✅ UPDATED: Progressive loading effect
+  // ✅ UPDATED: Progressive loading effect with parallel loading
   useEffect(() => {
     const fetchData = async () => {
       if (authLoading) return;
@@ -505,13 +505,27 @@ export default function ChapterOverviewPage() {
         setInitialLoading(false);
         console.log('✅ Step 1 completed: Initial setup done');
 
-        // ✅ STEP 2: Load sections (show them immediately)
-        console.log('🔄 Step 2: Loading sections...');
-        await loadSections(headers);
-
-        // ✅ STEP 3: Load progress (update sections with progress data)
-        console.log('🔄 Step 3: Loading progress...');
-        await loadProgress(headers);
+        // ✅ STEP 2 & 3: Load sections and progress in parallel
+        console.log('🔄 Step 2 & 3: Loading sections and progress in parallel...');
+        
+        // Start both operations simultaneously
+        const [sectionsResult, progressResult] = await Promise.allSettled([
+          loadSections(headers),
+          loadProgress(headers)
+        ]);
+        
+        // Log results
+        if (sectionsResult.status === 'fulfilled') {
+          console.log('✅ Sections loaded successfully');
+        } else {
+          console.error('❌ Sections loading failed:', sectionsResult.reason);
+        }
+        
+        if (progressResult.status === 'fulfilled') {
+          console.log('✅ Progress loaded successfully');
+        } else {
+          console.error('❌ Progress loading failed:', progressResult.reason);
+        }
 
         // Initialize token service
         userTokenService.fetchUserTokenStatus();
