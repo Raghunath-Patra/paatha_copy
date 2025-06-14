@@ -332,11 +332,9 @@ export default function SectionContentPage() {
       // Derive folder suffix from chapter number (2-digit padded)
       const folderSuffix = chapterNumber.toString().padStart(2, '0');
 
-      const tryPattern = async (filePrefix: string): Promise<string | null> => {
+      const tryPattern = async (): Promise<string | null> => {
         const subjectFolder = `${subjectBase}${folderSuffix}`;
-        const filename = filePrefix 
-          ? `${filePrefix}_section_${chapterNumber}_${sectionNumber}.html`
-          : `section_${chapterNumber}_${sectionNumber}.html`;
+        const filename = `section_${chapterNumber}_${sectionNumber}.html`;
         
         const htmlPath = `/interactive/${params.board}/${params.class}/${params.subject}/${subjectFolder}/${filename}`;
         
@@ -358,24 +356,25 @@ export default function SectionContentPage() {
       let fileFound = false;
 
       // Try file prefixes from '01' to '30'
-      for (let i = 1; i <= 30 && !fileFound; i++) {
-        const filePrefix = i.toString().padStart(2, '0');
-        const content = await tryPattern(filePrefix);
-        if (content) {
-          fetchedHtmlContent = content;
-          fileFound = true;
-          break;
-        }
+      // for (let i = 1; i <= 30 && !fileFound; i++) {
+      //   const filePrefix = i.toString().padStart(2, '0');
+        
+      // }
+
+      const content = await tryPattern();
+      if (content) {
+        fetchedHtmlContent = content;
+        fileFound = true;
       }
       
       // If no prefixed file found, try without prefix
-      if (!fileFound) {
-        const content = await tryPattern('');
-        if (content) {
-          fetchedHtmlContent = content;
-          fileFound = true;
-        }
-      }
+      // if (!fileFound) {
+      //   const content = await tryPattern();
+      //   if (content) {
+      //     fetchedHtmlContent = content;
+      //     fileFound = true;
+      //   }
+      // }
 
       if (!fileFound) {
         console.warn(`❌ No content found during normal loading for section ${sectionNumber}`);
