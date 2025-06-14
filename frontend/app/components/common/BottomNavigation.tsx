@@ -400,7 +400,7 @@ export default function BottomNavigation() {
                 disabled={isLoading || isNavigating}
               >
                 <TableOfContents size={16} className="sm:w-5 sm:h-5" />
-                <span className="text-xs mt-0.5 hidden sm:block">Subjects</span>
+                <span className="text-xs mt-0.5 hidden sm:block">Chapters</span>
               </button>
             )}
 
@@ -414,7 +414,7 @@ export default function BottomNavigation() {
                 disabled={isLoading || isNavigating}
               >
                 <BookOpen size={16} className="sm:w-5 sm:h-5" />
-                <span className="text-xs mt-0.5 hidden sm:block">Chapter</span>
+                <span className="text-xs mt-0.5 hidden sm:block">Sections</span>
               </button>
             )}
 
