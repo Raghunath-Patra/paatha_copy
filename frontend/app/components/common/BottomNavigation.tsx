@@ -418,8 +418,8 @@ export default function BottomNavigation() {
               </button>
             )}
 
-            {/* ✅ UPDATED: Performance button - shown on section content and questions pages */}
-            {(isSectionContentPage || isSectionQuestionsPage) && (
+            {/* ✅ UPDATED: Performance button - shown on section content, section questions, and exercise questions pages */}
+            {(isSectionContentPage || isSectionQuestionsPage || isExerciseQuestionsPage) && (
               <button
                 onClick={goToPerformance}
                 className="p-1 sm:p-2 text-gray-600 flex flex-col items-center justify-center min-w-0 flex-1"
