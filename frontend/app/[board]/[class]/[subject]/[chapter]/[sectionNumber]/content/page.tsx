@@ -486,8 +486,8 @@ export default function SectionContentPage() {
                   🎯 Perfect time to sharpen your skills!
                 </p>
                 <p style="color: #6b7280; font-size: 16px; margin: 15px 0; line-height: 1.7;">
-                  While we prepare your content, why not tackle some practice questions? 
-                  Each question you solve builds confidence and strengthens your understanding.
+                  While we prepare your content, why not tackle some AI-generated practice questions? 
+                  Each question you solve builds confidence and strengthens your understanding, with instant AI feedback to guide your learning.
                 </p>
                 <p style="color: #4f46e5; font-size: 16px; margin: 10px 0; font-weight: 500;">
                   💡 Practice makes progress - and progress makes champions!
