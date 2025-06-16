@@ -431,25 +431,7 @@ export default function SectionContentPage() {
                 animation: fadeInUp 0.8s ease-out;
               }
               
-              .practice-button {
-                background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-                color: white;
-                border: none;
-                padding: 15px 30px;
-                border-radius: 50px;
-                font-size: 16px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                margin: 10px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-              }
-              
-              .practice-button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-              }
-              
+
               .shimmer-text {
                 background: linear-gradient(90deg, #4f46e5, #06b6d4, #4f46e5);
                 background-size: 200px 100%;
@@ -497,21 +479,19 @@ export default function SectionContentPage() {
                 <div class="dot"></div>
               </div>
               
-              <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid #d1d5db;">
-                <p style="color: #374151; font-size: 14px; margin: 0; line-height: 1.5;">
-                  <strong style="color: #1f2937;">📚 Subject:</strong> ${params.subject}<br>
-                  <strong style="color: #1f2937;">📖 Chapter:</strong> ${chapterNumber}<br>
-                  <strong style="color: #1f2937;">📝 Section:</strong> ${sectionNumber}
-                </p>
-              </div>
+
               
               <div style="margin-top: 30px;">
-                <button class="practice-button" onclick="window.location.href='#practice-questions'">
-                  🎯 Practice Questions
-                </button>
-                <button class="practice-button" onclick="window.location.href='#review-notes'">
-                  📋 Review Notes
-                </button>
+                <p style="color: #4f46e5; font-size: 18px; font-weight: 600; margin: 15px 0; line-height: 1.6;">
+                  🎯 Perfect time to sharpen your skills!
+                </p>
+                <p style="color: #6b7280; font-size: 16px; margin: 15px 0; line-height: 1.7;">
+                  While we prepare your content, why not tackle some practice questions? 
+                  Each question you solve builds confidence and strengthens your understanding.
+                </p>
+                <p style="color: #4f46e5; font-size: 16px; margin: 10px 0; font-weight: 500;">
+                  💡 Practice makes progress - and progress makes champions!
+                </p>
               </div>
               
               <p style="color: #9ca3af; font-size: 14px; margin-top: 25px; font-style: italic;">
@@ -545,14 +525,6 @@ export default function SectionContentPage() {
           </div>
         `;
       }
-
-      setHtmlContent(fetchedHtmlContent);
-
-    } catch (error) {
-      console.error('Error in normal data fetch:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load section content');
-    }
-  };
 
   // Main useEffect
   useEffect(() => {
