@@ -526,6 +526,15 @@ export default function SectionContentPage() {
         `;
       }
 
+      setHtmlContent(fetchedHtmlContent);
+
+    } catch (error) {
+      console.error('Error in normal data fetch:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load section content');
+    }
+  };
+
+
   // Main useEffect
   useEffect(() => {
     const initializeContent = async () => {
