@@ -383,8 +383,8 @@ export default function BottomNavigation() {
           aria-label="Home"
           disabled={isLoading || isNavigating}
         >
-          <Home size={16} className="sm:w-5 sm:h-5" />
-          <span className="text-xs mt-0.5 hidden sm:block">Home</span>
+          <Home size={20} className="sm:w-5 sm:h-5" />
+          <span className="text-[10px] sm:text-xs mt-0.5">Home</span>
         </button>
         
         {/* For simple pages (legal, upgrade), we only show the Home button */}
@@ -399,8 +399,8 @@ export default function BottomNavigation() {
                 aria-label="Back to Subject List"
                 disabled={isLoading || isNavigating}
               >
-                <TableOfContents size={16} className="sm:w-5 sm:h-5" />
-                <span className="text-xs mt-0.5 hidden sm:block">Chapters</span>
+                <TableOfContents size={20} className="sm:w-5 sm:h-5" />
+                <span className="text-[10px] sm:text-xs mt-0.5">Chapters</span>
               </button>
             )}
 
@@ -413,8 +413,8 @@ export default function BottomNavigation() {
                 aria-label="Back to Chapter Overview"
                 disabled={isLoading || isNavigating}
               >
-                <BookOpen size={16} className="sm:w-5 sm:h-5" />
-                <span className="text-xs mt-0.5 hidden sm:block">Sections</span>
+                <BookOpen size={20} className="sm:w-5 sm:h-5" />
+                <span className="text-[10px] sm:text-xs mt-0.5">Sections</span>
               </button>
             )}
 
@@ -427,8 +427,8 @@ export default function BottomNavigation() {
                 aria-label="View Performance Report"
                 disabled={isLoading || isNavigating}
               >
-                <BarChart2 size={16} className="sm:w-5 sm:h-5" />
-                <span className="text-xs mt-0.5 hidden sm:block">Performance</span>
+                <BarChart2 size={20} className="sm:w-5 sm:h-5" />
+                <span className="text-[10px] sm:text-xs mt-0.5">Stats</span>
               </button>
             )}
             
@@ -441,9 +441,9 @@ export default function BottomNavigation() {
                 title="Questions"
                 aria-label="Questions"
               >
-                <FileQuestion size={16} className="sm:w-5 sm:h-5" />
-                <span className="text-xs mt-0.5 hidden sm:block whitespace-nowrap">
-                  {isLoading ? "Loading..." : "Questions"}
+                <FileQuestion size={20} className="sm:w-5 sm:h-5" />
+                <span className="text-[10px] sm:text-xs mt-0.5">
+                  {isLoading ? "Loading..." : "Quiz"}
                 </span>
               </button>
             )}
@@ -458,8 +458,8 @@ export default function BottomNavigation() {
                   aria-label="Back to Chapter List"
                   disabled={isLoading || isNavigating}
                 >
-                  <TableOfContents size={16} className="sm:w-5 sm:h-5" />
-                  <span className="text-xs mt-0.5 hidden sm:block">Chapters</span>
+                  <TableOfContents size={20} className="sm:w-5 sm:h-5" />
+                  <span className="text-[10px] sm:text-xs mt-0.5">Chapters</span>
                 </button>
                 
                 <button
@@ -469,8 +469,8 @@ export default function BottomNavigation() {
                   aria-label="View Performance Report"
                   disabled={isLoading || isNavigating}
                 >
-                  <BarChart2 size={16} className="sm:w-5 sm:h-5" />
-                  <span className="text-xs mt-0.5 hidden sm:block">Performance</span>
+                  <BarChart2 size={20} className="sm:w-5 sm:h-5" />
+                  <span className="text-[10px] sm:text-xs mt-0.5">Stats</span>
                 </button>
               </>
             )}
