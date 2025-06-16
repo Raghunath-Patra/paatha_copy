@@ -242,7 +242,7 @@ export default function ChapterOverviewPage() {
 
       if (!fileFound) {
         console.log(`🔧 Content being prepared for section ${sectionNumber} - showing practice mode`);
-        fetchedHtmlContent = `
+        htmlContent = `
           <div style="
             padding: 40px; 
             text-align: center; 
