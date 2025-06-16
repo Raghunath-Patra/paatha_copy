@@ -241,20 +241,151 @@ export default function ChapterOverviewPage() {
       // }
 
       if (!fileFound) {
-        console.warn(`❌ No content found during loading for section ${sectionNumber}`);
-        htmlContent = `
-          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-            <h2 style="color: #dc2626;">📁 Content Not Found</h2>
-            <p style="color: #6b7280; margin: 20px 0;">
-              Unable to locate learning content for Chapter ${chapterNumber}, Section ${sectionNumber}.
-            </p>
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p style="color: #6b7280; font-size: 14px;">
-                <strong>Subject:</strong> ${params.subject}<br>
-                <strong>Chapter:</strong> ${chapterNumber}<br>
-                <strong>Section:</strong> ${sectionNumber}
+        console.log(`🔧 Content being prepared for section ${sectionNumber} - showing practice mode`);
+        fetchedHtmlContent = `
+          <div style="
+            padding: 40px; 
+            text-align: center; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            min-height: 50vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+          ">
+            <style>
+              @keyframes float {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                33% { transform: translateY(-10px) rotate(1deg); }
+                66% { transform: translateY(5px) rotate(-1deg); }
+              }
+              
+              @keyframes pulse {
+                0%, 100% { opacity: 0.8; transform: scale(1); }
+                50% { opacity: 1; transform: scale(1.05); }
+              }
+              
+              @keyframes shimmer {
+                0% { background-position: -200px 0; }
+                100% { background-position: 200px 0; }
+              }
+              
+              @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(30px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+              
+              .floating-icon {
+                animation: float 3s ease-in-out infinite;
+                font-size: 4rem;
+                margin-bottom: 20px;
+                display: inline-block;
+              }
+              
+              .content-card {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 30px;
+                margin: 20px auto;
+                max-width: 500px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                animation: fadeInUp 0.8s ease-out;
+              }
+              
+
+              .shimmer-text {
+                background: linear-gradient(90deg, #4f46e5, #06b6d4, #4f46e5);
+                background-size: 200px 100%;
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                animation: shimmer 2s infinite;
+                font-weight: 700;
+              }
+              
+              .progress-dots {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                margin: 20px 0;
+              }
+              
+              .dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #4f46e5;
+                animation: pulse 1.5s infinite;
+              }
+              
+              .dot:nth-child(2) { animation-delay: 0.3s; }
+              .dot:nth-child(3) { animation-delay: 0.6s; }
+            </style>
+            
+            <div class="floating-icon">🚀</div>
+            
+            <div class="content-card">
+              <h2 style="color: #1f2937; margin-bottom: 15px; font-size: 2rem;">
+                <span class="shimmer-text">We're Building Something Amazing!</span>
+              </h2>
+              
+              <p style="color: #6b7280; margin: 20px 0; font-size: 18px; line-height: 1.6;">
+                Chapter ${chapterNumber}, Section ${sectionNumber} content is being crafted with care. 
+                While we perfect it, why not sharpen your skills?
+              </p>
+              
+              <div class="progress-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+              
+
+              
+              <div style="margin-top: 30px;">
+                <p style="color: #4f46e5; font-size: 18px; font-weight: 600; margin: 15px 0; line-height: 1.6;">
+                  🎯 Perfect time to sharpen your skills!
+                </p>
+                <p style="color: #6b7280; font-size: 16px; margin: 15px 0; line-height: 1.7;">
+                  While we prepare your content, why not tackle some AI-generated practice questions? 
+                  Each question you solve builds confidence and strengthens your understanding, with instant AI feedback to guide your learning.
+                </p>
+                <p style="color: #4f46e5; font-size: 16px; margin: 10px 0; font-weight: 500;">
+                  💡 Practice makes progress - and progress makes champions!
+                </p>
+              </div>
+              
+              <p style="color: #9ca3af; font-size: 14px; margin-top: 25px; font-style: italic;">
+                ✨ Great things take time. Your learning journey continues!
               </p>
             </div>
+            
+            <!-- Floating background elements -->
+            <div style="
+              position: absolute; 
+              top: 10%; 
+              left: 10%; 
+              width: 100px; 
+              height: 100px; 
+              background: rgba(255, 255, 255, 0.1); 
+              border-radius: 50%; 
+              animation: float 4s ease-in-out infinite;
+              z-index: -1;
+            "></div>
+            <div style="
+              position: absolute; 
+              bottom: 15%; 
+              right: 15%; 
+              width: 60px; 
+              height: 60px; 
+              background: rgba(255, 255, 255, 0.08); 
+              border-radius: 50%; 
+              animation: float 3.5s ease-in-out infinite reverse;
+              z-index: -1;
+            "></div>
           </div>
         `;
       }
