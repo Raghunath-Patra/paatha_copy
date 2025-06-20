@@ -100,7 +100,7 @@ export default function CreateCourse() {
       
       // Show success message and redirect
       alert(`Course created successfully! Course code: ${courseData.course_code}`);
-      router.push('/teacher/courses');
+      router.push('/teacher/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
