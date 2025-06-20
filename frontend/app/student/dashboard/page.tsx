@@ -450,7 +450,7 @@ export default function StudentDashboard() {
                 <div key={quiz.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                   <div>
                     <h4 className="font-medium text-gray-900">{quiz.title}</h4>
-                    <p className="text-sm text-gray-600">{quiz.course_name}</p>
+                    {/* <p className="text-sm text-gray-600">{quiz.course_name}</p> */}
                     <p className="text-sm text-gray-500">
                       {quiz.total_marks} marks • {quiz.time_limit ? `${quiz.time_limit} min` : 'No time limit'}
                     </p>
