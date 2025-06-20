@@ -60,7 +60,7 @@ export default function TeacherDashboard() {
   // Check if user is a teacher
   useEffect(() => {
     if (profile && profile.role !== 'teacher') {
-      router.push('/'); // Redirect non-teachers
+      //router.push('/'); // Redirect non-teachers -------------------------------------------------------------------------
     }
   }, [profile, router]);
 
