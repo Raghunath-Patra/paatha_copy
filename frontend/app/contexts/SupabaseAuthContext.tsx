@@ -18,12 +18,18 @@ interface UserProfile {
   full_name?: string;
   board?: string;
   class_level?: string;
+  role?: 'student' | 'teacher';
   institution_name?: string;
   phone_number?: string;
   mother_tongue?: string;
   primary_language?: string;
   location?: string;
   join_purpose?: string;
+  // Teacher-specific fields
+  teaching_experience?: number;
+  qualification?: string;
+  subjects_taught?: string[];
+  teacher_verified?: boolean;
   is_active: boolean;
   is_verified: boolean;
   is_premium?: boolean;

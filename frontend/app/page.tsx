@@ -1,4 +1,4 @@
-// app/page.tsx - Fixed responsive version with Daily Challenge Button
+// app/page.tsx - Updated with role-based routing
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -354,11 +354,26 @@ const CallToAction = () => {
 
 export default function HomePage() {
   const router = useRouter();
-  const { profile } = useSupabaseAuth();
+  const { profile, user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [showStats, setShowStats] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
+  
+  // Role-based redirect effect
+  useEffect(() => {
+    if (user && profile) {
+      // Check if user has completed profile setup
+      if (profile.role === 'teacher') {
+        router.push('/teacher/dashboard');
+        return;
+      } else if (profile.role === 'student') {
+        router.push('/student/dashboard');
+        return;
+      }
+      // If no role is set, continue to show the landing page
+    }
+  }, [user, profile, router]);
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {
@@ -488,35 +503,40 @@ export default function HomePage() {
               {/* Daily Challenge Button */}
               <DailyChallengeButton isVisible={showChallenge} />
               
-              {/* Board Selection */}
-              <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800 mb-6 sm:mb-8 opacity-0 animate-fade-in stagger-4 px-4 sm:px-0">
-                Choose Your Learning Path
-              </h2>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
-                {boardEntries.map(([boardKey, board], index) => (
-                  <div 
-                    key={boardKey}
-                    className="opacity-0 animate-fade-in-up"
-                    style={{
-                      animationDelay: `${0.5 + (index * 0.2)}s`,
-                      animationFillMode: 'forwards'
-                    }}
-                  >
-                    {cardsLoading ? (
-                      <BoardCardSkeleton />
-                    ) : (
-                      <EnhancedBoardCard
-                        board={boardKey}
-                        displayName={board.display_name}
-                        classes={board.classes}
-                        onClick={handleClassSelect}
-                        isLoading={false}
-                      />
-                    )}
+              {/* Show board selection only if user is not logged in or doesn't have a role */}
+              {(!user || !profile?.role) && (
+                <>
+                  {/* Board Selection */}
+                  <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800 mb-6 sm:mb-8 opacity-0 animate-fade-in stagger-4 px-4 sm:px-0">
+                    Choose Your Learning Path
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
+                    {boardEntries.map(([boardKey, board], index) => (
+                      <div 
+                        key={boardKey}
+                        className="opacity-0 animate-fade-in-up"
+                        style={{
+                          animationDelay: `${0.5 + (index * 0.2)}s`,
+                          animationFillMode: 'forwards'
+                        }}
+                      >
+                        {cardsLoading ? (
+                          <BoardCardSkeleton />
+                        ) : (
+                          <EnhancedBoardCard
+                            board={boardKey}
+                            displayName={board.display_name}
+                            classes={board.classes}
+                            onClick={handleClassSelect}
+                            isLoading={false}
+                          />
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
               
               {/* Features Section */}
               <Features />

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import RoleSelection from './RoleSelection';
 import Link from 'next/link';
 
 declare global {
@@ -23,16 +24,23 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  full_name?: string;  // Optional name field
+  full_name?: string;
+  role?: 'student' | 'teacher';
+  // Teacher-specific fields
+  teaching_experience?: number;
+  qualification?: string;
+  subjects_taught?: string[];
+  institution_name?: string;
 }
 
 export default function RegisterForm() {
   const router = useRouter();
+  const [step, setStep] = useState<'basic' | 'role'>('basic');
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
     password: '',
     confirmPassword: '',
-    full_name: ''  // Initialize empty
+    full_name: ''
   });
   const { register, signInWithGoogle, loading, error } = useSupabaseAuth();
   const [passwordError, setPasswordError] = useState<string>('');
@@ -84,8 +92,9 @@ export default function RegisterForm() {
   const handleGoogleOneTapResponse = async (response: any) => {
     try {
       if (response.credential) {
+        // For Google sign-up, we'll default to student role
+        // Users can change this later in their profile
         await signInWithGoogle(response.credential);
-        // Set the initial login flag
         sessionStorage.setItem('isInitialLogin', 'true');
       }
     } catch (error) {
@@ -93,19 +102,30 @@ export default function RegisterForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleBasicFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
+    
     if (formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match');
       return;
     }
+    
+    // Basic validation passed, move to role selection
+    setStep('role');
+  };
+
+  const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
     try {
-      await register({
+      const registrationData = {
         email: formData.email,
         password: formData.password,
-        full_name: formData.full_name || undefined  // Only include if not empty
-      });
+        full_name: formData.full_name || undefined,
+        role,
+        ...additionalData
+      };
+
+      await register(registrationData);
     } catch (err) {
       console.error('Registration error:', err);
     }
@@ -119,6 +139,10 @@ export default function RegisterForm() {
       console.error('Google sign in error:', err);
     }
   };
+
+  if (step === 'role') {
+    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />;
+  }
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
@@ -160,7 +184,7 @@ export default function RegisterForm() {
         </div>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleBasicFormSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email Address <span className="text-red-500">*</span>
@@ -217,7 +241,7 @@ export default function RegisterForm() {
         </div>
         
         <p className="mt-2 text-sm text-gray-600">
-          After registration, you'll be asked to provide your phone number to help us send you important notifications about your learning progress.
+          Next, you'll choose whether you're a student or teacher to customize your experience.
         </p>
 
         <button
@@ -225,7 +249,7 @@ export default function RegisterForm() {
           disabled={loading}
           className="w-full py-2 px-4 bg-[#ff3131] text-white rounded hover:bg-[#e52e2e] disabled:opacity-50"
         >
-          {loading ? 'Creating Account...' : 'Register'}
+          {loading ? 'Creating Account...' : 'Continue'}
         </button>
 
         <div className="text-center">
