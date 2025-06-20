@@ -51,6 +51,8 @@ export default function CreateQuiz() {
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   // Check if user is a teacher
   useEffect(() => {
     if (profile && profile.role !== 'teacher') {
@@ -67,7 +69,7 @@ export default function CreateQuiz() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('No session');
 
-        const response = await fetch('/api/teacher/courses/', {
+        const response = await fetch(`${API_URL}/api/teacher/courses/`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
@@ -109,7 +111,7 @@ export default function CreateQuiz() {
         time_limit: formData.time_limit || null
       };
 
-      const response = await fetch('/api/teacher/quizzes/', {
+      const response = await fetch(`${API_URL}/api/teacher/quizzes/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

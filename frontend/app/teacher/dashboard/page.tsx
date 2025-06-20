@@ -294,7 +294,7 @@ export default function TeacherDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">Recent Courses</h3>
               <button
-                onClick={() => router.push('/teacher/courses')}
+                // onClick={() => router.push('/teacher/courses')}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
                 View All
