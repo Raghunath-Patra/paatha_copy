@@ -186,7 +186,7 @@ const SimpleError = ({ error, onRetry }: { error: string; onRetry: () => void })
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
       </div>
-      <h3 className="font-semibold text-red-800 mb-2">Error Loading Content</h3>
+      <h3 className="font-semibold text-red-800 mb-2">Error Loading Content...</h3>
       <p className="text-red-700 mb-4">{error}</p>
       <button 
         onClick={onRetry}
