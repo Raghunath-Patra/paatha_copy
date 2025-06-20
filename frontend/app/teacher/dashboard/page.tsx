@@ -57,6 +57,8 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   // Check if user is a teacher
   useEffect(() => {
     if (profile && profile.role !== 'teacher') {
@@ -82,7 +84,7 @@ export default function TeacherDashboard() {
         };
 
         // Fetch courses
-        const coursesResponse = await fetch('/api/teacher/courses/', {
+        const coursesResponse = await fetch(`${API_URL}/api/teacher/courses/`, {
           headers
         });
 
@@ -94,7 +96,7 @@ export default function TeacherDashboard() {
         setCourses(coursesData);
 
         // Fetch recent quizzes
-        const quizzesResponse = await fetch('/api/teacher/quizzes/', {
+        const quizzesResponse = await fetch(`${API_URL}/api/teacher/quizzes/`, {
           headers
         });
 
