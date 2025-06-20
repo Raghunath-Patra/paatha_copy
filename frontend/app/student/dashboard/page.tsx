@@ -65,6 +65,8 @@ export default function StudentDashboard() {
   const [joiningCourse, setJoiningCourse] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   // Check if user is a student
   useEffect(() => {
     if (profile && profile.role !== 'student') {
@@ -90,7 +92,7 @@ export default function StudentDashboard() {
         };
 
         // Fetch enrolled courses
-        const coursesResponse = await fetch('/api/student/courses/', {
+        const coursesResponse = await fetch(`${API_URL}/api/student/courses/`, {
           headers
         });
 
@@ -105,7 +107,7 @@ export default function StudentDashboard() {
         const allQuizzes: QuizSummary[] = [];
         for (const course of coursesData) {
           try {
-            const quizzesResponse = await fetch(`/api/student/courses/${course.id}/quizzes`, {
+            const quizzesResponse = await fetch(`${API_URL}/api/student/courses/${course.id}/quizzes`, {
               headers
             });
             if (quizzesResponse.ok) {
