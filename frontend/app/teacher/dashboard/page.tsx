@@ -355,7 +355,7 @@ export default function TeacherDashboard() {
             </div>
             <div className="space-y-4">
               {recentQuizzes.map((quiz) => (
-                <div key={quiz.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div key={quiz.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50" onClick={() => router.push(`/teacher/quizzes/${quiz.id}/edit`)}>
                   <div>
                     <h4 className="font-medium text-gray-900">{quiz.title}</h4>
                     <p className="text-sm text-gray-600">{quiz.course_name}</p>
