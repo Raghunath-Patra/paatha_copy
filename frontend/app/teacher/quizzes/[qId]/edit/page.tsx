@@ -38,18 +38,35 @@ interface NewQuestion {
   marks: number;
 }
 
-interface BoardConfig {
+interface SubjectInfo {
+  code: string;
+  name: string;
+  display_name: string;
+  type: string;
+  shared_mapping?: {
+    source_board: string;
+    source_class: string;
+    source_subject: string;
+  };
+}
+
+interface ClassInfo {
+  code: string;
+  display_name: string;
+  subjects: SubjectInfo[];
+}
+
+interface BoardInfo {
+  code: string;
   display_name: string;
   classes: {
-    [key: string]: {
-      display_name: string;
-    };
+    [key: string]: ClassInfo;
   };
 }
 
 interface SubjectConfig {
   boards: {
-    [key: string]: BoardConfig;
+    [key: string]: BoardInfo;
   };
 }
 
@@ -178,7 +195,7 @@ export default function QuizEditor() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const response = await fetch(`${API_URL}/api/boards`, {
+      const response = await fetch(`${API_URL}/api/subjects-config`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -304,7 +321,7 @@ export default function QuizEditor() {
         throw new Error(errorData.detail || 'Failed to add question');
       }
 
-      const addedQuestion: QuizQuestion = await response.json();
+      const addedQuestion = await response.json();
       setQuestions([...questions, addedQuestion]);
 
       // Reset form
@@ -359,7 +376,7 @@ export default function QuizEditor() {
           throw new Error(errorData.detail || 'Failed to add question');
         }
 
-        const addedQuestion: QuizQuestion = await response.json();
+        const addedQuestion = await response.json();
         addedQuestions.push(addedQuestion);
       }
 
@@ -850,8 +867,8 @@ export default function QuizEditor() {
                       disabled={loadingConfig}
                     >
                       <option value="">Select Board</option>
-                      {subjectConfig?.boards && Object.entries(subjectConfig.boards).map(([code, board]) => (
-                        <option key={code} value={code}>{board.display_name}</option>
+                      {subjectConfig?.boards && Object.entries(subjectConfig.boards).map(([code, boardInfo]) => (
+                        <option key={code} value={code}>{boardInfo.display_name}</option>
                       ))}
                     </select>
                   </div>
@@ -871,8 +888,8 @@ export default function QuizEditor() {
                     >
                       <option value="">Select Class</option>
                       {questionFilters.board && subjectConfig?.boards[questionFilters.board]?.classes && 
-                        Object.entries(subjectConfig.boards[questionFilters.board].classes).map(([code, classLevel]) => (
-                          <option key={code} value={code}>{classLevel.display_name}</option>
+                        Object.entries(subjectConfig.boards[questionFilters.board].classes).map(([code, classInfo]) => (
+                          <option key={code} value={code}>{classInfo.display_name}</option>
                         ))}
                     </select>
                   </div>
@@ -887,14 +904,12 @@ export default function QuizEditor() {
                       disabled={!questionFilters.class_level}
                     >
                       <option value="">Select Subject</option>
-                      <option value="mathematics">Mathematics</option>
-                      <option value="science">Science</option>
-                      <option value="physics">Physics</option>
-                      <option value="chemistry">Chemistry</option>
-                      <option value="biology">Biology</option>
-                      <option value="english">English</option>
-                      <option value="hindi">Hindi</option>
-                      <option value="social-science">Social Science</option>
+                      {questionFilters.board && questionFilters.class_level && 
+                        subjectConfig?.boards[questionFilters.board]?.classes[questionFilters.class_level]?.subjects?.map((subject) => (
+                          <option key={subject.code} value={subject.code}>
+                            {subject.display_name}
+                          </option>
+                        ))}
                     </select>
                   </div>
                 </div>
