@@ -1,4 +1,4 @@
-// app/teacher/quizzes/[qId]/edit/page.tsx
+// app/teacher/quizzes/[qId]/edit/page.tsx - FIXED VERSION
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -38,16 +38,18 @@ interface NewQuestion {
   marks: number;
 }
 
+// FIXED: Corrected interface to match backend response
 interface SubjectInfo {
   code: string;
-  name: string;
-  display_name: string;
+  name: string; // This IS the display name from backend
   type: string;
   shared_mapping?: {
     source_board: string;
     source_class: string;
     source_subject: string;
   };
+  description?: string;
+  icon?: string;
 }
 
 interface ClassInfo {
@@ -207,6 +209,7 @@ export default function QuizEditor() {
       }
 
       const configData = await response.json();
+      console.log('Subject config received:', configData); // Debug log
       setSubjectConfig(configData);
     } catch (err) {
       console.error('Error fetching subject config:', err);
@@ -858,6 +861,14 @@ export default function QuizEditor() {
             </div>
 
             <div className="p-6 overflow-y-auto h-full">
+              {/* Debug: Show loading state */}
+              {loadingConfig && (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Loading configuration...</p>
+                </div>
+              )}
+
               {/* Filters */}
               <div className="mb-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -903,7 +914,7 @@ export default function QuizEditor() {
                     </select>
                   </div>
 
-                  {/* Subject Selection */}
+                  {/* Subject Selection - FIXED: Use subject.name instead of subject.display_name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                     <select
@@ -916,7 +927,7 @@ export default function QuizEditor() {
                       {questionFilters.board && questionFilters.class_level && 
                         subjectConfig?.boards[questionFilters.board]?.classes[questionFilters.class_level]?.subjects?.map((subject) => (
                           <option key={subject.code} value={subject.code}>
-                            {subject.display_name}
+                            {subject.name} {/* FIXED: Use subject.name instead of subject.display_name */}
                           </option>
                         ))}
                     </select>
