@@ -294,7 +294,16 @@ export default function QuizEditor() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const questionData = {
+      const questionData: {
+        question_type: string;
+        marks: number;
+        order_index: number;
+        custom_question_text: string;
+        custom_question_type: string;
+        custom_options: string[] | null;
+        custom_correct_answer: string;
+        custom_explanation: string | null;
+      } = {
         question_type: 'custom',
         marks: newQuestion.marks,
         order_index: questions.length + 1,
@@ -307,7 +316,7 @@ export default function QuizEditor() {
         custom_explanation: newQuestion.explanation || null
       };
 
-      const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/questions`, {
+      const response: Response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/questions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -321,7 +330,7 @@ export default function QuizEditor() {
         throw new Error(errorData.detail || 'Failed to add question');
       }
 
-      const addedQuestion = await response.json();
+      const addedQuestion: any = await response.json();
       setQuestions([...questions, addedQuestion]);
 
       // Reset form
@@ -376,7 +385,7 @@ export default function QuizEditor() {
           throw new Error(errorData.detail || 'Failed to add question');
         }
 
-        const addedQuestion = await response.json();
+        const addedQuestion: any = await response.json();
         addedQuestions.push(addedQuestion);
       }
 
