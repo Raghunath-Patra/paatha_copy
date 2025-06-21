@@ -68,6 +68,8 @@ export default function TakeQuiz() {
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(true);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   // Check if user is a student
   useEffect(() => {
     if (profile && profile.role !== 'student') {
@@ -83,7 +85,7 @@ export default function TakeQuiz() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const response = await fetch(`/api/student/quizzes/${quizId}`, {
+      const response = await fetch(`${API_URL}/api/student/quizzes/${quizId}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -118,7 +120,7 @@ export default function TakeQuiz() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const response = await fetch(`/api/student/quizzes/${quizId}/start`, {
+      const response = await fetch(`${API_URL}/api/student/quizzes/${quizId}/start`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -135,7 +137,7 @@ export default function TakeQuiz() {
       setCurrentAttempt(attemptData);
 
       // Fetch questions
-      const questionsResponse = await fetch(`/api/student/quizzes/${quizId}/questions`, {
+      const questionsResponse = await fetch(`${API_URL}/api/student/quizzes/${quizId}/questions`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -190,7 +192,7 @@ export default function TakeQuiz() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const response = await fetch(`/api/student/quizzes/${quizId}/submit`, {
+      const response = await fetch(`${API_URL}/api/student/quizzes/${quizId}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
