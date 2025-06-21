@@ -164,7 +164,7 @@ export default function StudentDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const response = await fetch('/api/student/courses/join', {
+      const response = await fetch(`${API_URL}/api/student/courses/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

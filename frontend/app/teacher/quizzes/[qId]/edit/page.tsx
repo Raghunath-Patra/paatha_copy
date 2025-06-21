@@ -246,6 +246,7 @@ export default function QuizEditor() {
       }
 
       setQuiz({ ...quiz, is_published: true });
+      router.push(`/teacher/dashboard`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to publish quiz');
     } finally {
