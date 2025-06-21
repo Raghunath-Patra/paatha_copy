@@ -39,9 +39,33 @@ interface NewQuestion {
 }
 
 // FIXED: Corrected interface to match backend response
+// Static board structure to prevent re-creation
+const BOARD_STRUCTURE = {
+  cbse: {
+    display_name: "CBSE",
+    classes: {
+      viii: { display_name: "Class VIII" },
+      ix: { display_name: "Class IX" },
+      x: { display_name: "Class X" },
+      xi: { display_name: "Class XI" },
+      xii: { display_name: "Class XII" }
+    }
+  },
+  karnataka: {
+    display_name: "Karnataka State Board", 
+    classes: {
+      "8th": { display_name: "8th Class" },
+      "9th": { display_name: "9th Class" },
+      "10th": { display_name: "10th Class" },
+      "puc-1": { display_name: "PUC-I" },
+      "puc-2": { display_name: "PUC-II" }
+    }
+  }
+} as const;
+
 interface SubjectInfo {
   code: string;
-  name: string; // This IS the display name from backend
+  name: string;
   type: string;
   shared_mapping?: {
     source_board: string;
@@ -50,26 +74,6 @@ interface SubjectInfo {
   };
   description?: string;
   icon?: string;
-}
-
-interface ClassInfo {
-  code: string;
-  display_name: string;
-  subjects: SubjectInfo[];
-}
-
-interface BoardInfo {
-  code: string;
-  display_name: string;
-  classes: {
-    [key: string]: ClassInfo;
-  };
-}
-
-interface SubjectConfig {
-  boards: {
-    [key: string]: BoardInfo;
-  };
 }
 
 interface BrowseQuestion {
@@ -112,8 +116,8 @@ export default function QuizEditor() {
   const [showQuestionBrowser, setShowQuestionBrowser] = useState(false);
 
   // Question Browser State
-  const [subjectConfig, setSubjectConfig] = useState<SubjectConfig | null>(null);
-  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [availableSubjects, setAvailableSubjects] = useState<SubjectInfo[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [browseQuestions, setBrowseQuestions] = useState<BrowseQuestion[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<Set<string>>(new Set());
@@ -188,16 +192,19 @@ export default function QuizEditor() {
     fetchQuizData();
   }, [user, quizId]);
 
-  // Fetch subject configuration
-  const fetchSubjectConfig = async () => {
-    if (!user) return;
+  // Fetch subjects for selected board and class
+  const fetchSubjects = async (board: string, classLevel: string) => {
+    if (!user || !board || !classLevel) return;
 
-    setLoadingConfig(true);
+    setLoadingSubjects(true);
+    setAvailableSubjects([]);
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const response = await fetch(`${API_URL}/api/subjects-config`, {
+      const subjectsUrl = `${API_URL}/api/subjects/${board}/${classLevel}`;
+      const response = await fetch(subjectsUrl, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -205,17 +212,17 @@ export default function QuizEditor() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch subject configuration');
+        throw new Error('Failed to fetch subjects');
       }
 
-      const configData = await response.json();
-      console.log('Subject config received:', configData); // Debug log
-      setSubjectConfig(configData);
+      const data = await response.json();
+      console.log('Subjects received:', data); // Debug log
+      setAvailableSubjects(data.subjects || []);
     } catch (err) {
-      console.error('Error fetching subject config:', err);
-      setError('Failed to load subject configuration');
+      console.error('Error fetching subjects:', err);
+      setError('Failed to load subjects');
     } finally {
-      setLoadingConfig(false);
+      setLoadingSubjects(false);
     }
   };
 
@@ -490,9 +497,18 @@ export default function QuizEditor() {
 
   const handleOpenQuestionBrowser = () => {
     setShowQuestionBrowser(true);
-    if (!subjectConfig) {
-      fetchSubjectConfig();
-    }
+    // Reset filters when opening
+    setQuestionFilters({
+      board: '',
+      class_level: '',
+      subject: '',
+      chapter: '',
+      difficulty: '',
+      question_type: '',
+      category: ''
+    });
+    setAvailableSubjects([]);
+    setBrowseQuestions([]);
   };
 
   const handleQuestionSelection = (questionId: string) => {
@@ -861,14 +877,6 @@ export default function QuizEditor() {
             </div>
 
             <div className="p-6 overflow-y-auto h-full">
-              {/* Debug: Show loading state */}
-              {loadingConfig && (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Loading configuration...</p>
-                </div>
-              )}
-
               {/* Filters */}
               <div className="mb-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -877,17 +885,21 @@ export default function QuizEditor() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Board</label>
                     <select
                       value={questionFilters.board}
-                      onChange={(e) => setQuestionFilters(prev => ({ 
-                        ...prev, 
-                        board: e.target.value, 
-                        class_level: '', 
-                        subject: '' 
-                      }))}
+                      onChange={(e) => {
+                        const newBoard = e.target.value;
+                        setQuestionFilters(prev => ({ 
+                          ...prev, 
+                          board: newBoard, 
+                          class_level: '', 
+                          subject: '' 
+                        }));
+                        setAvailableSubjects([]);
+                        setBrowseQuestions([]);
+                      }}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      disabled={loadingConfig}
                     >
                       <option value="">Select Board</option>
-                      {subjectConfig?.boards && Object.entries(subjectConfig.boards).map(([code, boardInfo]) => (
+                      {Object.entries(BOARD_STRUCTURE).map(([code, boardInfo]) => (
                         <option key={code} value={code}>{boardInfo.display_name}</option>
                       ))}
                     </select>
@@ -898,38 +910,48 @@ export default function QuizEditor() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
                     <select
                       value={questionFilters.class_level}
-                      onChange={(e) => setQuestionFilters(prev => ({ 
-                        ...prev, 
-                        class_level: e.target.value, 
-                        subject: '' 
-                      }))}
+                      onChange={(e) => {
+                        const newClass = e.target.value;
+                        setQuestionFilters(prev => ({ 
+                          ...prev, 
+                          class_level: newClass, 
+                          subject: '' 
+                        }));
+                        setBrowseQuestions([]);
+                        if (questionFilters.board && newClass) {
+                          fetchSubjects(questionFilters.board, newClass);
+                        } else {
+                          setAvailableSubjects([]);
+                        }
+                      }}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                       disabled={!questionFilters.board}
                     >
                       <option value="">Select Class</option>
-                      {questionFilters.board && subjectConfig?.boards[questionFilters.board]?.classes && 
-                        Object.entries(subjectConfig.boards[questionFilters.board].classes).map(([code, classInfo]) => (
+                      {questionFilters.board && BOARD_STRUCTURE[questionFilters.board as keyof typeof BOARD_STRUCTURE] && 
+                        Object.entries(BOARD_STRUCTURE[questionFilters.board as keyof typeof BOARD_STRUCTURE].classes).map(([code, classInfo]) => (
                           <option key={code} value={code}>{classInfo.display_name}</option>
                         ))}
                     </select>
                   </div>
 
-                  {/* Subject Selection - FIXED: Use subject.name instead of subject.display_name */}
+                  {/* Subject Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                     <select
                       value={questionFilters.subject}
                       onChange={(e) => setQuestionFilters(prev => ({ ...prev, subject: e.target.value }))}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      disabled={!questionFilters.class_level}
+                      disabled={!questionFilters.class_level || loadingSubjects}
                     >
-                      <option value="">Select Subject</option>
-                      {questionFilters.board && questionFilters.class_level && 
-                        subjectConfig?.boards[questionFilters.board]?.classes[questionFilters.class_level]?.subjects?.map((subject) => (
-                          <option key={subject.code} value={subject.code}>
-                            {subject.name} {/* FIXED: Use subject.name instead of subject.display_name */}
-                          </option>
-                        ))}
+                      <option value="">
+                        {loadingSubjects ? 'Loading subjects...' : 'Select Subject'}
+                      </option>
+                      {availableSubjects.map((subject) => (
+                        <option key={subject.code} value={subject.code}>
+                          {subject.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
