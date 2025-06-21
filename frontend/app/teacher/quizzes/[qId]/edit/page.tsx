@@ -1,0 +1,1 @@
+//Page for teachers to create questions for a quiz for now keep it simple as: he can set question, it's type and options (if mcq).
