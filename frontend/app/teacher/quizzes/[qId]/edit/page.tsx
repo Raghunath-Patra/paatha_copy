@@ -67,6 +67,10 @@ interface SubjectInfo {
   code: string;
   name: string;
   type: string;
+  chapters?: Array<{
+    number: number;
+    name: string;
+  }>;
   shared_mapping?: {
     source_board: string;
     source_class: string;
@@ -87,6 +91,7 @@ interface BrowseQuestion {
   topic?: string;
   bloom_level?: string;
   category?: string;
+  chapter?: number; // Added chapter field
   metadata?: any;
 }
 
@@ -94,7 +99,7 @@ interface QuestionFilters {
   board: string;
   class_level: string;
   subject: string;
-  chapter?: string;
+  chapter?: number; // Changed to number to match backend expectation
   difficulty?: string;
   question_type?: string;
   category?: string;
@@ -117,6 +122,7 @@ export default function QuizEditor() {
 
   // Question Browser State
   const [availableSubjects, setAvailableSubjects] = useState<SubjectInfo[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(null);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [browseQuestions, setBrowseQuestions] = useState<BrowseQuestion[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
@@ -127,7 +133,7 @@ export default function QuizEditor() {
     board: '',
     class_level: '',
     subject: '',
-    chapter: '',
+    chapter: undefined, // Changed to undefined for number type
     difficulty: '',
     question_type: '',
     category: ''
@@ -244,6 +250,7 @@ export default function QuizEditor() {
       if (questionFilters.difficulty) params.append('difficulty', questionFilters.difficulty);
       if (questionFilters.question_type) params.append('type', questionFilters.question_type);
       if (questionFilters.category) params.append('category', questionFilters.category);
+      if (questionFilters.chapter) params.append('chapter', questionFilters.chapter.toString());
 
       const queryString = params.toString() ? `?${params.toString()}` : '';
       
@@ -502,12 +509,13 @@ export default function QuizEditor() {
       board: '',
       class_level: '',
       subject: '',
-      chapter: '',
+      chapter: undefined,
       difficulty: '',
       question_type: '',
       category: ''
     });
     setAvailableSubjects([]);
+    setSelectedSubject(null);
     setBrowseQuestions([]);
   };
 
@@ -891,9 +899,11 @@ export default function QuizEditor() {
                           ...prev, 
                           board: newBoard, 
                           class_level: '', 
-                          subject: '' 
+                          subject: '',
+                          chapter: undefined // Reset chapter when board changes
                         }));
                         setAvailableSubjects([]);
+                        setSelectedSubject(null); // Reset selected subject
                         setBrowseQuestions([]);
                       }}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -915,8 +925,10 @@ export default function QuizEditor() {
                         setQuestionFilters(prev => ({ 
                           ...prev, 
                           class_level: newClass, 
-                          subject: '' 
+                          subject: '',
+                          chapter: undefined // Reset chapter when class changes
                         }));
+                        setSelectedSubject(null); // Reset selected subject
                         setBrowseQuestions([]);
                         if (questionFilters.board && newClass) {
                           fetchSubjects(questionFilters.board, newClass);
@@ -940,7 +952,17 @@ export default function QuizEditor() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                     <select
                       value={questionFilters.subject}
-                      onChange={(e) => setQuestionFilters(prev => ({ ...prev, subject: e.target.value }))}
+                      onChange={(e) => {
+                        const selectedSubjectCode = e.target.value;
+                        const subject = availableSubjects.find(s => s.code === selectedSubjectCode) || null;
+                        setSelectedSubject(subject);
+                        setQuestionFilters(prev => ({ 
+                          ...prev, 
+                          subject: selectedSubjectCode,
+                          chapter: undefined // Reset chapter when subject changes
+                        }));
+                        setBrowseQuestions([]);
+                      }}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                       disabled={!questionFilters.class_level || loadingSubjects}
                     >
@@ -955,6 +977,28 @@ export default function QuizEditor() {
                     </select>
                   </div>
                 </div>
+
+                {/* Chapter Selection Row - Only show if subject is selected and has chapters */}
+                {selectedSubject && selectedSubject.chapters && selectedSubject.chapters.length > 0 && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Chapter (Optional)</label>
+                    <select
+                      value={questionFilters.chapter || ''}
+                      onChange={(e) => setQuestionFilters(prev => ({ 
+                        ...prev, 
+                        chapter: e.target.value ? parseInt(e.target.value) : undefined 
+                      }))}
+                      className="w-full md:w-1/3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Chapters</option>
+                      {selectedSubject.chapters.map((chapter) => (
+                        <option key={chapter.number} value={chapter.number}>
+                          Chapter {chapter.number}: {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Additional Filters */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1056,6 +1100,11 @@ export default function QuizEditor() {
                             {question.category && (
                               <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
                                 {question.category}
+                              </span>
+                            )}
+                            {question.chapter && (
+                              <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                                Chapter {question.chapter}
                               </span>
                             )}
                           </div>
