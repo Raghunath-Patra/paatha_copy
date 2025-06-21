@@ -209,7 +209,8 @@ export default function TakeQuiz() {
       const resultData = await response.json();
       
       // Redirect to results page
-      router.push(`/student/quiz/${quizId}/results/${resultData.attempt.id}`);
+      //router.push(`/student/quiz/${quizId}/results/${resultData.attempt.id}`);-----------------------------------------------------------
+      router.push(`/student/dashboard`);
     } catch (err) {
       console.error('Error submitting quiz:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit quiz');
