@@ -125,13 +125,13 @@ export default function StudentDashboard() {
 
         // Sort by created date and get recent ones
         const recentQuizzes = allQuizzes
-          .filter(quiz => quiz.status !== 'completed')
+          .filter(quiz => quiz.quiz_status_value === 'in_progress')
           .slice(0, 5);
         setRecentQuizzes(recentQuizzes);
 
         // Calculate stats
         const totalQuizzesAvailable = allQuizzes.length;
-        const completedQuizzes = allQuizzes.filter(quiz => quiz.status === 'completed').length;
+        const completedQuizzes = allQuizzes.filter(quiz => quiz.status !== 'not_started').length;
         const totalScore = coursesData.reduce((sum: number, course: Course) => 
           sum + course.average_score, 0);
         const averageScore = coursesData.length > 0 ? totalScore / coursesData.length : 0;
