@@ -1,4 +1,4 @@
-// frontend/app/teacher/quizzes/[qId]/view/page.tsx
+// FIXED: Optimized Quiz View Results Page
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -54,6 +54,7 @@ interface QuizAttempt {
   status: string;
   is_auto_graded: boolean;
   teacher_reviewed: boolean;
+  _stats?: QuizStats; // Embedded stats from backend
 }
 
 interface QuizStats {
@@ -115,51 +116,36 @@ export default function QuizViewResults() {
         const quizData = await quizResponse.json();
         setQuiz(quizData);
 
-        // Fetch quiz attempts/results
+        // FIXED: Fetch quiz attempts/results with proper error handling
         const attemptsResponse = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/results`, {
           headers
         });
 
         if (attemptsResponse.ok) {
           const attemptsData = await attemptsResponse.json();
-          const attemptsList = attemptsData || []; // Direct array
-          setAttempts(attemptsList);
           
-          // Compute stats on frontend
-          if (attemptsList.length > 0) {
-            const passingPercentage = (quizData.passing_marks / quizData.total_marks) * 100;
-            const completedAttempts = attemptsList.filter((a: QuizAttempt) => a.status === 'completed');
-            const passedAttempts = completedAttempts.filter((a: QuizAttempt) => a.percentage >= passingPercentage);
-            const uniqueStudents = new Set(attemptsList.map((a: QuizAttempt) => a.student_id)).size;
+          // FIXED: Backend now returns direct array of attempts
+          if (Array.isArray(attemptsData)) {
+            setAttempts(attemptsData);
             
-            const computedStats = {
-              total_attempts: attemptsList.length,
-              unique_students: uniqueStudents,
-              average_score: completedAttempts.length > 0 
-                ? completedAttempts.reduce((sum: number, a: QuizAttempt) => sum + a.percentage, 0) / completedAttempts.length 
-                : 0,
-              highest_score: completedAttempts.length > 0 
-                ? Math.max(...completedAttempts.map((a: QuizAttempt) => a.percentage)) 
-                : 0,
-              lowest_score: completedAttempts.length > 0 
-                ? Math.min(...completedAttempts.map((a: QuizAttempt) => a.percentage)) 
-                : 0,
-              pass_rate: completedAttempts.length > 0 
-                ? (passedAttempts.length / completedAttempts.length) * 100 
-                : 0,
-              completion_rate: attemptsList.length > 0 
-                ? (completedAttempts.length / attemptsList.length) * 100 
-                : 0
-            };
-            
-            setStats(computedStats);
+            // FIXED: Extract stats from first attempt if available (embedded by backend)
+            if (attemptsData.length > 0 && attemptsData[0]._stats) {
+              setStats(attemptsData[0]._stats);
+            } else {
+              setStats(null);
+            }
           } else {
+            // Fallback for unexpected response format
+            console.warn('Unexpected response format:', attemptsData);
+            setAttempts([]);
             setStats(null);
           }
-        } else {
-          // If the endpoint doesn't exist, we'll still show the quiz with no attempts
+        } else if (attemptsResponse.status === 404) {
+          // Quiz has no attempts yet
           setAttempts([]);
           setStats(null);
+        } else {
+          throw new Error(`Failed to fetch quiz results: ${attemptsResponse.status}`);
         }
 
       } catch (err) {
@@ -171,7 +157,7 @@ export default function QuizViewResults() {
     };
 
     fetchQuizResults();
-  }, [user, quizId]);
+  }, [user, quizId, API_URL]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -205,6 +191,7 @@ export default function QuizViewResults() {
     return 'bg-red-100';
   };
 
+  // OPTIMIZED: Memoized sorting
   const sortedAttempts = React.useMemo(() => {
     if (!Array.isArray(attempts) || attempts.length === 0) {
       return [];
@@ -240,6 +227,7 @@ export default function QuizViewResults() {
     }
   };
 
+  // OPTIMIZED: Early returns for loading and error states
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -334,9 +322,10 @@ export default function QuizViewResults() {
           </div>
         </div>
 
+        {/* FIXED: Show stats and results only if attempts exist */}
         {stats && attempts.length > 0 ? (
           <>
-            {/* Statistics */}
+            {/* Statistics - Using backend computed stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center">
@@ -379,7 +368,7 @@ export default function QuizViewResults() {
               </div>
             </div>
 
-            {/* Student Results */}
+            {/* Student Results Table */}
             <div className="bg-white rounded-lg shadow-sm border">
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between">
@@ -389,7 +378,7 @@ export default function QuizViewResults() {
                       <span className="text-sm text-gray-600">Sort by:</span>
                       <button
                         onClick={() => handleSort('name')}
-                        className={`text-sm px-3 py-1 rounded ${
+                        className={`text-sm px-3 py-1 rounded transition-colors ${
                           sortBy === 'name' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-100'
                         }`}
                       >
@@ -397,7 +386,7 @@ export default function QuizViewResults() {
                       </button>
                       <button
                         onClick={() => handleSort('score')}
-                        className={`text-sm px-3 py-1 rounded ${
+                        className={`text-sm px-3 py-1 rounded transition-colors ${
                           sortBy === 'score' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-100'
                         }`}
                       >
@@ -405,7 +394,7 @@ export default function QuizViewResults() {
                       </button>
                       <button
                         onClick={() => handleSort('date')}
-                        className={`text-sm px-3 py-1 rounded ${
+                        className={`text-sm px-3 py-1 rounded transition-colors ${
                           sortBy === 'date' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-100'
                         }`}
                       >
@@ -441,8 +430,8 @@ export default function QuizViewResults() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sortedAttempts.length > 0 && sortedAttempts.map((attempt) => (
-                      <tr key={attempt.id} className="hover:bg-gray-50">
+                    {sortedAttempts.map((attempt) => (
+                      <tr key={attempt.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
@@ -475,7 +464,7 @@ export default function QuizViewResults() {
                           {attempt.submitted_at ? formatDate(attempt.submitted_at) : 'In Progress'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
                             attempt.status === 'completed' ? 'bg-green-100 text-green-800' :
                             attempt.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-gray-100 text-gray-800'
