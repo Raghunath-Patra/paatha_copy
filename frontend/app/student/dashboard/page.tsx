@@ -276,16 +276,16 @@ export default function StudentDashboard() {
   };
 
   const handleQuizClick = (quiz: QuizSummary) => {
-    router.push(`/student/quiz/${quiz.id}`);
-    // if (quiz.status === 'completed') {
-    //   // For completed quizzes, we don't have attempt ID here, so go to quiz page
-    //   // The quiz page will show previous attempts
-    //   router.push(`/student/quiz/${quiz.id}`);
-    // } else if (quiz.quiz_status_value === 'in_progress' && 
-    //            (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) {
-    //   // For available quizzes, go to take quiz
-    //   router.push(`/student/quiz/${quiz.id}`);
-    // }
+    //router.push(`/student/quiz/${quiz.id}`);
+    if (quiz.status === 'completed') {
+      // For completed quizzes, we don't have attempt ID here, so go to quiz page
+      // The quiz page will show previous attempts
+      router.push(`/student/quiz/${quiz.id}`);
+    } else if (quiz.quiz_status_value === 'in_progress' && 
+               (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) {
+      // For available quizzes, go to take quiz
+      router.push(`/student/quiz/${quiz.id}`);
+    }
   };
 
   const getFilteredQuizzes = () => {
