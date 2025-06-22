@@ -224,9 +224,12 @@ export default function TeacherDashboard() {
   };
 
   const handleQuizClick = (quiz: Quiz) => {
-    const statusInfo = getQuizStatusInfo(quiz);
-    if (statusInfo.canEdit) {
+    if (!quiz.is_published) {
+      // Draft quizzes go to edit page
       router.push(`/teacher/quizzes/${quiz.id}/edit`);
+    } else {
+      // Published quizzes go to view results page
+      router.push(`/teacher/quizzes/${quiz.id}/view`);
     }
   };
 
@@ -300,11 +303,8 @@ export default function TeacherDashboard() {
     );
   }
 
-  // Show draft quizzes and editable published quizzes
-  const editableQuizzes = allQuizzes.filter(quiz => {
-    const statusInfo = getQuizStatusInfo(quiz);
-    return statusInfo.canEdit;
-  }).slice(0, 5);
+  // Show recent quizzes instead of just editable ones
+  const recentQuizzes = allQuizzes.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -484,10 +484,8 @@ export default function TeacherDashboard() {
                       return (
                         <div 
                           key={quiz.id}
-                          className={`border rounded-lg p-4 transition-colors ${
-                            statusInfo.canEdit ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
-                          }`}
-                          onClick={() => statusInfo.canEdit && handleQuizClick(quiz)}
+                          className="border rounded-lg p-4 transition-colors hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleQuizClick(quiz)}
                         >
                           <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3">
                             <div className="flex-1 mb-2 sm:mb-0">
@@ -549,29 +547,19 @@ export default function TeacherDashboard() {
                             )}
                           </div>
                           
-                          {/* Action button for editable quizzes */}
-                          {statusInfo.canEdit && (
-                            <div className="mt-3 pt-3 border-t">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-green-600 font-medium">
-                                  Click to edit quiz
-                                </span>
+                          {/* Action button for all quizzes */}
+                          <div className="mt-3 pt-3 border-t">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-green-600 font-medium">
+                                Click to {!quiz.is_published ? 'edit quiz' : 'view results'}
+                              </span>
+                              {!quiz.is_published ? (
                                 <Edit className="h-4 w-4 text-green-600" />
-                              </div>
+                              ) : (
+                                <Eye className="h-4 w-4 text-green-600" />
+                              )}
                             </div>
-                          )}
-
-                          {/* Lock indicator for non-editable quizzes */}
-                          {!statusInfo.canEdit && (
-                            <div className="mt-3 pt-3 border-t">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500 font-medium">
-                                  Quiz is active/completed - editing disabled
-                                </span>
-                                <Lock className="h-4 w-4 text-gray-500" />
-                              </div>
-                            </div>
-                          )}
+                          </div>
                         </div>
                       );
                     })}
@@ -645,10 +633,10 @@ export default function TeacherDashboard() {
             </div>
           </div>
 
-          {/* Editable Quizzes */}
+          {/* Recent Quizzes */}
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Editable Quizzes</h3>
+              <h3 className="text-lg font-medium text-gray-900">Recent Quizzes</h3>
               <button
                 onClick={() => setShowAllQuizzesModal(true)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
@@ -657,7 +645,7 @@ export default function TeacherDashboard() {
               </button>
             </div>
             <div className="space-y-4">
-              {editableQuizzes.map((quiz) => {
+              {recentQuizzes.map((quiz) => {
                 const statusInfo = getQuizStatusInfo(quiz);
                 const Icon = statusInfo.icon;
                 
@@ -693,12 +681,9 @@ export default function TeacherDashboard() {
                   </div>
                 );
               })}
-              {editableQuizzes.length === 0 && (
+              {recentQuizzes.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No editable quizzes</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    All quizzes are either active or you have no quizzes yet
-                  </p>
+                  <p className="text-gray-500">No quizzes yet</p>
                   <button
                     onClick={() => router.push('/teacher/quizzes/create')}
                     className="mt-2 text-blue-600 hover:text-blue-700 font-medium"
