@@ -205,24 +205,31 @@ export default function QuizViewResults() {
     return 'bg-red-100';
   };
 
-  const sortedAttempts = [...attempts].sort((a, b) => {
-    let comparison = 0;
-    
-    switch (sortBy) {
-      case 'name':
-        comparison = a.student_name.localeCompare(b.student_name);
-        break;
-      case 'score':
-        comparison = a.percentage - b.percentage;
-        break;
-      case 'date':
-        comparison = new Date(a.submitted_at || a.started_at).getTime() - 
-                    new Date(b.submitted_at || b.started_at).getTime();
-        break;
+  const sortedAttempts = React.useMemo(() => {
+    if (!Array.isArray(attempts) || attempts.length === 0) {
+      return [];
     }
     
-    return sortOrder === 'asc' ? comparison : -comparison;
-  });
+    return [...attempts].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = (a.student_name || '').localeCompare(b.student_name || '');
+          break;
+        case 'score':
+          comparison = (a.percentage || 0) - (b.percentage || 0);
+          break;
+        case 'date':
+          const dateA = new Date(a.submitted_at || a.started_at).getTime();
+          const dateB = new Date(b.submitted_at || b.started_at).getTime();
+          comparison = dateA - dateB;
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }, [attempts, sortBy, sortOrder]);
 
   const handleSort = (newSortBy: 'name' | 'score' | 'date') => {
     if (sortBy === newSortBy) {
@@ -434,7 +441,7 @@ export default function QuizViewResults() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sortedAttempts.map((attempt) => (
+                    {sortedAttempts.length > 0 && sortedAttempts.map((attempt) => (
                       <tr key={attempt.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
