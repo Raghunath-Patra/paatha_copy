@@ -122,8 +122,40 @@ export default function QuizViewResults() {
 
         if (attemptsResponse.ok) {
           const attemptsData = await attemptsResponse.json();
-          setAttempts(attemptsData || []);
-          setStats(attemptsData.stats || null);//---------------------------------------------- null only
+          const attemptsList = attemptsData || []; // Direct array
+          setAttempts(attemptsList);
+          
+          // Compute stats on frontend
+          if (attemptsList.length > 0) {
+            const passingPercentage = (quizData.passing_marks / quizData.total_marks) * 100;
+            const completedAttempts = attemptsList.filter(a => a.status === 'completed');
+            const passedAttempts = completedAttempts.filter(a => a.percentage >= passingPercentage);
+            const uniqueStudents = new Set(attemptsList.map(a => a.student_id)).size;
+            
+            const computedStats = {
+              total_attempts: attemptsList.length,
+              unique_students: uniqueStudents,
+              average_score: completedAttempts.length > 0 
+                ? completedAttempts.reduce((sum, a) => sum + a.percentage, 0) / completedAttempts.length 
+                : 0,
+              highest_score: completedAttempts.length > 0 
+                ? Math.max(...completedAttempts.map(a => a.percentage)) 
+                : 0,
+              lowest_score: completedAttempts.length > 0 
+                ? Math.min(...completedAttempts.map(a => a.percentage)) 
+                : 0,
+              pass_rate: completedAttempts.length > 0 
+                ? (passedAttempts.length / completedAttempts.length) * 100 
+                : 0,
+              completion_rate: attemptsList.length > 0 
+                ? (completedAttempts.length / attemptsList.length) * 100 
+                : 0
+            };
+            
+            setStats(computedStats);
+          } else {
+            setStats(null);
+          }
         } else {
           // If the endpoint doesn't exist, we'll still show the quiz with no attempts
           setAttempts([]);
