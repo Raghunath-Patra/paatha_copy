@@ -202,9 +202,6 @@ const QuizResults = () => {
         setResults(mockData);
         setIsRichData(true); // Mock as rich data for demo
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching results:', error);
-        setLoading(false);
       }
     };
 
@@ -213,7 +210,7 @@ const QuizResults = () => {
     }
   }, [attemptId, quizId]);
 
-  const formatTime = (minutes) => {
+  const formatTime = (minutes: number) => {
     const hrs = Math.floor(minutes / 60);
     const mins = minutes % 60;
     if (hrs > 0) {
@@ -222,17 +219,17 @@ const QuizResults = () => {
     return `${mins}m`;
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
 
-  const getScoreColor = (percentage) => {
+  const getScoreColor = (percentage: number) => {
     if (percentage >= 80) return 'text-green-600';
     if (percentage >= 60) return 'text-yellow-600';
     return 'text-red-600';
   };
 
-  const getScoreBgColor = (percentage) => {
+  const getScoreBgColor = (percentage: number) => {
     if (percentage >= 80) return 'bg-green-100 border-green-200';
     if (percentage >= 60) return 'bg-yellow-100 border-yellow-200';
     return 'bg-red-100 border-red-200';
