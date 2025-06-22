@@ -128,21 +128,21 @@ export default function QuizViewResults() {
           // Compute stats on frontend
           if (attemptsList.length > 0) {
             const passingPercentage = (quizData.passing_marks / quizData.total_marks) * 100;
-            const completedAttempts = attemptsList.filter(a => a.status === 'completed');
-            const passedAttempts = completedAttempts.filter(a => a.percentage >= passingPercentage);
-            const uniqueStudents = new Set(attemptsList.map(a => a.student_id)).size;
+            const completedAttempts = attemptsList.filter((a: QuizAttempt) => a.status === 'completed');
+            const passedAttempts = completedAttempts.filter((a: QuizAttempt) => a.percentage >= passingPercentage);
+            const uniqueStudents = new Set(attemptsList.map((a: QuizAttempt) => a.student_id)).size;
             
             const computedStats = {
               total_attempts: attemptsList.length,
               unique_students: uniqueStudents,
               average_score: completedAttempts.length > 0 
-                ? completedAttempts.reduce((sum, a) => sum + a.percentage, 0) / completedAttempts.length 
+                ? completedAttempts.reduce((sum: number, a: QuizAttempt) => sum + a.percentage, 0) / completedAttempts.length 
                 : 0,
               highest_score: completedAttempts.length > 0 
-                ? Math.max(...completedAttempts.map(a => a.percentage)) 
+                ? Math.max(...completedAttempts.map((a: QuizAttempt) => a.percentage)) 
                 : 0,
               lowest_score: completedAttempts.length > 0 
-                ? Math.min(...completedAttempts.map(a => a.percentage)) 
+                ? Math.min(...completedAttempts.map((a: QuizAttempt) => a.percentage)) 
                 : 0,
               pass_rate: completedAttempts.length > 0 
                 ? (passedAttempts.length / completedAttempts.length) * 100 
