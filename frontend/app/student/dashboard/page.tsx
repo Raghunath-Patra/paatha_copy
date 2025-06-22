@@ -114,8 +114,7 @@ export default function StudentDashboard() {
             if (quizzesResponse.ok) {
               const quizzes = await quizzesResponse.json();
               allQuizzes.push(...quizzes.map((quiz: QuizSummary) => ({
-                ...quiz,
-                course_name: course.course_name
+                ...quiz
               })));
             }
           } catch (err) {
@@ -125,7 +124,7 @@ export default function StudentDashboard() {
 
         // Sort by created date and get recent ones
         const recentQuizzes = allQuizzes
-          .filter(quiz => quiz.status !== 'completed' && quiz.status !== 'time_expired')
+          .filter(quiz => quiz.status !== 'completed')
           .slice(0, 5);
         setRecentQuizzes(recentQuizzes);
 
