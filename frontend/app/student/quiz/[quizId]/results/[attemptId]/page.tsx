@@ -88,7 +88,7 @@ export default function QuizResults() {
   const [error, setError] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
-  const [isRichData, setIsRichData] = useState(false);
+  //const [isRichData, setIsRichData] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -112,7 +112,7 @@ export default function QuizResults() {
           console.log('📦 Loading rich data from sessionStorage');
           const richData = JSON.parse(storedResults);
           setResults(richData);
-          setIsRichData(true);
+          //setIsRichData(true);
           setLoading(false);
           
           // Clear the stored data to prevent stale data on future visits
@@ -142,7 +142,7 @@ export default function QuizResults() {
 
         const data = await response.json();
         setResults(data);
-        setIsRichData(false); // This is basic data from database
+        //setIsRichData(false); // This is basic data from database
         setLoading(false);
         
       } catch (err) {
@@ -255,7 +255,7 @@ export default function QuizResults() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Data Status Banner */}
-        {!isRichData && (
+        {/* {!isRichData && (
           <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
@@ -264,7 +264,7 @@ export default function QuizResults() {
               </p>
             </div>
           </div>
-        )}
+        )} */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -396,7 +396,7 @@ export default function QuizResults() {
                         <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                           <Lightbulb className="h-4 w-4 mr-1" />
                           Feedback:
-                          {isRichData && currentQuestion.question_type !== 'mcq' && (
+                          {currentQuestion.question_type !== 'mcq' && (
                             <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
                               AI Generated
                             </span>
@@ -409,7 +409,7 @@ export default function QuizResults() {
                     )}
 
                     {/* Explanation - only show if available */}
-                    {isRichData && currentQuestion.explanation && (
+                    {currentQuestion.explanation && (
                       <div>
                         <h5 className="text-sm font-medium text-gray-700 mb-2">Explanation:</h5>
                         <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
@@ -419,7 +419,7 @@ export default function QuizResults() {
                     )}
 
                     {/* Question Metadata - only show if available */}
-                    {isRichData && (
+                    {/* {isRichData && ( */}
                       <div className="flex items-center space-x-4 text-xs text-gray-500 pt-2 border-t">
                         {currentQuestion.confidence_level && (
                           <span className="flex items-center">
@@ -516,7 +516,7 @@ export default function QuizResults() {
                         <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                           <Lightbulb className="h-4 w-4 mr-1" />
                           Feedback:
-                          {isRichData && question.question_type.toLowerCase() !== 'mcq' && (
+                          {question.question_type.toLowerCase() !== 'mcq' && (
                             <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
                               AI Generated
                             </span>
@@ -529,7 +529,7 @@ export default function QuizResults() {
                     )}
 
                     {/* Only show explanation for rich data */}
-                    {isRichData && question.explanation && (
+                    {question.explanation && (
                       <div className="mt-4">
                         <h5 className="text-sm font-medium text-gray-700 mb-2">Explanation:</h5>
                         <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
@@ -570,7 +570,7 @@ export default function QuizResults() {
                   </span>
                   <span className="font-medium">{formatTime(results.summary.time_taken || 0)}</span>
                 </div>
-                {isRichData && results.summary.ai_grading_used && (
+                {results.summary.ai_grading_used && (
                   <div className="flex items-center justify-between">
                     <span className="flex items-center text-sm text-gray-600">
                       <Brain className="h-4 w-4 mr-2" />
@@ -579,7 +579,7 @@ export default function QuizResults() {
                     <span className="text-xs text-blue-600">Used</span>
                   </div>
                 )}
-                {isRichData && results.summary.ai_token_usage && (
+                {results.summary.ai_token_usage && (
                   <div className="flex items-center justify-between">
                     <span className="flex items-center text-sm text-gray-600">
                       <Brain className="h-4 w-4 mr-2" />
