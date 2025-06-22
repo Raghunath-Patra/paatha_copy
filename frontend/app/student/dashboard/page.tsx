@@ -467,6 +467,7 @@ export default function StudentDashboard() {
                     }`}>
                       {quiz.status === 'not_started' ? 'Available' : 
                        quiz.status === 'in_progress' ? 'In Progress' : 'Completed'}
+                       {console.log(quiz.status)}
                     </span>
                     <p className="text-xs text-gray-500 mt-1">
                       {quiz.my_attempts}/{quiz.attempts_allowed} attempts
