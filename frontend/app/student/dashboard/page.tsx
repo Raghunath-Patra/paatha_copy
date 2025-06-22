@@ -125,7 +125,7 @@ export default function StudentDashboard() {
 
         // Sort by created date and get recent ones
         const recentQuizzes = allQuizzes
-          .filter(quiz => quiz.status !== 'completed')
+          .filter(quiz => quiz.status !== 'completed' && quiz.status !== 'time_expired')
           .slice(0, 5);
         setRecentQuizzes(recentQuizzes);
 
@@ -467,10 +467,7 @@ export default function StudentDashboard() {
                         : 'bg-green-100 text-green-800'
                     }`}>
                       {quiz.status === 'not_started' ? 'Available' : 
-                       quiz.status === 'in_progress' ? 'In Progress' : 
-                       quiz.status === 'completed' ? 'Completedd' : 
-                       quiz.status === 'Completed' ? 'Complicated' : 'Unknown'}
-                       {quiz.status}
+                       quiz.status === 'in_progress' ? 'In Progress' : 'Completed'}
                     </span>
                     <p className="text-xs text-gray-500 mt-1">
                       {quiz.my_attempts}/{quiz.attempts_allowed} attempts
