@@ -516,7 +516,7 @@ export default function QuizResults() {
                         <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                           <Lightbulb className="h-4 w-4 mr-1" />
                           Feedback:
-                          {isRichData && question.question_type !== 'mcq' && (
+                          {isRichData && question.question_type.toLowerCase() !== 'mcq' && (
                             <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
                               AI Generated
                             </span>
