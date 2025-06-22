@@ -207,10 +207,15 @@ export default function TakeQuiz() {
       }
 
       const resultData = await response.json();
+      sessionStorage.setItem(`quiz_results_${resultData.attempt.id}`, JSON.stringify(resultData));
+    
+      // Redirect to results page with the attempt ID
+      router.push(`/student/quiz/${quizId}/results/${resultData.attempt.id}`);
+    
       
       // Redirect to results page
       //router.push(`/student/quiz/${quizId}/results/${resultData.attempt.id}`);-----------------------------------------------------------
-      router.push(`/student/dashboard`);
+      //router.push(`/student/dashboard`);
     } catch (err) {
       console.error('Error submitting quiz:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit quiz');
