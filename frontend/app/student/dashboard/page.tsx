@@ -27,6 +27,7 @@ interface Course {
 interface QuizSummary {
   id: string;
   title: string;
+  course_name: string;
   description?: string;
   total_marks: number;
   passing_marks: number;
@@ -466,8 +467,9 @@ export default function StudentDashboard() {
                         : 'bg-green-100 text-green-800'
                     }`}>
                       {quiz.status === 'not_started' ? 'Available' : 
-                       quiz.status === 'in_progress' ? 'In Progress' : 'Completed'}
-                       {console.log(quiz.status)}
+                       quiz.status === 'in_progress' ? 'In Progress' : 
+                       quiz.status === 'completed' ? 'Completedd' : 
+                       quiz.status === 'Completed' ? 'Complicated' : 'Unknown'}
                     </span>
                     <p className="text-xs text-gray-500 mt-1">
                       {quiz.my_attempts}/{quiz.attempts_allowed} attempts
