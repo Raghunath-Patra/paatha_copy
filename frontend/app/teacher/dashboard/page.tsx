@@ -154,10 +154,33 @@ export default function TeacherDashboard() {
     fetchDashboardData();
   }, [user]);
 
+  // Helper functions for Indian timezone
+  const getIndiaTime = () => {
+    const now = new Date();
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const indiaTime = new Date(utcTime + (5.5 * 3600000)); // UTC+5:30
+    return indiaTime;
+  };
+
+  const parseIndiaDateTime = (dateString: string) => {
+    if (!dateString) return null;
+    
+    // If the string already has timezone info, use it directly
+    if (dateString.includes('T') && (dateString.includes('Z') || dateString.includes('+'))) {
+      return new Date(dateString);
+    }
+    
+    // If it's a naive datetime string, assume it's in India timezone
+    const date = new Date(dateString);
+    // Adjust for India timezone (subtract 5.5 hours to get UTC, then let browser handle local display)
+    const utcTime = date.getTime() - (5.5 * 3600000);
+    return new Date(utcTime);
+  };
+
   // Helper functions for quiz status
   const getQuizStatusInfo = (quiz: Quiz) => {
-    const now = new Date();
-    const startTime = quiz.start_time ? new Date(quiz.start_time) : null;
+    const now = getIndiaTime();
+    const startTime = quiz.start_time ? parseIndiaDateTime(quiz.start_time) : null;
 
     if (!quiz.is_published) {
       return {
@@ -215,12 +238,18 @@ export default function TeacherDashboard() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return '';
+    
+    const date = parseIndiaDateTime(dateString);
+    if (!date) return '';
+    
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Asia/Kolkata'
     });
   };
 
