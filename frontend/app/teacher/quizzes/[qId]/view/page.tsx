@@ -122,8 +122,8 @@ export default function QuizViewResults() {
 
         if (attemptsResponse.ok) {
           const attemptsData = await attemptsResponse.json();
-          setAttempts(attemptsData.attempts || []);
-          setStats(attemptsData.stats || null);
+          setAttempts(attemptsData || []);
+          setStats(attemptsData.stats || null);//---------------------------------------------- null only
         } else {
           // If the endpoint doesn't exist, we'll still show the quiz with no attempts
           setAttempts([]);
