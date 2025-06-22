@@ -267,9 +267,25 @@ export default function StudentDashboard() {
   };
 
   const isQuizClickable = (quiz: QuizSummary) => {
-    // Can click if quiz is in valid time window and not completed all attempts
-    return quiz.quiz_status_value === 'in_progress' && 
-           (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed));
+    // Can click if:
+    // 1. Available to attempt (in time window and has attempts left)
+    // 2. Completed (to view results)
+    return (quiz.quiz_status_value === 'in_progress' && 
+            (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) ||
+           quiz.status === 'completed';
+  };
+
+  const handleQuizClick = (quiz: QuizSummary) => {
+    router.push(`/student/quiz/${quiz.id}`);
+    // if (quiz.status === 'completed') {
+    //   // For completed quizzes, we don't have attempt ID here, so go to quiz page
+    //   // The quiz page will show previous attempts
+    //   router.push(`/student/quiz/${quiz.id}`);
+    // } else if (quiz.quiz_status_value === 'in_progress' && 
+    //            (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) {
+    //   // For available quizzes, go to take quiz
+    //   router.push(`/student/quiz/${quiz.id}`);
+    // }
   };
 
   const getFilteredQuizzes = () => {
@@ -334,7 +350,11 @@ export default function StudentDashboard() {
     );
   }
 
-  const recentQuizzes = allQuizzes.slice(0, 5); // Show only first 5 in the panel
+  // Show available quizzes instead of recent ones
+  const availableQuizzes = allQuizzes.filter(quiz => 
+    quiz.quiz_status_value === 'in_progress' && 
+    (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))
+  ).slice(0, 5); // Show only first 5 available quizzes
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -502,20 +522,20 @@ export default function StudentDashboard() {
         {/* All Quizzes Modal */}
         {showAllQuizzesModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b">
-                <h3 className="text-xl font-semibold text-gray-900">All Available Quizzes</h3>
+            <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">All Available Quizzes</h3>
                 <button
                   onClick={() => setShowAllQuizzesModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 flex-shrink-0"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
               
               {/* Filter Tabs */}
-              <div className="border-b">
-                <nav className="flex space-x-8 px-6">
+              <div className="border-b overflow-x-auto">
+                <nav className="flex space-x-4 sm:space-x-8 px-4 sm:px-6 min-w-max">
                   {[
                     { key: 'all', label: 'All Quizzes', count: allQuizzes.length },
                     { key: 'available', label: 'Available', count: allQuizzes.filter(q => q.quiz_status_value === 'in_progress' && (q.status === 'not_started' || (q.status === 'in_progress' && q.my_attempts < q.attempts_allowed))).length },
@@ -525,7 +545,7 @@ export default function StudentDashboard() {
                     <button
                       key={tab.key}
                       onClick={() => setFilterStatus(tab.key)}
-                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      className={`py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                         filterStatus === tab.key
                           ? 'border-blue-500 text-blue-600'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -537,7 +557,7 @@ export default function StudentDashboard() {
                 </nav>
               </div>
               
-              <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
                 {getFilteredQuizzes().length === 0 ? (
                   <div className="text-center py-12">
                     <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -562,13 +582,13 @@ export default function StudentDashboard() {
                           className={`border rounded-lg p-4 transition-colors ${
                             clickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
                           }`}
-                          onClick={() => clickable && router.push(`/student/quiz/${quiz.id}`)}
+                          onClick={() => clickable && handleQuizClick(quiz)}
                         >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3">
+                            <div className="flex-1 mb-2 sm:mb-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
                                 <h4 className="font-semibold text-gray-900">{quiz.title}</h4>
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium self-start ${statusInfo.color}`}>
                                   <Icon className="h-3 w-3 mr-1" />
                                   {statusInfo.label}
                                 </span>
@@ -580,7 +600,7 @@ export default function StudentDashboard() {
                               <p className="text-xs text-gray-500">{statusInfo.description}</p>
                             </div>
                             
-                            <div className="text-right ml-4">
+                            <div className="text-left sm:text-right sm:ml-4 flex-shrink-0">
                               <div className="text-sm font-medium text-gray-900">
                                 {quiz.total_marks} marks
                               </div>
@@ -592,35 +612,40 @@ export default function StudentDashboard() {
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-500">
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs text-gray-500">
                             <div className="flex items-center">
-                              <Award className="h-3 w-3 mr-1" />
-                              Passing: {quiz.passing_marks}
+                              <Award className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">Passing: {quiz.passing_marks}</span>
                             </div>
                             <div className="flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {quiz.time_limit ? `${quiz.time_limit} min` : 'No limit'}
+                              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{quiz.time_limit ? `${quiz.time_limit} min` : 'No limit'}</span>
                             </div>
                             <div className="flex items-center">
-                              <BarChart3 className="h-3 w-3 mr-1" />
-                              {quiz.my_attempts}/{quiz.attempts_allowed} attempts
+                              <BarChart3 className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{quiz.my_attempts}/{quiz.attempts_allowed} attempts</span>
                             </div>
                             {quiz.start_time && (
-                              <div className="flex items-center">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                {formatDate(quiz.start_time)}
+                              <div className="flex items-center col-span-2 lg:col-span-1">
+                                <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                                <span className="truncate">{formatDate(quiz.start_time)}</span>
                               </div>
                             )}
                           </div>
                           
-                          {/* Action button for available quizzes */}
+                          {/* Action button for clickable quizzes */}
                           {clickable && (
                             <div className="mt-3 pt-3 border-t">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs text-green-600 font-medium">
-                                  Click to {quiz.status === 'not_started' ? 'start' : 'continue'} quiz
+                                  Click to {quiz.status === 'completed' ? 'view results' : 
+                                           quiz.status === 'not_started' ? 'start quiz' : 'continue quiz'}
                                 </span>
-                                <PlayCircle className="h-4 w-4 text-green-600" />
+                                {quiz.status === 'completed' ? (
+                                  <Eye className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <PlayCircle className="h-4 w-4 text-green-600" />
+                                )}
                               </div>
                             </div>
                           )}
@@ -657,21 +682,21 @@ export default function StudentDashboard() {
             </div>
             <div className="space-y-4">
               {courses.slice(0, 5).map((course) => (
-                <div key={course.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                  <div>
-                    <h4 className="font-medium text-gray-900">{course.course_name}</h4>
+                <div key={course.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex-1 mb-2 sm:mb-0">
+                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">{course.course_name}</h4>
                     <p className="text-sm text-gray-600">
                       {course.teacher_name} • {course.board.toUpperCase()} • Class {course.class_level}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       {course.completed_quizzes}/{course.total_quizzes} quizzes completed
                     </p>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                  <div className="text-left sm:text-right flex-shrink-0">
+                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block mb-1">
                       {course.course_code}
                     </span>
-                    <div className="mt-1">
+                    <div className="sm:mt-1">
                       <span className="text-sm font-medium text-blue-600">
                         {course.average_score.toFixed(1)}%
                       </span>
@@ -693,10 +718,10 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Recent Quizzes */}
+          {/* Available Quizzes */}
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Recent Quizzes</h3>
+              <h3 className="text-lg font-medium text-gray-900">Available Quizzes</h3>
               <button
                 onClick={() => setShowAllQuizzesModal(true)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
@@ -705,7 +730,7 @@ export default function StudentDashboard() {
               </button>
             </div>
             <div className="space-y-4">
-              {recentQuizzes.map((quiz) => {
+              {availableQuizzes.map((quiz) => {
                 const statusInfo = getQuizStatusInfo(quiz);
                 const Icon = statusInfo.icon;
                 const clickable = isQuizClickable(quiz);
@@ -713,30 +738,30 @@ export default function StudentDashboard() {
                 return (
                   <div 
                     key={quiz.id} 
-                    className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg transition-colors ${
                       clickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
                     }`}
-                    onClick={() => clickable && router.push(`/student/quiz/${quiz.id}`)}
+                    onClick={() => clickable && handleQuizClick(quiz)}
                   >
-                    <div>
+                    <div className="flex-1 mb-2 sm:mb-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium text-gray-900">{quiz.title}</h4>
-                        <Icon className="h-4 w-4 text-gray-400" />
+                        <h4 className="font-medium text-gray-900 text-sm sm:text-base">{quiz.title}</h4>
+                        <Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
                       </div>
                       <p className="text-sm text-gray-600">{quiz.course_name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs sm:text-sm text-gray-500">
                         {quiz.total_marks} marks • {quiz.time_limit ? `${quiz.time_limit} min` : 'No time limit'}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                    <div className="text-left sm:text-right flex-shrink-0">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color} mb-1`}>
                         {statusInfo.label}
                       </span>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500">
                         {quiz.my_attempts}/{quiz.attempts_allowed} attempts
                       </p>
                       {quiz.best_score !== undefined && (
-                        <p className="text-xs text-blue-600 mt-1">
+                        <p className="text-xs text-blue-600">
                           Best: {quiz.best_score.toFixed(1)}%
                         </p>
                       )}
@@ -744,11 +769,11 @@ export default function StudentDashboard() {
                   </div>
                 );
               })}
-              {recentQuizzes.length === 0 && (
+              {availableQuizzes.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No quizzes available</p>
+                  <p className="text-gray-500">No quizzes available to take right now</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Join courses to access quizzes
+                    Check back later or join more courses
                   </p>
                 </div>
               )}
