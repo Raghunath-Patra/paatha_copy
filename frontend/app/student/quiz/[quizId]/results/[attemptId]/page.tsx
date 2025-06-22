@@ -419,7 +419,7 @@ export default function QuizResults() {
                     )}
 
                     {/* Question Metadata - only show if available */}
-                    {/* {isRichData && ( */}
+                    {true && (
                       <div className="flex items-center space-x-4 text-xs text-gray-500 pt-2 border-t">
                         {currentQuestion.confidence_level && (
                           <span className="flex items-center">
