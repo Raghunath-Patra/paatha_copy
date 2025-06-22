@@ -7,6 +7,16 @@ import { useParams } from 'next/navigation';
 import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
 import { supabase } from '../../../utils/supabase';
 import Navigation from '../../../components/navigation/Navigation';
+import { 
+  Clock, 
+  Calendar, 
+  Award, 
+  CheckCircle, 
+  XCircle, 
+  Eye,
+  X,
+  BarChart3
+} from 'lucide-react';
 
 interface QuizDetails {
   id: string;
@@ -48,7 +58,23 @@ interface AttemptResponse {
   submitted_at?: string;
   time_taken?: number;
   status: string;
-  answers?: Record<string, any>;
+  is_auto_graded: boolean;
+  teacher_reviewed: boolean;
+  responses?: Record<string, any>;
+}
+
+interface QuizAttempt {
+  id: string;
+  quiz_id: string;
+  quiz_title: string;
+  attempt_number: number;
+  obtained_marks: number;
+  total_marks: number;
+  percentage: number;
+  started_at: string;
+  submitted_at?: string;
+  time_taken?: number;
+  status: string;
 }
 
 export default function TakeQuiz() {
@@ -67,6 +93,11 @@ export default function TakeQuiz() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(true);
+  
+  // New state for previous attempts
+  const [previousAttempts, setPreviousAttempts] = useState<QuizAttempt[]>([]);
+  const [showAttemptsModal, setShowAttemptsModal] = useState(false);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -104,6 +135,37 @@ export default function TakeQuiz() {
       setError(err instanceof Error ? err.message : 'Failed to load quiz');
     } finally {
       setLoading(false);
+    }
+  }, [user, quizId]);
+
+  // Fetch previous attempts for this quiz
+  const fetchPreviousAttempts = useCallback(async () => {
+    if (!user || !quizId) return;
+
+    try {
+      setLoadingAttempts(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(`${API_URL}/api/student/quizzes/attempts/my-attempts`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch attempts');
+      }
+
+      const attemptsData = await response.json();
+      // Filter attempts for this specific quiz
+      const quizAttempts = attemptsData.filter((attempt: AttemptResponse) => attempt.quiz_id === quizId);
+      setPreviousAttempts(quizAttempts);
+    } catch (err) {
+      console.error('Error fetching attempts:', err);
+    } finally {
+      setLoadingAttempts(false);
     }
   }, [user, quizId]);
 
@@ -165,6 +227,60 @@ export default function TakeQuiz() {
     }
   };
 
+  // Handle viewing previous attempts
+  const handleViewPreviousAttempts = async () => {
+    await fetchPreviousAttempts();
+    setShowAttemptsModal(true);
+  };
+
+  // Navigate to specific attempt results
+  const navigateToAttemptResults = (attemptId: string) => {
+    router.push(`/student/quiz/${quizId}/results/${attemptId}`);
+  };
+
+  // Format time remaining
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Format duration
+  const formatDuration = (minutes?: number) => {
+    if (!minutes) return 'N/A';
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hrs > 0) {
+      return `${hrs}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  // Get score color
+  const getScoreColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-600';
+    if (percentage >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  // Get score background color
+  const getScoreBgColor = (percentage: number) => {
+    if (percentage >= 80) return 'bg-green-100';
+    if (percentage >= 60) return 'bg-yellow-100';
+    return 'bg-red-100';
+  };
+
   // Timer effect
   useEffect(() => {
     if (timeRemaining === null || timeRemaining <= 0) return;
@@ -211,11 +327,6 @@ export default function TakeQuiz() {
     
       // Redirect to results page with the attempt ID
       router.push(`/student/quiz/${quizId}/results/${resultData.attempt.id}`);
-    
-      
-      // Redirect to results page
-      //router.push(`/student/quiz/${quizId}/results/${resultData.attempt.id}`);-----------------------------------------------------------
-      //router.push(`/student/dashboard`);
     } catch (err) {
       console.error('Error submitting quiz:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit quiz');
@@ -230,13 +341,6 @@ export default function TakeQuiz() {
       ...prev,
       [questionId]: answer
     }));
-  };
-
-  // Format time remaining
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -351,6 +455,18 @@ export default function TakeQuiz() {
                 >
                   Back
                 </button>
+                
+                {/* Show Previous Attempts button if user has attempts */}
+                {quiz.my_attempts > 0 && (
+                  <button
+                    onClick={handleViewPreviousAttempts}
+                    className="flex-1 py-3 px-4 border border-blue-300 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 flex items-center justify-center"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    View Previous Attempts
+                  </button>
+                )}
+                
                 <button
                   onClick={startQuizAttempt}
                   disabled={loading}
@@ -362,11 +478,118 @@ export default function TakeQuiz() {
             )}
           </div>
         </div>
+
+        {/* Previous Attempts Modal */}
+        {showAttemptsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">Previous Quiz Attempts</h3>
+                <button
+                  onClick={() => setShowAttemptsModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {loadingAttempts ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p>Loading attempts...</p>
+                  </div>
+                ) : previousAttempts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No previous attempts found.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {previousAttempts.map((attempt) => (
+                      <div 
+                        key={attempt.id}
+                        className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                        onClick={() => navigateToAttemptResults(attempt.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-3">
+                            <span className="font-medium text-gray-900">
+                              Attempt #{attempt.attempt_number}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              attempt.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              attempt.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {attempt.status === 'completed' ? 'Completed' :
+                               attempt.status === 'in_progress' ? 'In Progress' :
+                               attempt.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-lg font-bold ${getScoreColor(attempt.percentage)}`}>
+                              {attempt.percentage.toFixed(1)}%
+                            </span>
+                            <Eye className="h-4 w-4 text-gray-400" />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Award className="h-4 w-4 mr-1" />
+                            Score: {attempt.obtained_marks}/{attempt.total_marks}
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            Time: {formatDuration(attempt.time_taken)}
+                          </div>
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Started: {formatDate(attempt.started_at)}
+                          </div>
+                          {attempt.submitted_at && (
+                            <div className="flex items-center">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Submitted: {formatDate(attempt.submitted_at)}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Score bar */}
+                        <div className="mt-3">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                attempt.percentage >= 80 ? 'bg-green-500' :
+                                attempt.percentage >= 60 ? 'bg-yellow-500' :
+                                'bg-red-500'
+                              }`}
+                              style={{ width: `${Math.min(attempt.percentage, 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border-t p-4 bg-gray-50">
+                <button
+                  onClick={() => setShowAttemptsModal(false)}
+                  className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // Show quiz questions
+  // Show quiz questions (existing code continues...)
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
