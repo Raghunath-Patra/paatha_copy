@@ -207,7 +207,7 @@ export default function TeacherDashboard() {
     if (endTime &&  endTime < now) {
       return {
         label: 'Completed',
-        color: 'bg-orange-200 text-gray-800',
+        color: 'bg-red-200 text-gray-800',
         icon: XCircle,
         description: 'Quiz has ended',
         canEdit: false
@@ -535,6 +535,12 @@ export default function TeacherDashboard() {
                                 <span className="truncate">Start: {formatDate(quiz.start_time)}</span>
                               </div>
                             )}
+                            {quiz.end_time && (
+                              <div className="flex items-center col-span-2 lg:col-span-1">
+                                <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                                <span className="truncate">End: {formatDate(quiz.end_time)}</span>
+                              </div>
+                            )}
                             {quiz.average_score != null && (
                               <div className="flex items-center">
                                 <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
@@ -560,7 +566,7 @@ export default function TeacherDashboard() {
                             <div className="mt-3 pt-3 border-t">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs text-gray-500 font-medium">
-                                  Quiz is active - editing disabled
+                                  Quiz is active/completed - editing disabled
                                 </span>
                                 <Lock className="h-4 w-4 text-gray-500" />
                               </div>
