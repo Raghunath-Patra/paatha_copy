@@ -495,7 +495,7 @@ export default function TeacherDashboard() {
                                 <span className="truncate">Start: {formatDate(quiz.start_time)}</span>
                               </div>
                             )}
-                            {quiz.average_score !== undefined && (
+                            {quiz.average_score != null && (
                               <div className="flex items-center">
                                 <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
                                 <span className="truncate">Avg: {quiz.average_score.toFixed(1)}%</span>
@@ -638,7 +638,7 @@ export default function TeacherDashboard() {
                       <p className="text-xs text-gray-500">
                         {quiz.total_attempts} attempts
                       </p>
-                      {quiz.average_score !== undefined && (
+                      {quiz.average_score != null && (
                         <p className="text-xs text-blue-600">
                           Avg: {quiz.average_score.toFixed(1)}%
                         </p>
