@@ -6,6 +6,22 @@ import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { supabase } from '../../utils/supabase';
 import Navigation from '../../components/navigation/Navigation';
+import { 
+  Clock, 
+  Calendar, 
+  Award, 
+  CheckCircle, 
+  XCircle, 
+  Eye,
+  X,
+  BarChart3,
+  AlertCircle,
+  Edit,
+  Lock,
+  FileText,
+  Users,
+  BookOpen
+} from 'lucide-react';
 
 interface Course {
   id: string;
@@ -29,10 +45,13 @@ interface Quiz {
   title: string;
   description?: string;
   total_marks: number;
+  passing_marks: number;
   is_published: boolean;
   total_questions: number;
   total_attempts: number;
   average_score?: number;
+  start_time?: string;
+  end_time?: string;
   created_at: string;
 }
 
@@ -47,7 +66,7 @@ export default function TeacherDashboard() {
   const router = useRouter();
   const { user, profile } = useSupabaseAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [recentQuizzes, setRecentQuizzes] = useState<Quiz[]>([]);
+  const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     total_courses: 0,
     total_students: 0,
@@ -57,12 +76,17 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // New state for quiz modal
+  const [showAllQuizzesModal, setShowAllQuizzesModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>('all'); // 'all', 'draft', 'published'
+  const [filterCourse, setFilterCourse] = useState<string>('all'); // 'all' or course_id
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Check if user is a teacher
   useEffect(() => {
     if (profile && profile.role !== 'teacher') {
-      //router.push('/'); // Redirect non-teachers -------------------------------------------------------------------------
+      router.push('/student/dashboard'); // Redirect non-teachers
     }
   }, [profile, router]);
 
@@ -95,7 +119,7 @@ export default function TeacherDashboard() {
         const coursesData = await coursesResponse.json();
         setCourses(coursesData);
 
-        // Fetch recent quizzes
+        // Fetch ALL quizzes
         const quizzesResponse = await fetch(`${API_URL}/api/teacher/quizzes/`, {
           headers
         });
@@ -105,7 +129,7 @@ export default function TeacherDashboard() {
         }
 
         const quizzesData = await quizzesResponse.json();
-        setRecentQuizzes(quizzesData.slice(0, 5)); // Get 5 most recent
+        setAllQuizzes(quizzesData);
 
         // Calculate stats
         const totalStudents = coursesData.reduce((sum: number, course: Course) => 
@@ -129,6 +153,76 @@ export default function TeacherDashboard() {
 
     fetchDashboardData();
   }, [user]);
+
+  // Helper functions for quiz status
+  const getQuizStatusInfo = (quiz: Quiz) => {
+    const now = new Date();
+    const startTime = quiz.start_time ? new Date(quiz.start_time) : null;
+
+    if (!quiz.is_published) {
+      return {
+        label: 'Draft',
+        color: 'bg-gray-100 text-gray-800',
+        icon: FileText,
+        description: 'Not published yet',
+        canEdit: true
+      };
+    }
+
+    // Published quiz
+    if (startTime && startTime > now) {
+      return {
+        label: 'Scheduled',
+        color: 'bg-blue-100 text-blue-800',
+        icon: Clock,
+        description: 'Published, will start later',
+        canEdit: true
+      };
+    }
+
+    return {
+      label: 'Active',
+      color: 'bg-green-100 text-green-800',
+      icon: CheckCircle,
+      description: 'Published and active',
+      canEdit: false
+    };
+  };
+
+  const handleQuizClick = (quiz: Quiz) => {
+    const statusInfo = getQuizStatusInfo(quiz);
+    if (statusInfo.canEdit) {
+      router.push(`/teacher/quizzes/${quiz.id}/edit`);
+    }
+  };
+
+  const getFilteredQuizzes = () => {
+    let filtered = allQuizzes;
+
+    // Filter by status
+    if (filterStatus === 'draft') {
+      filtered = filtered.filter(quiz => !quiz.is_published);
+    } else if (filterStatus === 'published') {
+      filtered = filtered.filter(quiz => quiz.is_published);
+    }
+
+    // Filter by course
+    if (filterCourse !== 'all') {
+      filtered = filtered.filter(quiz => quiz.course_id === filterCourse);
+    }
+
+    return filtered;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   if (loading) {
     return (
@@ -166,6 +260,12 @@ export default function TeacherDashboard() {
     );
   }
 
+  // Show draft quizzes and editable published quizzes
+  const editableQuizzes = allQuizzes.filter(quiz => {
+    const statusInfo = getQuizStatusInfo(quiz);
+    return statusInfo.canEdit;
+  }).slice(0, 5);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -192,9 +292,7 @@ export default function TeacherDashboard() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+                <BookOpen className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Courses</p>
@@ -206,9 +304,7 @@ export default function TeacherDashboard() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-3 bg-green-100 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                </svg>
+                <Users className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Students</p>
@@ -220,9 +316,7 @@ export default function TeacherDashboard() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-3 bg-purple-100 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <FileText className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Quizzes</p>
@@ -234,9 +328,7 @@ export default function TeacherDashboard() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-3 bg-yellow-100 rounded-full">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                <CheckCircle className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Courses</p>
@@ -255,9 +347,7 @@ export default function TeacherDashboard() {
               className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
             >
               <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+                <BookOpen className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-600">Create New Course</p>
               </div>
             </button>
@@ -267,9 +357,7 @@ export default function TeacherDashboard() {
               className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-colors"
             >
               <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-600">Create New Quiz</p>
               </div>
             </button>
@@ -279,14 +367,183 @@ export default function TeacherDashboard() {
               className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors"
             >
               <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <BarChart3 className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-600">Browse Questions</p>
               </div>
             </button>
           </div>
         </div>
+
+        {/* All Quizzes Modal */}
+        {showAllQuizzesModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">All Quizzes</h3>
+                <button
+                  onClick={() => setShowAllQuizzesModal(false)}
+                  className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              {/* Filters */}
+              <div className="border-b p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Status Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Quizzes ({allQuizzes.length})</option>
+                      <option value="draft">Draft ({allQuizzes.filter(q => !q.is_published).length})</option>
+                      <option value="published">Published ({allQuizzes.filter(q => q.is_published).length})</option>
+                    </select>
+                  </div>
+
+                  {/* Course Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                    <select
+                      value={filterCourse}
+                      onChange={(e) => setFilterCourse(e.target.value)}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Courses</option>
+                      {courses.map((course) => (
+                        <option key={course.id} value={course.id}>
+                          {course.course_name} ({course.course_code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
+                {getFilteredQuizzes().length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500 text-lg">No quizzes found</p>
+                    <p className="text-gray-400 text-sm">
+                      {filterStatus === 'draft' ? 'No draft quizzes found' :
+                       filterStatus === 'published' ? 'No published quizzes found' :
+                       'Create your first quiz to get started'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {getFilteredQuizzes().map((quiz) => {
+                      const statusInfo = getQuizStatusInfo(quiz);
+                      const Icon = statusInfo.icon;
+                      
+                      return (
+                        <div 
+                          key={quiz.id}
+                          className={`border rounded-lg p-4 transition-colors ${
+                            statusInfo.canEdit ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
+                          }`}
+                          onClick={() => statusInfo.canEdit && handleQuizClick(quiz)}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3">
+                            <div className="flex-1 mb-2 sm:mb-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
+                                <h4 className="font-semibold text-gray-900">{quiz.title}</h4>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium self-start ${statusInfo.color}`}>
+                                  <Icon className="h-3 w-3 mr-1" />
+                                  {statusInfo.label}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-1">{quiz.course_name}</p>
+                              {quiz.description && (
+                                <p className="text-sm text-gray-500 mb-2">{quiz.description}</p>
+                              )}
+                              <p className="text-xs text-gray-500">{statusInfo.description}</p>
+                            </div>
+                            
+                            <div className="text-left sm:text-right sm:ml-4 flex-shrink-0">
+                              <div className="text-sm font-medium text-gray-900">
+                                {quiz.total_questions} questions
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {quiz.total_marks} marks
+                              </div>
+                              {quiz.total_attempts > 0 && (
+                                <div className="text-sm text-blue-600">
+                                  {quiz.total_attempts} attempts
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs text-gray-500">
+                            <div className="flex items-center">
+                              <Award className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">Passing: {quiz.passing_marks}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <BarChart3 className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{quiz.total_attempts} attempts</span>
+                            </div>
+                            {quiz.start_time && (
+                              <div className="flex items-center col-span-2 lg:col-span-1">
+                                <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                                <span className="truncate">Start: {formatDate(quiz.start_time)}</span>
+                              </div>
+                            )}
+                            {quiz.average_score !== undefined && (
+                              <div className="flex items-center">
+                                <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                                <span className="truncate">Avg: {quiz.average_score.toFixed(1)}%</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Action button for editable quizzes */}
+                          {statusInfo.canEdit && (
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-green-600 font-medium">
+                                  Click to edit quiz
+                                </span>
+                                <Edit className="h-4 w-4 text-green-600" />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Lock indicator for non-editable quizzes */}
+                          {!statusInfo.canEdit && (
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500 font-medium">
+                                  Quiz is active - editing disabled
+                                </span>
+                                <Lock className="h-4 w-4 text-gray-500" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border-t p-4 bg-gray-50">
+                <button
+                  onClick={() => setShowAllQuizzesModal(false)}
+                  className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recent Courses */}
@@ -294,7 +551,7 @@ export default function TeacherDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">Recent Courses</h3>
               <button
-                // onClick={() => router.push('/teacher/courses')}
+                onClick={() => router.push('/teacher/courses')}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
                 View All
@@ -302,21 +559,21 @@ export default function TeacherDashboard() {
             </div>
             <div className="space-y-4">
               {courses.slice(0, 5).map((course) => (
-                <div key={course.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                  <div>
-                    <h4 className="font-medium text-gray-900">{course.course_name}</h4>
+                <div key={course.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex-1 mb-2 sm:mb-0">
+                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">{course.course_name}</h4>
                     <p className="text-sm text-gray-600">
                       {course.board.toUpperCase()} • Class {course.class_level} • {course.subject}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       {course.current_students} students • {course.total_quizzes} quizzes
                     </p>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                  <div className="text-left sm:text-right flex-shrink-0">
+                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block mb-1">
                       {course.course_code}
                     </span>
-                    <div className="mt-1">
+                    <div className="sm:mt-1">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         course.is_active 
                           ? 'bg-green-100 text-green-800' 
@@ -342,44 +599,60 @@ export default function TeacherDashboard() {
             </div>
           </div>
 
-          {/* Recent Quizzes */}
+          {/* Editable Quizzes */}
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Recent Quizzes</h3>
+              <h3 className="text-lg font-medium text-gray-900">Editable Quizzes</h3>
               <button
-                onClick={() => router.push('/teacher/quizzes')}
+                onClick={() => setShowAllQuizzesModal(true)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
                 View All
               </button>
             </div>
             <div className="space-y-4">
-              {recentQuizzes.map((quiz) => (
-                <div key={quiz.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50" onClick={() => router.push(`/teacher/quizzes/${quiz.id}/edit`)}>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{quiz.title}</h4>
-                    <p className="text-sm text-gray-600">{quiz.course_name}</p>
-                    <p className="text-sm text-gray-500">
-                      {quiz.total_questions} questions • {quiz.total_marks} marks
-                    </p>
+              {editableQuizzes.map((quiz) => {
+                const statusInfo = getQuizStatusInfo(quiz);
+                const Icon = statusInfo.icon;
+                
+                return (
+                  <div 
+                    key={quiz.id} 
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => handleQuizClick(quiz)}
+                  >
+                    <div className="flex-1 mb-2 sm:mb-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h4 className="font-medium text-gray-900 text-sm sm:text-base">{quiz.title}</h4>
+                        <Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      </div>
+                      <p className="text-sm text-gray-600">{quiz.course_name}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        {quiz.total_questions} questions • {quiz.total_marks} marks
+                      </p>
+                    </div>
+                    <div className="text-left sm:text-right flex-shrink-0">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color} mb-1`}>
+                        {statusInfo.label}
+                      </span>
+                      <p className="text-xs text-gray-500">
+                        {quiz.total_attempts} attempts
+                      </p>
+                      {quiz.average_score !== undefined && (
+                        <p className="text-xs text-blue-600">
+                          Avg: {quiz.average_score.toFixed(1)}%
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      quiz.is_published 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {quiz.is_published ? 'Published' : 'Draft'}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {quiz.total_attempts} attempts
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {recentQuizzes.length === 0 && (
+                );
+              })}
+              {editableQuizzes.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No quizzes yet</p>
+                  <p className="text-gray-500">No editable quizzes</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    All quizzes are either active or you have no quizzes yet
+                  </p>
                   <button
                     onClick={() => router.push('/teacher/quizzes/create')}
                     className="mt-2 text-blue-600 hover:text-blue-700 font-medium"
