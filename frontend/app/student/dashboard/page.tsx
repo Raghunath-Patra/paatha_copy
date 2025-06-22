@@ -39,6 +39,7 @@ interface QuizSummary {
   my_attempts: number;
   best_score?: number;
   status: string;
+  quiz_status_value: string; // 'not_started', 'in_progress', 'time_expired'
 }
 
 interface DashboardStats {
