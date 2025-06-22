@@ -6,6 +6,22 @@ import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { supabase } from '../../utils/supabase';
 import Navigation from '../../components/navigation/Navigation';
+import { 
+  Clock, 
+  Calendar, 
+  Award, 
+  CheckCircle, 
+  XCircle, 
+  Eye,
+  X,
+  BarChart3,
+  AlertCircle,
+  PlayCircle,
+  PauseCircle,
+  StopCircle,
+  Timer,
+  Ban
+} from 'lucide-react';
 
 interface Course {
   id: string;
@@ -38,8 +54,8 @@ interface QuizSummary {
   attempts_allowed: number;
   my_attempts: number;
   best_score?: number;
-  status: string;
-  quiz_status_value: string; // 'not_started', 'in_progress', 'time_expired'
+  status: string; // 'not_started', 'in_progress', 'completed' (based on student's attempts)
+  quiz_status_value: string; // 'not_started', 'in_progress', 'time_expired' (based on quiz timing)
 }
 
 interface DashboardStats {
@@ -53,7 +69,7 @@ export default function StudentDashboard() {
   const router = useRouter();
   const { user, profile } = useSupabaseAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [recentQuizzes, setRecentQuizzes] = useState<QuizSummary[]>([]);
+  const [allQuizzes, setAllQuizzes] = useState<QuizSummary[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     total_courses: 0,
     total_quizzes_available: 0,
@@ -66,6 +82,10 @@ export default function StudentDashboard() {
   const [courseCode, setCourseCode] = useState('');
   const [joiningCourse, setJoiningCourse] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  
+  // New state for quiz modal
+  const [showAllQuizzesModal, setShowAllQuizzesModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>('all'); // 'all', 'available', 'completed', 'expired'
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -105,7 +125,7 @@ export default function StudentDashboard() {
         const coursesData = await coursesResponse.json();
         setCourses(coursesData);
 
-        // Fetch recent quizzes from all courses
+        // Fetch ALL quizzes from all courses (not just recent)
         const allQuizzes: QuizSummary[] = [];
         for (const course of coursesData) {
           try {
@@ -115,7 +135,8 @@ export default function StudentDashboard() {
             if (quizzesResponse.ok) {
               const quizzes = await quizzesResponse.json();
               allQuizzes.push(...quizzes.map((quiz: QuizSummary) => ({
-                ...quiz
+                ...quiz,
+                course_name: course.course_name // Add course name for display
               })));
             }
           } catch (err) {
@@ -123,15 +144,18 @@ export default function StudentDashboard() {
           }
         }
 
-        // Sort by created date and get recent ones
-        const recentQuizzes = allQuizzes
-          .filter(quiz => quiz.quiz_status_value === 'in_progress')
-          .slice(0, 5);
-        setRecentQuizzes(recentQuizzes);
+        // Sort by created date or start time
+        allQuizzes.sort((a, b) => {
+          const dateA = new Date(a.start_time || 0);
+          const dateB = new Date(b.start_time || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        setAllQuizzes(allQuizzes);
 
         // Calculate stats
         const totalQuizzesAvailable = allQuizzes.length;
-        const completedQuizzes = allQuizzes.filter(quiz => quiz.status !== 'not_started').length;
+        const completedQuizzes = allQuizzes.filter(quiz => quiz.status === 'completed').length;
         const totalScore = coursesData.reduce((sum: number, course: Course) => 
           sum + course.average_score, 0);
         const averageScore = coursesData.length > 0 ? totalScore / coursesData.length : 0;
@@ -188,6 +212,92 @@ export default function StudentDashboard() {
     }
   };
 
+  // Helper functions for quiz status
+  const getQuizStatusInfo = (quiz: QuizSummary) => {
+    // First check quiz timing status
+    if (quiz.quiz_status_value === 'not_started') {
+      return {
+        label: 'Not Started',
+        color: 'bg-gray-100 text-gray-800',
+        icon: Timer,
+        description: 'Quiz will start later'
+      };
+    }
+    
+    if (quiz.quiz_status_value === 'time_expired') {
+      return {
+        label: 'Expired',
+        color: 'bg-red-100 text-red-800',
+        icon: Ban,
+        description: 'Quiz time has ended'
+      };
+    }
+
+    // If quiz is in valid time window, check student status
+    switch (quiz.status) {
+      case 'not_started':
+        return {
+          label: 'Available',
+          color: 'bg-blue-100 text-blue-800',
+          icon: PlayCircle,
+          description: 'Ready to start'
+        };
+      case 'in_progress':
+        return {
+          label: 'In Progress',
+          color: 'bg-yellow-100 text-yellow-800',
+          icon: PauseCircle,
+          description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
+        };
+      case 'completed':
+        return {
+          label: 'Completed',
+          color: 'bg-green-100 text-green-800',
+          icon: CheckCircle,
+          description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
+        };
+      default:
+        return {
+          label: 'Unknown',
+          color: 'bg-gray-100 text-gray-800',
+          icon: AlertCircle,
+          description: ''
+        };
+    }
+  };
+
+  const isQuizClickable = (quiz: QuizSummary) => {
+    // Can click if quiz is in valid time window and not completed all attempts
+    return quiz.quiz_status_value === 'in_progress' && 
+           (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed));
+  };
+
+  const getFilteredQuizzes = () => {
+    switch (filterStatus) {
+      case 'available':
+        return allQuizzes.filter(quiz => 
+          quiz.quiz_status_value === 'in_progress' && 
+          (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))
+        );
+      case 'completed':
+        return allQuizzes.filter(quiz => quiz.status === 'completed');
+      case 'expired':
+        return allQuizzes.filter(quiz => quiz.quiz_status_value === 'time_expired' || quiz.quiz_status_value === 'not_started');
+      default:
+        return allQuizzes;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -223,6 +333,8 @@ export default function StudentDashboard() {
       </div>
     );
   }
+
+  const recentQuizzes = allQuizzes.slice(0, 5); // Show only first 5 in the panel
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -321,14 +433,14 @@ export default function StudentDashboard() {
             </button>
 
             <button
-              onClick={() => router.push('/student/quizzes')}
+              onClick={() => setShowAllQuizzesModal(true)}
               className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-colors"
             >
               <div className="text-center">
                 <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <p className="text-sm font-medium text-gray-600">Available Quizzes</p>
+                <p className="text-sm font-medium text-gray-600">Browse All Quizzes</p>
               </div>
             </button>
           </div>
@@ -387,6 +499,150 @@ export default function StudentDashboard() {
           </div>
         )}
 
+        {/* All Quizzes Modal */}
+        {showAllQuizzesModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b">
+                <h3 className="text-xl font-semibold text-gray-900">All Available Quizzes</h3>
+                <button
+                  onClick={() => setShowAllQuizzesModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              {/* Filter Tabs */}
+              <div className="border-b">
+                <nav className="flex space-x-8 px-6">
+                  {[
+                    { key: 'all', label: 'All Quizzes', count: allQuizzes.length },
+                    { key: 'available', label: 'Available', count: allQuizzes.filter(q => q.quiz_status_value === 'in_progress' && (q.status === 'not_started' || (q.status === 'in_progress' && q.my_attempts < q.attempts_allowed))).length },
+                    { key: 'completed', label: 'Completed', count: allQuizzes.filter(q => q.status === 'completed').length },
+                    { key: 'expired', label: 'Expired/Upcoming', count: allQuizzes.filter(q => q.quiz_status_value === 'time_expired' || q.quiz_status_value === 'not_started').length }
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setFilterStatus(tab.key)}
+                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                        filterStatus === tab.key
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      {tab.label} ({tab.count})
+                    </button>
+                  ))}
+                </nav>
+              </div>
+              
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {getFilteredQuizzes().length === 0 ? (
+                  <div className="text-center py-12">
+                    <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500 text-lg">No quizzes found</p>
+                    <p className="text-gray-400 text-sm">
+                      {filterStatus === 'all' ? 'Join courses to access quizzes' : 
+                       filterStatus === 'available' ? 'No quizzes available to take right now' :
+                       filterStatus === 'completed' ? 'You haven\'t completed any quizzes yet' :
+                       'No expired or upcoming quizzes'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {getFilteredQuizzes().map((quiz) => {
+                      const statusInfo = getQuizStatusInfo(quiz);
+                      const Icon = statusInfo.icon;
+                      const clickable = isQuizClickable(quiz);
+                      
+                      return (
+                        <div 
+                          key={quiz.id}
+                          className={`border rounded-lg p-4 transition-colors ${
+                            clickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
+                          }`}
+                          onClick={() => clickable && router.push(`/student/quiz/${quiz.id}`)}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h4 className="font-semibold text-gray-900">{quiz.title}</h4>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                                  <Icon className="h-3 w-3 mr-1" />
+                                  {statusInfo.label}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-1">{quiz.course_name}</p>
+                              {quiz.description && (
+                                <p className="text-sm text-gray-500 mb-2">{quiz.description}</p>
+                              )}
+                              <p className="text-xs text-gray-500">{statusInfo.description}</p>
+                            </div>
+                            
+                            <div className="text-right ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {quiz.total_marks} marks
+                              </div>
+                              {quiz.best_score !== undefined && (
+                                <div className="text-sm text-blue-600">
+                                  Best: {quiz.best_score.toFixed(1)}%
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-500">
+                            <div className="flex items-center">
+                              <Award className="h-3 w-3 mr-1" />
+                              Passing: {quiz.passing_marks}
+                            </div>
+                            <div className="flex items-center">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {quiz.time_limit ? `${quiz.time_limit} min` : 'No limit'}
+                            </div>
+                            <div className="flex items-center">
+                              <BarChart3 className="h-3 w-3 mr-1" />
+                              {quiz.my_attempts}/{quiz.attempts_allowed} attempts
+                            </div>
+                            {quiz.start_time && (
+                              <div className="flex items-center">
+                                <Calendar className="h-3 w-3 mr-1" />
+                                {formatDate(quiz.start_time)}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Action button for available quizzes */}
+                          {clickable && (
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-green-600 font-medium">
+                                  Click to {quiz.status === 'not_started' ? 'start' : 'continue'} quiz
+                                </span>
+                                <PlayCircle className="h-4 w-4 text-green-600" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border-t p-4 bg-gray-50">
+                <button
+                  onClick={() => setShowAllQuizzesModal(false)}
+                  className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* My Courses */}
           <div className="bg-white p-6 rounded-lg shadow">
@@ -437,44 +693,57 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Available Quizzes */}
+          {/* Recent Quizzes */}
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Available Quizzes</h3>
+              <h3 className="text-lg font-medium text-gray-900">Recent Quizzes</h3>
               <button
-                onClick={() => router.push('/student/quizzes')}
+                onClick={() => setShowAllQuizzesModal(true)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
                 View All
               </button>
             </div>
             <div className="space-y-4">
-              {recentQuizzes.map((quiz) => (
-                <div key={quiz.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50" onClick={() => router.push(`/student/quiz/${quiz.id}`)}>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{quiz.title}</h4>
-                    <p className="text-sm text-gray-600">{quiz.course_name}</p>
-                    <p className="text-sm text-gray-500">
-                      {quiz.total_marks} marks • {quiz.time_limit ? `${quiz.time_limit} min` : 'No time limit'}
-                    </p>
+              {recentQuizzes.map((quiz) => {
+                const statusInfo = getQuizStatusInfo(quiz);
+                const Icon = statusInfo.icon;
+                const clickable = isQuizClickable(quiz);
+                
+                return (
+                  <div 
+                    key={quiz.id} 
+                    className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
+                      clickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
+                    }`}
+                    onClick={() => clickable && router.push(`/student/quiz/${quiz.id}`)}
+                  >
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h4 className="font-medium text-gray-900">{quiz.title}</h4>
+                        <Icon className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <p className="text-sm text-gray-600">{quiz.course_name}</p>
+                      <p className="text-sm text-gray-500">
+                        {quiz.total_marks} marks • {quiz.time_limit ? `${quiz.time_limit} min` : 'No time limit'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {quiz.my_attempts}/{quiz.attempts_allowed} attempts
+                      </p>
+                      {quiz.best_score !== undefined && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          Best: {quiz.best_score.toFixed(1)}%
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      quiz.status === 'not_started' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : quiz.status === 'in_progress'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {quiz.status === 'not_started' ? 'Available' : 
-                       quiz.status === 'in_progress' ? 'In Progress' : 'Completed'}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {quiz.my_attempts}/{quiz.attempts_allowed} attempts
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {recentQuizzes.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-gray-500">No quizzes available</p>
