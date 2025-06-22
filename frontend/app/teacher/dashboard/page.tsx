@@ -181,6 +181,7 @@ export default function TeacherDashboard() {
   const getQuizStatusInfo = (quiz: Quiz) => {
     const now = getIndiaTime();
     const startTime = quiz.start_time ? parseIndiaDateTime(quiz.start_time) : null;
+    const endTime = quiz.end_time ? parseIndiaDateTime(quiz.end_time) : null;
 
     if (!quiz.is_published) {
       return {
@@ -200,6 +201,16 @@ export default function TeacherDashboard() {
         icon: Clock,
         description: 'Published, will start later',
         canEdit: true
+      };
+    }
+
+    if (endTime &&  endTime < now) {
+      return {
+        label: 'Completed',
+        color: 'bg-orange-200 text-gray-800',
+        icon: XCircle,
+        description: 'Quiz has ended',
+        canEdit: false
       };
     }
 
