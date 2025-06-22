@@ -438,8 +438,9 @@ export default function TakeQuiz() {
               )}
             </div>
 
-            {!quiz.can_attempt ? (
-              <div className="bg-red-50 p-4 rounded-lg">
+            {/* Show warning if cannot attempt */}
+            {!quiz.can_attempt && (
+              <div className="bg-red-50 p-4 rounded-lg mb-4">
                 <p className="text-red-700">
                   You cannot take this quiz at this time. 
                   {quiz.my_attempts >= quiz.attempts_allowed 
@@ -447,26 +448,30 @@ export default function TakeQuiz() {
                     : ' Please check the quiz schedule.'}
                 </p>
               </div>
-            ) : (
-              <div className="flex gap-4">
+            )}
+
+            {/* Action buttons - always show based on available options */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => router.back()}
+                className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Back
+              </button>
+              
+              {/* Show Previous Attempts button if user has attempts */}
+              {quiz.my_attempts > 0 && (
                 <button
-                  onClick={() => router.back()}
-                  className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  onClick={handleViewPreviousAttempts}
+                  className="flex-1 py-3 px-4 border border-blue-300 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 flex items-center justify-center"
                 >
-                  Back
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  View Previous Attempts
                 </button>
-                
-                {/* Show Previous Attempts button if user has attempts */}
-                {quiz.my_attempts > 0 && (
-                  <button
-                    onClick={handleViewPreviousAttempts}
-                    className="flex-1 py-3 px-4 border border-blue-300 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 flex items-center justify-center"
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    View Previous Attempts
-                  </button>
-                )}
-                
+              )}
+              
+              {/* Only show Start Quiz button if can attempt */}
+              {quiz.can_attempt && (
                 <button
                   onClick={startQuizAttempt}
                   disabled={loading}
@@ -474,6 +479,26 @@ export default function TakeQuiz() {
                 >
                   {loading ? 'Starting...' : 'Start Quiz'}
                 </button>
+              )}
+            </div>
+
+            {/* Additional info for users who exhausted attempts */}
+            {!quiz.can_attempt && quiz.my_attempts >= quiz.attempts_allowed && quiz.my_attempts > 0 && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center">
+                  <BarChart3 className="h-5 w-5 text-blue-600 mr-2" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      Quiz attempts completed ({quiz.my_attempts}/{quiz.attempts_allowed})
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      You can still view your previous attempts and results above.
+                      {quiz.best_score !== undefined && (
+                        <span className="font-medium"> Your best score: {quiz.best_score.toFixed(1)}%</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
