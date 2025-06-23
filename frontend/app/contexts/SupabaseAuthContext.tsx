@@ -62,6 +62,12 @@ interface RegisterData {
   email: string;
   password: string;
   full_name?: string;
+  role?: 'student' | 'teacher';
+  // Teacher-specific fields
+  teaching_experience?: number;
+  qualification?: string;
+  subjects_taught?: string[];
+  institution_name?: string;
 }
 
 const SupabaseAuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -454,7 +460,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // COMPLETE REGISTER FUNCTION (unchanged but using setErrorSafe)
+  // COMPLETE REGISTER FUNCTION
   const register = async (userData: RegisterData) => {
     if (authOperationInProgress.current) {
       setErrorSafe('Another operation is in progress. Please try again.');
@@ -465,6 +471,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       authOperationInProgress.current = true;
       setErrorSafe(null);
       setLoading(true);
+
+      // Ensure we have required fields
+      if (!userData.email || !userData.password) {
+        throw new Error('Email and password are required');
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
@@ -478,31 +489,43 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from registration');
 
-      // Create initial profile
+      // Create initial profile with all user data
+      const profileData = {
+        id: data.user.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        role: userData.role,
+        // Teacher-specific fields
+        teaching_experience: userData.teaching_experience,
+        qualification: userData.qualification,
+        subjects_taught: userData.subjects_taught,
+        institution_name: userData.institution_name,
+        is_active: true,
+        is_verified: false,
+        created_at: new Date().toISOString()
+      };
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert([{
-          id: data.user.id,
-          email: userData.email,
-          full_name: userData.full_name,
-          is_active: true,
-          is_verified: false,
-          created_at: new Date().toISOString()
-        }]);
+        .insert([profileData]);
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
+        // Don't throw here - user is created, profile creation can be retried
       }
 
-      // Auto-login: We're already logged in after signUp
+      // Set user state immediately
       setUser(data.user);
       setSession(data.session);
-      refreshAttempts.current = 0; // Reset refresh attempts on successful registration
+      refreshAttempts.current = 0;
+      
+      // Fetch the created profile
       const profile = await fetchProfile(data.user.id);
       if (profile) {
         setProfile(profile);
       }
 
+      // For email registration, redirect to verification page
       router.push('/login?registered=true');
     } catch (err) {
       console.error('Registration error:', err);

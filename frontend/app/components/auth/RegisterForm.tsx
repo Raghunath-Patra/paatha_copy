@@ -48,22 +48,55 @@ export default function RegisterForm() {
   const [passwordError, setPasswordError] = useState<string>('');
   const [localLoading, setLocalLoading] = useState(false);
   const googleInitialized = useRef(false);
+
+  // Helper function to safely extract error messages
+  const getErrorMessage = (err: unknown): string => {
+    if (err instanceof Error) {
+      return err.message;
+    }
+    return String(err);
+  };
   
   // Clear errors when component mounts or step changes
   useEffect(() => {
     if (error && (
       error.includes("Session could not be refreshed") || 
       error.includes("Error refreshing session") ||
-      error.includes("AuthSessionMissingError")
+      error.includes("AuthSessionMissingError") ||
+      error.includes("Auth session missing")
     )) {
       // Clear session-related errors that shouldn't be shown during registration
       setError(null);
     }
   }, [error, setError, step]);
 
+  // Show loading state
+  const isLoading = loading || localLoading;
+
+  // Add timeout handling for loading states
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (isLoading) {
+      timeoutId = setTimeout(() => {
+        if (localLoading) {
+          console.warn('Registration taking longer than expected');
+          setLocalLoading(false);
+          setError('Registration is taking longer than expected. Please try again.');
+        }
+      }, 30000); // 30 second timeout for registration
+    }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [isLoading, localLoading, setError]);
+
   // Initialize Google One-tap only once
   useEffect(() => {
-    if (googleInitialized.current) return;
+    if (googleInitialized.current || step !== 'basic') return;
     
     // Check if script already exists
     const existingScript = document.querySelector('script[src*="gsi/client"]');
@@ -89,19 +122,6 @@ export default function RegisterForm() {
             context: 'signup',
             ux_mode: 'popup'
           });
-
-          // Only render button if we're still on the basic step
-          if (step === 'basic') {
-            const buttonDiv = document.getElementById('google-one-tap-register');
-            if (buttonDiv) {
-              window.google.accounts.id.renderButton(buttonDiv, {
-                theme: 'outline',
-                size: 'large',
-                width: buttonDiv.offsetWidth,
-                text: 'signup_with'
-              });
-            }
-          }
         } catch (error) {
           console.error('Google One-tap initialization error:', error);
         }
@@ -122,7 +142,7 @@ export default function RegisterForm() {
   }, [step]);
 
   const handleGoogleOneTapResponse = async (response: any) => {
-    if (localLoading || loading) return; // Prevent multiple calls
+    if (isLoading) return; // Prevent multiple calls
     
     try {
       setLocalLoading(true);
@@ -151,6 +171,18 @@ export default function RegisterForm() {
     setPasswordError('');
     setError(null);
     
+    // Validate email
+    if (!formData.email?.trim()) {
+      setPasswordError('Email is required');
+      return;
+    }
+    
+    // Validate password
+    if (!formData.password) {
+      setPasswordError('Password is required');
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match');
       return;
@@ -167,7 +199,7 @@ export default function RegisterForm() {
   };
 
   const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
-    if (localLoading || loading) return; // Prevent multiple calls
+    if (isLoading) return; // Prevent multiple calls
     
     try {
       setLocalLoading(true);
@@ -177,35 +209,63 @@ export default function RegisterForm() {
         // Handle Google registration
         console.log('Completing Google registration with role:', role);
         
-        // Sign in with Google first
-        await signInWithGoogle(googleCredential);
-        
-        // Store role data for later processing
-        const roleData = { role, ...additionalData };
-        sessionStorage.setItem('pendingRoleData', JSON.stringify(roleData));
-        sessionStorage.setItem('isInitialLogin', 'true');
-        
-        // The auth context should handle the redirect after successful sign-in
-        console.log('Google registration completed, waiting for redirect...');
+        try {
+          await signInWithGoogle(googleCredential);
+          
+          // Store role data for profile update after successful sign-in
+          const roleData = { role, ...additionalData };
+          sessionStorage.setItem('pendingRoleData', JSON.stringify(roleData));
+          sessionStorage.setItem('isInitialLogin', 'true');
+          
+          // The auth context should handle the redirect
+          console.log('Google registration completed, waiting for redirect...');
+        } catch (googleError) {
+          console.error('Google registration failed:', googleError);
+          throw googleError;
+        }
         
       } else {
         // Handle email registration
         console.log('Completing email registration with role:', role);
         
+        // Validate form data before proceeding
+        if (!formData.email?.trim() || !formData.password) {
+          throw new Error('Email and password are required');
+        }
+        
+        if (formData.password !== formData.confirmPassword) {
+          throw new Error('Passwords do not match');
+        }
+        
         const registrationData = {
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
-          full_name: formData.full_name || undefined,
+          full_name: formData.full_name?.trim() || undefined,
           role,
-          ...additionalData
+          ...additionalData // This includes teacher-specific fields
         };
 
+        console.log('Registration data:', { ...registrationData, password: '[HIDDEN]' });
+        
         await register(registrationData);
-        // The register function should handle success/error states and redirects
+        // Don't handle redirect here - let the register function handle it
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+      
+      // Provide more specific error messages
+      const errorMessage = getErrorMessage(err);
+      if (errorMessage.includes('Anonymous sign-ins are disabled')) {
+        setError('Registration failed. Please check your email and password and try again.');
+      } else if (errorMessage.includes('already registered') || errorMessage.includes('already been registered')) {
+        setError('This email is already registered. Please try logging in instead.');
+      } else if (errorMessage.includes('Invalid email')) {
+        setError('Please enter a valid email address.');
+      } else if (errorMessage.includes('Password')) {
+        setError('Password must be at least 6 characters long.');
+      } else {
+        setError(errorMessage || 'Registration failed. Please try again.');
+      }
       
       // Reset to basic form on error
       setStep('basic');
@@ -218,7 +278,7 @@ export default function RegisterForm() {
 
   // Handle regular Google OAuth sign in (alternative to One-tap)
   const handleGoogleSignUp = async () => {
-    if (localLoading || loading) return;
+    if (isLoading) return;
     
     try {
       setLocalLoading(true);
@@ -242,10 +302,8 @@ export default function RegisterForm() {
     setGoogleCredential(null);
     setPasswordError('');
     setError(null);
+    setLocalLoading(false);
   };
-
-  // Show loading state
-  const isLoading = loading || localLoading;
 
   if (step === 'role') {
     return (
@@ -272,7 +330,9 @@ export default function RegisterForm() {
       <h2 className="text-2xl font-medium mb-6">Create an Account</h2>
       
       {/* Error Display */}
-      {error && !error.includes("Session could not be refreshed") && !error.includes("AuthSessionMissingError") && (
+      {error && !error.includes("Session could not be refreshed") && 
+       !error.includes("AuthSessionMissingError") && 
+       !error.includes("Auth session missing") && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
           {error}
         </div>
