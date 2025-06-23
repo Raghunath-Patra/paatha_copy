@@ -36,6 +36,8 @@ interface RegisterFormData {
 export default function RegisterForm() {
   const router = useRouter();
   const [step, setStep] = useState<'basic' | 'role'>('basic');
+  const [registrationType, setRegistrationType] = useState<'email' | 'google'>('email');
+  const [googleCredential, setGoogleCredential] = useState<string | null>(null);
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
     password: '',
@@ -92,10 +94,10 @@ export default function RegisterForm() {
   const handleGoogleOneTapResponse = async (response: any) => {
     try {
       if (response.credential) {
-        // For Google sign-up, we'll default to student role
-        // Users can change this later in their profile
-        await signInWithGoogle(response.credential);
-        sessionStorage.setItem('isInitialLogin', 'true');
+        // Store the Google credential and move to role selection
+        setGoogleCredential(response.credential);
+        setRegistrationType('google');
+        setStep('role');
       }
     } catch (error) {
       console.error('Google One-tap error:', error);
@@ -112,20 +114,32 @@ export default function RegisterForm() {
     }
     
     // Basic validation passed, move to role selection
+    setRegistrationType('email');
     setStep('role');
   };
 
   const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
     try {
-      const registrationData = {
-        email: formData.email,
-        password: formData.password,
-        full_name: formData.full_name || undefined,
-        role,
-        ...additionalData
-      };
+      if (registrationType === 'google' && googleCredential) {
+        // For Google registration, we need to sign in with Google first
+        // and then update the user profile with role information
+        await signInWithGoogle(googleCredential, {
+          role,
+          ...additionalData
+        });
+        sessionStorage.setItem('isInitialLogin', 'true');
+      } else {
+        // For email registration
+        const registrationData = {
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.full_name || undefined,
+          role,
+          ...additionalData
+        };
 
-      await register(registrationData);
+        await register(registrationData);
+      }
     } catch (err) {
       console.error('Registration error:', err);
     }
@@ -134,14 +148,38 @@ export default function RegisterForm() {
   // Handle regular Google OAuth sign in
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      // This will also go through role selection now
+      setRegistrationType('google');
+      setStep('role');
     } catch (err) {
       console.error('Google sign in error:', err);
     }
   };
 
+  const handleBackToBasic = () => {
+    setStep('basic');
+    setRegistrationType('email');
+    setGoogleCredential(null);
+  };
+
   if (step === 'role') {
-    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />;
+    return (
+      <div className="w-full max-w-md">
+        {/* Back button for role selection */}
+        <div className="mb-4">
+          <button
+            onClick={handleBackToBasic}
+            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to registration
+          </button>
+        </div>
+        <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />
+      </div>
+    );
   }
 
   return (
