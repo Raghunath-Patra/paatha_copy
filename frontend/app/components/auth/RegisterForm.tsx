@@ -1,6 +1,6 @@
 // frontend/app/components/auth/RegisterForm.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import RoleSelection from './RoleSelection';
@@ -44,72 +44,120 @@ export default function RegisterForm() {
     confirmPassword: '',
     full_name: ''
   });
-  const { register, signInWithGoogle, loading, error } = useSupabaseAuth();
+  const { register, signInWithGoogle, loading, error, setError } = useSupabaseAuth();
   const [passwordError, setPasswordError] = useState<string>('');
+  const [localLoading, setLocalLoading] = useState(false);
+  const googleInitialized = useRef(false);
   
-  // For Google One-tap
+  // Clear errors when component mounts or step changes
   useEffect(() => {
-    // Initialize Google One Tap
+    if (error && (
+      error.includes("Session could not be refreshed") || 
+      error.includes("Error refreshing session") ||
+      error.includes("AuthSessionMissingError")
+    )) {
+      // Clear session-related errors that shouldn't be shown during registration
+      setError(null);
+    }
+  }, [error, setError, step]);
+
+  // Initialize Google One-tap only once
+  useEffect(() => {
+    if (googleInitialized.current) return;
+    
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="gsi/client"]');
+    if (existingScript) {
+      googleInitialized.current = true;
+      return;
+    }
+
     const googleScript = document.createElement('script');
     googleScript.src = 'https://accounts.google.com/gsi/client';
     googleScript.async = true;
     googleScript.defer = true;
-    document.head.appendChild(googleScript);
-
+    
     googleScript.onload = () => {
-      if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-        window.google.accounts.id.initialize({
-          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-          callback: handleGoogleOneTapResponse,
-          auto_select: true,
-          cancel_on_tap_outside: false,
-          context: 'signup',
-          ux_mode: 'popup',
-          login_uri: window.location.origin + '/auth/callback'
-        });
-
-        // Render the Google One-tap button
-        const buttonDiv = document.getElementById('google-one-tap-register');
-        if (buttonDiv) {
-          window.google.accounts.id.renderButton(buttonDiv, {
-            theme: 'outline',
-            size: 'large',
-            width: buttonDiv.offsetWidth,
-            text: 'signup_with'
+      if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && !googleInitialized.current) {
+        try {
+          googleInitialized.current = true;
+          window.google.accounts.id.initialize({
+            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+            callback: handleGoogleOneTapResponse,
+            auto_select: false, // Disable auto-select for registration
+            cancel_on_tap_outside: true,
+            context: 'signup',
+            ux_mode: 'popup'
           });
-        }
 
-        // Prompt One-tap
-        window.google.accounts.id.prompt();
+          // Only render button if we're still on the basic step
+          if (step === 'basic') {
+            const buttonDiv = document.getElementById('google-one-tap-register');
+            if (buttonDiv) {
+              window.google.accounts.id.renderButton(buttonDiv, {
+                theme: 'outline',
+                size: 'large',
+                width: buttonDiv.offsetWidth,
+                text: 'signup_with'
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Google One-tap initialization error:', error);
+        }
       }
     };
+
+    googleScript.onerror = () => {
+      console.error('Failed to load Google authentication script');
+    };
+
+    document.head.appendChild(googleScript);
 
     return () => {
       if (googleScript.parentNode) {
         googleScript.parentNode.removeChild(googleScript);
       }
     };
-  }, []);
+  }, [step]);
 
   const handleGoogleOneTapResponse = async (response: any) => {
+    if (localLoading || loading) return; // Prevent multiple calls
+    
     try {
+      setLocalLoading(true);
+      setPasswordError('');
+      setError(null);
+      
       if (response.credential) {
-        // Store the Google credential and move to role selection
+        console.log('Google credential received, moving to role selection');
         setGoogleCredential(response.credential);
         setRegistrationType('google');
         setStep('role');
+      } else {
+        console.warn('No credential in Google response');
+        setError('Google authentication failed. Please try again.');
       }
     } catch (error) {
       console.error('Google One-tap error:', error);
+      setError('Google authentication failed. Please try again.');
+    } finally {
+      setLocalLoading(false);
     }
   };
 
   const handleBasicFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
+    setError(null);
     
     if (formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match');
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      setPasswordError('Password must be at least 6 characters long');
       return;
     }
     
@@ -119,20 +167,31 @@ export default function RegisterForm() {
   };
 
   const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
+    if (localLoading || loading) return; // Prevent multiple calls
+    
     try {
+      setLocalLoading(true);
+      setError(null);
+      
       if (registrationType === 'google' && googleCredential) {
-        // For Google registration, sign in with Google first
+        // Handle Google registration
+        console.log('Completing Google registration with role:', role);
+        
+        // Sign in with Google first
         await signInWithGoogle(googleCredential);
+        
+        // Store role data for later processing
+        const roleData = { role, ...additionalData };
+        sessionStorage.setItem('pendingRoleData', JSON.stringify(roleData));
         sessionStorage.setItem('isInitialLogin', 'true');
         
-        // Store role data to be handled by the auth context or parent component
-        // You may need to update user profile with role info after successful sign-in
-        sessionStorage.setItem('pendingRoleData', JSON.stringify({
-          role,
-          ...additionalData
-        }));
+        // The auth context should handle the redirect after successful sign-in
+        console.log('Google registration completed, waiting for redirect...');
+        
       } else {
-        // For email registration
+        // Handle email registration
+        console.log('Completing email registration with role:', role);
+        
         const registrationData = {
           email: formData.email,
           password: formData.password,
@@ -142,20 +201,38 @@ export default function RegisterForm() {
         };
 
         await register(registrationData);
+        // The register function should handle success/error states and redirects
       }
     } catch (err) {
       console.error('Registration error:', err);
+      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+      
+      // Reset to basic form on error
+      setStep('basic');
+      setRegistrationType('email');
+      setGoogleCredential(null);
+    } finally {
+      setLocalLoading(false);
     }
   };
 
-  // Handle regular Google OAuth sign in
-  const handleGoogleSignIn = async () => {
+  // Handle regular Google OAuth sign in (alternative to One-tap)
+  const handleGoogleSignUp = async () => {
+    if (localLoading || loading) return;
+    
     try {
-      // This will also go through role selection now
+      setLocalLoading(true);
+      setError(null);
+      
+      // Move to role selection without credential (will use OAuth flow)
       setRegistrationType('google');
+      setGoogleCredential(null); // No credential for OAuth flow
       setStep('role');
     } catch (err) {
-      console.error('Google sign in error:', err);
+      console.error('Google sign up error:', err);
+      setError('Failed to initialize Google sign up. Please try again.');
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -163,16 +240,21 @@ export default function RegisterForm() {
     setStep('basic');
     setRegistrationType('email');
     setGoogleCredential(null);
+    setPasswordError('');
+    setError(null);
   };
+
+  // Show loading state
+  const isLoading = loading || localLoading;
 
   if (step === 'role') {
     return (
       <div className="w-full max-w-md">
-        {/* Back button for role selection */}
         <div className="mb-4">
           <button
             onClick={handleBackToBasic}
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+            disabled={isLoading}
+            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -180,7 +262,7 @@ export default function RegisterForm() {
             Back to registration
           </button>
         </div>
-        <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />
+        <RoleSelection onRoleSelect={handleRoleSelect} loading={isLoading} />
       </div>
     );
   }
@@ -188,31 +270,40 @@ export default function RegisterForm() {
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
       <h2 className="text-2xl font-medium mb-6">Create an Account</h2>
-      {error && (
+      
+      {/* Error Display */}
+      {error && !error.includes("Session could not be refreshed") && !error.includes("AuthSessionMissingError") && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
           {error}
         </div>
       )}
+      
       {passwordError && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
           {passwordError}
         </div>
       )}
       
-      {/* Google Sign Up button - a faster option at the top */}
+      {/* Google Sign Up Button */}
       <div className="mb-6">
         <button
-          onClick={handleGoogleSignIn}
-          className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50"
-          disabled={loading}
+          onClick={handleGoogleSignUp}
+          disabled={isLoading}
+          className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50"
         >
-          <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
-            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
-          </svg>
-          <span className="text-gray-700 font-medium">Sign up with Google</span>
+          {isLoading ? (
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+          ) : (
+            <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+            </svg>
+          )}
+          <span className="text-gray-700 font-medium">
+            {isLoading ? 'Please wait...' : 'Sign up with Google'}
+          </span>
         </button>
       </div>
       
@@ -236,6 +327,7 @@ export default function RegisterForm() {
             value={formData.email}
             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
+            disabled={isLoading}
             required
           />
         </div>
@@ -250,6 +342,7 @@ export default function RegisterForm() {
             value={formData.full_name}
             onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
+            disabled={isLoading}
           />
         </div>
 
@@ -263,7 +356,9 @@ export default function RegisterForm() {
             value={formData.password}
             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
+            disabled={isLoading}
             required
+            minLength={6}
           />
         </div>
 
@@ -277,7 +372,9 @@ export default function RegisterForm() {
             value={formData.confirmPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
+            disabled={isLoading}
             required
+            minLength={6}
           />
         </div>
         
@@ -287,10 +384,17 @@ export default function RegisterForm() {
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full py-2 px-4 bg-[#ff3131] text-white rounded hover:bg-[#e52e2e] disabled:opacity-50"
+          disabled={isLoading}
+          className="w-full py-2 px-4 bg-[#ff3131] text-white rounded hover:bg-[#e52e2e] disabled:opacity-50 flex items-center justify-center"
         >
-          {loading ? 'Creating Account...' : 'Continue'}
+          {isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Please wait...
+            </>
+          ) : (
+            'Continue'
+          )}
         </button>
 
         <div className="text-center">
@@ -303,7 +407,7 @@ export default function RegisterForm() {
         </div>
       </form>
       
-      {/* Google One-tap button container (alternative placement) */}
+      {/* Hidden Google One-tap button container for potential future use */}
       <div id="google-one-tap-register" className="w-full mt-6 hidden"></div>
     </div>
   );
