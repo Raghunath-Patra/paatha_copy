@@ -1,6 +1,6 @@
 // frontend/app/components/auth/RegisterForm.tsx
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import RoleSelection from './RoleSelection';
@@ -36,334 +36,142 @@ interface RegisterFormData {
 export default function RegisterForm() {
   const router = useRouter();
   const [step, setStep] = useState<'basic' | 'role'>('basic');
-  const [registrationType, setRegistrationType] = useState<'email' | 'google'>('email');
-  const [googleCredential, setGoogleCredential] = useState<string | null>(null);
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
     password: '',
     confirmPassword: '',
     full_name: ''
   });
-  const { register, signInWithGoogle, loading, error, setError } = useSupabaseAuth();
+  const { register, signInWithGoogle, loading, error } = useSupabaseAuth();
   const [passwordError, setPasswordError] = useState<string>('');
-  const [localLoading, setLocalLoading] = useState(false);
-  const googleInitialized = useRef(false);
-
-  // Helper function to safely extract error messages
-  const getErrorMessage = (err: unknown): string => {
-    if (err instanceof Error) {
-      return err.message;
-    }
-    return String(err);
-  };
   
-  // Clear errors when component mounts or step changes
+  // For Google One-tap
   useEffect(() => {
-    if (error && (
-      error.includes("Session could not be refreshed") || 
-      error.includes("Error refreshing session") ||
-      error.includes("AuthSessionMissingError") ||
-      error.includes("Auth session missing")
-    )) {
-      // Clear session-related errors that shouldn't be shown during registration
-      setError(null);
-    }
-  }, [error, setError, step]);
-
-  // Show loading state
-  const isLoading = loading || localLoading;
-
-  // Add timeout handling for loading states
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    if (isLoading) {
-      timeoutId = setTimeout(() => {
-        if (localLoading) {
-          console.warn('Registration taking longer than expected');
-          setLocalLoading(false);
-          setError('Registration is taking longer than expected. Please try again.');
-        }
-      }, 30000); // 30 second timeout for registration
-    }
-    
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [isLoading, localLoading, setError]);
-
-  // Initialize Google One-tap only once
-  useEffect(() => {
-    if (googleInitialized.current || step !== 'basic') return;
-    
-    // Check if script already exists
-    const existingScript = document.querySelector('script[src*="gsi/client"]');
-    if (existingScript) {
-      googleInitialized.current = true;
-      return;
-    }
-
+    // Initialize Google One Tap
     const googleScript = document.createElement('script');
     googleScript.src = 'https://accounts.google.com/gsi/client';
     googleScript.async = true;
     googleScript.defer = true;
-    
+    document.head.appendChild(googleScript);
+
     googleScript.onload = () => {
-      if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && !googleInitialized.current) {
-        try {
-          googleInitialized.current = true;
-          window.google.accounts.id.initialize({
-            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-            callback: handleGoogleOneTapResponse,
-            auto_select: false, // Disable auto-select for registration
-            cancel_on_tap_outside: true,
-            context: 'signup',
-            ux_mode: 'popup'
+      if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+        window.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          callback: handleGoogleOneTapResponse,
+          auto_select: true,
+          cancel_on_tap_outside: false,
+          context: 'signup',
+          ux_mode: 'popup',
+          login_uri: window.location.origin + '/auth/callback'
+        });
+
+        // Render the Google One-tap button
+        const buttonDiv = document.getElementById('google-one-tap-register');
+        if (buttonDiv) {
+          window.google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            width: buttonDiv.offsetWidth,
+            text: 'signup_with'
           });
-        } catch (error) {
-          console.error('Google One-tap initialization error:', error);
         }
+
+        // Prompt One-tap
+        window.google.accounts.id.prompt();
       }
     };
-
-    googleScript.onerror = () => {
-      console.error('Failed to load Google authentication script');
-    };
-
-    document.head.appendChild(googleScript);
 
     return () => {
       if (googleScript.parentNode) {
         googleScript.parentNode.removeChild(googleScript);
       }
     };
-  }, [step]);
+  }, []);
 
   const handleGoogleOneTapResponse = async (response: any) => {
-    if (isLoading) return; // Prevent multiple calls
-    
     try {
-      setLocalLoading(true);
-      setPasswordError('');
-      setError(null);
-      
       if (response.credential) {
-        console.log('Google credential received, moving to role selection');
-        setGoogleCredential(response.credential);
-        setRegistrationType('google');
-        setStep('role');
-      } else {
-        console.warn('No credential in Google response');
-        setError('Google authentication failed. Please try again.');
+        // For Google sign-up, we'll default to student role
+        // Users can change this later in their profile
+        await signInWithGoogle(response.credential);
+        sessionStorage.setItem('isInitialLogin', 'true');
       }
     } catch (error) {
       console.error('Google One-tap error:', error);
-      setError('Google authentication failed. Please try again.');
-    } finally {
-      setLocalLoading(false);
     }
   };
 
   const handleBasicFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
-    setError(null);
-    
-    // Validate email
-    if (!formData.email?.trim()) {
-      setPasswordError('Email is required');
-      return;
-    }
-    
-    // Validate password
-    if (!formData.password) {
-      setPasswordError('Password is required');
-      return;
-    }
     
     if (formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match');
       return;
     }
     
-    if (formData.password.length < 6) {
-      setPasswordError('Password must be at least 6 characters long');
-      return;
-    }
-    
     // Basic validation passed, move to role selection
-    setRegistrationType('email');
     setStep('role');
   };
 
   const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
-    if (isLoading) return; // Prevent multiple calls
-    
     try {
-      setLocalLoading(true);
-      setError(null);
-      
-      if (registrationType === 'google' && googleCredential) {
-        // Handle Google registration
-        console.log('Completing Google registration with role:', role);
-        
-        try {
-          await signInWithGoogle(googleCredential);
-          
-          // Store role data for profile update after successful sign-in
-          const roleData = { role, ...additionalData };
-          sessionStorage.setItem('pendingRoleData', JSON.stringify(roleData));
-          sessionStorage.setItem('isInitialLogin', 'true');
-          
-          // The auth context should handle the redirect
-          console.log('Google registration completed, waiting for redirect...');
-        } catch (googleError) {
-          console.error('Google registration failed:', googleError);
-          throw googleError;
-        }
-        
-      } else {
-        // Handle email registration
-        console.log('Completing email registration with role:', role);
-        
-        // Validate form data before proceeding
-        if (!formData.email?.trim() || !formData.password) {
-          throw new Error('Email and password are required');
-        }
-        
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
-        
-        const registrationData = {
-          email: formData.email.trim(),
-          password: formData.password,
-          full_name: formData.full_name?.trim() || undefined,
-          role,
-          ...additionalData // This includes teacher-specific fields
-        };
+      const registrationData = {
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.full_name || undefined,
+        role,
+        ...additionalData
+      };
 
-        console.log('Registration data:', { ...registrationData, password: '[HIDDEN]' });
-        
-        await register(registrationData);
-        // Don't handle redirect here - let the register function handle it
-      }
+      await register(registrationData);
     } catch (err) {
       console.error('Registration error:', err);
-      
-      // Provide more specific error messages
-      const errorMessage = getErrorMessage(err);
-      if (errorMessage.includes('Anonymous sign-ins are disabled')) {
-        setError('Registration failed. Please check your email and password and try again.');
-      } else if (errorMessage.includes('already registered') || errorMessage.includes('already been registered')) {
-        setError('This email is already registered. Please try logging in instead.');
-      } else if (errorMessage.includes('Invalid email')) {
-        setError('Please enter a valid email address.');
-      } else if (errorMessage.includes('Password')) {
-        setError('Password must be at least 6 characters long.');
-      } else {
-        setError(errorMessage || 'Registration failed. Please try again.');
-      }
-      
-      // Reset to basic form on error
-      setStep('basic');
-      setRegistrationType('email');
-      setGoogleCredential(null);
-    } finally {
-      setLocalLoading(false);
     }
   };
 
-  // Handle regular Google OAuth sign in (alternative to One-tap)
-  const handleGoogleSignUp = async () => {
-    if (isLoading) return;
-    
+  // Handle regular Google OAuth sign in
+  const handleGoogleSignIn = async () => {
     try {
-      setLocalLoading(true);
-      setError(null);
-      
-      // Move to role selection without credential (will use OAuth flow)
-      setRegistrationType('google');
-      setGoogleCredential(null); // No credential for OAuth flow
-      setStep('role');
+      await signInWithGoogle();
     } catch (err) {
-      console.error('Google sign up error:', err);
-      setError('Failed to initialize Google sign up. Please try again.');
-    } finally {
-      setLocalLoading(false);
+      console.error('Google sign in error:', err);
     }
-  };
-
-  const handleBackToBasic = () => {
-    setStep('basic');
-    setRegistrationType('email');
-    setGoogleCredential(null);
-    setPasswordError('');
-    setError(null);
-    setLocalLoading(false);
   };
 
   if (step === 'role') {
-    return (
-      <div className="w-full max-w-md">
-        <div className="mb-4">
-          <button
-            onClick={handleBackToBasic}
-            disabled={isLoading}
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to registration
-          </button>
-        </div>
-        <RoleSelection onRoleSelect={handleRoleSelect} loading={isLoading} />
-      </div>
-    );
+    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />;
   }
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
       <h2 className="text-2xl font-medium mb-6">Create an Account</h2>
-      
-      {/* Error Display */}
-      {error && !error.includes("Session could not be refreshed") && 
-       !error.includes("AuthSessionMissingError") && 
-       !error.includes("Auth session missing") && (
+      {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
           {error}
         </div>
       )}
-      
       {passwordError && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
           {passwordError}
         </div>
       )}
       
-      {/* Google Sign Up Button */}
+      {/* Google Sign Up button - a faster option at the top */}
       <div className="mb-6">
         <button
-          onClick={handleGoogleSignUp}
-          disabled={isLoading}
-          className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50"
+          onClick={handleGoogleSignIn}
+          className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50"
+          disabled={loading}
         >
-          {isLoading ? (
-            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-          ) : (
-            <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
-              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
-            </svg>
-          )}
-          <span className="text-gray-700 font-medium">
-            {isLoading ? 'Please wait...' : 'Sign up with Google'}
-          </span>
+          <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+          </svg>
+          <span className="text-gray-700 font-medium">Sign up with Google</span>
         </button>
       </div>
       
@@ -387,7 +195,6 @@ export default function RegisterForm() {
             value={formData.email}
             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
-            disabled={isLoading}
             required
           />
         </div>
@@ -402,7 +209,6 @@ export default function RegisterForm() {
             value={formData.full_name}
             onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
-            disabled={isLoading}
           />
         </div>
 
@@ -416,9 +222,7 @@ export default function RegisterForm() {
             value={formData.password}
             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
-            disabled={isLoading}
             required
-            minLength={6}
           />
         </div>
 
@@ -432,9 +236,7 @@ export default function RegisterForm() {
             value={formData.confirmPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
-            disabled={isLoading}
             required
-            minLength={6}
           />
         </div>
         
@@ -444,17 +246,10 @@ export default function RegisterForm() {
 
         <button
           type="submit"
-          disabled={isLoading}
-          className="w-full py-2 px-4 bg-[#ff3131] text-white rounded hover:bg-[#e52e2e] disabled:opacity-50 flex items-center justify-center"
+          disabled={loading}
+          className="w-full py-2 px-4 bg-[#ff3131] text-white rounded hover:bg-[#e52e2e] disabled:opacity-50"
         >
-          {isLoading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-              Please wait...
-            </>
-          ) : (
-            'Continue'
-          )}
+          {loading ? 'Creating Account...' : 'Continue'}
         </button>
 
         <div className="text-center">
@@ -467,7 +262,7 @@ export default function RegisterForm() {
         </div>
       </form>
       
-      {/* Hidden Google One-tap button container for potential future use */}
+      {/* Google One-tap button container (alternative placement) */}
       <div id="google-one-tap-register" className="w-full mt-6 hidden"></div>
     </div>
   );
