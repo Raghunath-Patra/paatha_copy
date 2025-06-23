@@ -403,6 +403,10 @@ export default function QuizViewResults() {
                     </div>
                   </div>
                 </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  <Eye className="h-4 w-4 inline mr-1" />
+                  Click on any row to view detailed results
+                </p>
               </div>
 
               <div className="overflow-x-auto">
@@ -427,14 +431,21 @@ export default function QuizViewResults() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sortedAttempts.map((attempt) => (
-                      <tr key={attempt.id} className="hover:bg-gray-50 transition-colors">
+                      <tr 
+                        key={attempt.id} 
+                        className="hover:bg-blue-50 transition-colors cursor-pointer group"
+                        onClick={() => router.push(`/teacher/quizzes/${quizId}/${attempt.student_id}/${attempt.id}`)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 group-hover:text-blue-700">
                               {attempt.student_name}
                             </div>
                             <div className="text-sm text-gray-500">
@@ -473,6 +484,12 @@ export default function QuizViewResults() {
                              attempt.status === 'in_progress' ? 'In Progress' :
                              attempt.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center text-blue-600 group-hover:text-blue-800">
+                            <Eye className="h-4 w-4 mr-1" />
+                            <span className="font-medium">View Details</span>
+                          </div>
                         </td>
                       </tr>
                     ))}
