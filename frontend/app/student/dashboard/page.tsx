@@ -20,8 +20,37 @@ import {
   PauseCircle,
   StopCircle,
   Timer,
-  Ban
+  Ban,
+  BookOpen,
+  Target,
+  ChevronRight,
+  GraduationCap,
+  Zap
 } from 'lucide-react';
+
+// Board structure for quick access to learning paths
+const BOARD_STRUCTURE = {
+  cbse: {
+    display_name: "CBSE",
+    classes: {
+      viii: { display_name: "Class VIII" },
+      ix: { display_name: "Class IX" },
+      x: { display_name: "Class X" },
+      xi: { display_name: "Class XI" },
+      xii: { display_name: "Class XII" }
+    }
+  },
+  karnataka: {
+    display_name: "Karnataka State Board", 
+    classes: {
+      "8th": { display_name: "8th Class" },
+      "9th": { display_name: "9th Class" },
+      "10th": { display_name: "10th Class" },
+      "puc-1": { display_name: "PUC-I" },
+      "puc-2": { display_name: "PUC-II" }
+    }
+  }
+} as const;
 
 interface Course {
   id: string;
@@ -64,6 +93,192 @@ interface DashboardStats {
   completed_quizzes: number;
   average_score: number;
 }
+
+// Daily Challenge Button Component
+const DailyChallengeButton = () => {
+  const router = useRouter();
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleChallengeClick = () => {
+    router.push('/try');
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6 mb-8 relative overflow-hidden">
+      {/* Background gradient animation */}
+      <div className="absolute inset-0 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 opacity-50"></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Daily Challenge</h3>
+            <p className="text-sm text-gray-600">Test your knowledge and earn points!</p>
+          </div>
+          <div className="text-3xl animate-bounce">🎯</div>
+        </div>
+        
+        <button
+          onClick={handleChallengeClick}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="group w-full relative inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 overflow-hidden"
+        >
+          {/* Animated background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          {/* Shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center space-x-3">
+            <Zap className="w-5 h-5" />
+            <span>Start Daily Challenge</span>
+            <div className={`transform transition-transform duration-300 ${isHovered ? 'translate-x-2' : ''}`}>
+              <ChevronRight className="w-5 h-5" />
+            </div>
+          </div>
+          
+          {/* Floating particles effect */}
+          <div className="absolute inset-0 overflow-hidden rounded-lg">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-white/40 rounded-full animate-ping"
+                style={{
+                  left: `${20 + i * 20}%`,
+                  top: `${30 + (i % 2) * 40}%`,
+                  animationDelay: `${i * 0.5}s`,
+                  animationDuration: '2s'
+                }}
+              />
+            ))}
+          </div>
+        </button>
+        
+        <div className="mt-3 text-center">
+          <p className="text-xs text-gray-500">
+            Boost your learning with daily practice questions
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Board Card Component for Dashboard
+const BoardCard = ({ board, displayName, classes, onClick }: {
+  board: string;
+  displayName: string;
+  classes: Record<string, { display_name: string }>;
+  onClick: (board: string, classLevel: string) => void;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div 
+      className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 relative overflow-hidden group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Background animation */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center mb-4">
+          <div className="p-2 bg-blue-100 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors duration-300">
+            <GraduationCap className="h-6 w-6 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">{displayName}</h3>
+        </div>
+        
+        <div className="space-y-2">
+          {Object.entries(classes).map(([classKey, classInfo]) => (
+            <button
+              key={classKey}
+              onClick={() => onClick(board, classKey)}
+              className="w-full flex items-center justify-between p-3 text-left rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group/item"
+            >
+              <div className="flex items-center">
+                <BookOpen className="h-4 w-4 text-gray-400 mr-2 group-hover/item:text-blue-500 transition-colors duration-200" />
+                <span className="text-sm font-medium text-gray-700 group-hover/item:text-blue-700 transition-colors duration-200">
+                  {classInfo.display_name}
+                </span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400 group-hover/item:text-blue-500 group-hover/item:translate-x-1 transition-all duration-200" />
+            </button>
+          ))}
+        </div>
+        
+        {/* Animated indicator */}
+        <div className={`mt-4 flex justify-center transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex space-x-1">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="w-1 h-1 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Learning Path Selection Component
+const LearningPathSelection = () => {
+  const router = useRouter();
+
+  const handleClassSelect = (board: string, classLevel: string) => {
+    router.push(`/${board}/${classLevel}`);
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6 mb-8 relative overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-full opacity-50"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100 to-transparent rounded-tr-full opacity-50"></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="flex items-center mb-2">
+              <Target className="h-6 w-6 text-blue-600 mr-2" />
+              <h3 className="text-lg font-semibold text-gray-900">Explore Learning Paths</h3>
+            </div>
+            <p className="text-sm text-gray-600">
+              Browse subjects by board and class to start your learning journey
+            </p>
+          </div>
+          <div className="hidden sm:block">
+            <div className="text-2xl animate-pulse">📚</div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Object.entries(BOARD_STRUCTURE).map(([boardKey, board]) => (
+            <BoardCard
+              key={boardKey}
+              board={boardKey}
+              displayName={board.display_name}
+              classes={board.classes}
+              onClick={handleClassSelect}
+            />
+          ))}
+        </div>
+        
+        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+          <div className="flex items-center text-sm text-blue-800">
+            <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
+            <span className="font-medium">Pro Tip:</span>
+            <span className="ml-1">Access comprehensive study materials tailored to your curriculum</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -368,69 +583,43 @@ export default function StudentDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {profile?.full_name || 'Student'}!
-          </h2>
-          <p className="text-gray-600">
-            Join courses, take quizzes, and track your learning progress.
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+        <div className="mb-8 bg-white rounded-lg shadow-lg p-6 relative overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-50 via-purple-50 to-transparent rounded-bl-full opacity-60"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-green-50 to-transparent rounded-tr-full opacity-60"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                  Welcome back, {profile?.full_name || 'Student'}!
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  Join courses, take quizzes, and track your learning progress.
+                </p>
+                
+                {/* Quick stats in welcome section */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-lg font-bold text-blue-600">{stats.total_courses}</div>
+                    <div className="text-xs text-blue-700">Courses</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-lg font-bold text-green-600">{stats.completed_quizzes}</div>
+                    <div className="text-xs text-green-700">Completed</div>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <div className="text-lg font-bold text-purple-600">{stats.total_quizzes_available}</div>
+                    <div className="text-xs text-purple-700">Available</div>
+                  </div>
+                  <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div className="text-lg font-bold text-yellow-600">{stats.average_score.toFixed(1)}%</div>
+                    <div className="text-xs text-yellow-700">Avg Score</div>
+                  </div>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Enrolled Courses</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total_courses}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed Quizzes</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completed_quizzes}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Available Quizzes</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total_quizzes_available}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Average Score</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.average_score.toFixed(1)}%</p>
+              <div className="hidden lg:block">
+                <div className="text-4xl animate-bounce">🎓</div>
               </div>
             </div>
           </div>
@@ -667,6 +856,12 @@ export default function StudentDashboard() {
             </div>
           </div>
         )}
+
+        {/* Daily Challenge Section */}
+        <DailyChallengeButton />
+
+        {/* Learning Path Selection */}
+        <LearningPathSelection />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* My Courses */}
