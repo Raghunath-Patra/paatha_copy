@@ -81,6 +81,14 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const lastRefreshAttempt = useRef<number>(0);
   const refreshAttempts = useRef<number>(0); // Track refresh attempts
 
+  // Helper function to safely extract error messages
+  const getErrorMessage = (err: unknown): string => {
+    if (err instanceof Error) {
+      return err.message;
+    }
+    return String(err);
+  };
+
   // Fetch user profile from Supabase
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
@@ -223,8 +231,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       console.error('Error refreshing session:', err);
       
       // Don't show session refresh errors during registration
-      if (!err.message?.includes('Auth session missing')) {
-        setError('Session could not be refreshed. Please try again or log in.');
+      const errorMessage = getErrorMessage(err);
+      if (!errorMessage.includes('Auth session missing')) {
+        setErrorSafe('Session could not be refreshed. Please try again or log in.');
       }
     } finally {
       authOperationInProgress.current = false;
@@ -356,8 +365,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           setProfile(null);
           setSession(null);
           // Only set error for non-session related errors
-          if (!err.message?.includes('Auth session missing')) {
-            setError(err instanceof Error ? err.message : 'An error occurred during initialization');
+          const errorMessage = getErrorMessage(err);
+          if (!errorMessage.includes('Auth session missing')) {
+            setErrorSafe(errorMessage);
           }
         }
       } finally {
@@ -437,7 +447,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       
     } catch (err) {
       console.error('Login error:', err);
-      setErrorSafe(err instanceof Error ? err.message : 'An error occurred during login');
+      setErrorSafe(getErrorMessage(err));
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
@@ -496,7 +506,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       router.push('/login?registered=true');
     } catch (err) {
       console.error('Registration error:', err);
-      setErrorSafe(err instanceof Error ? err.message : 'An error occurred during registration');
+      setErrorSafe(getErrorMessage(err));
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
@@ -555,7 +565,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     } catch (err) {
       console.error('Google sign in error:', err);
-      setErrorSafe(err instanceof Error ? err.message : 'An error occurred during Google sign in');
+      setErrorSafe(getErrorMessage(err));
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
@@ -618,7 +628,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     } catch (err) {
       console.error('Profile update error:', err);
-      setErrorSafe(err instanceof Error ? err.message : 'An error occurred updating profile');
+      setErrorSafe(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -642,7 +652,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       return true;
     } catch (err) {
       console.error('Password reset request error:', err);
-      setErrorSafe(err instanceof Error ? err.message : 'An error occurred requesting password reset');
+      setErrorSafe(getErrorMessage(err));
       return false;
     } finally {
       authOperationInProgress.current = false;
@@ -667,7 +677,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       router.push('/login?reset=success');
     } catch (err) {
       console.error('Password reset error:', err);
-      setErrorSafe(err instanceof Error ? err.message : 'An error occurred resetting password');
+      setErrorSafe(getErrorMessage(err));
     } finally {
       authOperationInProgress.current = false;
     }
