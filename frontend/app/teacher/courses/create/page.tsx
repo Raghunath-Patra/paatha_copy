@@ -1,7 +1,7 @@
 // frontend/app/teacher/courses/create/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
 import { supabase } from '../../../utils/supabase';
@@ -16,39 +16,46 @@ interface CourseFormData {
   max_students: number;
 }
 
-const BOARDS = [
-  { value: 'cbse', label: 'CBSE' },
-  { value: 'karnataka', label: 'Karnataka State Board' },
-  { value: 'icse', label: 'ICSE' },
-  { value: 'ncert', label: 'NCERT' }
-];
+// Use the same board structure as the quiz editor
+const BOARD_STRUCTURE = {
+  cbse: {
+    display_name: "CBSE",
+    classes: {
+      viii: { display_name: "Class VIII" },
+      ix: { display_name: "Class IX" },
+      x: { display_name: "Class X" },
+      xi: { display_name: "Class XI" },
+      xii: { display_name: "Class XII" }
+    }
+  },
+  karnataka: {
+    display_name: "Karnataka State Board", 
+    classes: {
+      "8th": { display_name: "8th Class" },
+      "9th": { display_name: "9th Class" },
+      "10th": { display_name: "10th Class" },
+      "puc-1": { display_name: "PUC-I" },
+      "puc-2": { display_name: "PUC-II" }
+    }
+  }
+} as const;
 
-const CLASS_LEVELS = [
-  { value: '6th', label: '6th Class' },
-  { value: '7th', label: '7th Class' },
-  { value: '8th', label: '8th Class' },
-  { value: '9th', label: '9th Class' },
-  { value: '10th', label: '10th Class' },
-  { value: '11th', label: '11th Class' },
-  { value: '12th', label: '12th Class' },
-  { value: 'puc-1', label: 'PUC-I' },
-  { value: 'puc-2', label: 'PUC-II' }
-];
-
-const SUBJECTS = [
-  { value: 'mathematics', label: 'Mathematics' },
-  { value: 'science', label: 'Science' },
-  { value: 'physics', label: 'Physics' },
-  { value: 'chemistry', label: 'Chemistry' },
-  { value: 'biology', label: 'Biology' },
-  { value: 'english', label: 'English' },
-  { value: 'hindi', label: 'Hindi' },
-  { value: 'social_science', label: 'Social Science' },
-  { value: 'history', label: 'History' },
-  { value: 'geography', label: 'Geography' },
-  { value: 'economics', label: 'Economics' },
-  { value: 'computer_science', label: 'Computer Science' }
-];
+interface SubjectInfo {
+  code: string;
+  name: string;
+  type: string;
+  chapters?: Array<{
+    number: number;
+    name: string;
+  }>;
+  shared_mapping?: {
+    source_board: string;
+    source_class: string;
+    source_subject: string;
+  };
+  description?: string;
+  icon?: string;
+}
 
 export default function CreateCourse() {
   const router = useRouter();
@@ -63,14 +70,55 @@ export default function CreateCourse() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableSubjects, setAvailableSubjects] = useState<SubjectInfo[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   // Check if user is a teacher
-  React.useEffect(() => {
+  useEffect(() => {
     if (profile && profile.role !== 'teacher') {
       router.push('/'); // Redirect non-teachers
     }
   }, [profile, router]);
+
+  // Fetch subjects when board and class are selected
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      if (!formData.board || !formData.class_level || !user) return;
+
+      setLoadingSubjects(true);
+      setAvailableSubjects([]);
+      setFormData(prev => ({ ...prev, subject: '' })); // Reset subject selection
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('No session');
+
+        const subjectsUrl = `${API_URL}/api/subjects/${formData.board}/${formData.class_level}`;
+        const response = await fetch(subjectsUrl, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch subjects');
+        }
+
+        const data = await response.json();
+        setAvailableSubjects(data.subjects || []);
+      } catch (err) {
+        console.error('Error fetching subjects:', err);
+        setError('Failed to load subjects for selected board and class');
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+
+    fetchSubjects();
+  }, [formData.board, formData.class_level, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,13 +130,19 @@ export default function CreateCourse() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
+      // Prepare the data with subject code
+      const submitData = {
+        ...formData,
+        subject: formData.subject // This will be the subject code, not display name
+      };
+
       const response = await fetch(`${API_URL}/api/teacher/courses/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       });
 
       if (!response.ok) {
@@ -110,10 +164,35 @@ export default function CreateCourse() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'max_students' ? parseInt(value) || 0 : value
-    }));
+    
+    if (name === 'board') {
+      // Reset class and subject when board changes
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        class_level: '',
+        subject: ''
+      }));
+      setAvailableSubjects([]);
+    } else if (name === 'class_level') {
+      // Reset subject when class changes
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        subject: ''
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: name === 'max_students' ? parseInt(value) || 0 : value
+      }));
+    }
+  };
+
+  // Get the display name for the selected subject
+  const getSubjectDisplayName = (subjectCode: string) => {
+    const subject = availableSubjects.find(s => s.code === subjectCode);
+    return subject ? subject.name : subjectCode;
   };
 
   return (
@@ -187,9 +266,9 @@ export default function CreateCourse() {
                   required
                 >
                   <option value="">Select Board</option>
-                  {BOARDS.map(board => (
-                    <option key={board.value} value={board.value}>
-                      {board.label}
+                  {Object.entries(BOARD_STRUCTURE).map(([code, boardInfo]) => (
+                    <option key={code} value={code}>
+                      {boardInfo.display_name}
                     </option>
                   ))}
                 </select>
@@ -205,13 +284,15 @@ export default function CreateCourse() {
                   onChange={handleInputChange}
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                  disabled={!formData.board}
                 >
                   <option value="">Select Class</option>
-                  {CLASS_LEVELS.map(level => (
-                    <option key={level.value} value={level.value}>
-                      {level.label}
-                    </option>
-                  ))}
+                  {formData.board && BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE] && 
+                    Object.entries(BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE].classes).map(([code, classInfo]) => (
+                      <option key={code} value={code}>
+                        {classInfo.display_name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
@@ -227,14 +308,23 @@ export default function CreateCourse() {
                   onChange={handleInputChange}
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                  disabled={!formData.class_level || loadingSubjects}
                 >
-                  <option value="">Select Subject</option>
-                  {SUBJECTS.map(subject => (
-                    <option key={subject.value} value={subject.value}>
-                      {subject.label}
+                  <option value="">
+                    {loadingSubjects ? 'Loading subjects...' : 'Select Subject'}
+                  </option>
+                  {availableSubjects.map((subject) => (
+                    <option key={subject.code} value={subject.code}>
+                      {subject.name}
                     </option>
                   ))}
                 </select>
+                {loadingSubjects && (
+                  <div className="mt-1 flex items-center text-sm text-gray-500">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-1 border-blue-500 mr-2"></div>
+                    Loading available subjects...
+                  </div>
+                )}
               </div>
 
               <div>
@@ -276,7 +366,7 @@ export default function CreateCourse() {
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || loadingSubjects}
                 className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? 'Creating Course...' : 'Create Course'}
@@ -295,9 +385,17 @@ export default function CreateCourse() {
                 <p className="text-sm text-gray-600 mt-1">{formData.description}</p>
               )}
               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                {formData.board && <span>{formData.board.toUpperCase()}</span>}
-                {formData.class_level && <span>Class {formData.class_level}</span>}
-                {formData.subject && <span>{formData.subject.replace('_', ' ')}</span>}
+                {formData.board && (
+                  <span>{BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE]?.display_name}</span>
+                )}
+                {formData.class_level && formData.board && (
+                  <span>
+                    {BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE]?.classes[formData.class_level as keyof typeof BOARD_STRUCTURE[keyof typeof BOARD_STRUCTURE]['classes']]?.display_name}
+                  </span>
+                )}
+                {formData.subject && (
+                  <span>{getSubjectDisplayName(formData.subject)}</span>
+                )}
                 <span>Max {formData.max_students} students</span>
               </div>
             </div>
