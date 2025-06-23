@@ -6,8 +6,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
 import { supabase } from '../../../utils/supabase';
 import Navigation from '../../../components/navigation/Navigation';
-import PracticeAnalyticsTeacher from '../../../components/performance/PerformanceAnalyticsTeacher';
-import StudentDetailModal from '../../../components/performance/StudentDetailModal';
 import { 
   ArrowLeft,
   Users,
@@ -156,10 +154,6 @@ export default function CourseDetailPage() {
   const [selectedStudent, setSelectedStudent] = useState<string>('all');
   const [selectedChapter, setSelectedChapter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Student Detail Modal State
-  const [selectedStudentForModal, setSelectedStudentForModal] = useState<StudentPracticePerformance | null>(null);
-  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -424,17 +418,6 @@ export default function CourseDetailPage() {
       student.chapters_covered.forEach(chapter => chapters.add(chapter));
     });
     return Array.from(chapters).sort((a, b) => a - b);
-  };
-
-  // Handle student detail modal
-  const handleViewStudentDetails = (student: StudentPracticePerformance) => {
-    setSelectedStudentForModal(student);
-    setIsStudentModalOpen(true);
-  };
-
-  const handleCloseStudentModal = () => {
-    setIsStudentModalOpen(false);
-    setSelectedStudentForModal(null);
   };
 
   if (loading) {
@@ -1008,10 +991,7 @@ export default function CourseDetailPage() {
                                   </div>
 
                                   <div className="ml-4">
-                                    <button 
-                                      onClick={() => handleViewStudentDetails(student)}
-                                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                    >
+                                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                       View Details
                                     </button>
                                   </div>
@@ -1169,25 +1149,17 @@ export default function CourseDetailPage() {
                       </div>
                     </div>
 
-                    {/* Comprehensive Practice Analytics */}
-                    {practiceData.students.length > 0 && practiceData.chapters.length > 0 ? (
-                      <PracticeAnalyticsTeacher 
-                        data={practiceData}
-                        courseInfo={{
-                          board: course.board,
-                          class_level: course.class_level,
-                          subject: course.subject
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-                        <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <p className="text-gray-500 text-lg">Insufficient Data for Analytics</p>
-                        <p className="text-gray-400 text-sm">
-                          Need more student practice data to generate meaningful analytics
-                        </p>
-                      </div>
-                    )}
+                    {/* Placeholder for comprehensive analytics */}
+                    <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                      <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-500 text-lg">Comprehensive Analytics Coming Soon</p>
+                      <p className="text-gray-400 text-sm">
+                        Detailed charts, trends, and insights will be available here
+                      </p>
+                      <p className="text-gray-400 text-xs mt-2">
+                        Current data shows {practiceData.students.length} students with practice activity
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
@@ -1327,28 +1299,6 @@ export default function CourseDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* Student Detail Modal */}
-      {selectedStudentForModal && (
-        <StudentDetailModal
-          isOpen={isStudentModalOpen}
-          onClose={handleCloseStudentModal}
-          student={{
-            id: selectedStudentForModal.student_id,
-            name: selectedStudentForModal.student_name,
-            email: selectedStudentForModal.student_email,
-            total_practice_attempts: selectedStudentForModal.total_practice_attempts,
-            average_practice_score: selectedStudentForModal.average_practice_score,
-            total_practice_time: selectedStudentForModal.total_practice_time,
-            unique_questions_attempted: selectedStudentForModal.unique_questions_attempted,
-            chapters_covered: selectedStudentForModal.chapters_covered,
-            best_score: selectedStudentForModal.best_score,
-            latest_attempt_date: selectedStudentForModal.latest_attempt_date,
-            performance_trend: selectedStudentForModal.performance_trend
-          }}
-          courseId={courseId}
-        />
-      )}
     </div>
   );
 }
