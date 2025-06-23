@@ -121,13 +121,16 @@ export default function RegisterForm() {
   const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
     try {
       if (registrationType === 'google' && googleCredential) {
-        // For Google registration, we need to sign in with Google first
-        // and then update the user profile with role information
-        await signInWithGoogle(googleCredential, {
+        // For Google registration, sign in with Google first
+        await signInWithGoogle(googleCredential);
+        sessionStorage.setItem('isInitialLogin', 'true');
+        
+        // Store role data to be handled by the auth context or parent component
+        // You may need to update user profile with role info after successful sign-in
+        sessionStorage.setItem('pendingRoleData', JSON.stringify({
           role,
           ...additionalData
-        });
-        sessionStorage.setItem('isInitialLogin', 'true');
+        }));
       } else {
         // For email registration
         const registrationData = {
