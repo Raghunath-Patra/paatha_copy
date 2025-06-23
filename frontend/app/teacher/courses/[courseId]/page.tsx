@@ -248,8 +248,13 @@ export default function CourseDetailPage() {
   }, [user, courseId, course]);
 
   // NEW: Load Practice Performance Data
-  const loadPracticeData = async () => {
+  const loadPracticeData = async (forceReload = false) => {
     if (!user || !course) return;
+
+    // Don't reload if data exists and not forced
+    if (practiceData && !forceReload && selectedStudent === 'all' && selectedChapter === 'all') {
+      return;
+    }
 
     try {
       setPracticeLoading(true);
@@ -275,13 +280,17 @@ export default function CourseDetailPage() {
       const queryString = params.toString();
       const url = `${API_URL}/api/teacher/courses/${courseId}/practice-performance${queryString ? `?${queryString}` : ''}`;
 
+      console.log('Loading practice data from:', url);
+
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch practice performance data');
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch practice performance data: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Practice data loaded:', data);
       setPracticeData(data);
 
     } catch (err) {
@@ -294,10 +303,20 @@ export default function CourseDetailPage() {
 
   // Load practice data when switching to practice view or filters change
   useEffect(() => {
-    if (dataView === 'practice' && course) {
+    if (course && (
+      (activeTab === 'students' && dataView === 'practice') || 
+      activeTab === 'practice'
+    )) {
       loadPracticeData();
     }
-  }, [dataView, selectedStudent, selectedChapter, course]);
+  }, [dataView, selectedStudent, selectedChapter, course, activeTab]);
+
+  // Load practice data immediately when switching to practice tab
+  useEffect(() => {
+    if (activeTab === 'practice' && course && !practiceData && !practiceLoading) {
+      loadPracticeData();
+    }
+  }, [activeTab, course]);
 
   const handleCopyCode = () => {
     if (course) {
@@ -845,7 +864,7 @@ export default function CourseDetailPage() {
 
                         <div className="flex items-end">
                           <button
-                            onClick={loadPracticeData}
+                            onClick={() => loadPracticeData(true)}
                             disabled={practiceLoading}
                             className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-2"
                           >
@@ -910,7 +929,7 @@ export default function CourseDetailPage() {
                       <div className="text-center py-12">
                         <p className="text-red-600 mb-4">{practiceError}</p>
                         <button
-                          onClick={loadPracticeData}
+                          onClick={() => loadPracticeData(true)}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                         >
                           Retry
@@ -1060,7 +1079,7 @@ export default function CourseDetailPage() {
                       <span>Export Data</span>
                     </button>
                     <button
-                      onClick={loadPracticeData}
+                      onClick={() => loadPracticeData(true)}
                       disabled={practiceLoading}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
                     >
@@ -1070,14 +1089,87 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
 
-                {/* Comprehensive Practice Analytics would go here */}
-                <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-                  <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500 text-lg">Comprehensive Analytics Coming Soon</p>
-                  <p className="text-gray-400 text-sm">
-                    Detailed charts, trends, and insights will be available here
-                  </p>
-                </div>
+                {/* Show practice data if available */}
+                {practiceLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+                  </div>
+                ) : practiceError ? (
+                  <div className="text-center py-12">
+                    <p className="text-red-600 mb-4">{practiceError}</p>
+                    <button
+                      onClick={() => loadPracticeData(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : practiceData ? (
+                  <div className="space-y-6">
+                    {/* Practice Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 p-6 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Users className="h-8 w-8 text-blue-600" />
+                          <div>
+                            <p className="text-sm text-blue-600 font-medium">Students Practicing</p>
+                            <p className="text-3xl font-bold text-blue-900">{practiceData.stats.total_students_practiced}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-green-50 p-6 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Target className="h-8 w-8 text-green-600" />
+                          <div>
+                            <p className="text-sm text-green-600 font-medium">Total Attempts</p>
+                            <p className="text-3xl font-bold text-green-900">{practiceData.stats.total_practice_attempts}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-purple-50 p-6 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Award className="h-8 w-8 text-purple-600" />
+                          <div>
+                            <p className="text-sm text-purple-600 font-medium">Overall Average</p>
+                            <p className="text-3xl font-bold text-purple-900">{practiceData.stats.overall_average_score.toFixed(1)}/10</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-50 p-6 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <BookOpen className="h-8 w-8 text-orange-600" />
+                          <div>
+                            <p className="text-sm text-orange-600 font-medium">Chapters</p>
+                            <p className="text-3xl font-bold text-orange-900">{practiceData.stats.chapters_covered.length}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Placeholder for comprehensive analytics */}
+                    <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                      <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-500 text-lg">Comprehensive Analytics Coming Soon</p>
+                      <p className="text-gray-400 text-sm">
+                        Detailed charts, trends, and insights will be available here
+                      </p>
+                      <p className="text-gray-400 text-xs mt-2">
+                        Current data shows {practiceData.students.length} students with practice activity
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                    <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500 text-lg">No Practice Data Available</p>
+                    <p className="text-gray-400 text-sm">
+                      Students haven't started practicing questions yet
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
