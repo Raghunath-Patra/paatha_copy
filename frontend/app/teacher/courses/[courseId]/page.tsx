@@ -1,4 +1,4 @@
-// frontend/app/teacher/courses/[courseId]/page.tsx
+// frontend/app/teacher/courses/[courseId]/page.tsx - ENHANCED with Practice Performance
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -27,7 +27,14 @@ import {
   BookOpen,
   Mail,
   MoreVertical,
-  Trash2
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  Target,
+  Filter,
+  Search,
+  Download,
+  RefreshCw
 } from 'lucide-react';
 
 interface Course {
@@ -79,6 +86,49 @@ interface CourseStats {
   average_class_score: number;
 }
 
+// NEW: Practice Performance Interfaces
+interface StudentPracticePerformance {
+  student_id: string;
+  student_name: string;
+  student_email: string;
+  total_practice_attempts: number;
+  average_practice_score: number;
+  total_practice_time: number;
+  unique_questions_attempted: number;
+  chapters_covered: number[];
+  best_score: number;
+  latest_attempt_date?: string;
+  performance_trend: 'improving' | 'declining' | 'stable';
+}
+
+interface ChapterPerformance {
+  chapter: number;
+  chapter_name?: string;
+  total_attempts: number;
+  average_score: number;
+  student_count: number;
+  best_score: number;
+  worst_score: number;
+}
+
+interface PracticePerformanceStats {
+  total_students_practiced: number;
+  total_practice_attempts: number;
+  overall_average_score: number;
+  most_attempted_chapter?: number;
+  best_performing_chapter?: number;
+  chapters_covered: number[];
+}
+
+interface CoursePracticePerformance {
+  students: StudentPracticePerformance[];
+  chapters: ChapterPerformance[];
+  stats: PracticePerformanceStats;
+}
+
+type ViewMode = 'overview' | 'students' | 'quizzes' | 'practice' | 'settings';
+type DataView = 'quiz' | 'practice';
+
 export default function CourseDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -91,8 +141,19 @@ export default function CourseDetailPage() {
   const [stats, setStats] = useState<CourseStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'quizzes' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<ViewMode>('overview');
   const [copiedCode, setCopiedCode] = useState(false);
+
+  // NEW: Practice Performance State
+  const [dataView, setDataView] = useState<DataView>('quiz');
+  const [practiceData, setPracticeData] = useState<CoursePracticePerformance | null>(null);
+  const [practiceLoading, setPracticeLoading] = useState(false);
+  const [practiceError, setPracticeError] = useState<string | null>(null);
+  
+  // Practice Filters
+  const [selectedStudent, setSelectedStudent] = useState<string>('all');
+  const [selectedChapter, setSelectedChapter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -109,13 +170,12 @@ export default function CourseDetailPage() {
       try {
         setLoading(true);
 
-        // Try to get course data from sessionStorage first (passed from parent)
+        // Try to get course data from sessionStorage first
         const storedCourseData = sessionStorage.getItem('courseData');
         if (storedCourseData) {
           const courseData = JSON.parse(storedCourseData);
           if (courseData.id === courseId) {
             setCourse(courseData);
-            // Clear the stored data
             sessionStorage.removeItem('courseData');
           }
         }
@@ -187,6 +247,58 @@ export default function CourseDetailPage() {
     loadCourseData();
   }, [user, courseId, course]);
 
+  // NEW: Load Practice Performance Data
+  const loadPracticeData = async () => {
+    if (!user || !course) return;
+
+    try {
+      setPracticeLoading(true);
+      setPracticeError(null);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      };
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (selectedStudent !== 'all') {
+        params.append('student_id', selectedStudent);
+      }
+      if (selectedChapter !== 'all') {
+        params.append('chapter', selectedChapter);
+      }
+
+      const queryString = params.toString();
+      const url = `${API_URL}/api/teacher/courses/${courseId}/practice-performance${queryString ? `?${queryString}` : ''}`;
+
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch practice performance data');
+      }
+
+      const data = await response.json();
+      setPracticeData(data);
+
+    } catch (err) {
+      console.error('Error loading practice data:', err);
+      setPracticeError(err instanceof Error ? err.message : 'Failed to load practice data');
+    } finally {
+      setPracticeLoading(false);
+    }
+  };
+
+  // Load practice data when switching to practice view or filters change
+  useEffect(() => {
+    if (dataView === 'practice' && course) {
+      loadPracticeData();
+    }
+  }, [dataView, selectedStudent, selectedChapter, course]);
+
   const handleCopyCode = () => {
     if (course) {
       navigator.clipboard.writeText(course.course_code);
@@ -237,6 +349,56 @@ export default function CourseDetailPage() {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'improving': return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case 'declining': return <TrendingDown className="h-4 w-4 text-red-600" />;
+      default: return <Target className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getTrendColor = (trend: string) => {
+    switch (trend) {
+      case 'improving': return 'text-green-600';
+      case 'declining': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 8) return 'text-green-600 bg-green-50';
+    if (score >= 6) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-600 bg-red-50';
+  };
+
+  // Filter students based on search term
+  const getFilteredStudents = () => {
+    if (!practiceData) return [];
+    return practiceData.students.filter(student =>
+      student.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.student_email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  // Get unique chapters for filter
+  const getUniqueChapters = () => {
+    if (!practiceData) return [];
+    const chapters = new Set<number>();
+    practiceData.students.forEach(student => {
+      student.chapters_covered.forEach(chapter => chapters.add(chapter));
+    });
+    return Array.from(chapters).sort((a, b) => a - b);
   };
 
   if (loading) {
@@ -441,13 +603,14 @@ export default function CourseDetailPage() {
                 { id: 'overview', label: 'Overview', icon: Eye },
                 { id: 'students', label: 'Students', icon: Users },
                 { id: 'quizzes', label: 'Quizzes', icon: FileText },
+                { id: 'practice', label: 'Practice Performance', icon: BarChart3 },
                 { id: 'settings', label: 'Settings', icon: Settings }
               ].map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as ViewMode)}
                     className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
                       activeTab === tab.id
                         ? 'border-blue-500 text-blue-600'
@@ -520,79 +683,357 @@ export default function CourseDetailPage() {
             {/* Students Tab */}
             {activeTab === 'students' && (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Enrolled Students</h3>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
-                    <UserPlus className="h-4 w-4" />
-                    <span>Add Student</span>
-                  </button>
+                {/* Data View Toggle */}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-medium text-gray-900">Student Performance</h3>
+                  <div className="flex items-center space-x-4">
+                    {/* Toggle between Quiz and Practice data */}
+                    <div className="flex bg-gray-100 rounded-lg p-1">
+                      <button
+                        onClick={() => setDataView('quiz')}
+                        className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                          dataView === 'quiz'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Quiz Results
+                      </button>
+                      <button
+                        onClick={() => setDataView('practice')}
+                        className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                          dataView === 'practice'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Practice Performance
+                      </button>
+                    </div>
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+                      <UserPlus className="h-4 w-4" />
+                      <span>Add Student</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Student
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Quizzes Taken
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Average Score
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {students.map((student) => (
-                        <tr key={student.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{student.full_name}</div>
-                              <div className="text-sm text-gray-500">Joined {formatDate(student.enrollment_date)}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {student.email}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {student.total_quizzes_taken}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {student.average_score.toFixed(1)}%
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              student.status === 'active' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {student.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">
-                              <Mail className="h-4 w-4" />
-                            </button>
-                            <button className="text-gray-600 hover:text-gray-900">
-                              <MoreVertical className="h-4 w-4" />
-                            </button>
-                          </td>
+                {/* Quiz Results View */}
+                {dataView === 'quiz' && (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Quizzes Taken
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Average Score
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {students.map((student) => (
+                          <tr key={student.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{student.full_name}</div>
+                                <div className="text-sm text-gray-500">Joined {formatDate(student.enrollment_date)}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {student.email}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {student.total_quizzes_taken}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {student.average_score.toFixed(1)}%
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                student.status === 'active' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {student.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <button className="text-blue-600 hover:text-blue-900 mr-3">
+                                <Mail className="h-4 w-4" />
+                              </button>
+                              <button className="text-gray-600 hover:text-gray-900">
+                                <MoreVertical className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
+                {/* Practice Performance View */}
+                {dataView === 'practice' && (
+                  <div>
+                    {/* Practice Performance Filters */}
+                    <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Search Students
+                          </label>
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                              type="text"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              placeholder="Search by name or email..."
+                              className="pl-10 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Filter by Student
+                          </label>
+                          <select
+                            value={selectedStudent}
+                            onChange={(e) => setSelectedStudent(e.target.value)}
+                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="all">All Students</option>
+                            {students.map((student) => (
+                              <option key={student.id} value={student.id}>
+                                {student.full_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Filter by Chapter
+                          </label>
+                          <select
+                            value={selectedChapter}
+                            onChange={(e) => setSelectedChapter(e.target.value)}
+                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="all">All Chapters</option>
+                            {getUniqueChapters().map((chapter) => (
+                              <option key={chapter} value={chapter.toString()}>
+                                Chapter {chapter}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex items-end">
+                          <button
+                            onClick={loadPracticeData}
+                            disabled={practiceLoading}
+                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+                          >
+                            <RefreshCw className={`h-4 w-4 ${practiceLoading ? 'animate-spin' : ''}`} />
+                            <span>Refresh</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Practice Performance Stats */}
+                    {practiceData && (
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Users className="h-5 w-5 text-blue-600" />
+                            <div>
+                              <p className="text-sm text-blue-600">Students Practicing</p>
+                              <p className="text-2xl font-bold text-blue-900">{practiceData.stats.total_students_practiced}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Target className="h-5 w-5 text-green-600" />
+                            <div>
+                              <p className="text-sm text-green-600">Total Practice Attempts</p>
+                              <p className="text-2xl font-bold text-green-900">{practiceData.stats.total_practice_attempts}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-purple-50 p-4 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Award className="h-5 w-5 text-purple-600" />
+                            <div>
+                              <p className="text-sm text-purple-600">Overall Average</p>
+                              <p className="text-2xl font-bold text-purple-900">{practiceData.stats.overall_average_score.toFixed(1)}/10</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-orange-50 p-4 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <BookOpen className="h-5 w-5 text-orange-600" />
+                            <div>
+                              <p className="text-sm text-orange-600">Chapters Covered</p>
+                              <p className="text-2xl font-bold text-orange-900">{practiceData.stats.chapters_covered.length}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Practice Performance Content */}
+                    {practiceLoading ? (
+                      <div className="flex justify-center items-center py-12">
+                        <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+                      </div>
+                    ) : practiceError ? (
+                      <div className="text-center py-12">
+                        <p className="text-red-600 mb-4">{practiceError}</p>
+                        <button
+                          onClick={loadPracticeData}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    ) : practiceData && practiceData.students.length > 0 ? (
+                      <div className="space-y-6">
+                        {/* Student Practice Performance List */}
+                        <div className="bg-white border rounded-lg overflow-hidden">
+                          <div className="px-6 py-4 border-b border-gray-200">
+                            <h4 className="text-lg font-medium text-gray-900">Student Practice Performance</h4>
+                          </div>
+                          <div className="divide-y divide-gray-200">
+                            {getFilteredStudents().map((student) => (
+                              <div key={student.student_id} className="p-6 hover:bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-3 mb-2">
+                                      <h5 className="font-medium text-gray-900">{student.student_name}</h5>
+                                      <div className="flex items-center space-x-1">
+                                        {getTrendIcon(student.performance_trend)}
+                                        <span className={`text-sm ${getTrendColor(student.performance_trend)}`}>
+                                          {student.performance_trend}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mb-3">{student.student_email}</p>
+                                    
+                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                                      <div>
+                                        <p className="text-gray-500">Attempts</p>
+                                        <p className="font-medium">{student.total_practice_attempts}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-500">Average Score</p>
+                                        <p className={`font-medium px-2 py-1 rounded ${getScoreColor(student.average_practice_score)}`}>
+                                          {student.average_practice_score.toFixed(1)}/10
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-500">Best Score</p>
+                                        <p className="font-medium text-green-600">{student.best_score.toFixed(1)}/10</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-500">Time Spent</p>
+                                        <p className="font-medium">{formatTime(student.total_practice_time)}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-500">Chapters</p>
+                                        <p className="font-medium">{student.chapters_covered.length} chapters</p>
+                                      </div>
+                                    </div>
+
+                                    {student.latest_attempt_date && (
+                                      <p className="text-xs text-gray-500 mt-2">
+                                        Last activity: {formatDate(student.latest_attempt_date)}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="ml-4">
+                                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                      View Details
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Chapter Performance Summary */}
+                        {practiceData.chapters.length > 0 && (
+                          <div className="bg-white border rounded-lg overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                              <h4 className="text-lg font-medium text-gray-900">Chapter-wise Performance</h4>
+                            </div>
+                            <div className="p-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {practiceData.chapters
+                                  .sort((a, b) => a.chapter - b.chapter)
+                                  .map((chapter) => (
+                                  <div key={chapter.chapter} className="border rounded-lg p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h5 className="font-medium text-gray-900">Chapter {chapter.chapter}</h5>
+                                      <span className="text-sm text-gray-500">{chapter.student_count} students</span>
+                                    </div>
+                                    <div className="space-y-1 text-sm">
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-600">Average:</span>
+                                        <span className={`font-medium ${getScoreColor(chapter.average_score)}`}>
+                                          {chapter.average_score.toFixed(1)}/10
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-600">Best:</span>
+                                        <span className="font-medium text-green-600">{chapter.best_score.toFixed(1)}/10</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-600">Attempts:</span>
+                                        <span className="font-medium">{chapter.total_attempts}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                        <p className="text-gray-500 text-lg">No practice data available</p>
+                        <p className="text-gray-400 text-sm">
+                          Students haven't started practicing questions yet
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Empty state for no students */}
                 {students.length === 0 && (
                   <div className="text-center py-12">
                     <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -605,6 +1046,38 @@ export default function CourseDetailPage() {
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Practice Performance Tab */}
+            {activeTab === 'practice' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-medium text-gray-900">Student Practice Analytics</h3>
+                  <div className="flex items-center space-x-3">
+                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-2">
+                      <Download className="h-4 w-4" />
+                      <span>Export Data</span>
+                    </button>
+                    <button
+                      onClick={loadPracticeData}
+                      disabled={practiceLoading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${practiceLoading ? 'animate-spin' : ''}`} />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Comprehensive Practice Analytics would go here */}
+                <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                  <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-gray-500 text-lg">Comprehensive Analytics Coming Soon</p>
+                  <p className="text-gray-400 text-sm">
+                    Detailed charts, trends, and insights will be available here
+                  </p>
+                </div>
               </div>
             )}
 
