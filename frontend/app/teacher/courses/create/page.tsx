@@ -16,6 +16,29 @@ interface CourseFormData {
   max_students: number;
 }
 
+// Subject code to name mapping
+const SUBJECT_CODE_TO_NAME: Record<string, string> = {
+  'iesc1dd': 'Science',
+  'hesc1dd': 'Science',
+  'jesc1dd': 'Science',
+  'iemh1dd': 'Mathematics',
+  'jemh1dd': 'Mathematics',
+  'kemh1dd': 'Mathematics',
+  'lemh1dd': 'Mathematics (Part I)',
+  'lemh2dd': 'Mathematics (Part II)',
+  'hemh1dd': 'Mathematics',
+  'keph1dd': 'Physics (Part I)',
+  'keph2dd': 'Physics (Part II)',
+  'leph1dd': 'Physics (Part I)',
+  'leph2dd': 'Physics (Part II)',
+  'kech1dd': 'Chemistry (Part I)',
+  'kech2dd': 'Chemistry (Part II)',
+  'lech1dd': 'Chemistry (Part I)',
+  'lech2dd': 'Chemistry (Part II)',
+  'kebo1dd': 'Biology',
+  'lebo1dd': 'Biology'
+};
+
 // Use the same board structure as the quiz editor
 const BOARD_STRUCTURE = {
   cbse: {
@@ -199,13 +222,17 @@ export default function CreateCourse() {
     const board = BOARD_STRUCTURE[boardCode as keyof typeof BOARD_STRUCTURE];
     if (!board) return classCode;
     
-    const classInfo = board.classes[classCode as keyof typeof board.classes];
+    const classInfo = board.classes[classCode as keyof typeof board.classes] as { display_name: string } | undefined;
     return classInfo ? classInfo.display_name : classCode;
   };
 
   const getSubjectDisplayName = (subjectCode: string) => {
+    // First try to get from API data
     const subject = availableSubjects.find(s => s.code === subjectCode);
-    return subject ? subject.name : subjectCode;
+    if (subject) return subject.name;
+    
+    // Fallback to the mapping
+    return SUBJECT_CODE_TO_NAME[subjectCode] || subjectCode;
   };
 
   return (
