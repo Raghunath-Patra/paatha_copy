@@ -81,50 +81,66 @@ interface PracticeAnalyticsProps {
 export default function PracticeAnalyticsTeacher({ data, courseInfo }: PracticeAnalyticsProps) {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-  // Prepare chapter performance data for charts
+  // Validate data before processing
+  if (!data || !data.students || !data.chapters || !data.stats) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="text-center py-12">
+          <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Invalid Data</h3>
+          <p className="text-gray-600">Unable to load analytics data.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Prepare chapter performance data for charts with validation
   const chapterData = data.chapters
+    .filter(chapter => chapter && typeof chapter.chapter === 'number' && typeof chapter.average_score === 'number')
     .sort((a, b) => a.chapter - b.chapter)
     .map(chapter => ({
       chapter: `Ch ${chapter.chapter}`,
-      average_score: parseFloat(chapter.average_score.toFixed(1)),
-      total_attempts: chapter.total_attempts,
-      student_count: chapter.student_count,
-      best_score: parseFloat(chapter.best_score.toFixed(1)),
-      worst_score: parseFloat(chapter.worst_score.toFixed(1))
+      average_score: Math.round(chapter.average_score * 10) / 10, // Round to 1 decimal
+      total_attempts: chapter.total_attempts || 0,
+      student_count: chapter.student_count || 0,
+      best_score: Math.round(chapter.best_score * 10) / 10,
+      worst_score: Math.round(chapter.worst_score * 10) / 10
     }));
 
-  // Prepare student performance distribution
+  // Prepare student performance distribution with validation
   const scoreDistribution = [
-    { range: '9-10', count: data.students.filter(s => s.average_practice_score >= 9).length, color: '#10B981' },
-    { range: '7-8.9', count: data.students.filter(s => s.average_practice_score >= 7 && s.average_practice_score < 9).length, color: '#3B82F6' },
-    { range: '5-6.9', count: data.students.filter(s => s.average_practice_score >= 5 && s.average_practice_score < 7).length, color: '#F59E0B' },
-    { range: '0-4.9', count: data.students.filter(s => s.average_practice_score < 5).length, color: '#EF4444' }
+    { range: '9-10', count: data.students.filter(s => s && typeof s.average_practice_score === 'number' && s.average_practice_score >= 9).length, color: '#10B981' },
+    { range: '7-8.9', count: data.students.filter(s => s && typeof s.average_practice_score === 'number' && s.average_practice_score >= 7 && s.average_practice_score < 9).length, color: '#3B82F6' },
+    { range: '5-6.9', count: data.students.filter(s => s && typeof s.average_practice_score === 'number' && s.average_practice_score >= 5 && s.average_practice_score < 7).length, color: '#F59E0B' },
+    { range: '0-4.9', count: data.students.filter(s => s && typeof s.average_practice_score === 'number' && s.average_practice_score < 5).length, color: '#EF4444' }
   ];
 
-  // Prepare student engagement data (attempts vs performance)
-  const engagementData = data.students.map(student => ({
-    name: student.student_name.split(' ')[0], // First name only for readability
-    attempts: student.total_practice_attempts,
-    score: parseFloat(student.average_practice_score.toFixed(1)),
-    time: Math.round(student.total_practice_time / 60), // Convert to minutes
-    trend: student.performance_trend
-  }));
+  // Prepare student engagement data (attempts vs performance) with validation
+  const engagementData = data.students
+    .filter(student => student && student.student_name && typeof student.total_practice_attempts === 'number' && typeof student.average_practice_score === 'number')
+    .map(student => ({
+      name: student.student_name.split(' ')[0] || 'Unknown', // First name only for readability
+      attempts: student.total_practice_attempts,
+      score: Math.round(student.average_practice_score * 10) / 10,
+      time: Math.round((student.total_practice_time || 0) / 60), // Convert to minutes
+      trend: student.performance_trend || 'stable'
+    }));
 
-  // Performance trend distribution
+  // Performance trend distribution with validation
   const trendData = [
     { 
       name: 'Improving', 
-      value: data.students.filter(s => s.performance_trend === 'improving').length,
+      value: data.students.filter(s => s && s.performance_trend === 'improving').length,
       color: '#10B981'
     },
     { 
       name: 'Stable', 
-      value: data.students.filter(s => s.performance_trend === 'stable').length,
+      value: data.students.filter(s => s && s.performance_trend === 'stable').length,
       color: '#6B7280'
     },
     { 
       name: 'Declining', 
-      value: data.students.filter(s => s.performance_trend === 'declining').length,
+      value: data.students.filter(s => s && s.performance_trend === 'declining').length,
       color: '#EF4444'
     }
   ];

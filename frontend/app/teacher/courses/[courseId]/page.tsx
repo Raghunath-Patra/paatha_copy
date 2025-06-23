@@ -1170,14 +1170,24 @@ export default function CourseDetailPage() {
                     </div>
 
                     {/* Comprehensive Practice Analytics */}
-                    <PracticeAnalyticsTeacher 
-                      data={practiceData}
-                      courseInfo={{
-                        board: course.board,
-                        class_level: course.class_level,
-                        subject: course.subject
-                      }}
-                    />
+                    {practiceData.students.length > 0 && practiceData.chapters.length > 0 ? (
+                      <PracticeAnalyticsTeacher 
+                        data={practiceData}
+                        courseInfo={{
+                          board: course.board,
+                          class_level: course.class_level,
+                          subject: course.subject
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                        <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                        <p className="text-gray-500 text-lg">Insufficient Data for Analytics</p>
+                        <p className="text-gray-400 text-sm">
+                          Need more student practice data to generate meaningful analytics
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
