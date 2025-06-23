@@ -11,6 +11,7 @@ const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const SESSION_EXPIRY_WARNING = 5 * 60 * 1000; // 5 minutes before expiry
 const SESSION_REFRESH_THRESHOLD = 10 * 60 * 1000; // Refresh when 10 min remaining
 const AUTH_TIMEOUT = 15000; // 15 seconds timeout for auth operations
+const MAX_REFRESH_ATTEMPTS = 3; // Limit refresh attempts
 
 interface UserProfile {
   id: string;
@@ -78,6 +79,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const sessionCheckInterval = useRef<NodeJS.Timeout | null>(null);
   const authOperationInProgress = useRef<boolean>(false);
   const lastRefreshAttempt = useRef<number>(0);
+  const refreshAttempts = useRef<number>(0); // Track refresh attempts
 
   // Fetch user profile from Supabase
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
@@ -121,15 +123,25 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // Check session expiration
+  // FIXED: Improved session expiration check with better guards
   const checkSessionExpiration = useCallback(() => {
-    if (!session) return;
+    // Don't check if no session exists or if auth operation is in progress
+    if (!session || authOperationInProgress.current) return;
     
     const expiresAt = session.expires_at;
     if (!expiresAt) return;
     
     const expiresAtMs = expiresAt * 1000; // Convert to milliseconds
     const timeRemaining = expiresAtMs - Date.now();
+    
+    // If session already expired, don't try to refresh
+    if (timeRemaining <= 0) {
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setIsSessionExpiring(false);
+      return;
+    }
     
     // If session will expire soon, show warning
     if (timeRemaining < SESSION_EXPIRY_WARNING) {
@@ -138,8 +150,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setIsSessionExpiring(false);
     }
     
-    // If getting close to expiry, refresh session
-    if (timeRemaining < SESSION_REFRESH_THRESHOLD && !authOperationInProgress.current) {
+    // If getting close to expiry and haven't exceeded refresh attempts, refresh session
+    if (timeRemaining < SESSION_REFRESH_THRESHOLD && 
+        refreshAttempts.current < MAX_REFRESH_ATTEMPTS &&
+        !authOperationInProgress.current) {
       const now = Date.now();
       // Avoid refreshing too frequently (minimum 2 minutes between refreshes)
       if (now - lastRefreshAttempt.current > 120000) {
@@ -148,54 +162,99 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, [session]);
 
-  // Refresh session
+  // FIXED: Improved refresh session with proper error handling and attempt limiting
   const refreshSession = useCallback(async () => {
-    if (authOperationInProgress.current) {
+    if (authOperationInProgress.current || refreshAttempts.current >= MAX_REFRESH_ATTEMPTS) {
       return;
     }
 
     try {
       authOperationInProgress.current = true;
       lastRefreshAttempt.current = Date.now();
+      refreshAttempts.current += 1;
+      
+      // First check if we have a session to refresh
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (!currentSession) {
+        console.log('No session to refresh');
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setIsSessionExpiring(false);
+        return;
+      }
       
       const { data, error } = await supabase.auth.refreshSession();
       
       if (error) {
         console.error('Error refreshing session:', error);
-        throw error;
+        
+        // If refresh fails multiple times, clear session
+        if (refreshAttempts.current >= MAX_REFRESH_ATTEMPTS) {
+          console.log('Max refresh attempts reached, clearing session');
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setIsSessionExpiring(false);
+        }
+        return;
       }
       
       if (data.session) {
         setSession(data.session);
         setUser(data.session.user);
         setIsSessionExpiring(false);
+        refreshAttempts.current = 0; // Reset on successful refresh
+        
+        // Fetch updated profile if needed
+        if (!profile && data.session.user) {
+          const userProfile = await fetchProfile(data.session.user.id);
+          if (userProfile) {
+            setProfile(userProfile);
+          }
+        }
       } else {
         setSession(null);
         setUser(null);
+        setProfile(null);
       }
     } catch (err) {
       console.error('Error refreshing session:', err);
-      setError('Session could not be refreshed. Please try again or log in.');
+      
+      // Don't show session refresh errors during registration
+      if (!err.message?.includes('Auth session missing')) {
+        setError('Session could not be refreshed. Please try again or log in.');
+      }
     } finally {
       authOperationInProgress.current = false;
     }
-  }, []);
+  }, [profile, fetchProfile]);
 
-  // IMPORTANT: NO VISIBILITY CHANGE HANDLING - this prevents the refresh issue
-  // Set up session checking with longer intervals only
+  // FIXED: Improved session checking interval with better conditions
   useEffect(() => {
-    sessionCheckInterval.current = setInterval(() => {
-      checkSessionExpiration();
-    }, SESSION_CHECK_INTERVAL);
+    // Only start interval if we have a session
+    if (session && session.expires_at) {
+      sessionCheckInterval.current = setInterval(() => {
+        checkSessionExpiration();
+      }, SESSION_CHECK_INTERVAL);
+    } else {
+      // Clear interval if no session
+      if (sessionCheckInterval.current) {
+        clearInterval(sessionCheckInterval.current);
+        sessionCheckInterval.current = null;
+      }
+    }
 
     return () => {
       if (sessionCheckInterval.current) {
         clearInterval(sessionCheckInterval.current);
+        sessionCheckInterval.current = null;
       }
     };
-  }, [checkSessionExpiration]);
+  }, [checkSessionExpiration, session?.expires_at]); // Only depend on session expiry
 
-  // Initialize authentication
+  // FIXED: Improved authentication initialization
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
@@ -218,34 +277,73 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) throw sessionError;
-
-        if (currentSession?.user && mounted) {
+        if (sessionError) {
+          console.error('Session error during init:', sessionError);
+          // Don't throw for session errors during init
+          if (mounted) {
+            setUser(null);
+            setProfile(null);
+            setSession(null);
+          }
+        } else if (currentSession?.user && mounted) {
           setUser(currentSession.user);
           setSession(currentSession);
+          refreshAttempts.current = 0; // Reset refresh attempts for valid session
+          
           const userProfile = await fetchProfile(currentSession.user.id);
           if (mounted && userProfile) {
             setProfile(userProfile);
           }
         }
 
-        // Set up Supabase auth listener
+        // FIXED: Improved auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            if (event === 'SIGNED_IN' && session?.user) {
-              setUser(session.user);
-              
-              const originalPath = sessionStorage.getItem('originalPath');
-              if (originalPath) {
-                sessionStorage.removeItem('originalPath');
-                window.location.href = originalPath;
-              } else {
-                window.location.href = '/';
-              }
-            } else if (event === 'SIGNED_OUT') {
-              setUser(null);
-              setSession(null);
-              setProfile(null);
+            if (!mounted) return;
+            
+            console.log('Auth state change:', event, session?.user?.id);
+            
+            switch (event) {
+              case 'SIGNED_IN':
+                if (session?.user) {
+                  setUser(session.user);
+                  setSession(session);
+                  refreshAttempts.current = 0; // Reset on successful sign in
+                  
+                  const userProfile = await fetchProfile(session.user.id);
+                  if (mounted && userProfile) {
+                    setProfile(userProfile);
+                  }
+                  
+                  const originalPath = sessionStorage.getItem('originalPath');
+                  if (originalPath) {
+                    sessionStorage.removeItem('originalPath');
+                    window.location.href = originalPath;
+                  } else {
+                    window.location.href = '/';
+                  }
+                }
+                break;
+                
+              case 'SIGNED_OUT':
+                setUser(null);
+                setSession(null);
+                setProfile(null);
+                setIsSessionExpiring(false);
+                refreshAttempts.current = 0;
+                break;
+                
+              case 'TOKEN_REFRESHED':
+                if (session) {
+                  setSession(session);
+                  setUser(session.user);
+                  refreshAttempts.current = 0; // Reset on successful refresh
+                }
+                break;
+                
+              default:
+                // For other events, don't change state unnecessarily
+                break;
             }
           });
 
@@ -257,7 +355,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           setUser(null);
           setProfile(null);
           setSession(null);
-          setError(err instanceof Error ? err.message : 'An error occurred during initialization');
+          // Only set error for non-session related errors
+          if (!err.message?.includes('Auth session missing')) {
+            setError(err instanceof Error ? err.message : 'An error occurred during initialization');
+          }
         }
       } finally {
         clearTimeout(initTimeoutId);
@@ -276,18 +377,34 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         authListenerRef.current.data.subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, loading]);
+  }, [fetchProfile]);
 
-  // COMPLETE LOGIN FUNCTION
+  // FIXED: Improved setError function to filter session-related errors
+  const setErrorSafe = useCallback((newError: string | null) => {
+    // Filter out session-related errors that shouldn't be shown during registration/normal flow
+    if (newError && (
+      newError.includes("Session could not be refreshed") || 
+      newError.includes("Error refreshing session") ||
+      newError.includes("AuthSessionMissingError") ||
+      newError.includes("Auth session missing")
+    )) {
+      console.warn('Filtered session error:', newError);
+      return; // Don't set these errors in state
+    }
+    
+    setError(newError);
+  }, []);
+
+  // COMPLETE LOGIN FUNCTION (unchanged but using setErrorSafe)
   const login = async (email: string, password: string) => {
     if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
+      setErrorSafe('Another operation is in progress. Please try again.');
       return;
     }
 
     try {
       authOperationInProgress.current = true;
-      setError(null);
+      setErrorSafe(null);
       setLoading(true);
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -300,6 +417,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
       setUser(data.user);
       setSession(data.session);
+      refreshAttempts.current = 0; // Reset refresh attempts on successful login
       
       const userProfile = await fetchProfile(data.user.id);
       if (userProfile) {
@@ -319,23 +437,23 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       
     } catch (err) {
       console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during login');
+      setErrorSafe(err instanceof Error ? err.message : 'An error occurred during login');
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
     }
   };
 
-  // COMPLETE REGISTER FUNCTION
+  // COMPLETE REGISTER FUNCTION (unchanged but using setErrorSafe)
   const register = async (userData: RegisterData) => {
     if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
+      setErrorSafe('Another operation is in progress. Please try again.');
       return;
     }
 
     try {
       authOperationInProgress.current = true;
-      setError(null);
+      setErrorSafe(null);
       setLoading(true);
 
       const { data, error } = await supabase.auth.signUp({
@@ -369,6 +487,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       // Auto-login: We're already logged in after signUp
       setUser(data.user);
       setSession(data.session);
+      refreshAttempts.current = 0; // Reset refresh attempts on successful registration
       const profile = await fetchProfile(data.user.id);
       if (profile) {
         setProfile(profile);
@@ -377,23 +496,23 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       router.push('/login?registered=true');
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during registration');
+      setErrorSafe(err instanceof Error ? err.message : 'An error occurred during registration');
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
     }
   };
 
-  // COMPLETE GOOGLE SIGN IN FUNCTION
+  // COMPLETE GOOGLE SIGN IN FUNCTION (unchanged but using setErrorSafe)
   const signInWithGoogle = async (credential?: string) => {
     if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
+      setErrorSafe('Another operation is in progress. Please try again.');
       return;
     }
 
     try {
       authOperationInProgress.current = true;
-      setError(null);
+      setErrorSafe(null);
       setLoading(true);
   
       if (credential) {
@@ -407,6 +526,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         if (data.user) {
           setUser(data.user);
           setSession(data.session);
+          refreshAttempts.current = 0; // Reset refresh attempts
           const userProfile = await fetchProfile(data.user.id);
           if (userProfile) {
             setProfile(userProfile);
@@ -435,17 +555,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     } catch (err) {
       console.error('Google sign in error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during Google sign in');
+      setErrorSafe(err instanceof Error ? err.message : 'An error occurred during Google sign in');
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
     }
   };
 
-  // COMPLETE LOGOUT FUNCTION
+  // Rest of the functions remain unchanged but use setErrorSafe instead of setError...
+  
   const logout = async () => {
     if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
+      setErrorSafe('Another operation is in progress. Please try again.');
       return;
     }
   
@@ -459,6 +580,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setUser(null);
       setProfile(null);
       setSession(null);
+      refreshAttempts.current = 0;
       
       window.location.href = '/login';
     } catch (err) {
@@ -467,6 +589,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setUser(null);
       setProfile(null);
       setSession(null);
+      refreshAttempts.current = 0;
       window.location.href = '/login';
     } finally {
       setLoading(false);
@@ -474,7 +597,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // COMPLETE UPDATE PROFILE FUNCTION
   const updateProfile = async (userData: Partial<UserProfile>) => {
     if (!user) return;
 
@@ -496,22 +618,21 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     } catch (err) {
       console.error('Profile update error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred updating profile');
+      setErrorSafe(err instanceof Error ? err.message : 'An error occurred updating profile');
     } finally {
       setLoading(false);
     }
   };
 
-  // COMPLETE PASSWORD RESET FUNCTIONS
   const requestPasswordReset = async (email: string) => {
     if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
+      setErrorSafe('Another operation is in progress. Please try again.');
       return false;
     }
 
     try {
       authOperationInProgress.current = true;
-      setError(null);
+      setErrorSafe(null);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -521,7 +642,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       return true;
     } catch (err) {
       console.error('Password reset request error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred requesting password reset');
+      setErrorSafe(err instanceof Error ? err.message : 'An error occurred requesting password reset');
       return false;
     } finally {
       authOperationInProgress.current = false;
@@ -530,13 +651,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const resetPassword = async (newPassword: string) => {
     if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
+      setErrorSafe('Another operation is in progress. Please try again.');
       return;
     }
 
     try {
       authOperationInProgress.current = true;
-      setError(null);
+      setErrorSafe(null);
       
       const { error } = await supabase.auth.updateUser({
         password: newPassword
@@ -546,7 +667,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       router.push('/login?reset=success');
     } catch (err) {
       console.error('Password reset error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred resetting password');
+      setErrorSafe(err instanceof Error ? err.message : 'An error occurred resetting password');
     } finally {
       authOperationInProgress.current = false;
     }
@@ -568,7 +689,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         requestPasswordReset,
         resetPassword,
         signInWithGoogle,
-        setError: (err: string | null) => setError(err)
+        setError: setErrorSafe
       }}
     >
       {isSessionExpiring && (
