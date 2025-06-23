@@ -189,7 +189,20 @@ export default function CreateCourse() {
     }
   };
 
-  // Get the display name for the selected subject
+  // Helper functions to get display names
+  const getBoardDisplayName = (boardCode: string) => {
+    const board = BOARD_STRUCTURE[boardCode as keyof typeof BOARD_STRUCTURE];
+    return board ? board.display_name : boardCode;
+  };
+
+  const getClassDisplayName = (boardCode: string, classCode: string) => {
+    const board = BOARD_STRUCTURE[boardCode as keyof typeof BOARD_STRUCTURE];
+    if (!board) return classCode;
+    
+    const classInfo = board.classes[classCode as keyof typeof board.classes];
+    return classInfo ? classInfo.display_name : classCode;
+  };
+
   const getSubjectDisplayName = (subjectCode: string) => {
     const subject = availableSubjects.find(s => s.code === subjectCode);
     return subject ? subject.name : subjectCode;
@@ -386,12 +399,10 @@ export default function CreateCourse() {
               )}
               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                 {formData.board && (
-                  <span>{BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE]?.display_name}</span>
+                  <span>{getBoardDisplayName(formData.board)}</span>
                 )}
                 {formData.class_level && formData.board && (
-                  <span>
-                    {BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE]?.classes[formData.class_level as keyof typeof BOARD_STRUCTURE[keyof typeof BOARD_STRUCTURE]['classes']]?.display_name}
-                  </span>
+                  <span>{getClassDisplayName(formData.board, formData.class_level)}</span>
                 )}
                 {formData.subject && (
                   <span>{getSubjectDisplayName(formData.subject)}</span>
