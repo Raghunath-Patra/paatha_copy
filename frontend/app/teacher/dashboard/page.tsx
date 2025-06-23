@@ -20,7 +20,9 @@ import {
   Lock,
   FileText,
   Users,
-  BookOpen
+  BookOpen,
+  GraduationCap,
+  School
 } from 'lucide-react';
 
 interface Course {
@@ -76,10 +78,16 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // New state for quiz modal
+  // Quiz modal state
   const [showAllQuizzesModal, setShowAllQuizzesModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all'); // 'all', 'draft', 'published'
   const [filterCourse, setFilterCourse] = useState<string>('all'); // 'all' or course_id
+
+  // Course modal state
+  const [showAllCoursesModal, setShowAllCoursesModal] = useState(false);
+  const [courseFilterStatus, setCourseFilterStatus] = useState<string>('all'); // 'all', 'active', 'inactive'
+  const [courseFilterBoard, setCourseFilterBoard] = useState<string>('all'); // 'all' or board
+  const [courseFilterSubject, setCourseFilterSubject] = useState<string>('all'); // 'all' or subject
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -233,6 +241,15 @@ export default function TeacherDashboard() {
     }
   };
 
+  const handleCourseClick = (course: Course) => {
+    // Store course data temporarily to avoid unnecessary API calls
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('courseData', JSON.stringify(course));
+    }
+    // Navigate to course details/management page
+    router.push(`/teacher/courses/${course.id}`);
+  };
+
   const getFilteredQuizzes = () => {
     let filtered = allQuizzes;
 
@@ -251,6 +268,40 @@ export default function TeacherDashboard() {
     return filtered;
   };
 
+  const getFilteredCourses = () => {
+    let filtered = courses;
+
+    // Filter by status
+    if (courseFilterStatus === 'active') {
+      filtered = filtered.filter(course => course.is_active);
+    } else if (courseFilterStatus === 'inactive') {
+      filtered = filtered.filter(course => !course.is_active);
+    }
+
+    // Filter by board
+    if (courseFilterBoard !== 'all') {
+      filtered = filtered.filter(course => course.board.toLowerCase() === courseFilterBoard.toLowerCase());
+    }
+
+    // Filter by subject
+    if (courseFilterSubject !== 'all') {
+      filtered = filtered.filter(course => course.subject.toLowerCase() === courseFilterSubject.toLowerCase());
+    }
+
+    return filtered;
+  };
+
+  // Get unique values for filters
+  const getUniqueBoards = () => {
+    const boards = courses.map(course => course.board);
+    return [...new Set(boards)];
+  };
+
+  const getUniqueSubjects = () => {
+    const subjects = courses.map(course => course.subject);
+    return [...new Set(subjects)];
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     
@@ -264,6 +315,17 @@ export default function TeacherDashboard() {
       hour: '2-digit',
       minute: '2-digit',
       timeZone: 'Asia/Kolkata'
+    });
+  };
+
+  const formatCourseDate = (dateString: string) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -413,6 +475,177 @@ export default function TeacherDashboard() {
             </button>
           </div>
         </div>
+
+        {/* All Courses Modal */}
+        {showAllCoursesModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">All Courses</h3>
+                <button
+                  onClick={() => setShowAllCoursesModal(false)}
+                  className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              {/* Course Filters */}
+              <div className="border-b p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Status Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select
+                      value={courseFilterStatus}
+                      onChange={(e) => setCourseFilterStatus(e.target.value)}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Courses ({courses.length})</option>
+                      <option value="active">Active ({courses.filter(c => c.is_active).length})</option>
+                      <option value="inactive">Inactive ({courses.filter(c => !c.is_active).length})</option>
+                    </select>
+                  </div>
+
+                  {/* Board Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Board</label>
+                    <select
+                      value={courseFilterBoard}
+                      onChange={(e) => setCourseFilterBoard(e.target.value)}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Boards</option>
+                      {getUniqueBoards().map((board) => (
+                        <option key={board} value={board}>
+                          {board.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Subject Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                    <select
+                      value={courseFilterSubject}
+                      onChange={(e) => setCourseFilterSubject(e.target.value)}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Subjects</option>
+                      {getUniqueSubjects().map((subject) => (
+                        <option key={subject} value={subject}>
+                          {subject.charAt(0).toUpperCase() + subject.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
+                {getFilteredCourses().length === 0 ? (
+                  <div className="text-center py-12">
+                    <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500 text-lg">No courses found</p>
+                    <p className="text-gray-400 text-sm">
+                      {courseFilterStatus === 'active' ? 'No active courses found' :
+                       courseFilterStatus === 'inactive' ? 'No inactive courses found' :
+                       'Create your first course to get started'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {getFilteredCourses().map((course) => (
+                      <div 
+                        key={course.id}
+                        className="border rounded-lg p-4 transition-colors hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleCourseClick(course)}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3">
+                          <div className="flex-1 mb-2 sm:mb-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
+                              <h4 className="font-semibold text-gray-900">{course.course_name}</h4>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium self-start ${
+                                course.is_active 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                {course.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              {course.board.toUpperCase()} • Class {course.class_level} • {course.subject}
+                            </p>
+                            {course.description && (
+                              <p className="text-sm text-gray-500 mb-2">{course.description}</p>
+                            )}
+                            <div className="flex items-center space-x-4 text-xs text-gray-500">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">
+                                {course.course_code}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-left sm:text-right sm:ml-4 flex-shrink-0">
+                            <div className="text-sm font-medium text-gray-900">
+                              {course.current_students}/{course.max_students} students
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {course.total_quizzes} quizzes
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Created {formatCourseDate(course.created_at)}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs text-gray-500">
+                          <div className="flex items-center">
+                            <Users className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{course.current_students} students</span>
+                          </div>
+                          <div className="flex items-center">
+                            <FileText className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{course.total_quizzes} quizzes</span>
+                          </div>
+                          <div className="flex items-center">
+                            <School className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{course.board.toUpperCase()}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <GraduationCap className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">Class {course.class_level}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Action button */}
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-green-600 font-medium">
+                              Click to manage course
+                            </span>
+                            <Eye className="h-4 w-4 text-green-600" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border-t p-4 bg-gray-50">
+                <button
+                  onClick={() => setShowAllCoursesModal(false)}
+                  className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* All Quizzes Modal */}
         {showAllQuizzesModal && (
@@ -585,7 +818,7 @@ export default function TeacherDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">Recent Courses</h3>
               <button
-                onClick={() => router.push('/teacher/courses')}
+                onClick={() => setShowAllCoursesModal(true)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
                 View All
@@ -593,7 +826,11 @@ export default function TeacherDashboard() {
             </div>
             <div className="space-y-4">
               {courses.slice(0, 5).map((course) => (
-                <div key={course.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div 
+                  key={course.id} 
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleCourseClick(course)}
+                >
                   <div className="flex-1 mb-2 sm:mb-0">
                     <h4 className="font-medium text-gray-900 text-sm sm:text-base">{course.course_name}</h4>
                     <p className="text-sm text-gray-600">
