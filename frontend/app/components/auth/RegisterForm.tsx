@@ -1,10 +1,24 @@
 // frontend/app/components/auth/RegisterForm.tsx
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import RoleSelection from './RoleSelection';
 import Link from 'next/link';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 interface RegisterFormData {
   email: string;
@@ -30,6 +44,63 @@ export default function RegisterForm() {
   });
   const { register, signInWithGoogle, loading, error } = useSupabaseAuth();
   const [passwordError, setPasswordError] = useState<string>('');
+  
+  // For Google One-tap
+  useEffect(() => {
+    // Initialize Google One Tap
+    const googleScript = document.createElement('script');
+    googleScript.src = 'https://accounts.google.com/gsi/client';
+    googleScript.async = true;
+    googleScript.defer = true;
+    document.head.appendChild(googleScript);
+
+    googleScript.onload = () => {
+      if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+        window.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          callback: handleGoogleOneTapResponse,
+          auto_select: true,
+          cancel_on_tap_outside: false,
+          context: 'signup',
+          ux_mode: 'popup',
+          login_uri: window.location.origin + '/auth/callback'
+        });
+
+        // Render the Google One-tap button
+        const buttonDiv = document.getElementById('google-one-tap-register');
+        if (buttonDiv) {
+          window.google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            width: buttonDiv.offsetWidth,
+            text: 'signup_with'
+          });
+        }
+
+        // Prompt One-tap
+        window.google.accounts.id.prompt();
+      }
+    };
+
+    return () => {
+      if (googleScript.parentNode) {
+        googleScript.parentNode.removeChild(googleScript);
+      }
+    };
+  }, []);
+
+  const handleGoogleOneTapResponse = async (response: any) => {
+    try {
+      if (response.credential) {
+        // For Google sign-up, we'll default to student role
+        // Users can change this later in their profile
+        await signInWithGoogle(response.credential);
+        sessionStorage.setItem('isInitialLogin', 'true');
+      }
+    } catch (error) {
+      console.error('Google One-tap error:', error);
+    }
+  };
 
   const handleBasicFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,8 +134,6 @@ export default function RegisterForm() {
   // Handle regular Google OAuth sign in
   const handleGoogleSignIn = async () => {
     try {
-      // Set flag to indicate this is a registration flow
-      sessionStorage.setItem('isGoogleRegistration', 'true');
       await signInWithGoogle();
     } catch (err) {
       console.error('Google sign in error:', err);
@@ -72,14 +141,7 @@ export default function RegisterForm() {
   };
 
   if (step === 'role') {
-    return (
-      <RoleSelection 
-        onRoleSelect={handleRoleSelect} 
-        loading={loading}
-        showBackButton={true}
-        onBack={() => setStep('basic')}
-      />
-    );
+    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />;
   }
 
   return (
@@ -199,6 +261,9 @@ export default function RegisterForm() {
           </span>
         </div>
       </form>
+      
+      {/* Google One-tap button container (alternative placement) */}
+      <div id="google-one-tap-register" className="w-full mt-6 hidden"></div>
     </div>
   );
 }

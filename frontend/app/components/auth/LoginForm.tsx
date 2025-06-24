@@ -27,7 +27,6 @@ export default function LoginForm() {
   const registered = searchParams?.get('registered');
   const resetSuccess = searchParams?.get('reset');
   const sessionExpired = searchParams?.get('session_expired');
-  const urlError = searchParams?.get('error');
 
   const { login, signInWithGoogle, loading, error, setError } = useSupabaseAuth();
   
@@ -48,9 +47,6 @@ export default function LoginForm() {
   }, [error, setError]);
 
   useEffect(() => {
-    // Check if user just registered - don't auto-trigger Google
-    const justRegistered = searchParams?.get('registered');
-    
     // Initialize Google One Tap
     const googleScript = document.createElement('script');
     googleScript.src = 'https://accounts.google.com/gsi/client';
@@ -63,7 +59,7 @@ export default function LoginForm() {
         window.google.accounts.id.initialize({
           client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
           callback: handleGoogleOneTapResponse,
-          auto_select: false, // Don't auto-select to avoid unwanted prompts
+          auto_select: true,
           cancel_on_tap_outside: false,
           context: 'signin',
           ux_mode: 'popup',
@@ -81,10 +77,8 @@ export default function LoginForm() {
           });
         }
 
-        // Only prompt One-tap if user didn't just register
-        if (!justRegistered && !urlError) {
-          window.google.accounts.id.prompt();
-        }
+        // Prompt One-tap
+        window.google.accounts.id.prompt();
       }
     };
 
@@ -93,7 +87,7 @@ export default function LoginForm() {
         googleScript.parentNode.removeChild(googleScript);
       }
     };
-  }, [searchParams, urlError]);
+  }, []);
 
   const handleGoogleOneTapResponse = async (response: any) => {
     try {
@@ -120,51 +114,26 @@ export default function LoginForm() {
     sessionStorage.setItem('isInitialLogin', 'true');
   };
 
-  // Helper function to get user-friendly error messages
-  const getErrorMessage = (errorCode: string) => {
-    switch (errorCode) {
-      case 'email_not_confirmed':
-        return 'Please check your email and click the verification link before logging in.';
-      case 'invalid_or_expired_code':
-        return 'The verification link has expired. Please try logging in again.';
-      case 'auth_callback_error':
-        return 'Authentication failed. Please try logging in again.';
-      default:
-        // Only show the error if it's not a technical/internal error
-        if (errorCode.includes('null') || errorCode.includes('undefined') || errorCode.includes('code')) {
-          return null; // Don't show technical errors to users
-        }
-        return decodeURIComponent(errorCode);
-    }
-  };
-
   // Filter out session refresh errors for display
   const displayError = error && !(
     error.includes("Session could not be refreshed") || 
     error.includes("Error refreshing session")
   ) ? error : null;
 
-  // URL error takes precedence, but filter out technical errors
-  const urlErrorMessage = urlError ? getErrorMessage(urlError) : null;
-  const finalError = urlErrorMessage || displayError;
-
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
       <h2 className="text-2xl font-medium mb-6">Login to Your Account</h2>
 
-      {finalError && (
+      {displayError && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
-          {finalError}
+          {displayError}
         </div>
       )}
 
       {registered && (
         <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg">
-          <div className="font-medium mb-1">Registration Successful!</div>
-          <div className="text-sm">
-            A verification link has been sent to your email address. 
-            Please verify your email before logging in.
-          </div>
+          A verification link has been sent to your email address. 
+          Please verify your email before logging in.
         </div>
       )}
 

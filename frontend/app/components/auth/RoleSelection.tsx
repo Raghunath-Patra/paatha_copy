@@ -7,8 +7,6 @@ import { useRouter } from 'next/navigation';
 interface RoleSelectionProps {
   onRoleSelect: (role: 'student' | 'teacher', additionalData?: any) => void;
   loading?: boolean;
-  showBackButton?: boolean;
-  onBack?: () => void;
 }
 
 interface TeacherData {
@@ -18,12 +16,7 @@ interface TeacherData {
   institution_name?: string;
 }
 
-export default function RoleSelection({ 
-  onRoleSelect, 
-  loading = false, 
-  showBackButton = true,
-  onBack 
-}: RoleSelectionProps) {
+export default function RoleSelection({ onRoleSelect, loading = false }: RoleSelectionProps) {
   const [selectedRole, setSelectedRole] = useState<'student' | 'teacher' | null>(null);
   const [showTeacherForm, setShowTeacherForm] = useState(false);
   const [teacherData, setTeacherData] = useState<TeacherData>({
@@ -49,15 +42,6 @@ export default function RoleSelection({
       subjects_taught: teacherData.subjects_taught?.filter(subject => subject.trim() !== '')
     };
     onRoleSelect('teacher', cleanedData);
-  };
-
-  const handleBack = () => {
-    if (showTeacherForm) {
-      setShowTeacherForm(false);
-      setSelectedRole(null);
-    } else if (onBack) {
-      onBack();
-    }
   };
 
   const addSubject = () => {
@@ -87,17 +71,17 @@ export default function RoleSelection({
     return (
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
         <div className="flex items-center mb-6">
-          {showBackButton && (
-            <button
-              onClick={handleBack}
-              className="mr-3 text-gray-400 hover:text-gray-600"
-              disabled={loading}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setShowTeacherForm(false);
+              setSelectedRole(null);
+            }}
+            className="mr-3 text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
           <h2 className="text-2xl font-medium">Teacher Information</h2>
         </div>
 
@@ -116,7 +100,6 @@ export default function RoleSelection({
               }))}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., 5"
-              disabled={loading}
             />
           </div>
 
@@ -133,7 +116,6 @@ export default function RoleSelection({
               }))}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., M.Sc. Mathematics, B.Ed."
-              disabled={loading}
             />
           </div>
 
@@ -150,7 +132,6 @@ export default function RoleSelection({
               }))}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., ABC School"
-              disabled={loading}
             />
           </div>
 
@@ -167,13 +148,11 @@ export default function RoleSelection({
                     onChange={(e) => updateSubject(index, e.target.value)}
                     className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., Mathematics"
-                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => removeSubject(index)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
-                    disabled={loading}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -184,8 +163,7 @@ export default function RoleSelection({
               <button
                 type="button"
                 onClick={addSubject}
-                className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-gray-600 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50"
-                disabled={loading}
+                className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-gray-600 hover:border-blue-400 hover:text-blue-600"
               >
                 + Add Subject
               </button>
@@ -198,7 +176,7 @@ export default function RoleSelection({
               disabled={loading}
               className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Setting up your account...' : 'Complete Setup'}
+              {loading ? 'Creating Account...' : 'Complete Registration'}
             </button>
           </div>
         </form>
@@ -208,20 +186,6 @@ export default function RoleSelection({
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
-      {showBackButton && onBack && (
-        <div className="flex items-center mb-6">
-          <button
-            onClick={handleBack}
-            className="mr-3 text-gray-400 hover:text-gray-600"
-            disabled={loading}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
-      )}
-      
       <h2 className="text-2xl font-medium mb-6 text-center">Choose Your Role</h2>
       <p className="text-gray-600 text-center mb-8">
         How will you be using Paaṭha AI?

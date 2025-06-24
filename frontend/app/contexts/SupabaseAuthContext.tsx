@@ -10,6 +10,7 @@ import { User, Session } from '@supabase/supabase-js';
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const SESSION_EXPIRY_WARNING = 5 * 60 * 1000; // 5 minutes before expiry
 const SESSION_REFRESH_THRESHOLD = 10 * 60 * 1000; // Refresh when 10 min remaining
+const AUTH_TIMEOUT = 15000; // 15 seconds timeout for auth operations
 
 interface UserProfile {
   id: string;
@@ -54,20 +55,12 @@ interface AuthContextType {
   resetPassword: (newPassword: string) => Promise<void>;
   signInWithGoogle: (credential?: string) => Promise<void>;
   setError: (error: string | null) => void;
-  updateUserRole: (role: 'student' | 'teacher', additionalData?: any) => Promise<void>;
 }
 
-// FIXED: Updated RegisterData interface to include role and teacher fields
 interface RegisterData {
   email: string;
   password: string;
   full_name?: string;
-  role?: 'student' | 'teacher';
-  // Teacher-specific fields
-  teaching_experience?: number;
-  qualification?: string;
-  subjects_taught?: string[];
-  institution_name?: string;
 }
 
 const SupabaseAuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -89,8 +82,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   // Fetch user profile from Supabase
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
-      console.log('Fetching profile for user:', userId);
-      
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -98,16 +89,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         .single();
 
       if (fetchError) {
-        console.error('Profile fetch error:', fetchError);
-        
         if (fetchError.code === 'PGRST116') {  // Profile not found
-          console.log('Profile not found, creating new profile');
           const { data: { user: currentUser } } = await supabase.auth.getUser();
           
-          if (!currentUser) {
-            console.error('No current user found');
-            return null;
-          }
+          if (!currentUser) throw new Error("User not found");
           
           const newProfileData = {
             id: userId,
@@ -117,28 +102,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             is_verified: false
           };
 
-          console.log('Creating new profile:', newProfileData);
           const { data: createdProfile, error: createError } = await supabase
             .from('profiles')
             .insert([newProfileData])
             .select()
             .single();
 
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            return null;
-          }
-          
-          console.log('Profile created successfully:', createdProfile);
+          if (createError) throw createError;
           return createdProfile;
         }
-        
-        // For other errors (like 406), return null and let the app handle it
-        console.error('Failed to fetch profile, returning null');
-        return null;
+        throw fetchError;
       }
 
-      console.log('Profile fetched successfully:', existingProfile);
       return existingProfile;
     } catch (err) {
       console.error('Error in fetchProfile:', err);
@@ -175,7 +150,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   // Refresh session
   const refreshSession = useCallback(async () => {
-    if (authOperationInProgress.current || !session) {
+    if (authOperationInProgress.current) {
       return;
     }
 
@@ -187,8 +162,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       
       if (error) {
         console.error('Error refreshing session:', error);
-        // Don't throw here, let the session expire naturally
-        return;
+        throw error;
       }
       
       if (data.session) {
@@ -201,123 +175,17 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     } catch (err) {
       console.error('Error refreshing session:', err);
-      // Don't show error to user, just log it
+      setError('Session could not be refreshed. Please try again or log in.');
     } finally {
       authOperationInProgress.current = false;
     }
-  }, [session]);
+  }, []);
 
-  // Helper function to handle post-login navigation
-  const handlePostLoginNavigation = useCallback(async (user: User, profile: UserProfile | null) => {
-    console.log('handlePostLoginNavigation called with:', { userId: user.id, profile });
-    
-    // Check if this was a Google registration flow
-    const isGoogleRegistration = sessionStorage.getItem('isGoogleRegistration');
-    
-    if (isGoogleRegistration) {
-      console.log('Google registration flow detected');
-      sessionStorage.removeItem('isGoogleRegistration');
-      
-      // If user doesn't have a role, redirect to role selection
-      if (!profile?.role) {
-        console.log('No role in profile, redirecting to role selection');
-        router.push('/role-selection');
-        return;
-      }
-    }
-    
-    // For email verification flow, check if this is the first login after verification
-    const isInitialLogin = sessionStorage.getItem('isInitialLogin');
-    if (isInitialLogin) {
-      sessionStorage.removeItem('isInitialLogin');
-    }
-    
-    // Check for original path (for protected route redirects)
-    const originalPath = sessionStorage.getItem('originalPath');
-    if (originalPath && originalPath !== '/login' && originalPath !== '/register') {
-      sessionStorage.removeItem('originalPath');
-      console.log('Redirecting to original path:', originalPath);
-      window.location.href = originalPath;
-      return;
-    }
-    
-    // Handle case where profile fetch failed or profile is null
-    if (!profile) {
-      console.log('Profile is null, redirecting to role selection');
-      router.push('/role-selection');
-      return;
-    }
-    
-    // Direct navigation based on user profile
-    if (profile.role) {
-      if (profile.board && profile.class_level) {
-        // Complete profile - go to dashboard
-        const dashboardPath = `/${profile.board}/${profile.class_level}`;
-        console.log('Complete profile found, navigating to dashboard:', dashboardPath);
-        router.push(dashboardPath);
-      } else {
-        // Has role but incomplete profile - go to home for completion
-        console.log('Profile has role but incomplete, navigating to home for completion');
-        router.push('/');
-      }
-    } else {
-      // No role - go to role selection
-      console.log('Profile exists but no role, navigating to role selection');
-      router.push('/role-selection');
-    }
-  }, [router]);
-
-  // Update user role (for Google registration and role selection page)
-  const updateUserRole = useCallback(async (role: 'student' | 'teacher', additionalData?: any) => {
-    if (!user) throw new Error('No user found');
-
-    try {
-      setLoading(true);
-      
-      const updateData = {
-        role,
-        ...additionalData,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      // Fetch updated profile
-      const updatedProfile = await fetchProfile(user.id);
-      if (updatedProfile) {
-        setProfile(updatedProfile);
-      }
-
-      // Navigate to appropriate page after role selection
-      if (updatedProfile?.board && updatedProfile?.class_level) {
-        router.push(`/${updatedProfile.board}/${updatedProfile.class_level}`);
-      } else {
-        router.push('/');
-      }
-    } catch (err) {
-      console.error('Error updating user role:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred updating your role');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [user, fetchProfile, router]);
-
-  // IMPORTANT: Session checking with defensive logic
+  // IMPORTANT: NO VISIBILITY CHANGE HANDLING - this prevents the refresh issue
+  // Set up session checking with longer intervals only
   useEffect(() => {
-    // Only set up interval if we have a session
-    if (!session) return;
-
     sessionCheckInterval.current = setInterval(() => {
-      // Only check if we still have a session
-      if (session) {
-        checkSessionExpiration();
-      }
+      checkSessionExpiration();
     }, SESSION_CHECK_INTERVAL);
 
     return () => {
@@ -325,7 +193,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         clearInterval(sessionCheckInterval.current);
       }
     };
-  }, [checkSessionExpiration, session]);
+  }, [checkSessionExpiration]);
 
   // Initialize authentication
   useEffect(() => {
@@ -333,178 +201,47 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     initialized.current = true;
 
     let mounted = true;
+    let initTimeoutId: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
         setLoading(true);
         
+        initTimeoutId = setTimeout(() => {
+          if (mounted && loading) {
+            setLoading(false);
+            setUser(null);
+            setProfile(null);
+            setSession(null);
+          }
+        }, AUTH_TIMEOUT);
+        
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          // Don't throw, just continue with no session
-        }
+        if (sessionError) throw sessionError;
 
         if (currentSession?.user && mounted) {
-          console.log('Existing session found:', currentSession.user.id);
           setUser(currentSession.user);
           setSession(currentSession);
           const userProfile = await fetchProfile(currentSession.user.id);
           if (mounted && userProfile) {
             setProfile(userProfile);
           }
-        } else {
-          console.log('No existing session found');
         }
 
         // Set up Supabase auth listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log('Auth state change:', event, session?.user?.id);
-            
             if (event === 'SIGNED_IN' && session?.user) {
               setUser(session.user);
-              setSession(session);
               
-              console.log('Fetching user profile...');
-              let userProfile = await fetchProfile(session.user.id);
-              console.log('Initial profile fetch result:', userProfile);
-              
-              // If profile fetch failed (likely due to 406/RLS issue), create a minimal profile
-              if (!userProfile) {
-                console.log('Profile fetch failed, creating minimal profile for navigation');
-                userProfile = {
-                  id: session.user.id,
-                  email: session.user.email || '',
-                  is_active: true,
-                  is_verified: false
-                };
-                // Don't set this in state yet, just use for navigation logic
-              }
-              
-              // Check for pending registration data (from email verification flow)
-              const pendingData = sessionStorage.getItem('pendingRegistrationData');
-              console.log('Pending registration data:', pendingData);
-              
-              if (pendingData) {
-                try {
-                  const registrationData = JSON.parse(pendingData);
-                  console.log('Applying pending registration data:', registrationData);
-                  
-                  // If we have pending data, the user should go to role selection if profile operations fail
-                  let shouldGoToRoleSelection = true;
-                  
-                  // Try to apply pending data if profile exists or can be created
-                  if (userProfile && userProfile.id) {
-                    // Try to update existing profile
-                    const { error: updateError } = await supabase
-                      .from('profiles')
-                      .update({
-                        ...registrationData,
-                        updated_at: new Date().toISOString()
-                      })
-                      .eq('id', session.user.id);
-                    
-                    if (!updateError) {
-                      // Update successful, refetch profile
-                      const updatedProfile = await fetchProfile(session.user.id);
-                      if (updatedProfile) {
-                        userProfile = updatedProfile;
-                        shouldGoToRoleSelection = false;
-                        console.log('Profile updated successfully:', userProfile);
-                      }
-                    } else {
-                      console.error('Error updating profile with pending data:', updateError);
-                    }
-                  }
-                  
-                  // If update failed, try to create profile
-                  if (shouldGoToRoleSelection && userProfile && !userProfile.role) {
-                    console.log('Attempting to create profile with pending data');
-                    const { data: { user: currentUser } } = await supabase.auth.getUser();
-                    
-                    const newProfileData = {
-                      id: session.user.id,
-                      email: currentUser?.email,
-                      full_name: currentUser?.user_metadata?.full_name,
-                      is_active: true,
-                      is_verified: false,
-                      ...registrationData,
-                      created_at: new Date().toISOString()
-                    };
-                    
-                    const { data: createdProfile, error: createError } = await supabase
-                      .from('profiles')
-                      .insert([newProfileData])
-                      .select()
-                      .single();
-                    
-                    if (!createError && createdProfile) {
-                      userProfile = createdProfile;
-                      shouldGoToRoleSelection = false;
-                      console.log('Profile created with pending data:', userProfile);
-                    } else {
-                      console.error('Error creating profile:', createError);
-                      // Keep shouldGoToRoleSelection = true
-                    }
-                  }
-                  
-                  // Clear pending data if we successfully applied it, or if we're going to role selection anyway
-                  if (!shouldGoToRoleSelection || (userProfile && !userProfile.role)) {
-                    sessionStorage.removeItem('pendingRegistrationData');
-                    console.log('Pending data cleared');
-                  }
-                  
-                  // If all database operations failed but we have pending role data, 
-                  // ensure user goes to role selection by setting a minimal profile
-                  if (shouldGoToRoleSelection && registrationData.role) {
-                    console.log('Database operations failed, but ensuring role selection with pending data');
-                    userProfile = {
-                      id: session.user.id,
-                      email: session.user.email || '',
-                      is_active: true,
-                      is_verified: false,
-                      // Don't include role so navigation goes to role selection
-                    };
-                    // Keep pending data for role selection page to use
-                  }
-                  
-                } catch (err) {
-                  console.error('Error parsing or applying pending registration data:', err);
-                  sessionStorage.removeItem('pendingRegistrationData');
-                }
-              }
-              
-              console.log('Final profile state before navigation:', userProfile);
-              
-              // Set profile in state (even if it's a minimal profile for navigation)
-              if (userProfile) {
-                setProfile(userProfile);
+              const originalPath = sessionStorage.getItem('originalPath');
+              if (originalPath) {
+                sessionStorage.removeItem('originalPath');
+                window.location.href = originalPath;
               } else {
-                console.warn('No profile available - user will be directed to role selection');
-                setProfile(null);
+                window.location.href = '/';
               }
-              
-              // Only handle navigation if this is coming from auth callback
-              // Avoid navigation loops from other sign-in events
-              if (typeof window !== 'undefined') {
-                const currentPath = window.location.pathname;
-                const searchParams = new URLSearchParams(window.location.search);
-                
-                // Only navigate if we're on login, register, auth callback, or role selection pages
-                if (currentPath === '/login' || 
-                    currentPath === '/register' || 
-                    currentPath.includes('/auth/callback') ||
-                    currentPath === '/role-selection' ||
-                    searchParams.has('code')) {
-                  
-                  console.log('Navigating from auth state change');
-                  await handlePostLoginNavigation(session.user, userProfile);
-                } else {
-                  console.log('Skipping navigation - user already on app page');
-                }
-              }
-              
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
               setSession(null);
@@ -523,6 +260,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           setError(err instanceof Error ? err.message : 'An error occurred during initialization');
         }
       } finally {
+        clearTimeout(initTimeoutId);
         if (mounted) {
           setLoading(false);
         }
@@ -533,11 +271,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
     return () => {
       mounted = false;
+      clearTimeout(initTimeoutId);
       if (authListenerRef.current) {
         authListenerRef.current.data.subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, handlePostLoginNavigation]);
+  }, [fetchProfile, loading]);
 
   // COMPLETE LOGIN FUNCTION
   const login = async (email: string, password: string) => {
@@ -570,8 +309,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('isInitialLogin', 'true');
       }
-      
-      await handlePostLoginNavigation(data.user, userProfile);
+      const originalPath = sessionStorage.getItem('originalPath');
+      if (originalPath) {
+        sessionStorage.removeItem('originalPath');
+        window.location.href = originalPath;
+      } else {
+        window.location.href = '/';
+      }
       
     } catch (err) {
       console.error('Login error:', err);
@@ -582,7 +326,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // FIXED: Updated register function to handle role and teacher data
+  // COMPLETE REGISTER FUNCTION
   const register = async (userData: RegisterData) => {
     if (authOperationInProgress.current) {
       setError('Another operation is in progress. Please try again.');
@@ -606,26 +350,31 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from registration');
 
-      console.log('Registration successful, user ID:', data.user.id);
+      // Create initial profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([{
+          id: data.user.id,
+          email: userData.email,
+          full_name: userData.full_name,
+          is_active: true,
+          is_verified: false,
+          created_at: new Date().toISOString()
+        }]);
 
-      // Store registration data for after email verification
-      if (userData.role) {
-        const pendingData = {
-          role: userData.role,
-          teaching_experience: userData.teaching_experience,
-          qualification: userData.qualification,
-          subjects_taught: userData.subjects_taught,
-          institution_name: userData.institution_name
-        };
-        sessionStorage.setItem('pendingRegistrationData', JSON.stringify(pendingData));
-        console.log('Stored pending registration data:', pendingData);
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
       }
 
-      // For email registration, always show verification message
-      // Don't auto-login, let the email verification process handle it
-      console.log('Registration complete, redirecting to login with verification message');
-      router.push('/login?registered=true');
+      // Auto-login: We're already logged in after signUp
+      setUser(data.user);
+      setSession(data.session);
+      const profile = await fetchProfile(data.user.id);
+      if (profile) {
+        setProfile(profile);
+      }
 
+      router.push('/login?registered=true');
     } catch (err) {
       console.error('Registration error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during registration');
@@ -661,9 +410,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           const userProfile = await fetchProfile(data.user.id);
           if (userProfile) {
             setProfile(userProfile);
+            if (userProfile.board && userProfile.class_level) {
+              router.push(`/${userProfile.board}/${userProfile.class_level}`);
+            } else {
+              router.push('/');
+            }
           }
-          
-          await handlePostLoginNavigation(data.user, userProfile);
         }
       } else {
         // Handle regular Google OAuth
@@ -816,8 +568,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         requestPasswordReset,
         resetPassword,
         signInWithGoogle,
-        setError: (err: string | null) => setError(err),
-        updateUserRole
+        setError: (err: string | null) => setError(err)
       }}
     >
       {isSessionExpiring && (
