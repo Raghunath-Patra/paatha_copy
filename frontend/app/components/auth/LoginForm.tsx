@@ -48,6 +48,9 @@ export default function LoginForm() {
   }, [error, setError]);
 
   useEffect(() => {
+    // Check if user just registered - don't auto-trigger Google
+    const justRegistered = searchParams?.get('registered');
+    
     // Initialize Google One Tap
     const googleScript = document.createElement('script');
     googleScript.src = 'https://accounts.google.com/gsi/client';
@@ -60,7 +63,7 @@ export default function LoginForm() {
         window.google.accounts.id.initialize({
           client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
           callback: handleGoogleOneTapResponse,
-          auto_select: true,
+          auto_select: false, // Don't auto-select to avoid unwanted prompts
           cancel_on_tap_outside: false,
           context: 'signin',
           ux_mode: 'popup',
@@ -78,8 +81,10 @@ export default function LoginForm() {
           });
         }
 
-        // Prompt One-tap
-        window.google.accounts.id.prompt();
+        // Only prompt One-tap if user didn't just register
+        if (!justRegistered && !urlError) {
+          window.google.accounts.id.prompt();
+        }
       }
     };
 
@@ -88,7 +93,7 @@ export default function LoginForm() {
         googleScript.parentNode.removeChild(googleScript);
       }
     };
-  }, []);
+  }, [searchParams, urlError]);
 
   const handleGoogleOneTapResponse = async (response: any) => {
     try {

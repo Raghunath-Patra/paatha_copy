@@ -10,7 +10,6 @@ import { User, Session } from '@supabase/supabase-js';
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const SESSION_EXPIRY_WARNING = 5 * 60 * 1000; // 5 minutes before expiry
 const SESSION_REFRESH_THRESHOLD = 10 * 60 * 1000; // Refresh when 10 min remaining
-const AUTH_TIMEOUT = 15000; // 15 seconds timeout for auth operations
 
 interface UserProfile {
   id: string;
@@ -158,7 +157,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   // Refresh session
   const refreshSession = useCallback(async () => {
-    if (authOperationInProgress.current) {
+    if (authOperationInProgress.current || !session) {
       return;
     }
 
@@ -170,7 +169,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       
       if (error) {
         console.error('Error refreshing session:', error);
-        throw error;
+        // Don't throw here, let the session expire naturally
+        return;
       }
       
       if (data.session) {
@@ -183,11 +183,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     } catch (err) {
       console.error('Error refreshing session:', err);
-      setError('Session could not be refreshed. Please try again or log in.');
+      // Don't show error to user, just log it
     } finally {
       authOperationInProgress.current = false;
     }
-  }, []);
+  }, [session]);
 
   // Helper function to handle post-login navigation
   const handlePostLoginNavigation = useCallback(async (user: User, profile: UserProfile | null) => {
@@ -278,11 +278,16 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, [user, fetchProfile, router]);
 
-  // IMPORTANT: NO VISIBILITY CHANGE HANDLING - this prevents the refresh issue
-  // Set up session checking with longer intervals only
+  // IMPORTANT: Session checking with defensive logic
   useEffect(() => {
+    // Only set up interval if we have a session
+    if (!session) return;
+
     sessionCheckInterval.current = setInterval(() => {
-      checkSessionExpiration();
+      // Only check if we still have a session
+      if (session) {
+        checkSessionExpiration();
+      }
     }, SESSION_CHECK_INTERVAL);
 
     return () => {
@@ -290,7 +295,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         clearInterval(sessionCheckInterval.current);
       }
     };
-  }, [checkSessionExpiration]);
+  }, [checkSessionExpiration, session]);
 
   // Initialize authentication
   useEffect(() => {
@@ -298,32 +303,28 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     initialized.current = true;
 
     let mounted = true;
-    let initTimeoutId: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
         setLoading(true);
         
-        initTimeoutId = setTimeout(() => {
-          if (mounted && loading) {
-            setLoading(false);
-            setUser(null);
-            setProfile(null);
-            setSession(null);
-          }
-        }, AUTH_TIMEOUT);
-        
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          // Don't throw, just continue with no session
+        }
 
         if (currentSession?.user && mounted) {
+          console.log('Existing session found:', currentSession.user.id);
           setUser(currentSession.user);
           setSession(currentSession);
           const userProfile = await fetchProfile(currentSession.user.id);
           if (mounted && userProfile) {
             setProfile(userProfile);
           }
+        } else {
+          console.log('No existing session found');
         }
 
         // Set up Supabase auth listener
@@ -409,7 +410,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           setError(err instanceof Error ? err.message : 'An error occurred during initialization');
         }
       } finally {
-        clearTimeout(initTimeoutId);
         if (mounted) {
           setLoading(false);
         }
@@ -420,12 +420,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
     return () => {
       mounted = false;
-      clearTimeout(initTimeoutId);
       if (authListenerRef.current) {
         authListenerRef.current.data.subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, loading, handlePostLoginNavigation]);
+  }, [fetchProfile, handlePostLoginNavigation]);
 
   // COMPLETE LOGIN FUNCTION
   const login = async (email: string, password: string) => {
