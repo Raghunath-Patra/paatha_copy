@@ -27,6 +27,7 @@ export default function LoginForm() {
   const registered = searchParams?.get('registered');
   const resetSuccess = searchParams?.get('reset');
   const sessionExpired = searchParams?.get('session_expired');
+  const urlError = searchParams?.get('error');
 
   const { login, signInWithGoogle, loading, error, setError } = useSupabaseAuth();
   
@@ -114,26 +115,52 @@ export default function LoginForm() {
     sessionStorage.setItem('isInitialLogin', 'true');
   };
 
+  // Helper function to get user-friendly error messages
+  const getErrorMessage = (errorCode: string) => {
+    switch (errorCode) {
+      case 'email_not_confirmed':
+        return 'Please check your email and click the verification link before logging in.';
+      case 'invalid_or_expired_code':
+        return 'The verification link has expired. Please try logging in again.';
+      case 'no_code_provided':
+        return 'Invalid verification link. Please try the link from your email again.';
+      case 'no_user_returned':
+        return 'Authentication failed. Please try again.';
+      case 'unexpected_error':
+        return 'An unexpected error occurred. Please try again.';
+      case 'auth_callback_error':
+        return 'Authentication failed. Please try logging in again.';
+      default:
+        return decodeURIComponent(errorCode);
+    }
+  };
+
   // Filter out session refresh errors for display
   const displayError = error && !(
     error.includes("Session could not be refreshed") || 
     error.includes("Error refreshing session")
   ) ? error : null;
 
+  // URL error takes precedence
+  const finalError = urlError ? getErrorMessage(urlError) : displayError;
+
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
       <h2 className="text-2xl font-medium mb-6">Login to Your Account</h2>
 
-      {displayError && (
+      {finalError && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
-          {displayError}
+          {finalError}
         </div>
       )}
 
       {registered && (
         <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg">
-          A verification link has been sent to your email address. 
-          Please verify your email before logging in.
+          <div className="font-medium mb-1">Registration Successful!</div>
+          <div className="text-sm">
+            A verification link has been sent to your email address. 
+            Please verify your email before logging in.
+          </div>
         </div>
       )}
 

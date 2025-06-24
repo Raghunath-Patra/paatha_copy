@@ -326,11 +326,43 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         // Set up Supabase auth listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
+            console.log('Auth state change:', event, session?.user?.id);
+            
             if (event === 'SIGNED_IN' && session?.user) {
               setUser(session.user);
               setSession(session);
               
-              const userProfile = await fetchProfile(session.user.id);
+              let userProfile = await fetchProfile(session.user.id);
+              
+              // Check for pending registration data (from email verification flow)
+              const pendingData = sessionStorage.getItem('pendingRegistrationData');
+              if (pendingData && userProfile && !userProfile.role) {
+                try {
+                  const registrationData = JSON.parse(pendingData);
+                  console.log('Applying pending registration data:', registrationData);
+                  
+                  // Update profile with pending registration data
+                  const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({
+                      ...registrationData,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+                  
+                  if (updateError) {
+                    console.error('Error updating profile with pending data:', updateError);
+                  } else {
+                    // Refetch profile with updated data
+                    userProfile = await fetchProfile(session.user.id);
+                    sessionStorage.removeItem('pendingRegistrationData');
+                  }
+                } catch (err) {
+                  console.error('Error parsing pending registration data:', err);
+                  sessionStorage.removeItem('pendingRegistrationData');
+                }
+              }
+              
               if (userProfile) {
                 setProfile(userProfile);
               }
@@ -440,6 +472,30 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from registration');
 
+      console.log('Registration data:', data);
+
+      // Store registration data temporarily for after email verification
+      if (userData.role) {
+        sessionStorage.setItem('pendingRegistrationData', JSON.stringify({
+          role: userData.role,
+          teaching_experience: userData.teaching_experience,
+          qualification: userData.qualification,
+          subjects_taught: userData.subjects_taught,
+          institution_name: userData.institution_name
+        }));
+      }
+
+      // Check if user needs email verification
+      if (!data.session) {
+        // Email verification required - user will get verification email
+        console.log('Email verification required');
+        router.push('/login?registered=true');
+        return;
+      }
+
+      // If we have a session, user is auto-confirmed (shouldn't happen with email verification enabled)
+      console.log('User auto-confirmed, creating profile...');
+
       // FIXED: Create profile with all provided data including role
       const profileData: any = {
         id: data.user.id,
@@ -473,9 +529,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
+        // Don't throw here, continue with login
       }
 
-      // Auto-login: We're already logged in after signUp
+      // Set session and user
       setUser(data.user);
       setSession(data.session);
       const profile = await fetchProfile(data.user.id);
@@ -483,13 +540,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setProfile(profile);
       }
 
-      // FIXED: Navigate based on whether role was provided
+      // Navigate based on whether role was provided
       if (userData.role) {
-        // Role was provided, proceed with normal navigation
         await handlePostRegistrationNavigation(data.user, profile);
       } else {
-        // No role provided, show verification message and then role selection
-        router.push('/login?registered=true');
+        router.push('/role-selection');
       }
 
     } catch (err) {
