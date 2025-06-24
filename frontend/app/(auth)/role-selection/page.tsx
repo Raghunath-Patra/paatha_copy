@@ -1,7 +1,7 @@
 // frontend/app/(auth)/role-selection/page.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import RoleSelection from '../../components/auth/RoleSelection';
@@ -10,6 +10,28 @@ import EnhancedLogo from '../../components/common/EnhancedLogo';
 export default function RoleSelectionPage() {
   const router = useRouter();
   const { user, profile, loading, updateUserRole } = useSupabaseAuth();
+  const [pendingData, setPendingData] = useState<any>(null);
+
+  // Check for pending registration data and auto-apply if available
+  useEffect(() => {
+    const storedPendingData = sessionStorage.getItem('pendingRegistrationData');
+    if (storedPendingData) {
+      try {
+        const data = JSON.parse(storedPendingData);
+        console.log('Found pending registration data:', data);
+        setPendingData(data);
+        
+        // Auto-apply the pending role selection if available
+        if (data.role) {
+          console.log('Auto-applying pending role:', data.role);
+          handleRoleSelect(data.role, data);
+        }
+      } catch (err) {
+        console.error('Error parsing pending registration data:', err);
+        sessionStorage.removeItem('pendingRegistrationData');
+      }
+    }
+  }, []);
 
   // Redirect if user is not logged in or already has a role
   useEffect(() => {
@@ -19,7 +41,7 @@ export default function RoleSelectionPage() {
         return;
       }
       
-      if (profile?.role) {
+      if (profile?.role && !pendingData) {
         // User already has a role, redirect to dashboard
         if (profile.board && profile.class_level) {
           router.push(`/${profile.board}/${profile.class_level}`);
@@ -29,10 +51,16 @@ export default function RoleSelectionPage() {
         return;
       }
     }
-  }, [user, profile, loading, router]);
+  }, [user, profile, loading, router, pendingData]);
 
   const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
     try {
+      console.log('Role selected:', role, additionalData);
+      
+      // Clear pending data since we're applying it now
+      sessionStorage.removeItem('pendingRegistrationData');
+      setPendingData(null);
+      
       await updateUserRole(role, additionalData);
     } catch (error) {
       console.error('Error updating role:', error);
@@ -141,9 +169,31 @@ export default function RoleSelectionPage() {
               Welcome to Paaṭha AI!
             </h1>
             <p className="text-sm sm:text-base text-gray-600 max-w-sm mx-auto">
-              You're almost done! Let us know how you'll be using Paaṭha AI to customize your experience.
+              {pendingData ? 
+                'Completing your registration...' : 
+                "You're almost done! Let us know how you'll be using Paaṭha AI to customize your experience."
+              }
             </p>
           </div>
+
+          {/* Show message if auto-applying pending data */}
+          {pendingData && (
+            <div className="w-full max-w-md mb-6 opacity-0 animate-fade-in stagger-2">
+              <div className="bg-blue-50/90 backdrop-blur-sm text-blue-700 rounded-xl p-4 text-center border border-blue-200 shadow-lg">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="font-medium mb-1">Completing Your Setup</div>
+                <div className="text-sm">
+                  We're applying your registration preferences...
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Enhanced Role Selection Container */}
           <div className="w-full max-w-md opacity-0 animate-fade-in-up stagger-2">

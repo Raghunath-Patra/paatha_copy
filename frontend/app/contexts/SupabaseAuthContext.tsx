@@ -89,6 +89,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   // Fetch user profile from Supabase
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
+      console.log('Fetching profile for user:', userId);
+      
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -96,10 +98,16 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         .single();
 
       if (fetchError) {
+        console.error('Profile fetch error:', fetchError);
+        
         if (fetchError.code === 'PGRST116') {  // Profile not found
+          console.log('Profile not found, creating new profile');
           const { data: { user: currentUser } } = await supabase.auth.getUser();
           
-          if (!currentUser) throw new Error("User not found");
+          if (!currentUser) {
+            console.error('No current user found');
+            return null;
+          }
           
           const newProfileData = {
             id: userId,
@@ -109,18 +117,28 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             is_verified: false
           };
 
+          console.log('Creating new profile:', newProfileData);
           const { data: createdProfile, error: createError } = await supabase
             .from('profiles')
             .insert([newProfileData])
             .select()
             .single();
 
-          if (createError) throw createError;
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            return null;
+          }
+          
+          console.log('Profile created successfully:', createdProfile);
           return createdProfile;
         }
-        throw fetchError;
+        
+        // For other errors (like 406), return null and let the app handle it
+        console.error('Failed to fetch profile, returning null');
+        return null;
       }
 
+      console.log('Profile fetched successfully:', existingProfile);
       return existingProfile;
     } catch (err) {
       console.error('Error in fetchProfile:', err);
@@ -191,14 +209,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   // Helper function to handle post-login navigation
   const handlePostLoginNavigation = useCallback(async (user: User, profile: UserProfile | null) => {
+    console.log('handlePostLoginNavigation called with:', { userId: user.id, profile });
+    
     // Check if this was a Google registration flow
     const isGoogleRegistration = sessionStorage.getItem('isGoogleRegistration');
     
     if (isGoogleRegistration) {
+      console.log('Google registration flow detected');
       sessionStorage.removeItem('isGoogleRegistration');
       
       // If user doesn't have a role, redirect to role selection
       if (!profile?.role) {
+        console.log('No role in profile, redirecting to role selection');
         router.push('/role-selection');
         return;
       }
@@ -214,25 +236,33 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     const originalPath = sessionStorage.getItem('originalPath');
     if (originalPath && originalPath !== '/login' && originalPath !== '/register') {
       sessionStorage.removeItem('originalPath');
+      console.log('Redirecting to original path:', originalPath);
       window.location.href = originalPath;
       return;
     }
     
+    // Handle case where profile fetch failed or profile is null
+    if (!profile) {
+      console.log('Profile is null, redirecting to role selection');
+      router.push('/role-selection');
+      return;
+    }
+    
     // Direct navigation based on user profile
-    if (profile?.role) {
+    if (profile.role) {
       if (profile.board && profile.class_level) {
         // Complete profile - go to dashboard
         const dashboardPath = `/${profile.board}/${profile.class_level}`;
-        console.log('Navigating to dashboard:', dashboardPath);
+        console.log('Complete profile found, navigating to dashboard:', dashboardPath);
         router.push(dashboardPath);
       } else {
         // Has role but incomplete profile - go to home for completion
-        console.log('Navigating to home for profile completion');
+        console.log('Profile has role but incomplete, navigating to home for completion');
         router.push('/');
       }
     } else {
       // No role - go to role selection
-      console.log('No role found, going to role selection');
+      console.log('Profile exists but no role, navigating to role selection');
       router.push('/role-selection');
     }
   }, [router]);
@@ -336,40 +366,123 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
               setUser(session.user);
               setSession(session);
               
+              console.log('Fetching user profile...');
               let userProfile = await fetchProfile(session.user.id);
+              console.log('Initial profile fetch result:', userProfile);
+              
+              // If profile fetch failed (likely due to 406/RLS issue), create a minimal profile
+              if (!userProfile) {
+                console.log('Profile fetch failed, creating minimal profile for navigation');
+                userProfile = {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  is_active: true,
+                  is_verified: false
+                };
+                // Don't set this in state yet, just use for navigation logic
+              }
               
               // Check for pending registration data (from email verification flow)
               const pendingData = sessionStorage.getItem('pendingRegistrationData');
-              if (pendingData && userProfile && !userProfile.role) {
+              console.log('Pending registration data:', pendingData);
+              
+              if (pendingData) {
                 try {
                   const registrationData = JSON.parse(pendingData);
                   console.log('Applying pending registration data:', registrationData);
                   
-                  // Update profile with pending registration data
-                  const { error: updateError } = await supabase
-                    .from('profiles')
-                    .update({
-                      ...registrationData,
-                      updated_at: new Date().toISOString()
-                    })
-                    .eq('id', session.user.id);
+                  // If we have pending data, the user should go to role selection if profile operations fail
+                  let shouldGoToRoleSelection = true;
                   
-                  if (updateError) {
-                    console.error('Error updating profile with pending data:', updateError);
-                  } else {
-                    // Refetch profile with updated data
-                    userProfile = await fetchProfile(session.user.id);
-                    sessionStorage.removeItem('pendingRegistrationData');
-                    console.log('Profile updated with pending data');
+                  // Try to apply pending data if profile exists or can be created
+                  if (userProfile && userProfile.id) {
+                    // Try to update existing profile
+                    const { error: updateError } = await supabase
+                      .from('profiles')
+                      .update({
+                        ...registrationData,
+                        updated_at: new Date().toISOString()
+                      })
+                      .eq('id', session.user.id);
+                    
+                    if (!updateError) {
+                      // Update successful, refetch profile
+                      const updatedProfile = await fetchProfile(session.user.id);
+                      if (updatedProfile) {
+                        userProfile = updatedProfile;
+                        shouldGoToRoleSelection = false;
+                        console.log('Profile updated successfully:', userProfile);
+                      }
+                    } else {
+                      console.error('Error updating profile with pending data:', updateError);
+                    }
                   }
+                  
+                  // If update failed, try to create profile
+                  if (shouldGoToRoleSelection && userProfile && !userProfile.role) {
+                    console.log('Attempting to create profile with pending data');
+                    const { data: { user: currentUser } } = await supabase.auth.getUser();
+                    
+                    const newProfileData = {
+                      id: session.user.id,
+                      email: currentUser?.email,
+                      full_name: currentUser?.user_metadata?.full_name,
+                      is_active: true,
+                      is_verified: false,
+                      ...registrationData,
+                      created_at: new Date().toISOString()
+                    };
+                    
+                    const { data: createdProfile, error: createError } = await supabase
+                      .from('profiles')
+                      .insert([newProfileData])
+                      .select()
+                      .single();
+                    
+                    if (!createError && createdProfile) {
+                      userProfile = createdProfile;
+                      shouldGoToRoleSelection = false;
+                      console.log('Profile created with pending data:', userProfile);
+                    } else {
+                      console.error('Error creating profile:', createError);
+                      // Keep shouldGoToRoleSelection = true
+                    }
+                  }
+                  
+                  // Clear pending data if we successfully applied it, or if we're going to role selection anyway
+                  if (!shouldGoToRoleSelection || (userProfile && !userProfile.role)) {
+                    sessionStorage.removeItem('pendingRegistrationData');
+                    console.log('Pending data cleared');
+                  }
+                  
+                  // If all database operations failed but we have pending role data, 
+                  // ensure user goes to role selection by setting a minimal profile
+                  if (shouldGoToRoleSelection && registrationData.role) {
+                    console.log('Database operations failed, but ensuring role selection with pending data');
+                    userProfile = {
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      is_active: true,
+                      is_verified: false,
+                      // Don't include role so navigation goes to role selection
+                    };
+                    // Keep pending data for role selection page to use
+                  }
+                  
                 } catch (err) {
-                  console.error('Error parsing pending registration data:', err);
+                  console.error('Error parsing or applying pending registration data:', err);
                   sessionStorage.removeItem('pendingRegistrationData');
                 }
               }
               
+              console.log('Final profile state before navigation:', userProfile);
+              
+              // Set profile in state (even if it's a minimal profile for navigation)
               if (userProfile) {
                 setProfile(userProfile);
+              } else {
+                console.warn('No profile available - user will be directed to role selection');
+                setProfile(null);
               }
               
               // Only handle navigation if this is coming from auth callback
