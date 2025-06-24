@@ -92,10 +92,9 @@ export default function RegisterForm() {
   const handleGoogleOneTapResponse = async (response: any) => {
     try {
       if (response.credential) {
-        // For Google sign-up, we'll default to student role
-        // Users can change this later in their profile
+        // Set flag to indicate this is a registration flow
+        sessionStorage.setItem('isGoogleRegistration', 'true');
         await signInWithGoogle(response.credential);
-        sessionStorage.setItem('isInitialLogin', 'true');
       }
     } catch (error) {
       console.error('Google One-tap error:', error);
@@ -134,6 +133,8 @@ export default function RegisterForm() {
   // Handle regular Google OAuth sign in
   const handleGoogleSignIn = async () => {
     try {
+      // Set flag to indicate this is a registration flow
+      sessionStorage.setItem('isGoogleRegistration', 'true');
       await signInWithGoogle();
     } catch (err) {
       console.error('Google sign in error:', err);
@@ -141,7 +142,14 @@ export default function RegisterForm() {
   };
 
   if (step === 'role') {
-    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />;
+    return (
+      <RoleSelection 
+        onRoleSelect={handleRoleSelect} 
+        loading={loading}
+        showBackButton={true}
+        onBack={() => setStep('basic')}
+      />
+    );
   }
 
   return (

@@ -55,6 +55,7 @@ interface AuthContextType {
   resetPassword: (newPassword: string) => Promise<void>;
   signInWithGoogle: (credential?: string) => Promise<void>;
   setError: (error: string | null) => void;
+  updateUserRole: (role: 'student' | 'teacher', additionalData?: any) => Promise<void>;
 }
 
 interface RegisterData {
@@ -181,6 +182,77 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  // Helper function to handle post-login navigation
+  const handlePostLoginNavigation = useCallback(async (user: User, profile: UserProfile | null) => {
+    // Check if this was a Google registration flow
+    const isGoogleRegistration = sessionStorage.getItem('isGoogleRegistration');
+    
+    if (isGoogleRegistration) {
+      sessionStorage.removeItem('isGoogleRegistration');
+      
+      // If user doesn't have a role, redirect to role selection
+      if (!profile?.role) {
+        router.push('/role-selection');
+        return;
+      }
+    }
+    
+    // Normal login flow
+    const originalPath = sessionStorage.getItem('originalPath');
+    if (originalPath) {
+      sessionStorage.removeItem('originalPath');
+      window.location.href = originalPath;
+    } else {
+      // Navigate based on user role and profile completion
+      if (profile?.board && profile?.class_level) {
+        router.push(`/${profile.board}/${profile.class_level}`);
+      } else {
+        router.push('/');
+      }
+    }
+  }, [router]);
+
+  // Update user role (new function for Google registration)
+  const updateUserRole = useCallback(async (role: 'student' | 'teacher', additionalData?: any) => {
+    if (!user) throw new Error('No user found');
+
+    try {
+      setLoading(true);
+      
+      const updateData = {
+        role,
+        ...additionalData,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Fetch updated profile
+      const updatedProfile = await fetchProfile(user.id);
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+      }
+
+      // Navigate to appropriate page after role selection
+      if (updatedProfile?.board && updatedProfile?.class_level) {
+        router.push(`/${updatedProfile.board}/${updatedProfile.class_level}`);
+      } else {
+        router.push('/');
+      }
+    } catch (err) {
+      console.error('Error updating user role:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred updating your role');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, fetchProfile, router]);
+
   // IMPORTANT: NO VISIBILITY CHANGE HANDLING - this prevents the refresh issue
   // Set up session checking with longer intervals only
   useEffect(() => {
@@ -234,14 +306,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           async (event, session) => {
             if (event === 'SIGNED_IN' && session?.user) {
               setUser(session.user);
+              setSession(session);
               
-              const originalPath = sessionStorage.getItem('originalPath');
-              if (originalPath) {
-                sessionStorage.removeItem('originalPath');
-                window.location.href = originalPath;
-              } else {
-                window.location.href = '/';
+              const userProfile = await fetchProfile(session.user.id);
+              if (userProfile) {
+                setProfile(userProfile);
               }
+              
+              // Handle navigation after successful sign in
+              await handlePostLoginNavigation(session.user, userProfile);
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
               setSession(null);
@@ -276,7 +349,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         authListenerRef.current.data.subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, loading]);
+  }, [fetchProfile, loading, handlePostLoginNavigation]);
 
   // COMPLETE LOGIN FUNCTION
   const login = async (email: string, password: string) => {
@@ -309,13 +382,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('isInitialLogin', 'true');
       }
-      const originalPath = sessionStorage.getItem('originalPath');
-      if (originalPath) {
-        sessionStorage.removeItem('originalPath');
-        window.location.href = originalPath;
-      } else {
-        window.location.href = '/';
-      }
+      
+      await handlePostLoginNavigation(data.user, userProfile);
       
     } catch (err) {
       console.error('Login error:', err);
@@ -410,12 +478,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           const userProfile = await fetchProfile(data.user.id);
           if (userProfile) {
             setProfile(userProfile);
-            if (userProfile.board && userProfile.class_level) {
-              router.push(`/${userProfile.board}/${userProfile.class_level}`);
-            } else {
-              router.push('/');
-            }
           }
+          
+          await handlePostLoginNavigation(data.user, userProfile);
         }
       } else {
         // Handle regular Google OAuth
@@ -568,7 +633,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         requestPasswordReset,
         resetPassword,
         signInWithGoogle,
-        setError: (err: string | null) => setError(err)
+        setError: (err: string | null) => setError(err),
+        updateUserRole
       }}
     >
       {isSessionExpiring && (
