@@ -58,10 +58,17 @@ interface AuthContextType {
   updateUserRole: (role: 'student' | 'teacher', additionalData?: any) => Promise<void>;
 }
 
+// FIXED: Updated RegisterData interface to include role and teacher fields
 interface RegisterData {
   email: string;
   password: string;
   full_name?: string;
+  role?: 'student' | 'teacher';
+  // Teacher-specific fields
+  teaching_experience?: number;
+  qualification?: string;
+  subjects_taught?: string[];
+  institution_name?: string;
 }
 
 const SupabaseAuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -253,6 +260,21 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, [user, fetchProfile, router]);
 
+  // Helper function to determine post-registration navigation
+  const handlePostRegistrationNavigation = useCallback(async (user: User, profile: UserProfile | null) => {
+    // If user has a role, proceed with normal navigation
+    if (profile?.role) {
+      if (profile.board && profile.class_level) {
+        router.push(`/${profile.board}/${profile.class_level}`);
+      } else {
+        router.push('/');
+      }
+    } else {
+      // If no role, redirect to role selection
+      router.push('/role-selection');
+    }
+  }, [router]);
+
   // IMPORTANT: NO VISIBILITY CHANGE HANDLING - this prevents the refresh issue
   // Set up session checking with longer intervals only
   useEffect(() => {
@@ -394,7 +416,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // COMPLETE REGISTER FUNCTION
+  // FIXED: Updated register function to handle role and teacher data
   const register = async (userData: RegisterData) => {
     if (authOperationInProgress.current) {
       setError('Another operation is in progress. Please try again.');
@@ -418,17 +440,36 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from registration');
 
-      // Create initial profile
+      // FIXED: Create profile with all provided data including role
+      const profileData: any = {
+        id: data.user.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        is_active: true,
+        is_verified: false,
+        created_at: new Date().toISOString()
+      };
+
+      // Add role and teacher-specific fields if provided
+      if (userData.role) {
+        profileData.role = userData.role;
+      }
+      if (userData.teaching_experience !== undefined) {
+        profileData.teaching_experience = userData.teaching_experience;
+      }
+      if (userData.qualification) {
+        profileData.qualification = userData.qualification;
+      }
+      if (userData.subjects_taught) {
+        profileData.subjects_taught = userData.subjects_taught;
+      }
+      if (userData.institution_name) {
+        profileData.institution_name = userData.institution_name;
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert([{
-          id: data.user.id,
-          email: userData.email,
-          full_name: userData.full_name,
-          is_active: true,
-          is_verified: false,
-          created_at: new Date().toISOString()
-        }]);
+        .insert([profileData]);
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
@@ -442,7 +483,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setProfile(profile);
       }
 
-      router.push('/login?registered=true');
+      // FIXED: Navigate based on whether role was provided
+      if (userData.role) {
+        // Role was provided, proceed with normal navigation
+        await handlePostRegistrationNavigation(data.user, profile);
+      } else {
+        // No role provided, show verification message and then role selection
+        router.push('/login?registered=true');
+      }
+
     } catch (err) {
       console.error('Registration error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during registration');
