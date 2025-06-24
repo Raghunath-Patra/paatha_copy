@@ -204,22 +204,40 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     }
     
-    // Normal login flow
+    // For email verification flow, check if this is the first login after verification
+    const isInitialLogin = sessionStorage.getItem('isInitialLogin');
+    if (isInitialLogin) {
+      sessionStorage.removeItem('isInitialLogin');
+    }
+    
+    // Check for original path (for protected route redirects)
     const originalPath = sessionStorage.getItem('originalPath');
-    if (originalPath) {
+    if (originalPath && originalPath !== '/login' && originalPath !== '/register') {
       sessionStorage.removeItem('originalPath');
       window.location.href = originalPath;
-    } else {
-      // Navigate based on user role and profile completion
-      if (profile?.board && profile?.class_level) {
-        router.push(`/${profile.board}/${profile.class_level}`);
+      return;
+    }
+    
+    // Direct navigation based on user profile
+    if (profile?.role) {
+      if (profile.board && profile.class_level) {
+        // Complete profile - go to dashboard
+        const dashboardPath = `/${profile.board}/${profile.class_level}`;
+        console.log('Navigating to dashboard:', dashboardPath);
+        router.push(dashboardPath);
       } else {
+        // Has role but incomplete profile - go to home for completion
+        console.log('Navigating to home for profile completion');
         router.push('/');
       }
+    } else {
+      // No role - go to role selection
+      console.log('No role found, going to role selection');
+      router.push('/role-selection');
     }
   }, [router]);
 
-  // Update user role (new function for Google registration)
+  // Update user role (for Google registration and role selection page)
   const updateUserRole = useCallback(async (role: 'student' | 'teacher', additionalData?: any) => {
     if (!user) throw new Error('No user found');
 
@@ -259,21 +277,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setLoading(false);
     }
   }, [user, fetchProfile, router]);
-
-  // Helper function to determine post-registration navigation
-  const handlePostRegistrationNavigation = useCallback(async (user: User, profile: UserProfile | null) => {
-    // If user has a role, proceed with normal navigation
-    if (profile?.role) {
-      if (profile.board && profile.class_level) {
-        router.push(`/${profile.board}/${profile.class_level}`);
-      } else {
-        router.push('/');
-      }
-    } else {
-      // If no role, redirect to role selection
-      router.push('/role-selection');
-    }
-  }, [router]);
 
   // IMPORTANT: NO VISIBILITY CHANGE HANDLING - this prevents the refresh issue
   // Set up session checking with longer intervals only
@@ -356,6 +359,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
                     // Refetch profile with updated data
                     userProfile = await fetchProfile(session.user.id);
                     sessionStorage.removeItem('pendingRegistrationData');
+                    console.log('Profile updated with pending data');
                   }
                 } catch (err) {
                   console.error('Error parsing pending registration data:', err);
@@ -367,8 +371,26 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
                 setProfile(userProfile);
               }
               
-              // Handle navigation after successful sign in
-              await handlePostLoginNavigation(session.user, userProfile);
+              // Only handle navigation if this is coming from auth callback
+              // Avoid navigation loops from other sign-in events
+              if (typeof window !== 'undefined') {
+                const currentPath = window.location.pathname;
+                const searchParams = new URLSearchParams(window.location.search);
+                
+                // Only navigate if we're on login, register, auth callback, or role selection pages
+                if (currentPath === '/login' || 
+                    currentPath === '/register' || 
+                    currentPath.includes('/auth/callback') ||
+                    currentPath === '/role-selection' ||
+                    searchParams.has('code')) {
+                  
+                  console.log('Navigating from auth state change');
+                  await handlePostLoginNavigation(session.user, userProfile);
+                } else {
+                  console.log('Skipping navigation - user already on app page');
+                }
+              }
+              
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
               setSession(null);
@@ -472,80 +494,25 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from registration');
 
-      console.log('Registration data:', data);
+      console.log('Registration successful, user ID:', data.user.id);
 
-      // Store registration data temporarily for after email verification
+      // Store registration data for after email verification
       if (userData.role) {
-        sessionStorage.setItem('pendingRegistrationData', JSON.stringify({
+        const pendingData = {
           role: userData.role,
           teaching_experience: userData.teaching_experience,
           qualification: userData.qualification,
           subjects_taught: userData.subjects_taught,
           institution_name: userData.institution_name
-        }));
+        };
+        sessionStorage.setItem('pendingRegistrationData', JSON.stringify(pendingData));
+        console.log('Stored pending registration data:', pendingData);
       }
 
-      // Check if user needs email verification
-      if (!data.session) {
-        // Email verification required - user will get verification email
-        console.log('Email verification required');
-        router.push('/login?registered=true');
-        return;
-      }
-
-      // If we have a session, user is auto-confirmed (shouldn't happen with email verification enabled)
-      console.log('User auto-confirmed, creating profile...');
-
-      // FIXED: Create profile with all provided data including role
-      const profileData: any = {
-        id: data.user.id,
-        email: userData.email,
-        full_name: userData.full_name,
-        is_active: true,
-        is_verified: false,
-        created_at: new Date().toISOString()
-      };
-
-      // Add role and teacher-specific fields if provided
-      if (userData.role) {
-        profileData.role = userData.role;
-      }
-      if (userData.teaching_experience !== undefined) {
-        profileData.teaching_experience = userData.teaching_experience;
-      }
-      if (userData.qualification) {
-        profileData.qualification = userData.qualification;
-      }
-      if (userData.subjects_taught) {
-        profileData.subjects_taught = userData.subjects_taught;
-      }
-      if (userData.institution_name) {
-        profileData.institution_name = userData.institution_name;
-      }
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([profileData]);
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        // Don't throw here, continue with login
-      }
-
-      // Set session and user
-      setUser(data.user);
-      setSession(data.session);
-      const profile = await fetchProfile(data.user.id);
-      if (profile) {
-        setProfile(profile);
-      }
-
-      // Navigate based on whether role was provided
-      if (userData.role) {
-        await handlePostRegistrationNavigation(data.user, profile);
-      } else {
-        router.push('/role-selection');
-      }
+      // For email registration, always show verification message
+      // Don't auto-login, let the email verification process handle it
+      console.log('Registration complete, redirecting to login with verification message');
+      router.push('/login?registered=true');
 
     } catch (err) {
       console.error('Registration error:', err);

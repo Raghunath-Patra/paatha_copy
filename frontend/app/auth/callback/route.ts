@@ -19,12 +19,10 @@ export async function GET(request: Request) {
     );
   }
 
-  // Handle missing code
+  // Handle missing code - this is normal for some flows, redirect silently
   if (!code) {
-    console.error('No code provided in callback');
-    return NextResponse.redirect(
-      new URL('/login?error=no_code_provided', requestUrl.origin)
-    );
+    console.log('No code provided in callback, redirecting to login');
+    return NextResponse.redirect(new URL('/login', requestUrl.origin));
   }
 
   try {
@@ -36,7 +34,7 @@ export async function GET(request: Request) {
     if (exchangeError) {
       console.error('Code exchange error:', exchangeError);
       
-      // Handle specific error types
+      // Handle specific error types with user-friendly redirects
       if (exchangeError.message?.includes('Email not confirmed')) {
         return NextResponse.redirect(
           new URL('/login?error=email_not_confirmed', requestUrl.origin)
@@ -49,17 +47,15 @@ export async function GET(request: Request) {
         );
       }
       
-      // Generic error handling
-      return NextResponse.redirect(
-        new URL(`/login?error=${encodeURIComponent(exchangeError.message)}`, requestUrl.origin)
-      );
+      // For other errors, redirect to login without showing technical details
+      console.log('Auth callback failed, redirecting to login silently');
+      return NextResponse.redirect(new URL('/login', requestUrl.origin));
     }
 
     if (!data.user) {
       console.error('No user returned from code exchange');
-      return NextResponse.redirect(
-        new URL('/login?error=no_user_returned', requestUrl.origin)
-      );
+      // Redirect silently without showing technical error to user
+      return NextResponse.redirect(new URL('/login', requestUrl.origin));
     }
 
     console.log('Code exchange successful, user:', data.user.id);
@@ -79,9 +75,6 @@ export async function GET(request: Request) {
 
     // Determine redirect URL based on profile status
     let redirectUrl = '/';
-    
-    // Check for Google registration flow
-    const isGoogleRegistration = requestUrl.searchParams.get('google_registration') === 'true';
     
     // If no role (either new Google user or incomplete profile)
     if (!profile?.role) {
@@ -104,8 +97,7 @@ export async function GET(request: Request) {
 
   } catch (err) {
     console.error('Unexpected error in auth callback:', err);
-    return NextResponse.redirect(
-      new URL('/login?error=unexpected_error', requestUrl.origin)
-    );
+    // Redirect silently without showing technical details to user
+    return NextResponse.redirect(new URL('/login', requestUrl.origin));
   }
 }

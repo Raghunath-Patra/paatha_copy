@@ -122,15 +122,13 @@ export default function LoginForm() {
         return 'Please check your email and click the verification link before logging in.';
       case 'invalid_or_expired_code':
         return 'The verification link has expired. Please try logging in again.';
-      case 'no_code_provided':
-        return 'Invalid verification link. Please try the link from your email again.';
-      case 'no_user_returned':
-        return 'Authentication failed. Please try again.';
-      case 'unexpected_error':
-        return 'An unexpected error occurred. Please try again.';
       case 'auth_callback_error':
         return 'Authentication failed. Please try logging in again.';
       default:
+        // Only show the error if it's not a technical/internal error
+        if (errorCode.includes('null') || errorCode.includes('undefined') || errorCode.includes('code')) {
+          return null; // Don't show technical errors to users
+        }
         return decodeURIComponent(errorCode);
     }
   };
@@ -141,8 +139,9 @@ export default function LoginForm() {
     error.includes("Error refreshing session")
   ) ? error : null;
 
-  // URL error takes precedence
-  const finalError = urlError ? getErrorMessage(urlError) : displayError;
+  // URL error takes precedence, but filter out technical errors
+  const urlErrorMessage = urlError ? getErrorMessage(urlError) : null;
+  const finalError = urlErrorMessage || displayError;
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
