@@ -66,7 +66,7 @@ interface Course {
   enrolled_at: string;
   total_quizzes: number;
   completed_quizzes: number;
-  average_score: number;
+  average_score: number | null;
 }
 
 interface QuizSummary {
@@ -82,7 +82,7 @@ interface QuizSummary {
   end_time?: string;
   attempts_allowed: number;
   my_attempts: number;
-  best_score?: number;
+  best_score?: number | null;
   status: string; // 'not_started', 'in_progress', 'completed' (based on student's attempts)
   quiz_status_value: string; // 'not_started', 'in_progress', 'time_expired' (based on quiz timing)
 }
@@ -93,6 +93,14 @@ interface DashboardStats {
   completed_quizzes: number;
   average_score: number;
 }
+
+// Helper function to safely format numbers
+const safeToFixed = (value: number | null | undefined, decimals: number = 1): string => {
+  if (value === null || value === undefined || isNaN(value)) {
+    return '0.0';
+  }
+  return value.toFixed(decimals);
+};
 
 // Daily Challenge Button Component
 const DailyChallengeButton = () => {
@@ -368,12 +376,17 @@ export default function StudentDashboard() {
 
         setAllQuizzes(allQuizzes);
 
-        // Calculate stats
+        // Calculate stats with null safety
         const totalQuizzesAvailable = allQuizzes.length;
         const completedQuizzes = allQuizzes.filter(quiz => quiz.status === 'completed').length;
-        const totalScore = coursesData.reduce((sum: number, course: Course) => 
-          sum + course.average_score, 0);
-        const averageScore = coursesData.length > 0 ? totalScore / coursesData.length : 0;
+        
+        // Safe calculation of average score
+        const validCourses = coursesData.filter((course: Course) => 
+          course.average_score !== null && course.average_score !== undefined && !isNaN(course.average_score)
+        );
+        const totalScore = validCourses.reduce((sum: number, course: Course) => 
+          sum + (course.average_score || 0), 0);
+        const averageScore = validCourses.length > 0 ? totalScore / validCourses.length : 0;
 
         setStats({
           total_courses: coursesData.length,
@@ -613,7 +626,7 @@ export default function StudentDashboard() {
                     <div className="text-xs text-purple-700">Available</div>
                   </div>
                   <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                    <div className="text-lg font-bold text-yellow-600">{stats.average_score.toFixed(1)}%</div>
+                    <div className="text-lg font-bold text-yellow-600">{safeToFixed(stats.average_score)}%</div>
                     <div className="text-xs text-yellow-700">Avg Score</div>
                   </div>
                 </div>
@@ -793,9 +806,9 @@ export default function StudentDashboard() {
                               <div className="text-sm font-medium text-gray-900">
                                 {quiz.total_marks} marks
                               </div>
-                              {quiz.best_score !== undefined && (
+                              {quiz.best_score !== undefined && quiz.best_score !== null && (
                                 <div className="text-sm text-blue-600">
-                                  Best: {quiz.best_score.toFixed(1)}%
+                                  Best: {safeToFixed(quiz.best_score)}%
                                 </div>
                               )}
                             </div>
@@ -893,7 +906,7 @@ export default function StudentDashboard() {
                     </span>
                     <div className="sm:mt-1">
                       <span className="text-sm font-medium text-blue-600">
-                        {course.average_score.toFixed(1)}%
+                        {safeToFixed(course.average_score)}%
                       </span>
                     </div>
                   </div>
@@ -955,9 +968,9 @@ export default function StudentDashboard() {
                       <p className="text-xs text-gray-500">
                         {quiz.my_attempts}/{quiz.attempts_allowed} attempts
                       </p>
-                      {quiz.best_score !== undefined && (
+                      {quiz.best_score !== undefined && quiz.best_score !== null && (
                         <p className="text-xs text-blue-600">
-                          Best: {quiz.best_score.toFixed(1)}%
+                          Best: {safeToFixed(quiz.best_score)}%
                         </p>
                       )}
                     </div>
