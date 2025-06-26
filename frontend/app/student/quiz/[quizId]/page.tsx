@@ -1,7 +1,7 @@
 // frontend/app/student/quiz/[quizId]/page.tsx
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
@@ -15,7 +15,12 @@ import {
   XCircle, 
   Eye,
   X,
-  BarChart3
+  BarChart3,
+  Camera,
+  Upload,
+  Image as ImageIcon,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 interface QuizDetails {
@@ -99,6 +104,16 @@ export default function TakeQuiz() {
   const [showAttemptsModal, setShowAttemptsModal] = useState(false);
   const [loadingAttempts, setLoadingAttempts] = useState(false);
 
+  // Image upload states
+  const [showImageOptions, setShowImageOptions] = useState(false);
+  const [processingImage, setProcessingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Check if user is a student
@@ -107,6 +122,15 @@ export default function TakeQuiz() {
       router.push('/'); // Redirect non-students
     }
   }, [profile, router]);
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
 
   // Fetch quiz details
   const fetchQuizDetails = useCallback(async () => {
@@ -172,6 +196,153 @@ export default function TakeQuiz() {
   useEffect(() => {
     fetchQuizDetails();
   }, [fetchQuizDetails]);
+
+  // Image processing functions
+  const processImageFile = async (file: File) => {
+    setProcessingImage(true);
+    setImageError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_URL}/api/student/process-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to process image');
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.extracted_text) {
+        // Append to current answer
+        const currentQuestion = questions[currentQuestionIndex];
+        const currentAnswer = answers[currentQuestion.id] || '';
+        const newAnswer = currentAnswer + (currentAnswer ? '\n\n' : '') + result.extracted_text;
+        
+        setAnswers(prev => ({
+          ...prev,
+          [currentQuestion.id]: newAnswer
+        }));
+      }
+    } catch (err) {
+      console.error('Error processing image:', err);
+      setImageError(err instanceof Error ? err.message : 'Failed to process image');
+    } finally {
+      setProcessingImage(false);
+      setShowImageOptions(false);
+    }
+  };
+
+  const processImageFromCamera = async (imageDataUrl: string) => {
+    setProcessingImage(true);
+    setImageError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      // Remove data URL prefix
+      const base64Data = imageDataUrl.split(',')[1];
+
+      const response = await fetch(`${API_URL}/api/student/process-image-base64`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image: base64Data })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to process image');
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.extracted_text) {
+        // Append to current answer
+        const currentQuestion = questions[currentQuestionIndex];
+        const currentAnswer = answers[currentQuestion.id] || '';
+        const newAnswer = currentAnswer + (currentAnswer ? '\n\n' : '') + result.extracted_text;
+        
+        setAnswers(prev => ({
+          ...prev,
+          [currentQuestion.id]: newAnswer
+        }));
+      }
+    } catch (err) {
+      console.error('Error processing image:', err);
+      setImageError(err instanceof Error ? err.message : 'Failed to process image');
+    } finally {
+      setProcessingImage(false);
+      setShowImageOptions(false);
+      stopCamera();
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment' // Use back camera on mobile
+        } 
+      });
+      
+      setCameraStream(stream);
+      setCameraActive(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      setImageError('Failed to access camera. Please check permissions.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      if (context) {
+        context.drawImage(video, 0, 0);
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        processImageFromCamera(imageDataUrl);
+      }
+    }
+  };
 
   // Start quiz attempt
   const startQuizAttempt = async () => {
@@ -614,7 +785,7 @@ export default function TakeQuiz() {
     );
   }
 
-  // Show quiz questions (existing code continues...)
+  // Show quiz questions
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
@@ -684,13 +855,120 @@ export default function TakeQuiz() {
                   </label>
                 ))
               ) : (
-                <textarea
-                  value={answers[currentQuestion.id] || ''}
-                  onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={4}
-                  placeholder="Type your answer here..."
-                />
+                <div className="space-y-3">
+                  {/* Image upload options for text questions */}
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Your Answer:</label>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowImageOptions(!showImageOptions)}
+                        className="inline-flex items-center px-3 py-1 border border-blue-300 text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 text-sm"
+                        disabled={processingImage}
+                      >
+                        <ImageIcon className="h-4 w-4 mr-1" />
+                        Add Image
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Image upload options */}
+                  {showImageOptions && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-blue-900">Add Image to Extract Text</h4>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowImageOptions(false);
+                            stopCamera();
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={processingImage}
+                          className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-blue-300 text-blue-700 bg-white rounded-md hover:bg-blue-50 disabled:opacity-50"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload Image
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={cameraActive ? stopCamera : startCamera}
+                          disabled={processingImage}
+                          className={`flex-1 inline-flex items-center justify-center px-4 py-2 border rounded-md disabled:opacity-50 ${
+                            cameraActive 
+                              ? 'border-red-300 text-red-700 bg-red-50 hover:bg-red-100'
+                              : 'border-blue-300 text-blue-700 bg-white hover:bg-blue-50'
+                          }`}
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          {cameraActive ? 'Stop Camera' : 'Use Camera'}
+                        </button>
+                      </div>
+
+                      {/* Camera preview */}
+                      {cameraActive && (
+                        <div className="mt-4">
+                          <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-full max-w-sm mx-auto rounded-lg bg-black"
+                          />
+                          <div className="mt-3 text-center">
+                            <button
+                              type="button"
+                              onClick={captureImage}
+                              disabled={processingImage}
+                              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              <Camera className="h-4 w-4 mr-2" />
+                              Capture & Process
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Processing indicator */}
+                      {processingImage && (
+                        <div className="mt-4 flex items-center justify-center text-blue-700">
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Processing image...
+                        </div>
+                      )}
+
+                      {/* Error display */}
+                      {imageError && (
+                        <div className="mt-4 flex items-center text-red-700 bg-red-50 p-3 rounded-lg">
+                          <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="text-sm">{imageError}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <textarea
+                    value={answers[currentQuestion.id] || ''}
+                    onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={6}
+                    placeholder="Type your answer here... or use the 'Add Image' button above to extract text from an image."
+                  />
+                  
+                  <p className="text-xs text-gray-500">
+                    Tip: You can upload images containing handwritten text, diagrams, or printed text. The system will extract the content and add it to your answer for editing.
+                  </p>
+                </div>
               )}
             </div>
 
@@ -762,6 +1040,18 @@ export default function TakeQuiz() {
           </div>
         </div>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Hidden canvas for image capture */}
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 }
