@@ -20,7 +20,9 @@ import {
   Upload,
   Image as ImageIcon,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  SwitchCamera,
+  RefreshCw
 } from 'lucide-react';
 
 interface QuizDetails {
@@ -99,27 +101,50 @@ export default function TakeQuiz() {
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(true);
   
-  // New state for previous attempts
+  // Previous attempts state
   const [previousAttempts, setPreviousAttempts] = useState<QuizAttempt[]>([]);
   const [showAttemptsModal, setShowAttemptsModal] = useState(false);
   const [loadingAttempts, setLoadingAttempts] = useState(false);
 
-  // Image upload states
+  // Enhanced image upload states
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [imageSuccess, setImageSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // Detect if device is desktop/laptop
+  useEffect(() => {
+    const checkDevice = () => {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isDesktopSize = window.innerWidth >= 1024;
+      
+      // Consider it desktop if it's not mobile, doesn't have touch, or has large screen
+      setIsDesktop(isDesktopSize && (!isMobile || !hasTouch));
+      
+      // Set default camera based on device type
+      setFacingMode(isDesktopSize && !isMobile ? 'user' : 'environment');
+    };
+
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
 
   // Check if user is a student
   useEffect(() => {
     if (profile && profile.role !== 'student') {
-      router.push('/'); // Redirect non-students
+      router.push('/');
     }
   }, [profile, router]);
 
@@ -131,6 +156,21 @@ export default function TakeQuiz() {
       }
     };
   }, [cameraStream]);
+
+  // Clear success/error messages after delay
+  useEffect(() => {
+    if (imageSuccess) {
+      const timer = setTimeout(() => setImageSuccess(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [imageSuccess]);
+
+  useEffect(() => {
+    if (imageError) {
+      const timer = setTimeout(() => setImageError(null), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [imageError]);
 
   // Fetch quiz details
   const fetchQuizDetails = useCallback(async () => {
@@ -162,7 +202,7 @@ export default function TakeQuiz() {
     }
   }, [user, quizId]);
 
-  // Fetch previous attempts for this quiz
+  // Fetch previous attempts
   const fetchPreviousAttempts = useCallback(async () => {
     if (!user || !quizId) return;
 
@@ -183,7 +223,6 @@ export default function TakeQuiz() {
       }
 
       const attemptsData = await response.json();
-      // Filter attempts for this specific quiz
       const quizAttempts = attemptsData.filter((attempt: AttemptResponse) => attempt.quiz_id === quizId);
       setPreviousAttempts(quizAttempts);
     } catch (err) {
@@ -197,14 +236,24 @@ export default function TakeQuiz() {
     fetchQuizDetails();
   }, [fetchQuizDetails]);
 
-  // Image processing functions
+  // Enhanced image processing functions
   const processImageFile = async (file: File) => {
     setProcessingImage(true);
     setImageError(null);
+    setImageSuccess(null);
 
     try {
+      // Client-side validation
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please select a valid image file');
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('Image too large (maximum 10MB)');
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
+      if (!session) throw new Error('Please log in again');
 
       const formData = new FormData();
       formData.append('file', file);
@@ -217,27 +266,31 @@ export default function TakeQuiz() {
         body: formData
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to process image');
+        throw new Error(result.detail || `Server error: ${response.status}`);
       }
 
-      const result = await response.json();
-      
       if (result.success && result.extracted_text) {
-        // Append to current answer
         const currentQuestion = questions[currentQuestionIndex];
         const currentAnswer = answers[currentQuestion.id] || '';
-        const newAnswer = currentAnswer + (currentAnswer ? '\n\n' : '') + result.extracted_text;
+        const separator = currentAnswer.trim() ? '\n\n--- From Image ---\n' : '';
+        const newAnswer = currentAnswer + separator + result.extracted_text;
         
         setAnswers(prev => ({
           ...prev,
           [currentQuestion.id]: newAnswer
         }));
+
+        setImageSuccess(`Successfully extracted text from image! ${result.extracted_text.length} characters added.`);
+      } else {
+        setImageError('No text could be extracted from this image. Please try a clearer image.');
       }
     } catch (err) {
       console.error('Error processing image:', err);
-      setImageError(err instanceof Error ? err.message : 'Failed to process image');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process image';
+      setImageError(errorMessage);
     } finally {
       setProcessingImage(false);
       setShowImageOptions(false);
@@ -247,13 +300,22 @@ export default function TakeQuiz() {
   const processImageFromCamera = async (imageDataUrl: string) => {
     setProcessingImage(true);
     setImageError(null);
+    setImageSuccess(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
+      if (!session) throw new Error('Please log in again');
 
-      // Remove data URL prefix
+      // Validate the data URL
+      if (!imageDataUrl || !imageDataUrl.includes(',')) {
+        throw new Error('Invalid image capture');
+      }
+
       const base64Data = imageDataUrl.split(',')[1];
+      
+      if (!base64Data) {
+        throw new Error('Failed to capture image data');
+      }
 
       const response = await fetch(`${API_URL}/api/student/process-image-base64`, {
         method: 'POST',
@@ -264,27 +326,31 @@ export default function TakeQuiz() {
         body: JSON.stringify({ image: base64Data })
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to process image');
+        throw new Error(result.detail || `Server error: ${response.status}`);
       }
 
-      const result = await response.json();
-      
       if (result.success && result.extracted_text) {
-        // Append to current answer
         const currentQuestion = questions[currentQuestionIndex];
         const currentAnswer = answers[currentQuestion.id] || '';
-        const newAnswer = currentAnswer + (currentAnswer ? '\n\n' : '') + result.extracted_text;
+        const separator = currentAnswer.trim() ? '\n\n--- From Camera ---\n' : '';
+        const newAnswer = currentAnswer + separator + result.extracted_text;
         
         setAnswers(prev => ({
           ...prev,
           [currentQuestion.id]: newAnswer
         }));
+
+        setImageSuccess(`Successfully extracted text from camera! ${result.extracted_text.length} characters added.`);
+      } else {
+        setImageError('No text could be extracted from the captured image. Please try again with better lighting.');
       }
     } catch (err) {
-      console.error('Error processing image:', err);
-      setImageError(err instanceof Error ? err.message : 'Failed to process image');
+      console.error('Error processing camera image:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process captured image';
+      setImageError(errorMessage);
     } finally {
       setProcessingImage(false);
       setShowImageOptions(false);
@@ -297,15 +363,30 @@ export default function TakeQuiz() {
     if (file) {
       processImageFile(file);
     }
+    // Reset input to allow selecting the same file again
+    if (event.target) {
+      event.target.value = '';
+    }
   };
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment' // Use back camera on mobile
-        } 
-      });
+      setCameraError(null);
+      
+      // Stop existing stream if any
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+
+      const constraints = {
+        video: {
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       setCameraStream(stream);
       setCameraActive(true);
@@ -315,7 +396,22 @@ export default function TakeQuiz() {
       }
     } catch (err) {
       console.error('Error accessing camera:', err);
-      setImageError('Failed to access camera. Please check permissions.');
+      let errorMessage = 'Failed to access camera. ';
+      
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError') {
+          errorMessage += 'Please allow camera access and try again.';
+        } else if (err.name === 'NotFoundError') {
+          errorMessage += 'No camera found on this device.';
+        } else if (err.name === 'NotReadableError') {
+          errorMessage += 'Camera is already in use by another application.';
+        } else {
+          errorMessage += 'Please check your camera permissions.';
+        }
+      }
+      
+      setCameraError(errorMessage);
+      setImageError(errorMessage);
     }
   };
 
@@ -325,6 +421,21 @@ export default function TakeQuiz() {
       setCameraStream(null);
     }
     setCameraActive(false);
+    setCameraError(null);
+  };
+
+  const switchCamera = async () => {
+    const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newFacingMode);
+    
+    if (cameraActive) {
+      stopCamera();
+      // Small delay to ensure previous stream is properly closed
+      setTimeout(() => {
+        setFacingMode(newFacingMode);
+        startCamera();
+      }, 100);
+    }
   };
 
   const captureImage = () => {
@@ -333,13 +444,22 @@ export default function TakeQuiz() {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
       
+      if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
+        setImageError('Camera not ready. Please wait for the camera to load.');
+        return;
+      }
+      
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      if (context) {
-        context.drawImage(video, 0, 0);
+      context.drawImage(video, 0, 0);
+      
+      try {
         const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
         processImageFromCamera(imageDataUrl);
+      } catch (err) {
+        console.error('Error capturing image:', err);
+        setImageError('Failed to capture image. Please try again.');
       }
     }
   };
@@ -386,7 +506,7 @@ export default function TakeQuiz() {
 
       // Initialize timer if quiz has time limit
       if (quiz.time_limit) {
-        setTimeRemaining(quiz.time_limit * 60); // Convert minutes to seconds
+        setTimeRemaining(quiz.time_limit * 60);
       }
 
       setShowInstructions(false);
@@ -445,13 +565,6 @@ export default function TakeQuiz() {
     return 'text-red-600';
   };
 
-  // Get score background color
-  const getScoreBgColor = (percentage: number) => {
-    if (percentage >= 80) return 'bg-green-100';
-    if (percentage >= 60) return 'bg-yellow-100';
-    return 'bg-red-100';
-  };
-
   // Timer effect
   useEffect(() => {
     if (timeRemaining === null || timeRemaining <= 0) return;
@@ -459,7 +572,6 @@ export default function TakeQuiz() {
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev === null || prev <= 1) {
-          // Auto-submit when time runs out
           submitQuiz();
           return 0;
         }
@@ -496,7 +608,6 @@ export default function TakeQuiz() {
       const resultData = await response.json();
       sessionStorage.setItem(`quiz_results_${resultData.attempt.id}`, JSON.stringify(resultData));
     
-      // Redirect to results page with the attempt ID
       router.push(`/student/quiz/${quizId}/results/${resultData.attempt.id}`);
     } catch (err) {
       console.error('Error submitting quiz:', err);
@@ -609,7 +720,6 @@ export default function TakeQuiz() {
               )}
             </div>
 
-            {/* Show warning if cannot attempt */}
             {!quiz.can_attempt && (
               <div className="bg-red-50 p-4 rounded-lg mb-4">
                 <p className="text-red-700">
@@ -621,7 +731,6 @@ export default function TakeQuiz() {
               </div>
             )}
 
-            {/* Action buttons - always show based on available options */}
             <div className="flex gap-4">
               <button
                 onClick={() => router.back()}
@@ -630,7 +739,6 @@ export default function TakeQuiz() {
                 Back
               </button>
               
-              {/* Show Previous Attempts button if user has attempts */}
               {quiz.my_attempts > 0 && (
                 <button
                   onClick={handleViewPreviousAttempts}
@@ -641,7 +749,6 @@ export default function TakeQuiz() {
                 </button>
               )}
               
-              {/* Only show Start Quiz button if can attempt */}
               {quiz.can_attempt && (
                 <button
                   onClick={startQuizAttempt}
@@ -653,7 +760,6 @@ export default function TakeQuiz() {
               )}
             </div>
 
-            {/* Additional info for users who exhausted attempts */}
             {!quiz.can_attempt && quiz.my_attempts >= quiz.attempts_allowed && quiz.my_attempts > 0 && (
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center">
@@ -751,7 +857,6 @@ export default function TakeQuiz() {
                           )}
                         </div>
                         
-                        {/* Score bar */}
                         <div className="mt-3">
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
@@ -810,7 +915,6 @@ export default function TakeQuiz() {
             </div>
           </div>
           
-          {/* Progress bar */}
           <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
             <div 
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -856,7 +960,7 @@ export default function TakeQuiz() {
                 ))
               ) : (
                 <div className="space-y-3">
-                  {/* Image upload options for text questions */}
+                  {/* Enhanced image upload section */}
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-gray-700">Your Answer:</label>
                     <div className="flex items-center space-x-2">
@@ -872,11 +976,34 @@ export default function TakeQuiz() {
                     </div>
                   </div>
 
-                  {/* Image upload options */}
+                  {/* Success message */}
+                  {imageSuccess && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center text-green-700">
+                        <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="text-sm">{imageSuccess}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Error message */}
+                  {imageError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <div className="flex items-start text-red-700">
+                        <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium">Error processing image:</p>
+                          <p>{imageError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Enhanced image upload options */}
                   {showImageOptions && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-blue-900">Add Image to Extract Text</h4>
+                        <h4 className="text-sm font-medium text-blue-900">Extract Text from Image</h4>
                         <button
                           type="button"
                           onClick={() => {
@@ -889,7 +1016,7 @@ export default function TakeQuiz() {
                         </button>
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3 mb-3">
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
@@ -911,47 +1038,78 @@ export default function TakeQuiz() {
                           }`}
                         >
                           <Camera className="h-4 w-4 mr-2" />
-                          {cameraActive ? 'Stop Camera' : 'Use Camera'}
+                          {cameraActive ? 'Stop Camera' : `Use Camera${isDesktop ? ' (Front)' : ' (Back)'}`}
                         </button>
                       </div>
+
+                      {/* Camera switching button - show when camera is active */}
+                      {cameraActive && (
+                        <div className="flex justify-center mb-3">
+                          <button
+                            type="button"
+                            onClick={switchCamera}
+                            disabled={processingImage}
+                            className="inline-flex items-center px-3 py-2 text-sm border border-blue-300 text-blue-700 bg-white rounded-md hover:bg-blue-50 disabled:opacity-50"
+                          >
+                            <SwitchCamera className="h-4 w-4 mr-2" />
+                            Switch to {facingMode === 'user' ? 'Back' : 'Front'} Camera
+                          </button>
+                        </div>
+                      )}
 
                       {/* Camera preview */}
                       {cameraActive && (
                         <div className="mt-4">
-                          <video
-                            ref={videoRef}
-                            autoPlay
-                            playsInline
-                            muted
-                            className="w-full max-w-sm mx-auto rounded-lg bg-black"
-                          />
-                          <div className="mt-3 text-center">
-                            <button
-                              type="button"
-                              onClick={captureImage}
-                              disabled={processingImage}
-                              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                            >
-                              <Camera className="h-4 w-4 mr-2" />
-                              Capture & Process
-                            </button>
-                          </div>
+                          {cameraError ? (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                              <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+                              <p className="text-red-700 text-sm">{cameraError}</p>
+                              <button
+                                type="button"
+                                onClick={startCamera}
+                                className="mt-2 inline-flex items-center px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                              >
+                                <RefreshCw className="h-4 w-4 mr-1" />
+                                Retry
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="w-full max-w-sm mx-auto rounded-lg bg-black"
+                                style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
+                              />
+                              <div className="mt-3 text-center space-y-2">
+                                <p className="text-xs text-blue-700">
+                                  {facingMode === 'user' ? 'Front camera active' : 'Back camera active'}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={captureImage}
+                                  disabled={processingImage}
+                                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  <Camera className="h-4 w-4 mr-2" />
+                                  Capture & Extract Text
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
 
                       {/* Processing indicator */}
                       {processingImage && (
-                        <div className="mt-4 flex items-center justify-center text-blue-700">
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Processing image...
-                        </div>
-                      )}
-
-                      {/* Error display */}
-                      {imageError && (
-                        <div className="mt-4 flex items-center text-red-700 bg-red-50 p-3 rounded-lg">
-                          <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span className="text-sm">{imageError}</span>
+                        <div className="mt-4 flex items-center justify-center text-blue-700 bg-blue-100 rounded-lg p-3">
+                          <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                          <div className="text-sm">
+                            <p className="font-medium">Processing image...</p>
+                            <p>Extracting text and visual content...</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -965,9 +1123,15 @@ export default function TakeQuiz() {
                     placeholder="Type your answer here... or use the 'Add Image' button above to extract text from an image."
                   />
                   
-                  <p className="text-xs text-gray-500">
-                    Tip: You can upload images containing handwritten text, diagrams, or printed text. The system will extract the content and add it to your answer for editing.
-                  </p>
+                  <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+                    <p className="font-medium mb-1">💡 Image Upload Tips:</p>
+                    <ul className="space-y-1">
+                      <li>• Upload clear photos of handwritten text, diagrams, or printed material</li>
+                      <li>• Ensure good lighting and avoid shadows</li>
+                      <li>• For best results, hold the camera steady and focus clearly</li>
+                      <li>• Mathematical equations and diagrams are supported</li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
@@ -1041,7 +1205,7 @@ export default function TakeQuiz() {
         </div>
       </div>
 
-      {/* Hidden file input */}
+      {/* Hidden elements */}
       <input
         ref={fileInputRef}
         type="file"
@@ -1049,8 +1213,6 @@ export default function TakeQuiz() {
         onChange={handleFileSelect}
         className="hidden"
       />
-
-      {/* Hidden canvas for image capture */}
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
