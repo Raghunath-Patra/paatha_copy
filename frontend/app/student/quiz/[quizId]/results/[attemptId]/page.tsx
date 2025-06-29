@@ -19,7 +19,14 @@ import {
   Lightbulb,
   AlertCircle,
   Star,
-  Home
+  Home,
+  RefreshCw,
+  Hourglass,
+  Sparkles,
+  TrendingUp,
+  MessageCircle,
+  Calendar,
+  Eye
 } from 'lucide-react';
 
 interface QuizAttempt {
@@ -48,8 +55,8 @@ interface QuestionWithAnswer {
   explanation?: string;
   feedback?: string;
   marks: number;
-  score: number;
-  is_correct: boolean;
+  score: number | null; // Can be null if not graded yet
+  is_correct: boolean | null; // Can be null if not graded yet
   time_spent?: number;
   confidence_level?: number;
   flagged_for_review?: boolean;
@@ -67,12 +74,24 @@ interface QuizResults {
     passed: boolean;
     time_taken?: number;
     ai_grading_used?: boolean;
-    ai_token_usage?: {
-      prompt_tokens: number;
-      completion_tokens: number;
-      total_tokens: number;
-    };
+    grading_status?: string;
+    grading_message?: string;
+    auto_grading_enabled?: boolean;
   };
+}
+
+interface GradingStatus {
+  attempt_id: string;
+  status: string;
+  submitted_at?: string;
+  is_graded: boolean;
+  auto_graded: boolean;
+  teacher_reviewed: boolean;
+  obtained_marks: number;
+  percentage: number;
+  total_marks: number;
+  message?: string;
+  estimated_grading_time?: string;
 }
 
 export default function QuizResults() {
@@ -84,11 +103,13 @@ export default function QuizResults() {
   const attemptId = params?.attemptId as string;
   
   const [results, setResults] = useState<QuizResults | null>(null);
+  const [gradingStatus, setGradingStatus] = useState<GradingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
-  //const [isRichData, setIsRichData] = useState(false);
+  const [checkingGrading, setCheckingGrading] = useState(false);
+  const [lastGradingCheck, setLastGradingCheck] = useState<Date | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -99,6 +120,44 @@ export default function QuizResults() {
     }
   }, [profile, router]);
 
+  // Check if quiz is graded
+  const isGraded = results?.questions_with_answers.some(q => q.score !== null) || false;
+  const isPendingGrading = results && !isGraded;
+
+  const fetchGradingStatus = async () => {
+    if (!user || !attemptId || checkingGrading) return;
+
+    try {
+      setCheckingGrading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`${API_URL}/api/student/quizzes/attempts/${attemptId}/grading-status`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const status = await response.json();
+        setGradingStatus(status);
+        setLastGradingCheck(new Date());
+        
+        // If grading is complete, refresh the results
+        if (status.is_graded && isPendingGrading) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      }
+    } catch (err) {
+      console.error('Error checking grading status:', err);
+    } finally {
+      setCheckingGrading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchResults = async () => {
       if (!user || !attemptId) return;
@@ -108,11 +167,9 @@ export default function QuizResults() {
         const storedResults = sessionStorage.getItem(`quiz_results_${attemptId}`);
         
         if (storedResults) {
-          // We have rich data from immediate submission
           console.log('📦 Loading rich data from sessionStorage');
           const richData = JSON.parse(storedResults);
           setResults(richData);
-          //setIsRichData(true);
           setLoading(false);
           
           // Clear the stored data to prevent stale data on future visits
@@ -142,7 +199,6 @@ export default function QuizResults() {
 
         const data = await response.json();
         setResults(data);
-        //setIsRichData(false); // This is basic data from database
         setLoading(false);
         
       } catch (err) {
@@ -154,6 +210,20 @@ export default function QuizResults() {
 
     fetchResults();
   }, [user, attemptId, API_URL, router]);
+
+  // Fetch grading status when results are loaded and pending
+  useEffect(() => {
+    if (results && isPendingGrading) {
+      fetchGradingStatus();
+      
+      // Set up periodic checking for grading status
+      const interval = setInterval(() => {
+        fetchGradingStatus();
+      }, 30000); // Check every 30 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [results, isPendingGrading]);
 
   const formatTime = (minutes: number) => {
     if (!minutes) return '0m';
@@ -254,28 +324,87 @@ export default function QuizResults() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Data Status Banner */}
-        {/* {!isRichData && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-              <p className="text-sm text-yellow-800">
-                You're viewing basic results. Some detailed information like AI feedback and explanations may not be available.
-              </p>
+        {/* Grading Status Banner */}
+        {isPendingGrading && (
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Hourglass className="h-5 w-5 text-blue-600 animate-pulse" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2 flex items-center">
+                  <Sparkles className="h-5 w-5 mr-2 text-blue-600" />
+                  Your Quiz is Being Graded! ✨
+                </h3>
+                <p className="text-blue-800 mb-3">
+                  {gradingStatus?.message || 
+                   "Great job completing the quiz! Our AI is carefully reviewing your answers and will have your results ready soon."}
+                </p>
+                <div className="flex items-center space-x-4 text-sm text-blue-700">
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Submitted: {formatDate(results.attempt.submitted_at || results.attempt.started_at)}
+                  </div>
+                  <div className="flex items-center">
+                    <Brain className="h-4 w-4 mr-1" />
+                    AI Grading in Progress
+                  </div>
+                  {lastGradingCheck && (
+                    <div className="flex items-center">
+                      <RefreshCw className={`h-4 w-4 mr-1 ${checkingGrading ? 'animate-spin' : ''}`} />
+                      Last checked: {lastGradingCheck.toLocaleTimeString()}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-4 flex items-center space-x-3">
+                  <button
+                    onClick={fetchGradingStatus}
+                    disabled={checkingGrading}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {checkingGrading ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Checking...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Check Status
+                      </>
+                    )}
+                  </button>
+                  <div className="text-xs text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                    <TrendingUp className="h-3 w-3 inline mr-1" />
+                    Auto-refresh every 30 seconds
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        )} */}
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Overall Score Card */}
-            <div className={`rounded-lg border p-6 ${getScoreBgColor(results.summary.percentage)}`}>
+            <div className={`rounded-lg border p-6 ${
+              isPendingGrading ? 'bg-blue-50 border-blue-200' : getScoreBgColor(results.summary.percentage)
+            }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Quiz Results</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {isPendingGrading ? 'Quiz Submitted Successfully!' : 'Quiz Results'}
+                  </h2>
                   <p className="text-gray-600">
-                    {results.summary.passed ? (
+                    {isPendingGrading ? (
+                      <span className="flex items-center text-blue-600">
+                        <Hourglass className="h-5 w-5 mr-1 animate-pulse" />
+                        Awaiting Grading
+                      </span>
+                    ) : results.summary.passed ? (
                       <span className="flex items-center text-green-600">
                         <CheckCircle className="h-5 w-5 mr-1" />
                         Passed
@@ -289,18 +418,61 @@ export default function QuizResults() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className={`text-4xl font-bold ${getScoreColor(results.summary.percentage)}`}>
-                    {results.summary.percentage.toFixed(1)}%
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {results.summary.obtained_marks}/{results.summary.total_marks} marks
-                  </div>
+                  {isPendingGrading ? (
+                    <div className="text-4xl font-bold text-blue-600">
+                      <MessageCircle className="h-12 w-12" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className={`text-4xl font-bold ${getScoreColor(results.summary.percentage)}`}>
+                        {results.summary.percentage.toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {results.summary.obtained_marks}/{results.summary.total_marks} marks
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Question Navigation */}
-            {!showAllQuestions && results.questions_with_answers.length > 0 && (
+            {/* Pending Grading Message */}
+            {isPendingGrading && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="text-center py-8">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-4">
+                    <Eye className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    Your Responses Have Been Recorded! 🎉
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Thank you for completing the quiz. Your answers are being carefully evaluated. 
+                    We'll notify you as soon as your results are ready!
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <CheckCircle className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                      <div className="text-sm font-medium text-blue-900">Submitted</div>
+                      <div className="text-xs text-blue-700">All answers recorded</div>
+                    </div>
+                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                      <RefreshCw className="h-6 w-6 text-yellow-600 mx-auto mb-2 animate-spin" />
+                      <div className="text-sm font-medium text-yellow-900">Processing</div>
+                      <div className="text-xs text-yellow-700">AI is grading</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <Star className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                      <div className="text-sm font-medium text-gray-600">Results Ready</div>
+                      <div className="text-xs text-gray-500">Coming soon!</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Question Review (show questions even if not graded) */}
+            {!isPendingGrading && !showAllQuestions && results.questions_with_answers.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -329,15 +501,17 @@ export default function QuizResults() {
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        currentQuestion.is_correct === null ? 'bg-blue-100 text-blue-800' :
                         currentQuestion.is_correct ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {currentQuestion.is_correct ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                        {currentQuestion.is_correct === null ? <Clock className="h-5 w-5" /> :
+                         currentQuestion.is_correct ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900">{currentQuestion.question_text}</h4>
                         <div className="mt-2 text-sm text-gray-600">
                           <span className="font-medium">Type:</span> {currentQuestion.question_type} • 
-                          <span className="font-medium ml-2">Marks:</span> {currentQuestion.score}/{currentQuestion.marks}
+                          <span className="font-medium ml-2">Marks:</span> {currentQuestion.score !== null ? `${currentQuestion.score}/${currentQuestion.marks}` : `${currentQuestion.marks} marks`}
                           {currentQuestion.time_spent && (
                             <>
                               <span className="font-medium ml-2">Time:</span> {Math.floor(currentQuestion.time_spent / 60)}m {currentQuestion.time_spent % 60}s
@@ -357,7 +531,7 @@ export default function QuizResults() {
                               key={index}
                               className={`p-2 rounded text-sm ${
                                 option === currentQuestion.correct_answer ? 'bg-green-100 text-green-800' :
-                                option === currentQuestion.student_answer ? 'bg-red-100 text-red-800' :
+                                option === currentQuestion.student_answer ? 'bg-blue-100 text-blue-800' :
                                 'bg-gray-50 text-gray-700'
                               }`}
                             >
@@ -418,8 +592,8 @@ export default function QuizResults() {
                       </div>
                     )}
 
-                    {/* Question Metadata - only show if available */}
-                    {true && (
+                    {/* Question Metadata */}
+                    {(currentQuestion.confidence_level || currentQuestion.flagged_for_review || currentQuestion.time_spent) && (
                       <div className="flex items-center space-x-4 text-xs text-gray-500 pt-2 border-t">
                         {currentQuestion.confidence_level && (
                           <span className="flex items-center">
@@ -453,6 +627,7 @@ export default function QuizResults() {
                         onClick={() => setCurrentQuestionIndex(index)}
                         className={`w-8 h-8 rounded text-xs font-medium ${
                           index === currentQuestionIndex ? 'bg-blue-600 text-white' :
+                          q.is_correct === null ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' :
                           q.is_correct ? 'bg-green-100 text-green-800 hover:bg-green-200' :
                           'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
@@ -466,7 +641,7 @@ export default function QuizResults() {
             )}
 
             {/* Toggle View Button */}
-            {results.questions_with_answers.length > 0 && (
+            {!isPendingGrading && results.questions_with_answers.length > 0 && (
               <div className="text-center">
                 <button
                   onClick={() => setShowAllQuestions(!showAllQuestions)}
@@ -478,20 +653,22 @@ export default function QuizResults() {
             )}
 
             {/* All Questions View */}
-            {showAllQuestions && (
+            {!isPendingGrading && showAllQuestions && (
               <div className="space-y-6">
                 {results.questions_with_answers.map((question, index) => (
                   <div key={question.question_id} className="bg-white rounded-lg shadow-sm border p-6">
                     <div className="flex items-start space-x-3 mb-4">
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        question.is_correct === null ? 'bg-blue-100 text-blue-800' :
                         question.is_correct ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {question.is_correct ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                        {question.is_correct === null ? <Clock className="h-5 w-5" /> :
+                         question.is_correct ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900">Question {index + 1}: {question.question_text}</h4>
                         <div className="mt-1 text-sm text-gray-600">
-                          Score: {question.score}/{question.marks} marks
+                          Score: {question.score !== null ? `${question.score}/${question.marks}` : `${question.marks} marks`}
                         </div>
                       </div>
                     </div>
@@ -528,7 +705,6 @@ export default function QuizResults() {
                       </div>
                     )}
 
-                    {/* Only show explanation for rich data */}
                     {question.explanation && (
                       <div className="mt-4">
                         <h5 className="text-sm font-medium text-gray-700 mb-2">Explanation:</h5>
@@ -547,21 +723,33 @@ export default function QuizResults() {
           <div className="space-y-6">
             {/* Quick Stats */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {isPendingGrading ? 'Submission Summary' : 'Quick Stats'}
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center text-sm text-gray-600">
                     <Target className="h-4 w-4 mr-2" />
-                    Questions Correct
+                    {isPendingGrading ? 'Questions Answered' : 'Questions Correct'}
                   </span>
-                  <span className="font-medium">{results.summary.correct_answers}/{results.summary.total_questions}</span>
+                  <span className="font-medium">
+                    {isPendingGrading ? 
+                      `${results.questions_with_answers.filter(q => q.student_answer.trim()).length}/${results.summary.total_questions}` :
+                      `${results.summary.correct_answers}/${results.summary.total_questions}`
+                    }
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center text-sm text-gray-600">
                     <Award className="h-4 w-4 mr-2" />
-                    Total Score
+                    {isPendingGrading ? 'Maximum Marks' : 'Total Score'}
                   </span>
-                  <span className="font-medium">{results.summary.obtained_marks}/{results.summary.total_marks}</span>
+                  <span className="font-medium">
+                    {isPendingGrading ? 
+                      `${results.summary.total_marks} marks` :
+                      `${results.summary.obtained_marks}/${results.summary.total_marks}`
+                    }
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center text-sm text-gray-600">
@@ -579,57 +767,48 @@ export default function QuizResults() {
                     <span className="text-xs text-blue-600">Used</span>
                   </div>
                 )}
-                {results.summary.ai_token_usage && (
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center text-sm text-gray-600">
-                      <Brain className="h-4 w-4 mr-2" />
-                      AI Tokens
-                    </span>
-                    <span className="text-xs text-gray-600">{results.summary.ai_token_usage.total_tokens}</span>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Performance Breakdown */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Accuracy</span>
-                  <span className="font-medium">
-                    {results.summary.total_questions > 0 ? 
-                      ((results.summary.correct_answers / results.summary.total_questions) * 100).toFixed(1) : 0}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full" 
-                    style={{ 
-                      width: results.summary.total_questions > 0 ? 
-                        `${(results.summary.correct_answers / results.summary.total_questions) * 100}%` : '0%'
-                    }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Question Types Breakdown */}
-            {results.questions_with_answers.length > 0 && (
+            {/* Performance Breakdown (only show if graded) */}
+            {!isPendingGrading && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Question Types</h3>
-                <div className="space-y-2">
-                  {Object.entries(
-                    results.questions_with_answers.reduce((acc, q) => {
-                      acc[q.question_type] = (acc[q.question_type] || 0) + 1;
-                      return acc;
-                    }, {} as Record<string, number>)
-                  ).map(([type, count]) => (
-                    <div key={type} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 capitalize">{type.replace('_', ' ')}</span>
-                      <span className="font-medium">{count}</span>
-                    </div>
-                  ))}
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Accuracy</span>
+                    <span className="font-medium">
+                      {results.summary.total_questions > 0 ? 
+                        ((results.summary.correct_answers / results.summary.total_questions) * 100).toFixed(1) : 0}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ 
+                        width: results.summary.total_questions > 0 ? 
+                          `${(results.summary.correct_answers / results.summary.total_questions) * 100}%` : '0%'
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Encouragement Card for Pending Grading */}
+            {isPendingGrading && (
+              <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200 p-6">
+                <h3 className="text-lg font-semibold text-green-900 mb-3 flex items-center">
+                  <Sparkles className="h-5 w-5 mr-2 text-green-600" />
+                  Well Done! 🌟
+                </h3>
+                <div className="space-y-2 text-sm text-green-800">
+                  <p>✅ Quiz completed successfully</p>
+                  <p>✅ All responses submitted</p>
+                  <p>✅ Time: {formatTime(results.summary.time_taken || 0)}</p>
+                  <p className="mt-3 text-green-700 font-medium">
+                    🎯 Keep up the great work! Your results will be available soon.
+                  </p>
                 </div>
               </div>
             )}
@@ -645,12 +824,14 @@ export default function QuizResults() {
                   <Home className="h-4 w-4 mr-2 inline" />
                   Back to Dashboard
                 </button>
-                <button 
-                  className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  onClick={() => window.print()}
-                >
-                  Download Report
-                </button>
+                {!isPendingGrading && (
+                  <button 
+                    className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    onClick={() => window.print()}
+                  >
+                    Download Report
+                  </button>
+                )}
               </div>
             </div>
           </div>

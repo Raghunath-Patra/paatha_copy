@@ -25,7 +25,15 @@ import {
   GraduationCap,
   Download,
   MessageSquare,
-  Home
+  Home,
+  Hourglass,
+  Sparkles,
+  RefreshCw,
+  Zap,
+  ThumbsUp,
+  TrendingUp,
+  Eye,
+  FileText
 } from 'lucide-react';
 
 interface QuizAttempt {
@@ -55,8 +63,8 @@ interface QuestionWithAnswer {
   explanation?: string;
   feedback?: string;
   marks: number;
-  score: number;
-  is_correct: boolean;
+  score: number | null; // Can be null if not graded yet
+  is_correct: boolean | null; // Can be null if not graded yet
   time_spent?: number;
   confidence_level?: number;
   flagged_for_review?: boolean;
@@ -103,6 +111,7 @@ export default function TeacherAttemptDetail() {
   const [error, setError] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -113,42 +122,61 @@ export default function TeacherAttemptDetail() {
     }
   }, [profile, router]);
 
-  useEffect(() => {
-    const fetchAttemptResults = async () => {
-      if (!user || !quizId || !attemptId) return;
+  // Check if attempt is graded
+  const isGraded = results?.questions_with_answers.some(q => q.score !== null) || false;
+  const isPendingGrading = results && !isGraded;
 
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          router.push('/login');
-          return;
-        }
+  const fetchAttemptResults = async (showRefreshing = false) => {
+    if (!user || !quizId || !attemptId) return;
 
-        const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/students/${studentId}/attempts/${attemptId}/results`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Failed to fetch attempt results');
-        }
-
-        const data = await response.json();
-        setResults(data);
-        setLoading(false);
-        
-      } catch (err) {
-        console.error('Error fetching attempt results:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load attempt results');
-        setLoading(false);
+    try {
+      if (showRefreshing) setRefreshing(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
       }
-    };
 
+      const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/students/${studentId}/attempts/${attemptId}/results`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to fetch attempt results');
+      }
+
+      const data = await response.json();
+      setResults(data);
+      setLoading(false);
+      
+    } catch (err) {
+      console.error('Error fetching attempt results:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load attempt results');
+      setLoading(false);
+    } finally {
+      if (showRefreshing) setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAttemptResults();
   }, [user, quizId, attemptId, API_URL, router]);
+
+  // Auto-refresh for pending grading
+  useEffect(() => {
+    if (isPendingGrading) {
+      const interval = setInterval(() => {
+        fetchAttemptResults();
+      }, 30000); // Check every 30 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isPendingGrading]);
 
   const formatTime = (minutes: number) => {
     if (!minutes) return '0m';
@@ -174,6 +202,10 @@ export default function TeacherAttemptDetail() {
     if (percentage >= 80) return 'bg-green-100 border-green-200';
     if (percentage >= 60) return 'bg-yellow-100 border-yellow-200';
     return 'bg-red-100 border-red-200';
+  };
+
+  const handleRefresh = () => {
+    fetchAttemptResults(true);
   };
 
   if (loading) {
@@ -243,6 +275,16 @@ export default function TeacherAttemptDetail() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {isPendingGrading && (
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Checking...' : 'Check Status'}
+                </button>
+              )}
               <Navigation />
             </div>
           </div>
@@ -250,16 +292,62 @@ export default function TeacherAttemptDetail() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Grading Status Banner */}
+        {isPendingGrading && (
+          <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <Hourglass className="h-5 w-5 text-yellow-600 animate-pulse" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-yellow-900 mb-2 flex items-center">
+                  <Zap className="h-5 w-5 mr-2 text-yellow-600" />
+                  Student Submission Under Review ⚡
+                </h3>
+                <p className="text-yellow-800 mb-3">
+                  {results.student_info.name}'s quiz submission is currently being processed by our AI grading system. 
+                  The detailed scores and feedback will be available once grading is complete.
+                </p>
+                <div className="flex items-center space-x-4 text-sm text-yellow-700">
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Submitted: {formatDate(results.attempt.submitted_at || results.attempt.started_at)}
+                  </div>
+                  <div className="flex items-center">
+                    <Brain className="h-4 w-4 mr-1" />
+                    AI Grading in Progress
+                  </div>
+                  <div className="flex items-center">
+                    <FileText className="h-4 w-4 mr-1" />
+                    {results.summary.total_questions} Questions Submitted
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Overall Score Card */}
-            <div className={`rounded-lg border p-6 ${getScoreBgColor(results.summary.percentage)}`}>
+            <div className={`rounded-lg border p-6 ${
+              isPendingGrading ? 'bg-blue-50 border-blue-200' : getScoreBgColor(results.summary.percentage)
+            }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Student Performance</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {isPendingGrading ? 'Student Submission' : 'Student Performance'}
+                  </h2>
                   <p className="text-gray-600">
-                    {results.summary.passed ? (
+                    {isPendingGrading ? (
+                      <span className="flex items-center text-blue-600">
+                        <Hourglass className="h-5 w-5 mr-1 animate-pulse" />
+                        Under Review
+                      </span>
+                    ) : results.summary.passed ? (
                       <span className="flex items-center text-green-600">
                         <CheckCircle className="h-5 w-5 mr-1" />
                         Passed
@@ -273,18 +361,70 @@ export default function TeacherAttemptDetail() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className={`text-4xl font-bold ${getScoreColor(results.summary.percentage)}`}>
-                    {results.summary.percentage.toFixed(1)}%
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {results.summary.obtained_marks}/{results.summary.total_marks} marks
-                  </div>
+                  {isPendingGrading ? (
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-blue-600 mb-2">
+                        <Brain className="h-12 w-12 mx-auto" />
+                      </div>
+                      <div className="text-sm text-blue-700">Processing...</div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={`text-4xl font-bold ${getScoreColor(results.summary.percentage)}`}>
+                        {results.summary.percentage.toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {results.summary.obtained_marks}/{results.summary.total_marks} marks
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* Pending Grading Overview */}
+            {isPendingGrading && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="text-center py-6">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-4">
+                    <Eye className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    Submission Successfully Received! 🎯
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    {results.student_info.name} has completed their quiz attempt. The AI grading system is now 
+                    evaluating their responses for accuracy and providing personalized feedback.
+                  </p>
+                  
+                  {/* Submission Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                      <div className="text-sm font-medium text-green-900">Completed</div>
+                      <div className="text-xs text-green-700">
+                        {results.questions_with_answers.filter(q => q.student_answer.trim()).length}/{results.summary.total_questions} questions
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <Clock className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                      <div className="text-sm font-medium text-blue-900">Time Taken</div>
+                      <div className="text-xs text-blue-700">{formatTime(results.summary.time_taken || 0)}</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <TrendingUp className="h-6 w-6 text-purple-600 mx-auto mb-2" />
+                      <div className="text-sm font-medium text-purple-900">Effort Level</div>
+                      <div className="text-xs text-purple-700">
+                        {results.questions_with_answers.some(q => q.confidence_level) ? 'High Engagement' : 'Good Participation'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Question Navigation */}
-            {!showAllQuestions && results.questions_with_answers.length > 0 && (
+            {!isPendingGrading && !showAllQuestions && results.questions_with_answers.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -374,7 +514,7 @@ export default function TeacherAttemptDetail() {
                       </div>
                     </div>
 
-                    {/* Feedback - only show if available */}
+                    {/* Feedback */}
                     {currentQuestion.feedback && (
                       <div>
                         <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -392,7 +532,7 @@ export default function TeacherAttemptDetail() {
                       </div>
                     )}
 
-                    {/* Explanation - only show if available */}
+                    {/* Explanation */}
                     {currentQuestion.explanation && (
                       <div>
                         <h5 className="text-sm font-medium text-gray-700 mb-2">Explanation:</h5>
@@ -450,7 +590,7 @@ export default function TeacherAttemptDetail() {
             )}
 
             {/* Toggle View Button */}
-            {results.questions_with_answers.length > 0 && (
+            {!isPendingGrading && results.questions_with_answers.length > 0 && (
               <div className="text-center">
                 <button
                   onClick={() => setShowAllQuestions(!showAllQuestions)}
@@ -462,7 +602,7 @@ export default function TeacherAttemptDetail() {
             )}
 
             {/* All Questions View */}
-            {showAllQuestions && (
+            {!isPendingGrading && showAllQuestions && (
               <div className="space-y-6">
                 {results.questions_with_answers.map((question, index) => (
                   <div key={question.question_id} className="bg-white rounded-lg shadow-sm border p-6">
@@ -574,21 +714,33 @@ export default function TeacherAttemptDetail() {
 
             {/* Quick Stats */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {isPendingGrading ? 'Submission Summary' : 'Quick Stats'}
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center text-sm text-gray-600">
                     <Target className="h-4 w-4 mr-2" />
-                    Questions Correct
+                    {isPendingGrading ? 'Questions Answered' : 'Questions Correct'}
                   </span>
-                  <span className="font-medium">{results.summary.correct_answers}/{results.summary.total_questions}</span>
+                  <span className="font-medium">
+                    {isPendingGrading ? 
+                      `${results.questions_with_answers.filter(q => q.student_answer.trim()).length}/${results.summary.total_questions}` :
+                      `${results.summary.correct_answers}/${results.summary.total_questions}`
+                    }
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center text-sm text-gray-600">
                     <Award className="h-4 w-4 mr-2" />
-                    Total Score
+                    {isPendingGrading ? 'Maximum Marks' : 'Total Score'}
                   </span>
-                  <span className="font-medium">{results.summary.obtained_marks}/{results.summary.total_marks}</span>
+                  <span className="font-medium">
+                    {isPendingGrading ? 
+                      `${results.summary.total_marks} marks` :
+                      `${results.summary.obtained_marks}/${results.summary.total_marks}`
+                    }
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center text-sm text-gray-600">
@@ -616,38 +768,58 @@ export default function TeacherAttemptDetail() {
               </div>
             </div>
 
-            {/* Performance Breakdown */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Accuracy</span>
-                  <span className="font-medium">
-                    {results.summary.total_questions > 0 ? 
-                      ((results.summary.correct_answers / results.summary.total_questions) * 100).toFixed(1) : 0}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full" 
-                    style={{ 
-                      width: results.summary.total_questions > 0 ? 
-                        `${(results.summary.correct_answers / results.summary.total_questions) * 100}%` : '0%'
-                    }}
-                  ></div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Status</span>
-                  <span className={`font-medium ${results.summary.passed ? 'text-green-600' : 'text-red-600'}`}>
-                    {results.summary.passed ? 'Passed' : 'Failed'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Passing Marks</span>
-                  <span className="font-medium">{results.summary.quiz_passing_marks}</span>
+            {/* Performance Breakdown (only show if graded) */}
+            {!isPendingGrading && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Accuracy</span>
+                    <span className="font-medium">
+                      {results.summary.total_questions > 0 ? 
+                        ((results.summary.correct_answers / results.summary.total_questions) * 100).toFixed(1) : 0}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ 
+                        width: results.summary.total_questions > 0 ? 
+                          `${(results.summary.correct_answers / results.summary.total_questions) * 100}%` : '0%'
+                      }}
+                    ></div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Status</span>
+                    <span className={`font-medium ${results.summary.passed ? 'text-green-600' : 'text-red-600'}`}>
+                      {results.summary.passed ? 'Passed' : 'Failed'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Passing Marks</span>
+                    <span className="font-medium">{results.summary.quiz_passing_marks}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Encouragement for Pending Grading */}
+            {isPendingGrading && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6">
+                <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                  <ThumbsUp className="h-5 w-5 mr-2 text-blue-600" />
+                  Great Participation! 🌟
+                </h3>
+                <div className="space-y-2 text-sm text-blue-800">
+                  <p>✅ Student completed the quiz</p>
+                  <p>✅ All responses submitted</p>
+                  <p>✅ Time: {formatTime(results.summary.time_taken || 0)}</p>
+                  <p className="mt-3 text-blue-700 font-medium">
+                    🎯 Results will be available once AI grading is complete.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -667,13 +839,15 @@ export default function TeacherAttemptDetail() {
                   <Home className="h-4 w-4 mr-2 inline" />
                   Teacher Dashboard
                 </button>
-                <button 
-                  className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  onClick={() => window.print()}
-                >
-                  <Download className="h-4 w-4 mr-2 inline" />
-                  Download Report
-                </button>
+                {!isPendingGrading && (
+                  <button 
+                    className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    onClick={() => window.print()}
+                  >
+                    <Download className="h-4 w-4 mr-2 inline" />
+                    Download Report
+                  </button>
+                )}
               </div>
             </div>
           </div>
