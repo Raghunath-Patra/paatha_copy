@@ -36,7 +36,6 @@ import {
   PowerOff,
   Activity
 } from 'lucide-react';
-import { get } from 'http';
 
 interface Quiz {
   id: string;
@@ -138,6 +137,10 @@ export default function QuizViewResults() {
     } else if (endTime && now > endTime) {
       return 'ended';
     } else {
+      // Active state includes:
+      // - Quiz with no time restrictions (no start/end time)
+      // - Quiz that has started but not ended
+      // - Quiz that has no end time but has started
       return 'active';
     }
   };
@@ -435,33 +438,49 @@ export default function QuizViewResults() {
         );
 
       case 'active':
+        const hasTimeRestrictions = quiz?.start_time || quiz?.end_time;
         return (
           <div className="bg-white rounded-lg shadow-sm border p-12">
             <div className="text-center">
               <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center mb-6">
                 <Activity className="h-10 w-10 text-green-600 animate-pulse" />
               </div>
-              <h3 className="text-2xl font-medium text-gray-900 mb-3">Quiz is Live! 🎯</h3>
+              <h3 className="text-2xl font-medium text-gray-900 mb-3">
+                {hasTimeRestrictions ? 'Quiz is Live! 🎯' : 'Quiz is Always Available! 🎯'}
+              </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Your quiz is currently active and students can take it. Results will appear here as students complete their attempts.
+                {hasTimeRestrictions ? 
+                  'Your quiz is currently active and students can take it. Results will appear here as students complete their attempts.' :
+                  'Your quiz is published with no time restrictions. Students can take it anytime. Results will appear here as students complete their attempts.'
+                }
               </p>
               
               <div className="bg-green-50 rounded-lg p-6 max-w-lg mx-auto mb-8">
                 <div className="flex items-center justify-center space-x-2 text-green-800 font-medium mb-4">
                   <Power className="h-5 w-5 text-green-600" />
-                  <span>Currently Active</span>
+                  <span>{hasTimeRestrictions ? 'Currently Active' : 'Always Available'}</span>
                 </div>
                 <div className="space-y-2 text-left">
-                  {quiz?.start_time && (
+                  {quiz?.start_time ? (
                     <div className="flex items-center text-sm text-green-700">
                       <PlayCircle className="h-4 w-4 mr-2" />
                       Started: {formatDate(quiz.start_time)}
                     </div>
+                  ) : (
+                    <div className="flex items-center text-sm text-green-700">
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      No start time restriction
+                    </div>
                   )}
-                  {quiz?.end_time && (
+                  {quiz?.end_time ? (
                     <div className="flex items-center text-sm text-green-700">
                       <PauseCircle className="h-4 w-4 mr-2" />
                       Ends: {formatDate(quiz.end_time)}
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-sm text-green-700">
+                      <PauseCircle className="h-4 w-4 mr-2" />
+                      No end time restriction
                     </div>
                   )}
                   <div className="flex items-center text-sm text-green-700">
@@ -553,6 +572,7 @@ export default function QuizViewResults() {
         );
 
       default:
+        const hasTimeRestrictions = quiz?.start_time || quiz?.end_time;
         return (
           <div className="bg-white rounded-lg shadow-sm border p-12">
             <div className="text-center">
@@ -592,6 +612,32 @@ export default function QuizViewResults() {
                       {quiz?.auto_grade ? 'Auto-grading enabled' : 'Manual grading configured'}
                     </span>
                   </div>
+                  <div className="flex items-center">
+                    {hasTimeRestrictions ? (
+                      <Calendar className="h-4 w-4 text-blue-500 mr-3" />
+                    ) : (
+                      <Clock className="h-4 w-4 text-green-500 mr-3" />
+                    )}
+                    <span className="text-sm text-gray-700">
+                      {hasTimeRestrictions ? 'Time restrictions configured' : 'Available anytime (no time restrictions)'}
+                    </span>
+                  </div>
+                  {quiz?.start_time && (
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 text-blue-500 mr-3" />
+                      <span className="text-sm text-gray-700">
+                        Starts: {formatDate(quiz.start_time)}
+                      </span>
+                    </div>
+                  )}
+                  {quiz?.end_time && (
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 text-orange-500 mr-3" />
+                      <span className="text-sm text-gray-700">
+                        Ends: {formatDate(quiz.end_time)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -670,7 +716,7 @@ export default function QuizViewResults() {
                     quizState === 'ended' ? 'bg-purple-100 text-purple-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {quizState === 'active' ? 'Live' :
+                    {quizState === 'active' ? (quiz?.start_time || quiz?.end_time ? 'Live' : 'Available') :
                      quizState === 'not_started' ? 'Scheduled' :
                      quizState === 'ended' ? 'Completed' :
                      quizState === 'not_published' ? 'Draft' : 'Ready'}
