@@ -559,9 +559,6 @@ export default function StudentDashboard() {
         };
       }
     }
-
-    // If quiz is in valid time window, check student status and attempts
-    const hasAttemptsLeft = quiz.my_attempts < quiz.attempts_allowed;
     
     switch (quiz.status) {
       case 'not_started':
@@ -574,42 +571,22 @@ export default function StudentDashboard() {
         };
         
       case 'in_progress':
-        if (hasAttemptsLeft) {
-          return {
+        return {
             label: 'In Progress',
             color: 'bg-yellow-100 text-yellow-800',
             icon: PauseCircle,
             description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - ${quiz.attempts_allowed - quiz.my_attempts} remaining`,
             actionMessage: 'Continue quiz'
           };
-        } else {
-          return {
-            label: 'All Attempts Used',
-            color: 'bg-orange-100 text-orange-800',
-            icon: StopCircle,
-            description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - No attempts remaining`,
-            actionMessage: 'View results'
-          };
-        }
-        
+
       case 'completed':
-        if (hasAttemptsLeft) {
-          return {
+        return {
             label: 'Completed',
             color: 'bg-green-100 text-green-800',
             icon: CheckCircle,
-            description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - ${quiz.attempts_allowed - quiz.my_attempts} attempts remaining`,
-            actionMessage: 'Retake quiz'
+            description: `All attempts used`,
+            actionMessage: 'View Results'
           };
-        } else {
-          return {
-            label: 'All Attempts Used',
-            color: 'bg-purple-100 text-purple-800',
-            icon: CheckCircle,
-            description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - All attempts completed`,
-            actionMessage: 'View results'
-          };
-        }
         
       default:
         return {
@@ -965,7 +942,7 @@ export default function StudentDashboard() {
                                 <span className="text-xs text-green-600 font-medium">
                                   Click to {statusInfo.actionMessage}
                                 </span>
-                                {quiz.status === 'completed' ? (
+                                {quiz.status !== 'not_started' ? (
                                   <Eye className="h-4 w-4 text-green-600" />
                                 ) : (
                                   <PlayCircle className="h-4 w-4 text-green-600" />
