@@ -377,7 +377,7 @@ export default function QuizViewResults() {
                     <span>Scheduled Start</span>
                   </div>
                   <p className="text-lg font-semibold text-blue-900">
-                    {formatDate(quiz?.start_time)}
+                    {formatDate(quiz.start_time!)}
                   </p>
                   {timeToStart && (
                     <p className="text-sm text-blue-700">
