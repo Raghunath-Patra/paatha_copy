@@ -438,7 +438,7 @@ export default function QuizViewResults() {
         );
 
       case 'active':
-        const hasTimeRestrictions = quiz?.start_time || quiz?.end_time;
+        const hasActiveTimeRestrictions = quiz?.start_time || quiz?.end_time;
         return (
           <div className="bg-white rounded-lg shadow-sm border p-12">
             <div className="text-center">
@@ -446,10 +446,10 @@ export default function QuizViewResults() {
                 <Activity className="h-10 w-10 text-green-600 animate-pulse" />
               </div>
               <h3 className="text-2xl font-medium text-gray-900 mb-3">
-                {hasTimeRestrictions ? 'Quiz is Live! 🎯' : 'Quiz is Always Available! 🎯'}
+                {hasActiveTimeRestrictions ? 'Quiz is Live! 🎯' : 'Quiz is Always Available! 🎯'}
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                {hasTimeRestrictions ? 
+                {hasActiveTimeRestrictions ? 
                   'Your quiz is currently active and students can take it. Results will appear here as students complete their attempts.' :
                   'Your quiz is published with no time restrictions. Students can take it anytime. Results will appear here as students complete their attempts.'
                 }
@@ -458,7 +458,7 @@ export default function QuizViewResults() {
               <div className="bg-green-50 rounded-lg p-6 max-w-lg mx-auto mb-8">
                 <div className="flex items-center justify-center space-x-2 text-green-800 font-medium mb-4">
                   <Power className="h-5 w-5 text-green-600" />
-                  <span>{hasTimeRestrictions ? 'Currently Active' : 'Always Available'}</span>
+                  <span>{hasActiveTimeRestrictions ? 'Currently Active' : 'Always Available'}</span>
                 </div>
                 <div className="space-y-2 text-left">
                   {quiz?.start_time ? (
