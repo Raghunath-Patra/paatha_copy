@@ -841,7 +841,7 @@ export default function StudentDashboard() {
                   {[
                     { key: 'all', label: 'All Quizzes', count: allQuizzes.length },
                     { key: 'available', label: 'Available', count: allQuizzes.filter(q => q.quiz_status_value === 'in_progress' && (q.status === 'not_started' || (q.status === 'in_progress' && q.my_attempts < q.attempts_allowed))).length },
-                    { key: 'completed', label: 'Completed', count: allQuizzes.filter(q => q.status === 'completed').length },
+                    { key: 'completed', label: 'Completed', count: allQuizzes.filter(q => q.my_attempts > 0).length },
                     { key: 'expired', label: 'Expired/Upcoming', count: allQuizzes.filter(q => q.quiz_status_value === 'time_expired' || q.quiz_status_value === 'not_started').length }
                   ].map((tab) => (
                     <button
