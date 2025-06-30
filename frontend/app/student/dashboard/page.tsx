@@ -628,7 +628,7 @@ export default function StudentDashboard() {
           (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))
         );
       case 'completed':
-        return allQuizzes.filter(quiz => quiz.status === 'completed');
+        return allQuizzes.filter(quiz => quiz.my_attempts > 0);
       case 'expired':
         return allQuizzes.filter(quiz => quiz.quiz_status_value === 'time_expired' || quiz.quiz_status_value === 'not_started');
       default:
