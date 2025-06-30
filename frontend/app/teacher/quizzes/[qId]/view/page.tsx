@@ -30,7 +30,11 @@ import {
   PlayCircle,
   PauseCircle,
   Target,
-  Zap
+  Zap,
+  Timer,
+  Power,
+  PowerOff,
+  Activity
 } from 'lucide-react';
 
 interface Quiz {
@@ -101,6 +105,25 @@ export default function QuizViewResults() {
       router.push('/');
     }
   }, [profile, router]);
+
+  // Get quiz state based on start and end times
+  const getQuizState = () => {
+    if (!quiz) return 'unknown';
+    
+    const now = new Date();
+    const startTime = quiz.start_time ? new Date(quiz.start_time) : null;
+    const endTime = quiz.end_time ? new Date(quiz.end_time) : null;
+    
+    if (!quiz.is_published) {
+      return 'not_published';
+    } else if (startTime && now < startTime) {
+      return 'not_started';
+    } else if (endTime && now > endTime) {
+      return 'ended';
+    } else {
+      return 'active';
+    }
+  };
 
   const fetchQuizResults = async (showRefreshing = false) => {
     if (!user || !quizId) return;
@@ -229,6 +252,7 @@ export default function QuizViewResults() {
   };
 
   const gradingInfo = getGradingStatusInfo();
+  const quizState = getQuizState();
 
   // Memoized sorting
   const sortedAttempts = React.useMemo(() => {
@@ -268,6 +292,313 @@ export default function QuizViewResults() {
 
   const handleRefresh = () => {
     fetchQuizResults(true);
+  };
+
+  const getTimeToStart = () => {
+    if (!quiz?.start_time) return null;
+    const now = new Date();
+    const startTime = new Date(quiz.start_time);
+    const diff = startTime.getTime() - now.getTime();
+    
+    if (diff <= 0) return null;
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+
+  const renderNoAttemptsContent = () => {
+    switch (quizState) {
+      case 'not_published':
+        return (
+          <div className="bg-white rounded-lg shadow-sm border p-12">
+            <div className="text-center">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6">
+                <PowerOff className="h-10 w-10 text-gray-500" />
+              </div>
+              <h3 className="text-2xl font-medium text-gray-900 mb-3">Quiz Not Published</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                This quiz is created but not published yet. Students won't be able to see or take this quiz until you publish it.
+              </p>
+              
+              <div className="bg-yellow-50 rounded-lg p-6 max-w-lg mx-auto mb-8">
+                <div className="flex items-center justify-center space-x-2 text-yellow-800 font-medium mb-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  <span>Ready to Publish?</span>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  Make sure your quiz is completely configured before publishing. Once published, students will be able to access it.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => router.push(`/teacher/quizzes/${quizId}/edit`)}
+                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Settings className="h-4 w-4 mr-2 inline" />
+                  Edit & Publish Quiz
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 inline ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh Status
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'not_started':
+        const timeToStart = getTimeToStart();
+        return (
+          <div className="bg-white rounded-lg shadow-sm border p-12">
+            <div className="text-center">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-6">
+                <Timer className="h-10 w-10 text-blue-600" />
+              </div>
+              <h3 className="text-2xl font-medium text-gray-900 mb-3">Quiz Starting Soon! ⏰</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Your quiz is published and ready, but hasn't started yet. Students will be able to take it once the start time arrives.
+              </p>
+              
+              <div className="bg-blue-50 rounded-lg p-6 max-w-lg mx-auto mb-8">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center space-x-2 text-blue-800 font-medium">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <span>Scheduled Start</span>
+                  </div>
+                  <p className="text-lg font-semibold text-blue-900">
+                    {formatDate(quiz.start_time!)}
+                  </p>
+                  {timeToStart && (
+                    <p className="text-sm text-blue-700">
+                      Starting in: <span className="font-medium">{timeToStart}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-4 max-w-md mx-auto mb-8">
+                <div className="flex items-center justify-center space-x-2 text-green-800 font-medium">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span>All Systems Ready!</span>
+                </div>
+                <p className="text-sm text-green-700 mt-2">
+                  Quiz is published and configured. Students can see it but can't start until the scheduled time.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => router.push(`/teacher/quizzes/${quizId}/edit`)}
+                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Settings className="h-4 w-4 mr-2 inline" />
+                  Edit Quiz Settings
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 inline ${refreshing ? 'animate-spin' : ''}`} />
+                  Check Status
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'active':
+        return (
+          <div className="bg-white rounded-lg shadow-sm border p-12">
+            <div className="text-center">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center mb-6">
+                <Activity className="h-10 w-10 text-green-600 animate-pulse" />
+              </div>
+              <h3 className="text-2xl font-medium text-gray-900 mb-3">Quiz is Live! 🎯</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Your quiz is currently active and students can take it. Results will appear here as students complete their attempts.
+              </p>
+              
+              <div className="bg-green-50 rounded-lg p-6 max-w-lg mx-auto mb-8">
+                <div className="flex items-center justify-center space-x-2 text-green-800 font-medium mb-4">
+                  <Power className="h-5 w-5 text-green-600" />
+                  <span>Currently Active</span>
+                </div>
+                <div className="space-y-2 text-left">
+                  {quiz.start_time && (
+                    <div className="flex items-center text-sm text-green-700">
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Started: {formatDate(quiz.start_time)}
+                    </div>
+                  )}
+                  {quiz.end_time && (
+                    <div className="flex items-center text-sm text-green-700">
+                      <PauseCircle className="h-4 w-4 mr-2" />
+                      Ends: {formatDate(quiz.end_time)}
+                    </div>
+                  )}
+                  <div className="flex items-center text-sm text-green-700">
+                    <Target className="h-4 w-4 mr-2" />
+                    {quiz.total_questions} questions, {quiz.total_marks} marks
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 max-w-md mx-auto mb-8">
+                <div className="flex items-center justify-center space-x-2 text-blue-800 font-medium">
+                  <Eye className="h-5 w-5 text-blue-600" />
+                  <span>Monitoring Active</span>
+                </div>
+                <p className="text-sm text-blue-700 mt-2">
+                  This page will automatically update as students submit their attempts. No action needed!
+                </p>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 inline ${refreshing ? 'animate-spin' : ''}`} />
+                  Check for New Attempts
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'ended':
+        return (
+          <div className="bg-white rounded-lg shadow-sm border p-12">
+            <div className="text-center">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle className="h-10 w-10 text-purple-600" />
+              </div>
+              <h3 className="text-2xl font-medium text-gray-900 mb-3">Quiz Completed! 🎉</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                The quiz has ended successfully. Unfortunately, no students took this quiz during the active period.
+              </p>
+              
+              <div className="bg-purple-50 rounded-lg p-6 max-w-lg mx-auto mb-8">
+                <div className="flex items-center justify-center space-x-2 text-purple-800 font-medium mb-4">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                  <span>Quiz Timeline</span>
+                </div>
+                <div className="space-y-2 text-left text-sm">
+                  {quiz.start_time && (
+                    <div className="flex items-center text-purple-700">
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Started: {formatDate(quiz.start_time)}
+                    </div>
+                  )}
+                  {quiz.end_time && (
+                    <div className="flex items-center text-purple-700">
+                      <PauseCircle className="h-4 w-4 mr-2" />
+                      Ended: {formatDate(quiz.end_time)}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 max-w-md mx-auto mb-8">
+                <div className="flex items-center justify-center space-x-2 text-blue-800 font-medium">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                  <span>What's Next?</span>
+                </div>
+                <p className="text-sm text-blue-700 mt-2">
+                  Consider reviewing the quiz setup or scheduling a new quiz session for better student participation.
+                </p>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 inline ${refreshing ? 'animate-spin' : ''}`} />
+                  Final Check
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="bg-white rounded-lg shadow-sm border p-12">
+            <div className="text-center">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-6">
+                <Users className="h-10 w-10 text-blue-600" />
+              </div>
+              <h3 className="text-2xl font-medium text-gray-900 mb-3">Ready for Student Participation! 🚀</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Your quiz is set up and ready to go. Once students start taking the quiz, their results and analytics will appear here.
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-6 max-w-lg mx-auto">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                  Quiz Setup Status
+                </h4>
+                <div className="space-y-3 text-left">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
+                    <span className="text-sm text-gray-700">
+                      Quiz is {quiz.is_published ? 'published and visible' : 'created but not published'}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
+                    <span className="text-sm text-gray-700">
+                      {quiz.total_questions} question{quiz.total_questions !== 1 ? 's' : ''} configured
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    {quiz.auto_grade ? (
+                      <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
+                    ) : (
+                      <Settings className="h-4 w-4 text-blue-500 mr-3" />
+                    )}
+                    <span className="text-sm text-gray-700">
+                      {quiz.auto_grade ? 'Auto-grading enabled' : 'Manual grading configured'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => router.push(`/teacher/quizzes/${quizId}/edit`)}
+                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Settings className="h-4 w-4 mr-2 inline" />
+                  Edit Quiz Settings
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 inline ${refreshing ? 'animate-spin' : ''}`} />
+                  Check for New Attempts
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+    }
   };
 
   if (loading) {
@@ -314,7 +645,20 @@ export default function QuizViewResults() {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
-                <p className="text-sm text-gray-600">{quiz.course_name}</p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm text-gray-600">{quiz.course_name}</p>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    quizState === 'active' ? 'bg-green-100 text-green-800' :
+                    quizState === 'not_started' ? 'bg-blue-100 text-blue-800' :
+                    quizState === 'ended' ? 'bg-purple-100 text-purple-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {quizState === 'active' ? 'Live' :
+                     quizState === 'not_started' ? 'Scheduled' :
+                     quizState === 'ended' ? 'Completed' :
+                     quizState === 'not_published' ? 'Draft' : 'Ready'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -623,95 +967,7 @@ export default function QuizViewResults() {
           </>
         ) : (
           /* No Attempts Message */
-          <div className="bg-white rounded-lg shadow-sm border p-12">
-            <div className="text-center">
-              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-6">
-                <Users className="h-10 w-10 text-blue-600" />
-              </div>
-              <h3 className="text-2xl font-medium text-gray-900 mb-3">Ready for Student Participation! 🚀</h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                Your quiz is set up and ready to go. Once students start taking the quiz, their results and analytics will appear here.
-              </p>
-              
-              {/* Quiz Status Checklist */}
-              <div className="bg-gray-50 rounded-lg p-6 max-w-lg mx-auto">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-                  Quiz Setup Status
-                </h4>
-                <div className="space-y-3 text-left">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
-                    <span className="text-sm text-gray-700">
-                      Quiz is {quiz.is_published ? 'published and visible' : 'created but not published'}
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
-                    <span className="text-sm text-gray-700">
-                      {quiz.total_questions} question{quiz.total_questions !== 1 ? 's' : ''} configured
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    {quiz.auto_grade ? (
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
-                    ) : (
-                      <Settings className="h-4 w-4 text-blue-500 mr-3" />
-                    )}
-                    <span className="text-sm text-gray-700">
-                      {quiz.auto_grade ? 'Auto-grading enabled' : 'Manual grading configured'}
-                    </span>
-                  </div>
-                  {quiz.start_time && (
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 text-blue-500 mr-3" />
-                      <span className="text-sm text-gray-700">
-                        Starts: {formatDate(quiz.start_time)}
-                      </span>
-                    </div>
-                  )}
-                  {quiz.end_time && (
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 text-orange-500 mr-3" />
-                      <span className="text-sm text-gray-700">
-                        Ends: {formatDate(quiz.end_time)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Encouragement Message */}
-              <div className="mt-8 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 max-w-md mx-auto">
-                <div className="flex items-center justify-center space-x-2 text-green-800 font-medium">
-                  <Sparkles className="h-5 w-5 text-green-600" />
-                  <span>Everything looks great!</span>
-                </div>
-                <p className="text-sm text-green-700 mt-2">
-                  Your quiz is professionally configured. Students can now start taking it!
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={() => router.push(`/teacher/quizzes/${quizId}/edit`)}
-                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <Settings className="h-4 w-4 mr-2 inline" />
-                  Edit Quiz Settings
-                </button>
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 transition-colors"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 inline ${refreshing ? 'animate-spin' : ''}`} />
-                  Check for New Attempts
-                </button>
-              </div>
-            </div>
-          </div>
+          renderNoAttemptsContent()
         )}
       </div>
     </div>
