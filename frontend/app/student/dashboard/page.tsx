@@ -532,7 +532,16 @@ export default function StudentDashboard() {
     
     if (quiz.quiz_status_value === 'time_expired') {
       // Check if user has any attempts to view results
-      if (quiz.my_attempts > 0) {
+      if(quiz.my_attempts == quiz.attempts_allowed) {
+        return {
+          label: 'Expired',
+          color: 'bg-red-100 text-red-800',
+          icon: Ban,
+          description: 'Quiz time has ended - All attempts used',
+          actionMessage: 'View results'
+        }
+      }
+      else if (quiz.my_attempts > 0) {
         return {
           label: 'Expired',
           color: 'bg-red-100 text-red-800',
