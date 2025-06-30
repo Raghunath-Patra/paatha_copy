@@ -498,7 +498,10 @@ export default function StudentDashboard() {
     // Can click if:
     // 1. Available to attempt (in time window and has attempts left)
     // 2. Completed (to view results)
-    return true;  
+    // return (quiz.quiz_status_value === 'in_progress' && 
+    //         (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) ||
+    //        quiz.status === 'completed';
+    return true; // For now, allow all quizzes to be clickable
   };
 
   const handleQuizClick = (quiz: QuizSummary) => {
