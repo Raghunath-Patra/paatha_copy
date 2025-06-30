@@ -538,13 +538,9 @@ export default function TakeQuiz() {
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const date = new Date(dateString);
+    const utcTime = date.getTime() - (5.5 * 3600000);
+    return new Date(utcTime).toLocaleString();
   };
 
   // Format duration

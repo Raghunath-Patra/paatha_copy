@@ -236,7 +236,9 @@ export default function QuizResults() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    const date = new Date(dateString);
+    const utcTime = date.getTime() - (5.5 * 3600000);
+    return new Date(utcTime).toLocaleString();
   };
 
   const getScoreColor = (percentage: number) => {
