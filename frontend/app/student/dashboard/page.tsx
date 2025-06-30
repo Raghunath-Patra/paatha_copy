@@ -954,8 +954,7 @@ export default function StudentDashboard() {
                             <div className="mt-3 pt-3 border-t">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs text-green-600 font-medium">
-                                  Click to {quiz.status === 'completed' ? 'view results' : 
-                                           quiz.status === 'not_started' ? 'start quiz' : 'continue quiz'}
+                                  Click to {statusInfo.actionMessage}
                                 </span>
                                 {quiz.status === 'completed' ? (
                                   <Eye className="h-4 w-4 text-green-600" />
