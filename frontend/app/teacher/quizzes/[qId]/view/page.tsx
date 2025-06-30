@@ -36,6 +36,7 @@ import {
   PowerOff,
   Activity
 } from 'lucide-react';
+import { get } from 'http';
 
 interface Quiz {
   id: string;
@@ -316,7 +317,7 @@ export default function QuizViewResults() {
 
   const getTimeToStart = () => {
     if (!quiz?.start_time) return null;
-    const now = new Date();
+    const now = getIndiaTime();
     const startTime = new Date(quiz.start_time);
     const diff = startTime.getTime() - now.getTime();
     
