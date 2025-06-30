@@ -441,68 +441,68 @@ export default function StudentDashboard() {
   };
 
   // Helper functions for quiz status
-  const getQuizStatusInfo = (quiz: QuizSummary) => {
-    // First check quiz timing status
-    if (quiz.quiz_status_value === 'not_started') {
-      return {
-        label: 'Not Started',
-        color: 'bg-gray-100 text-gray-800',
-        icon: Timer,
-        description: 'Quiz will start later'
-      };
-    }
+  // const getQuizStatusInfo = (quiz: QuizSummary) => {
+  //   // First check quiz timing status
+  //   if (quiz.quiz_status_value === 'not_started') {
+  //     return {
+  //       label: 'Not Started',
+  //       color: 'bg-gray-100 text-gray-800',
+  //       icon: Timer,
+  //       description: 'Quiz will start later'
+  //     };
+  //   }
     
-    if (quiz.quiz_status_value === 'time_expired') {
-      return {
-        label: 'Expired',
-        color: 'bg-red-100 text-red-800',
-        icon: Ban,
-        description: 'Quiz time has ended'
-      };
-    }
+  //   if (quiz.quiz_status_value === 'time_expired') {
+  //     return {
+  //       label: 'Expired',
+  //       color: 'bg-red-100 text-red-800',
+  //       icon: Ban,
+  //       description: 'Quiz time has ended'
+  //     };
+  //   }
 
-    // If quiz is in valid time window, check student status
-    switch (quiz.status) {
-      case 'not_started':
-        return {
-          label: 'Available',
-          color: 'bg-blue-100 text-blue-800',
-          icon: PlayCircle,
-          description: 'Ready to start'
-        };
-      case 'in_progress':
-        return {
-          label: 'In Progress',
-          color: 'bg-yellow-100 text-yellow-800',
-          icon: PauseCircle,
-          description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
-        };
-      case 'completed':
-        return {
-          label: 'Completed',
-          color: 'bg-green-100 text-green-800',
-          icon: CheckCircle,
-          description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
-        };
-      default:
-        return {
-          label: 'Unknown',
-          color: 'bg-gray-100 text-gray-800',
-          icon: AlertCircle,
-          description: ''
-        };
-    }
-  };
+  //   // If quiz is in valid time window, check student status
+  //   switch (quiz.status) {
+  //     case 'not_started':
+  //       return {
+  //         label: 'Available',
+  //         color: 'bg-blue-100 text-blue-800',
+  //         icon: PlayCircle,
+  //         description: 'Ready to start'
+  //       };
+  //     case 'in_progress':
+  //       return {
+  //         label: 'In Progress',
+  //         color: 'bg-yellow-100 text-yellow-800',
+  //         icon: PauseCircle,
+  //         description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
+  //       };
+  //     case 'completed':
+  //       return {
+  //         label: 'Completed',
+  //         color: 'bg-green-100 text-green-800',
+  //         icon: CheckCircle,
+  //         description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
+  //       };
+  //     default:
+  //       return {
+  //         label: 'Unknown',
+  //         color: 'bg-gray-100 text-gray-800',
+  //         icon: AlertCircle,
+  //         description: ''
+  //       };
+  //   }
+  // };
 
-  const isQuizClickable = (quiz: QuizSummary) => {
-    // Can click if:
-    // 1. Available to attempt (in time window and has attempts left)
-    // 2. Completed (to view results)
-    // return (quiz.quiz_status_value === 'in_progress' && 
-    //         (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) ||
-    //        quiz.status === 'completed';
-    return true; // For now, allow all quizzes to be clickable
-  };
+  // const isQuizClickable = (quiz: QuizSummary) => {
+  //   // Can click if:
+  //   // 1. Available to attempt (in time window and has attempts left)
+  //   // 2. Completed (to view results)
+  //   // return (quiz.quiz_status_value === 'in_progress' && 
+  //   //         (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) ||
+  //   //        quiz.status === 'completed';
+  //   return true; // For now, allow all quizzes to be clickable
+  // };
 
   const handleQuizClick = (quiz: QuizSummary) => {
     router.push(`/student/quiz/${quiz.id}`);
@@ -516,6 +516,123 @@ export default function StudentDashboard() {
     //   router.push(`/student/quiz/${quiz.id}`);
     // }
   };
+
+  // Helper functions for quiz status
+  const getQuizStatusInfo = (quiz: QuizSummary) => {
+    // First check quiz timing status
+    if (quiz.quiz_status_value === 'not_started') {
+      return {
+        label: 'Not Started',
+        color: 'bg-gray-100 text-gray-800',
+        icon: Timer,
+        description: 'Quiz will start later',
+        actionMessage: 'Quiz not available yet'
+      };
+    }
+    
+    if (quiz.quiz_status_value === 'time_expired') {
+      // Check if user has any attempts to view results
+      if (quiz.my_attempts > 0) {
+        return {
+          label: 'Expired',
+          color: 'bg-red-100 text-red-800',
+          icon: Ban,
+          description: 'Quiz time has ended',
+          actionMessage: 'View previous attempts'
+        };
+      } else {
+        return {
+          label: 'Expired',
+          color: 'bg-red-100 text-red-800',
+          icon: Ban,
+          description: 'Quiz time has ended - No attempts made',
+          actionMessage: 'Quiz expired'
+        };
+      }
+    }
+
+    // If quiz is in valid time window, check student status and attempts
+    const hasAttemptsLeft = quiz.my_attempts < quiz.attempts_allowed;
+    
+    switch (quiz.status) {
+      case 'not_started':
+        return {
+          label: 'Available',
+          color: 'bg-blue-100 text-blue-800',
+          icon: PlayCircle,
+          description: `Ready to start - ${quiz.attempts_allowed - quiz.my_attempts} attempts remaining`,
+          actionMessage: 'Start quiz'
+        };
+        
+      case 'in_progress':
+        if (hasAttemptsLeft) {
+          return {
+            label: 'In Progress',
+            color: 'bg-yellow-100 text-yellow-800',
+            icon: PauseCircle,
+            description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - ${quiz.attempts_allowed - quiz.my_attempts} remaining`,
+            actionMessage: 'Continue quiz'
+          };
+        } else {
+          return {
+            label: 'All Attempts Used',
+            color: 'bg-orange-100 text-orange-800',
+            icon: StopCircle,
+            description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - No attempts remaining`,
+            actionMessage: 'View results'
+          };
+        }
+        
+      case 'completed':
+        if (hasAttemptsLeft) {
+          return {
+            label: 'Completed',
+            color: 'bg-green-100 text-green-800',
+            icon: CheckCircle,
+            description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - ${quiz.attempts_allowed - quiz.my_attempts} attempts remaining`,
+            actionMessage: 'Retake quiz'
+          };
+        } else {
+          return {
+            label: 'All Attempts Used',
+            color: 'bg-purple-100 text-purple-800',
+            icon: CheckCircle,
+            description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used - All attempts completed`,
+            actionMessage: 'View results'
+          };
+        }
+        
+      default:
+        return {
+          label: 'Unknown',
+          color: 'bg-gray-100 text-gray-800',
+          icon: AlertCircle,
+          description: 'Status unknown',
+          actionMessage: 'Check quiz'
+        };
+    }
+  };
+
+  const isQuizClickable = (quiz: QuizSummary) => {
+    // Always allow clicking if user has made at least one attempt (to view results)
+    if (quiz.my_attempts > 0) {
+      return true;
+    }
+    
+    // For quizzes not yet attempted, check timing and attempt availability
+    if (quiz.quiz_status_value === 'in_progress') {
+      // Quiz is in valid time window
+      const hasAttemptsLeft = quiz.my_attempts < quiz.attempts_allowed;
+      if (hasAttemptsLeft && (quiz.status === 'not_started' || quiz.status === 'in_progress')) {
+        return true;
+      }
+    }
+    
+    // Don't allow clicking for expired quizzes with no attempts
+    // or quizzes that haven't started yet
+    return false;
+  };
+
 
   const getFilteredQuizzes = () => {
     switch (filterStatus) {
