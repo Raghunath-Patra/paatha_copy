@@ -106,14 +106,19 @@ export default function QuizViewResults() {
     }
   }, [profile, router]);
 
+  const formatIndianDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const utcTime = date.getTime() - (5.5 * 3600000);
+    return new Date(utcTime);
+  };
   // Get quiz state based on start and end times
   const getQuizState = () => {
     if (!quiz) return 'unknown';
     
-    const now = new Date();
-    const startTime = quiz.start_time ? new Date(quiz.start_time) : null;
-    const endTime = quiz.end_time ? new Date(quiz.end_time) : null;
-    
+    const now = formatIndianDate(new Date().toISOString());
+    const startTime = quiz.start_time ? quiz.start_time : null;
+    const endTime = quiz.end_time ? quiz.end_time : null;
+    console.log('Current Time:', now, 'startTime:', startTime, 'endTime:', endTime);
     if (!quiz.is_published) {
       return 'not_published';
     } else if (startTime && now < startTime) {
