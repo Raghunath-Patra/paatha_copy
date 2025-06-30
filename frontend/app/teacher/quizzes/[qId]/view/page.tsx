@@ -208,7 +208,6 @@ export default function QuizViewResults() {
   }, [quiz, attempts]);
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     const utcTime = date.getTime() - (5.5 * 3600000);
     return new Date(utcTime).toLocaleString();
@@ -377,7 +376,7 @@ export default function QuizViewResults() {
                     <span>Scheduled Start</span>
                   </div>
                   <p className="text-lg font-semibold text-blue-900">
-                    {formatDate(quiz.start_time!)}
+                    {quiz?.start_time ? formatDate(quiz.start_time) : 'Not scheduled'}
                   </p>
                   {timeToStart && (
                     <p className="text-sm text-blue-700">
@@ -436,13 +435,13 @@ export default function QuizViewResults() {
                   <span>Currently Active</span>
                 </div>
                 <div className="space-y-2 text-left">
-                  {quiz.start_time && (
+                  {quiz?.start_time && (
                     <div className="flex items-center text-sm text-green-700">
                       <PlayCircle className="h-4 w-4 mr-2" />
                       Started: {formatDate(quiz.start_time)}
                     </div>
                   )}
-                  {quiz.end_time && (
+                  {quiz?.end_time && (
                     <div className="flex items-center text-sm text-green-700">
                       <PauseCircle className="h-4 w-4 mr-2" />
                       Ends: {formatDate(quiz.end_time)}
@@ -450,7 +449,7 @@ export default function QuizViewResults() {
                   )}
                   <div className="flex items-center text-sm text-green-700">
                     <Target className="h-4 w-4 mr-2" />
-                    {quiz.total_questions} questions, {quiz.total_marks} marks
+                    {quiz?.total_questions || 0} questions, {quiz?.total_marks || 0} marks
                   </div>
                 </div>
               </div>
@@ -497,13 +496,13 @@ export default function QuizViewResults() {
                   <span>Quiz Timeline</span>
                 </div>
                 <div className="space-y-2 text-left text-sm">
-                  {quiz.start_time && (
+                  {quiz?.start_time && (
                     <div className="flex items-center text-purple-700">
                       <PlayCircle className="h-4 w-4 mr-2" />
                       Started: {formatDate(quiz.start_time)}
                     </div>
                   )}
-                  {quiz.end_time && (
+                  {quiz?.end_time && (
                     <div className="flex items-center text-purple-700">
                       <PauseCircle className="h-4 w-4 mr-2" />
                       Ended: {formatDate(quiz.end_time)}
@@ -557,23 +556,23 @@ export default function QuizViewResults() {
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
                     <span className="text-sm text-gray-700">
-                      Quiz is {quiz.is_published ? 'published and visible' : 'created but not published'}
+                      Quiz is {quiz?.is_published ? 'published and visible' : 'created but not published'}
                     </span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
                     <span className="text-sm text-gray-700">
-                      {quiz.total_questions} question{quiz.total_questions !== 1 ? 's' : ''} configured
+                      {quiz?.total_questions || 0} question{(quiz?.total_questions || 0) !== 1 ? 's' : ''} configured
                     </span>
                   </div>
                   <div className="flex items-center">
-                    {quiz.auto_grade ? (
+                    {quiz?.auto_grade ? (
                       <CheckCircle className="h-4 w-4 text-green-500 mr-3" />
                     ) : (
                       <Settings className="h-4 w-4 text-blue-500 mr-3" />
                     )}
                     <span className="text-sm text-gray-700">
-                      {quiz.auto_grade ? 'Auto-grading enabled' : 'Manual grading configured'}
+                      {quiz?.auto_grade ? 'Auto-grading enabled' : 'Manual grading configured'}
                     </span>
                   </div>
                 </div>
@@ -645,9 +644,9 @@ export default function QuizViewResults() {
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{quiz?.title || 'Loading...'}</h1>
                 <div className="flex items-center space-x-2">
-                  <p className="text-sm text-gray-600">{quiz.course_name}</p>
+                  <p className="text-sm text-gray-600">{quiz?.course_name || ''}</p>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                     quizState === 'active' ? 'bg-green-100 text-green-800' :
                     quizState === 'not_started' ? 'bg-blue-100 text-blue-800' :
@@ -688,14 +687,14 @@ export default function QuizViewResults() {
               <FileText className="h-8 w-8 text-blue-500 mr-3" />
               <div>
                 <p className="text-sm font-medium text-gray-600">Questions</p>
-                <p className="text-2xl font-bold text-gray-900">{quiz.total_questions}</p>
+                <p className="text-2xl font-bold text-gray-900">{quiz?.total_questions || 0}</p>
               </div>
             </div>
             <div className="flex items-center">
               <Award className="h-8 w-8 text-green-500 mr-3" />
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Marks</p>
-                <p className="text-2xl font-bold text-gray-900">{quiz.total_marks}</p>
+                <p className="text-2xl font-bold text-gray-900">{quiz?.total_marks || 0}</p>
               </div>
             </div>
             <div className="flex items-center">
@@ -703,7 +702,7 @@ export default function QuizViewResults() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Time Limit</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quiz.time_limit ? `${quiz.time_limit}m` : 'No limit'}
+                  {quiz?.time_limit ? `${quiz.time_limit}m` : 'No limit'}
                 </p>
               </div>
             </div>
@@ -711,14 +710,14 @@ export default function QuizViewResults() {
               <CheckCircle className="h-8 w-8 text-purple-500 mr-3" />
               <div>
                 <p className="text-sm font-medium text-gray-600">Passing Marks</p>
-                <p className="text-2xl font-bold text-gray-900">{quiz.passing_marks}</p>
+                <p className="text-2xl font-bold text-gray-900">{quiz?.passing_marks || 0}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Grading Status Banner */}
-        {gradingInfo && gradingInfo.pending > 0 && quiz.auto_grade && (
+        {gradingInfo && gradingInfo.pending > 0 && quiz?.auto_grade && (
           <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
