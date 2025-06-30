@@ -36,6 +36,7 @@ import {
   PowerOff,
   Activity
 } from 'lucide-react';
+import { get } from 'http';
 
 interface Quiz {
   id: string;
@@ -106,19 +107,30 @@ export default function QuizViewResults() {
     }
   }, [profile, router]);
 
-  const formatIndianDate = (dateString: string) => {
+  const getIndiaTime = () => {
+    const now = new Date();
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const indiaTime = new Date(utcTime + (5.5 * 3600000)); // UTC+5:30
+    return indiaTime;
+  };
+
+  const parseIndiaDateTime = (dateString: string) => {
+    if (!dateString) return null;
+    // If it's a naive datetime string, assume it's in India timezone
     const date = new Date(dateString);
+    // Adjust for India timezone (subtract 5.5 hours to get UTC, then let browser handle local display)
     const utcTime = date.getTime() - (5.5 * 3600000);
     return new Date(utcTime);
   };
+
   // Get quiz state based on start and end times
   const getQuizState = () => {
     if (!quiz) return 'unknown';
     
-    const now = formatIndianDate(new Date().toISOString());
-    const startTime = quiz.start_time ? quiz.start_time : null;
-    const endTime = quiz.end_time ? quiz.end_time : null;
-    console.log('Current Time:', now, 'startTime:', startTime, 'endTime:', endTime);
+    const now = getIndiaTime();
+    const startTime = quiz.start_time ? parseIndiaDateTime(quiz.start_time) : null;
+    const endTime = quiz.end_time ? parseIndiaDateTime(quiz.end_time) : null;
+    //console.log('Current Time:', now, 'startTime:', startTime, 'endTime:', endTime);
     if (!quiz.is_published) {
       return 'not_published';
     } else if (startTime && now < startTime) {
