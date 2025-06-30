@@ -172,7 +172,7 @@ export default function TeacherDashboard() {
 
   const parseIndiaDateTime = (dateString: string) => {
     if (!dateString) return null;
-    
+    console.log('Parsing date string:', dateString, 'parsed: ', new Date(dateString));
     // If the string already has timezone info, use it directly
     if (dateString.includes('T') && (dateString.includes('Z') || dateString.includes('+'))) {
       return new Date(dateString);
