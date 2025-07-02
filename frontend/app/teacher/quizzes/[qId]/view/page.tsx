@@ -177,7 +177,7 @@ export default function QuizViewResults() {
       console.error('Error triggering manual grading:', error);
       setGradingResult({
         success: false,
-        message: error.message || 'Failed to trigger auto-grading'
+        message: error instanceof Error ? error.message : 'Failed to trigger auto-grading'
       });
     } finally {
       setManualGrading(false);
