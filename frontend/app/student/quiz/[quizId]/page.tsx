@@ -296,6 +296,22 @@ export default function TakeQuiz() {
     return 'text-red-600';
   };
 
+  // Safe percentage formatting
+  const formatPercentage = (percentage: number | null | undefined): string => {
+    if (percentage === null || percentage === undefined || isNaN(percentage)) {
+      return '0.0';
+    }
+    return percentage.toFixed(1);
+  };
+
+  // Safe score formatting
+  const formatScore = (score: number | null | undefined): string => {
+    if (score === null || score === undefined || isNaN(score)) {
+      return 'N/A';
+    }
+    return score.toFixed(1);
+  };
+
   // Timer effect - SSR safe
   useEffect(() => {
     if (!isClient || timeRemaining === null || timeRemaining <= 0) return;
@@ -521,8 +537,8 @@ export default function TakeQuiz() {
                     </p>
                     <p className="text-sm text-blue-700">
                       You can still view your previous attempts and results above.
-                      {quiz.best_score !== undefined && (
-                        <span className="font-medium"> Your best score: {quiz.best_score.toFixed(1)}%</span>
+                      {quiz.best_score !== undefined && quiz.best_score !== null && (
+                        <span className="font-medium"> Your best score: {formatScore(quiz.best_score)}%</span>
                       )}
                     </p>
                   </div>
@@ -580,8 +596,8 @@ export default function TakeQuiz() {
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className={`text-lg font-bold ${getScoreColor(attempt.percentage)}`}>
-                              {attempt.percentage.toFixed(1)}%
+                            <span className={`text-lg font-bold ${getScoreColor(attempt.percentage || 0)}`}>
+                              {formatPercentage(attempt.percentage)}%
                             </span>
                             <Eye className="h-4 w-4 text-gray-400" />
                           </div>
@@ -590,7 +606,7 @@ export default function TakeQuiz() {
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                           <div className="flex items-center">
                             <Award className="h-4 w-4 mr-1" />
-                            Score: {attempt.obtained_marks}/{attempt.total_marks}
+                            Score: {attempt.obtained_marks || 0}/{attempt.total_marks || 0}
                           </div>
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-1" />
@@ -612,11 +628,11 @@ export default function TakeQuiz() {
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className={`h-2 rounded-full ${
-                                attempt.percentage >= 80 ? 'bg-green-500' :
-                                attempt.percentage >= 60 ? 'bg-yellow-500' :
+                                (attempt.percentage || 0) >= 80 ? 'bg-green-500' :
+                                (attempt.percentage || 0) >= 60 ? 'bg-yellow-500' :
                                 'bg-red-500'
                               }`}
-                              style={{ width: `${Math.min(attempt.percentage, 100)}%` }}
+                              style={{ width: `${Math.min(attempt.percentage || 0, 100)}%` }}
                             ></div>
                           </div>
                         </div>
