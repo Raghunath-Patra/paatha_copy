@@ -122,7 +122,7 @@ export default function QuizResults() {
   }, [profile, router]);
 
   // Check if quiz is graded
-  const isGraded = results?.questions_with_answers.some(q => q.score !== null) || false;
+  const isGraded = results?.questions_with_answers?.some(q => q.score !== null) || false;
   const isPendingGrading = (gradingStatus && !gradingStatus.is_graded) || (results && !isGraded);
 
   // Safe formatting functions
@@ -493,7 +493,7 @@ export default function QuizResults() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Questions Answered</span>
                     <span className="font-medium">
-                      {results.questions_with_answers.filter(q => q.student_answer.trim()).length}/{results.summary.total_questions}
+                      {results.questions_with_answers.filter(q => q.student_answer && q.student_answer.trim()).length}/{results.summary.total_questions}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -535,7 +535,7 @@ export default function QuizResults() {
     );
   }
 
-  const currentQuestion = results.questions_with_answers[currentQuestionIndex];
+  const currentQuestion = results?.questions_with_answers?.[currentQuestionIndex];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -601,11 +601,11 @@ export default function QuizResults() {
             </div>
 
             {/* Question Review */}
-            {!showAllQuestions && results.questions_with_answers.length > 0 && (
+            {!showAllQuestions && results?.questions_with_answers && results.questions_with_answers.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Question {currentQuestionIndex + 1} of {results.questions_with_answers.length}
+                    Question {currentQuestionIndex + 1} of {results?.questions_with_answers?.length || 0}
                   </h3>
                   <div className="flex space-x-2">
                     <button
@@ -616,8 +616,8 @@ export default function QuizResults() {
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={() => setCurrentQuestionIndex(Math.min(results.questions_with_answers.length - 1, currentQuestionIndex + 1))}
-                      disabled={currentQuestionIndex === results.questions_with_answers.length - 1}
+                      onClick={() => setCurrentQuestionIndex(Math.min((results?.questions_with_answers?.length || 1) - 1, currentQuestionIndex + 1))}
+                      disabled={currentQuestionIndex === (results?.questions_with_answers?.length || 1) - 1}
                       className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                     >
                       <ChevronRight className="h-5 w-5" />
@@ -750,7 +750,7 @@ export default function QuizResults() {
                 {/* Question Grid Navigation */}
                 <div className="mt-6 pt-4 border-t">
                   <div className="grid grid-cols-10 gap-2">
-                    {results.questions_with_answers.map((q, index) => (
+                    {results?.questions_with_answers?.map((q, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentQuestionIndex(index)}
@@ -770,7 +770,7 @@ export default function QuizResults() {
             )}
 
             {/* Toggle View Button */}
-            {results.questions_with_answers.length > 0 && (
+            {results?.questions_with_answers && results.questions_with_answers.length > 0 && (
               <div className="text-center">
                 <button
                   onClick={() => setShowAllQuestions(!showAllQuestions)}
@@ -782,7 +782,7 @@ export default function QuizResults() {
             )}
 
             {/* All Questions View */}
-            {showAllQuestions && (
+            {showAllQuestions && results?.questions_with_answers && (
               <div className="space-y-6">
                 {results.questions_with_answers.map((question, index) => (
                   <div key={question.question_id} className="bg-white rounded-lg shadow-sm border p-6">
