@@ -34,7 +34,8 @@ import {
   Timer,
   Power,
   PowerOff,
-  Activity
+  Activity,
+  StopCircle
 } from 'lucide-react';
 import { get } from 'http';
 
@@ -99,6 +100,7 @@ export default function QuizViewResults() {
   const [refreshing, setRefreshing] = useState(false);
   const [manualGrading, setManualGrading] = useState(false);
   const [gradingResult, setGradingResult] = useState<any>(null);
+  const [endingQuiz, setEndingQuiz] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -346,6 +348,45 @@ export default function QuizViewResults() {
 
   const handleRefresh = () => {
     fetchQuizResults(true);
+  };
+
+  // Handle ending quiz
+  const handleEndQuiz = async () => {
+    if (!user || !quizId) return;
+    
+    // Confirm action
+    if (!confirm('Are you sure you want to end this quiz? Students will no longer be able to take it.')) {
+      return;
+    }
+    
+    try {
+      setEndingQuiz(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/end`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to end quiz');
+      }
+
+      // Refresh the quiz data after successfully ending
+      await fetchQuizResults(true);
+      
+    } catch (error) {
+      console.error('Error ending quiz:', error);
+      alert(error instanceof Error ? error.message : 'Failed to end quiz');
+    } finally {
+      setEndingQuiz(false);
+    }
   };
 
   const getTimeToStart = () => {
@@ -762,6 +803,27 @@ export default function QuizViewResults() {
               <div className="text-sm text-gray-600">
                 {attempts.length} attempt{attempts.length !== 1 ? 's' : ''}
               </div>
+              {/* End Quiz Button - only show if quiz is active */}
+              {quizState === 'active' && (
+                <button
+                  onClick={handleEndQuiz}
+                  disabled={endingQuiz}
+                  className="flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="End this quiz immediately"
+                >
+                  {endingQuiz ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Ending...
+                    </>
+                  ) : (
+                    <>
+                      <StopCircle className="w-4 h-4 mr-2" />
+                      End Quiz
+                    </>
+                  )}
+                </button>
+              )}
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}

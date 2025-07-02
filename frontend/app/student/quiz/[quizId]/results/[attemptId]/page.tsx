@@ -266,6 +266,26 @@ export default function QuizResults() {
     }
   };
 
+  // Function to handle grading completion without page refresh
+  const handleGradingComplete = async () => {
+    //console.log('🎉 Grading completed! Fetching updated results...');
+    setLoading(true);
+    
+    try {
+      // Clear sessionStorage to ensure fresh data
+      sessionStorage.removeItem(`quiz_results_${attemptId}`);
+      
+      // Fetch fresh results
+      await fetchResults();
+      
+      // Show success message
+      //console.log('✅ Results updated successfully!');
+    } catch (err) {
+      console.error('Error updating results:', err);
+      setError('Failed to load updated results');
+    }
+  };
+
   // Initial load
   useEffect(() => {
     fetchResults();
@@ -277,12 +297,10 @@ export default function QuizResults() {
       const interval = setInterval(async () => {
         const newStatus = await fetchGradingStatus();
         
-        // If grading is complete, refresh the page to get full results
+        // If grading is complete, fetch updated results instead of refreshing page
         if (newStatus && newStatus.is_graded) {
-          console.log('🎉 Grading completed! Refreshing results...');
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+          clearInterval(interval); // Stop the interval
+          await handleGradingComplete();
         }
       }, 30000); // Check every 30 seconds
 
