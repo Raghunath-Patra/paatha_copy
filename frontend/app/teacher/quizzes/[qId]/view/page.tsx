@@ -1,4 +1,4 @@
-// Enhanced Teacher Quiz View Results Page
+// Enhanced Teacher Quiz View Results Page with Manual Grading
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -69,7 +69,7 @@ interface QuizAttempt {
   status: string;
   is_auto_graded: boolean;
   teacher_reviewed: boolean;
-  _stats?: QuizStats; // Embedded stats from backend
+  _stats?: QuizStats;
 }
 
 interface QuizStats {
@@ -97,6 +97,8 @@ export default function QuizViewResults() {
   const [sortBy, setSortBy] = useState<'name' | 'score' | 'date'>('score');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [refreshing, setRefreshing] = useState(false);
+  const [manualGrading, setManualGrading] = useState(false);
+  const [gradingResult, setGradingResult] = useState<any>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -110,27 +112,24 @@ export default function QuizViewResults() {
   const getIndiaTime = () => {
     const now = new Date();
     const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const indiaTime = new Date(utcTime + (5.5 * 3600000)); // UTC+5:30
+    const indiaTime = new Date(utcTime + (5.5 * 3600000));
     return indiaTime;
   };
 
   const parseIndiaDateTime = (dateString: string) => {
     if (!dateString) return null;
-    // If it's a naive datetime string, assume it's in India timezone
     const date = new Date(dateString);
-    // Adjust for India timezone (subtract 5.5 hours to get UTC, then let browser handle local display)
     const utcTime = date.getTime() - (5.5 * 3600000);
     return new Date(utcTime);
   };
 
-  // Get quiz state based on start and end times
   const getQuizState = () => {
     if (!quiz) return 'unknown';
     
     const now = getIndiaTime();
     const startTime = quiz.start_time ? parseIndiaDateTime(quiz.start_time) : null;
     const endTime = quiz.end_time ? parseIndiaDateTime(quiz.end_time) : null;
-    //console.log('Current Time:', now, 'startTime:', startTime, 'endTime:', endTime);
+
     if (!quiz.is_published) {
       return 'not_published';
     } else if (startTime && now < startTime) {
@@ -138,11 +137,50 @@ export default function QuizViewResults() {
     } else if (endTime && now > endTime) {
       return 'ended';
     } else {
-      // Active state includes:
-      // - Quiz with no time restrictions (no start/end time)
-      // - Quiz that has started but not ended
-      // - Quiz that has no end time but has started
       return 'active';
+    }
+  };
+
+  // Manual grading function
+  const handleManualGrading = async () => {
+    if (!user || !quizId) return;
+    
+    try {
+      setManualGrading(true);
+      setGradingResult(null);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/trigger-grading`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to trigger grading');
+      }
+
+      const result = await response.json();
+      setGradingResult(result);
+      
+      // Refresh the quiz results after grading
+      setTimeout(() => {
+        fetchQuizResults();
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error triggering manual grading:', error);
+      setGradingResult({
+        success: false,
+        message: error.message || 'Failed to trigger auto-grading'
+      });
+    } finally {
+      setManualGrading(false);
     }
   };
 
@@ -160,7 +198,6 @@ export default function QuizViewResults() {
         'Content-Type': 'application/json'
       };
 
-      // Fetch quiz details
       const quizResponse = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}`, {
         headers
       });
@@ -172,7 +209,6 @@ export default function QuizViewResults() {
       const quizData = await quizResponse.json();
       setQuiz(quizData);
 
-      // Fetch quiz attempts/results
       const attemptsResponse = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/results`, {
         headers
       });
@@ -183,7 +219,6 @@ export default function QuizViewResults() {
         if (Array.isArray(attemptsData)) {
           setAttempts(attemptsData);
           
-          // Extract stats from first attempt if available
           if (attemptsData.length > 0 && attemptsData[0]._stats) {
             setStats(attemptsData[0]._stats);
           } else {
@@ -213,7 +248,6 @@ export default function QuizViewResults() {
     fetchQuizResults();
   }, [user, quizId, API_URL]);
 
-  // Auto-refresh for auto-graded quizzes
   useEffect(() => {
     if (quiz?.auto_grade && attempts.length > 0) {
       const ungraded = attempts.some(a => !a.is_auto_graded && a.status === 'completed');
@@ -221,7 +255,7 @@ export default function QuizViewResults() {
       if (ungraded) {
         const interval = setInterval(() => {
           fetchQuizResults();
-        }, 30000); // Check every 30 seconds
+        }, 30000);
 
         return () => clearInterval(interval);
       }
@@ -275,7 +309,6 @@ export default function QuizViewResults() {
   const gradingInfo = getGradingStatusInfo();
   const quizState = getQuizState();
 
-  // Memoized sorting
   const sortedAttempts = React.useMemo(() => {
     if (!Array.isArray(attempts) || attempts.length === 0) {
       return [];
@@ -780,7 +813,7 @@ export default function QuizViewResults() {
           </div>
         </div>
 
-        {/* Grading Status Banner */}
+        {/* Enhanced Grading Status Banner with Manual Trigger */}
         {gradingInfo && gradingInfo.pending > 0 && quiz?.auto_grade && (
           <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-start space-x-4">
@@ -792,20 +825,20 @@ export default function QuizViewResults() {
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-blue-900 mb-2 flex items-center">
                   <Zap className="h-5 w-5 mr-2 text-blue-600" />
-                  Auto-Grading in Progress! ⚡
+                  Auto-Grading Available! ⚡
                 </h3>
                 <p className="text-blue-800 mb-3">
-                  {gradingInfo.pending} submission{gradingInfo.pending !== 1 ? 's are' : ' is'} being automatically graded. 
-                  This process ensures fair and consistent evaluation for all students.
+                  {gradingInfo.pending} submission{gradingInfo.pending !== 1 ? 's are' : ' is'} ready for automatic grading. 
+                  You can trigger the grading process manually or wait for the scheduled auto-grading.
                 </p>
-                <div className="flex items-center space-x-6 text-sm text-blue-700">
+                <div className="flex items-center space-x-6 text-sm text-blue-700 mb-4">
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
                     {gradingInfo.graded} Graded
                   </div>
                   <div className="flex items-center">
-                    <Hourglass className="h-4 w-4 mr-1 text-yellow-600 animate-pulse" />
-                    {gradingInfo.pending} Processing
+                    <Hourglass className="h-4 w-4 mr-1 text-yellow-600" />
+                    {gradingInfo.pending} Pending
                   </div>
                   {gradingInfo.inProgress > 0 && (
                     <div className="flex items-center">
@@ -814,7 +847,7 @@ export default function QuizViewResults() {
                     </div>
                   )}
                 </div>
-                <div className="mt-3 w-full bg-blue-200 rounded-full h-2">
+                <div className="w-full bg-blue-200 rounded-full h-2 mb-4">
                   <div 
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                     style={{ 
@@ -822,13 +855,60 @@ export default function QuizViewResults() {
                     }}
                   ></div>
                 </div>
+                
+                {/* Manual Grading Result Display */}
+                {gradingResult && (
+                  <div className={`mb-4 p-4 rounded-lg ${
+                    gradingResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      {gradingResult.success ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-600" />
+                      )}
+                      <div>
+                        <p className={`font-medium ${gradingResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                          {gradingResult.success ? 'Grading Completed!' : 'Grading Failed'}
+                        </p>
+                        <p className={`text-sm ${gradingResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {gradingResult.message}
+                        </p>
+                        {gradingResult.success && gradingResult.graded_submissions > 0 && (
+                          <p className="text-sm text-green-600 mt-1">
+                            ✅ {gradingResult.graded_submissions} submission{gradingResult.graded_submissions !== 1 ? 's' : ''} graded
+                            {gradingResult.total_tokens > 0 && ` • ${gradingResult.total_tokens} AI tokens used`}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 space-y-2">
+                <button
+                  onClick={handleManualGrading}
+                  disabled={manualGrading}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {manualGrading ? (
+                    <>
+                      <Hourglass className="h-4 w-4 mr-2 inline animate-pulse" />
+                      Grading...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-4 w-4 mr-2 inline" />
+                      Grade Now
+                    </>
+                  )}
+                </button>
                 <button
                   onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  disabled={refreshing || manualGrading}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
                 >
+                  <RefreshCw className={`h-4 w-4 mr-2 inline ${refreshing ? 'animate-spin' : ''}`} />
                   {refreshing ? 'Checking...' : 'Check Status'}
                 </button>
               </div>
