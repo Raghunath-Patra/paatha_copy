@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../../utils/supabase';
 import { 
   Camera,
   Upload,
