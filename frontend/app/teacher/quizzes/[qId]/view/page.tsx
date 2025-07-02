@@ -796,6 +796,27 @@ export default function QuizViewResults() {
                      quizState === 'ended' ? 'Completed' :
                      quizState === 'not_published' ? 'Draft' : 'Ready'}
                   </span>
+                  {/* End Quiz Button - moved here beside availability text */}
+                  {quizState === 'active' && (
+                    <button
+                      onClick={handleEndQuiz}
+                      disabled={endingQuiz}
+                      className="flex items-center px-3 py-1 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-full hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                      title="End this quiz immediately"
+                    >
+                      {endingQuiz ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                          Ending...
+                        </>
+                      ) : (
+                        <>
+                          <StopCircle className="w-3 h-3 mr-1" />
+                          End Quiz
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -803,27 +824,6 @@ export default function QuizViewResults() {
               <div className="text-sm text-gray-600">
                 {attempts.length} attempt{attempts.length !== 1 ? 's' : ''}
               </div>
-              {/* End Quiz Button - only show if quiz is active */}
-              {quizState === 'active' && (
-                <button
-                  onClick={handleEndQuiz}
-                  disabled={endingQuiz}
-                  className="flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title="End this quiz immediately"
-                >
-                  {endingQuiz ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Ending...
-                    </>
-                  ) : (
-                    <>
-                      <StopCircle className="w-4 h-4 mr-2" />
-                      End Quiz
-                    </>
-                  )}
-                </button>
-              )}
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
