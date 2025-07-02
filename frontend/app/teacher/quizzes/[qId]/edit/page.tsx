@@ -1,4 +1,4 @@
-// app/teacher/quizzes/[qId]/edit/page.tsx - FIXED VERSION
+// app/teacher/quizzes/[qId]/edit/page.tsx - UPDATED VERSION WITH MARKS VALIDATION
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -151,7 +151,10 @@ export default function QuizEditor() {
   const [editingMarks, setEditingMarks] = useState<string | null>(null);
   const [tempMarks, setTempMarks] = useState<number>(1);
   const [updatingMarks, setUpdatingMarks] = useState(false);
-
+  
+  // Marks validation modal state
+  const [showMarksValidationModal, setShowMarksValidationModal] = useState(false);
+  const [updatingQuizMarks, setUpdatingQuizMarks] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -447,11 +450,18 @@ export default function QuizEditor() {
     }
   };
 
-  const handlePublishQuiz = async () => {
+  const handlePublishQuiz = async (skipMarksValidation = false) => {
     if (!user || !quiz) return;
 
     if (questions.length === 0) {
       setError('Add at least one question before publishing');
+      return;
+    }
+
+    // Check if marks match (unless we're skipping validation)
+    const totalQuestionMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+    if (!skipMarksValidation && totalQuestionMarks !== quiz.total_marks) {
+      setShowMarksValidationModal(true);
       return;
     }
 
@@ -535,63 +545,109 @@ export default function QuizEditor() {
   };
 
   // Add this function to handle marks editing
-const handleEditMarks = (questionId: string, currentMarks: number) => {
-  setEditingMarks(questionId);
-  setTempMarks(currentMarks);
-};
+  const handleEditMarks = (questionId: string, currentMarks: number) => {
+    setEditingMarks(questionId);
+    setTempMarks(currentMarks);
+  };
 
-// Add this function to save marks
-const handleSaveMarks = async (questionId: string) => {
-  if (!user || !quiz) return;
+  // Add this function to save marks
+  const handleSaveMarks = async (questionId: string) => {
+    if (!user || !quiz) return;
 
-  // Validate marks
-  if (tempMarks < 1 || tempMarks > 100) {
-    setError('Marks must be between 1 and 100');
-    return;
-  }
-
-  setUpdatingMarks(true);
-  setError(null);
-
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
-    const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/questions/${questionId}/marks`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ marks: tempMarks })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to update marks');
+    // Validate marks
+    if (tempMarks < 1 || tempMarks > 100) {
+      setError('Marks must be between 1 and 100');
+      return;
     }
 
-    const updatedQuestion = await response.json();
-    
-    // Update the questions list
-    setQuestions(questions.map(q => 
-      q.id === questionId 
-        ? { ...q, marks: tempMarks }
-        : q
-    ));
+    setUpdatingMarks(true);
+    setError(null);
 
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}/questions/${questionId}/marks`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ marks: tempMarks })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update marks');
+      }
+
+      const updatedQuestion = await response.json();
+      
+      // Update the questions list
+      setQuestions(questions.map(q => 
+        q.id === questionId 
+          ? { ...q, marks: tempMarks }
+          : q
+      ));
+
+      setEditingMarks(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update marks');
+    } finally {
+      setUpdatingMarks(false);
+    }
+  };
+
+  // Add this function to cancel marks editing
+  const handleCancelMarksEdit = () => {
     setEditingMarks(null);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Failed to update marks');
-  } finally {
-    setUpdatingMarks(false);
-  }
-};
-// Add this function to cancel marks editing
-const handleCancelMarksEdit = () => {
-  setEditingMarks(null);
-  setTempMarks(1);
-};
+    setTempMarks(1);
+  };
+
+  // Handle updating quiz total marks and scaling passing marks
+  const handleUpdateQuizMarks = async () => {
+    if (!user || !quiz) return;
+
+    const totalQuestionMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+    const scalingFactor = totalQuestionMarks / quiz.total_marks;
+    const newPassingMarks = Math.round(quiz.passing_marks * scalingFactor);
+
+    setUpdatingQuizMarks(true);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(`${API_URL}/api/teacher/quizzes/${quizId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          total_marks: totalQuestionMarks,
+          passing_marks: newPassingMarks
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update quiz marks');
+      }
+
+      const updatedQuiz = await response.json();
+      setQuiz(updatedQuiz);
+      setShowMarksValidationModal(false);
+
+      // Now publish the quiz
+      handlePublishQuiz(true); // Skip marks validation since we just fixed it
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update quiz marks');
+    } finally {
+      setUpdatingQuizMarks(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -651,7 +707,7 @@ const handleCancelMarksEdit = () => {
                 </span>
               ) : (
                 <button
-                  onClick={handlePublishQuiz}
+                  onClick={() => handlePublishQuiz()}
                   disabled={publishing || questions.length === 0}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
                 >
@@ -674,138 +730,138 @@ const handleCancelMarksEdit = () => {
         <div className="space-y-6">
           {questions.map((question, index) => (
             <div key={question.id} className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center space-x-4">
-                    <h3 className="font-medium text-gray-900">
+                  <h3 className="font-medium text-gray-900">
                     Question {index + 1}
-                    </h3>
-                    
-                    {/* Marks Display/Edit Section */}
-                    <div className="flex items-center space-x-2">
+                  </h3>
+                  
+                  {/* Marks Display/Edit Section */}
+                  <div className="flex items-center space-x-2">
                     {editingMarks === question.id ? (
-                        // Edit mode
-                        <div className="flex items-center space-x-2">
+                      // Edit mode
+                      <div className="flex items-center space-x-2">
                         <input
-                            type="number"
-                            value={tempMarks}
-                            onChange={(e) => setTempMarks(parseInt(e.target.value) || 1)}
-                            min="1"
-                            max="100"
-                            className="w-16 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 text-sm"
-                            disabled={updatingMarks}
+                          type="number"
+                          value={tempMarks}
+                          onChange={(e) => setTempMarks(parseInt(e.target.value) || 1)}
+                          min="1"
+                          max="100"
+                          className="w-16 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 text-sm"
+                          disabled={updatingMarks}
                         />
                         <span className="text-sm text-gray-600">
-                            mark{tempMarks !== 1 ? 's' : ''}
+                          mark{tempMarks !== 1 ? 's' : ''}
                         </span>
                         <button
-                            onClick={() => handleSaveMarks(question.id)}
-                            disabled={updatingMarks}
-                            className="text-green-600 hover:text-green-800 disabled:opacity-50"
-                            title="Save marks"
+                          onClick={() => handleSaveMarks(question.id)}
+                          disabled={updatingMarks}
+                          className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                          title="Save marks"
                         >
-                            {updatingMarks ? (
+                          {updatingMarks ? (
                             <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
+                          ) : (
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            )}
+                          )}
                         </button>
                         <button
-                            onClick={handleCancelMarksEdit}
-                            disabled={updatingMarks}
-                            className="text-gray-600 hover:text-gray-800 disabled:opacity-50"
-                            title="Cancel"
+                          onClick={handleCancelMarksEdit}
+                          disabled={updatingMarks}
+                          className="text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                          title="Cancel"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                          </svg>
                         </button>
-                        </div>
+                      </div>
                     ) : (
-                        // Display mode
-                        <div className="flex items-center space-x-2">
+                      // Display mode
+                      <div className="flex items-center space-x-2">
                         <span className="text-sm text-gray-600">
-                            ({question.marks} mark{question.marks !== 1 ? 's' : ''})
+                          ({question.marks} mark{question.marks !== 1 ? 's' : ''})
                         </span>
                         <button
-                            onClick={() => handleEditMarks(question.id, question.marks)}
-                            className="text-blue-600 hover:text-blue-800"
-                            title="Edit marks"
+                          onClick={() => handleEditMarks(question.id, question.marks)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Edit marks"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
+                          </svg>
                         </button>
-                        </div>
+                      </div>
                     )}
-                    </div>
+                  </div>
                 </div>
 
                 <button
-                    onClick={() => handleDeleteQuestion(question.id)}
-                    className="text-red-600 hover:text-red-800"
-                    title="Delete question"
+                  onClick={() => handleDeleteQuestion(question.id)}
+                  className="text-red-600 hover:text-red-800"
+                  title="Delete question"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                  </svg>
                 </button>
-                </div>
+              </div>
 
-                {/* Rest of the question display remains the same */}
-                <div className="space-y-4">
+              {/* Rest of the question display remains the same */}
+              <div className="space-y-4">
                 <div>
-                    <p className="text-gray-900 mb-2">{question.question_text}</p>
-                    <div className="flex items-center space-x-2">
+                  <p className="text-gray-900 mb-2">{question.question_text}</p>
+                  <div className="flex items-center space-x-2">
                     <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                        {question.question_type.replace('_', ' ').toUpperCase()}
+                      {question.question_type.replace('_', ' ').toUpperCase()}
                     </span>
                     <span className="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
-                        {question.question_source === 'ai_generated' ? 'AI Generated' : 'Custom'}
+                      {question.question_source === 'ai_generated' ? 'AI Generated' : 'Custom'}
                     </span>
-                    </div>
+                  </div>
                 </div>
 
                 {question.options && question.options.length > 0 && (
-                    <div>
+                  <div>
                     <p className="text-sm font-medium text-gray-700 mb-2">Options:</p>
                     <ul className="space-y-1">
-                        {question.options.map((option, optIndex) => (
+                      {question.options.map((option, optIndex) => (
                         <li 
-                            key={optIndex}
-                            className={`p-2 rounded ${
+                          key={optIndex}
+                          className={`p-2 rounded ${
                             option === question.correct_answer 
-                                ? 'bg-green-50 border border-green-200' 
-                                : 'bg-gray-50'
-                            }`}
+                              ? 'bg-green-50 border border-green-200' 
+                              : 'bg-gray-50'
+                          }`}
                         >
-                            {option}
-                            {option === question.correct_answer && (
+                          {option}
+                          {option === question.correct_answer && (
                             <span className="ml-2 text-green-600 text-sm">✓ Correct</span>
-                            )}
+                          )}
                         </li>
-                        ))}
+                      ))}
                     </ul>
-                    </div>
+                  </div>
                 )}
 
                 {question.question_type !== 'mcq' && (
-                    <div>
+                  <div>
                     <p className="text-sm font-medium text-gray-700">Correct Answer:</p>
                     <p className="text-gray-900 bg-green-50 p-2 rounded">{question.correct_answer}</p>
-                    </div>
+                  </div>
                 )}
 
                 {question.explanation && (
-                    <div>
+                  <div>
                     <p className="text-sm font-medium text-gray-700">Explanation:</p>
                     <p className="text-gray-600">{question.explanation}</p>
-                    </div>
+                  </div>
                 )}
-                </div>
+              </div>
             </div>
-            ))}
+          ))}
 
           {/* Add Question Options */}
           <div className="flex space-x-4">
@@ -984,20 +1040,20 @@ const handleCancelMarksEdit = () => {
 
         {/* Quiz Summary */}
         {questions.length > 0 && (
-        <div className="mt-8 bg-blue-50 p-6 rounded-lg">
+          <div className="mt-8 bg-blue-50 p-6 rounded-lg">
             <h3 className="font-medium text-blue-900 mb-2">Quiz Summary</h3>
             <div className="text-sm text-blue-800 space-y-1">
-            <p>Total Questions: {questions.length}</p>
-            <p>Total Marks: {questions.reduce((sum, q) => sum + q.marks, 0)}</p>
-            <p>Passing Marks: {quiz.passing_marks}</p>
-            <p>Status: {quiz.is_published ? 'Published' : 'Draft'}</p>
-            {questions.reduce((sum, q) => sum + q.marks, 0) !== quiz.total_marks && (
+              <p>Total Questions: {questions.length}</p>
+              <p>Total Marks: {questions.reduce((sum, q) => sum + q.marks, 0)}</p>
+              <p>Passing Marks: {quiz.passing_marks}</p>
+              <p>Status: {quiz.is_published ? 'Published' : 'Draft'}</p>
+              {questions.reduce((sum, q) => sum + q.marks, 0) !== quiz.total_marks && (
                 <p className="text-orange-600">
-                ⚠️ Note: Quiz total marks ({quiz.total_marks}) doesn't match sum of question marks ({questions.reduce((sum, q) => sum + q.marks, 0)})
+                  ⚠️ Note: Quiz total marks ({quiz.total_marks}) doesn't match sum of question marks ({questions.reduce((sum, q) => sum + q.marks, 0)})
                 </p>
-            )}
+              )}
             </div>
-        </div>
+          </div>
         )}
       </div>
 
@@ -1269,6 +1325,118 @@ const handleCancelMarksEdit = () => {
                     }
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Marks Validation Modal */}
+      {showMarksValidationModal && quiz && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-2xl">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Marks Validation Required</h2>
+                <button
+                  onClick={() => setShowMarksValidationModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <div className="flex">
+                    <svg className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                      <h3 className="font-medium text-yellow-800">Marks Mismatch Detected</h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p><strong>Quiz Total Marks:</strong> {quiz.total_marks}</p>
+                        <p><strong>Sum of Question Marks:</strong> {questions.reduce((sum, q) => sum + q.marks, 0)}</p>
+                        <p><strong>Current Passing Marks:</strong> {quiz.passing_marks}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-gray-700 mb-4">
+                  The total marks for your quiz don't match the sum of individual question marks. 
+                  Please choose one of the following options to resolve this before publishing:
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Option 1: Update total marks */}
+                <div className="border rounded-lg p-4 hover:bg-gray-50">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                        1
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Update Quiz Total Marks (Recommended)
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Set total marks to {questions.reduce((sum, q) => sum + q.marks, 0)} and scale passing marks to{' '}
+                        {Math.round(quiz.passing_marks * (questions.reduce((sum, q) => sum + q.marks, 0) / quiz.total_marks))} 
+                        {' '}(proportionally adjusted from {quiz.passing_marks}).
+                      </p>
+                      <button
+                        onClick={handleUpdateQuizMarks}
+                        disabled={updatingQuizMarks}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {updatingQuizMarks ? 'Updating & Publishing...' : 'Update & Publish Quiz'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Option 2: Manual adjustment instruction */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                        2
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Manually Adjust Question Marks
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Close this dialog and edit the marks for individual questions using the edit button (pencil icon) 
+                        next to each question's marks. Make sure the total adds up to {quiz.total_marks} marks.
+                      </p>
+                      <button
+                        onClick={() => setShowMarksValidationModal(false)}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                      >
+                        Close & Edit Questions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cancel option */}
+              <div className="mt-6 pt-4 border-t">
+                <button
+                  onClick={() => setShowMarksValidationModal(false)}
+                  className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel Publishing
+                </button>
               </div>
             </div>
           </div>

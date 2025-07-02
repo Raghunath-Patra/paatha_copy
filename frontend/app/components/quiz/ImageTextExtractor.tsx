@@ -219,8 +219,10 @@ export default function ImageTextExtractor({
     try {
       setCameraError(null);
       
+      // Stop any existing stream first
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
+        setCameraStream(null);
       }
 
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -240,9 +242,20 @@ export default function ImageTextExtractor({
       setCameraStream(stream);
       setCameraActive(true);
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      // Add delay and explicit video play like in ImageAnswerInput
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current?.play().catch(err => {
+              console.error('Error playing video:', err);
+              setCameraError('Could not start video preview. Please try again.');
+              setImageError('Could not start video preview. Please try again.');
+            });
+          };
+        }
+      }, 100);
+      
     } catch (err) {
       console.error('Error accessing camera:', err);
       let errorMessage = 'Failed to access camera. ';
@@ -261,6 +274,7 @@ export default function ImageTextExtractor({
       
       setCameraError(errorMessage);
       setImageError(errorMessage);
+      setCameraActive(false);
     }
   };
 
@@ -268,6 +282,9 @@ export default function ImageTextExtractor({
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
       setCameraStream(null);
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     setCameraActive(false);
     setCameraError(null);
@@ -279,10 +296,10 @@ export default function ImageTextExtractor({
     
     if (cameraActive) {
       stopCamera();
+      // Add a longer delay for camera switching
       setTimeout(() => {
-        setFacingMode(newFacingMode);
         startCamera();
-      }, 100);
+      }, 500);
     }
   };
 
@@ -400,7 +417,7 @@ export default function ImageTextExtractor({
           </div>
 
           {/* Camera switching button */}
-          {cameraActive && (
+          {cameraActive && !cameraError && (
             <div className="flex justify-center mb-3">
               <button
                 type="button"
@@ -420,29 +437,34 @@ export default function ImageTextExtractor({
               {cameraError ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
                   <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                  <p className="text-red-700 text-sm">{cameraError}</p>
+                  <p className="text-red-700 text-sm mb-3">{cameraError}</p>
                   <button
                     type="button"
                     onClick={startCamera}
-                    className="mt-2 inline-flex items-center px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                    className="inline-flex items-center px-3 py-2 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
                   >
                     <RefreshCw className="h-4 w-4 mr-1" />
                     Retry
                   </button>
                 </div>
               ) : (
-                <>
+                <div className="text-center">
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full max-w-sm mx-auto rounded-lg bg-black"
-                    style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
+                    className="w-full max-w-md mx-auto rounded-lg bg-black"
+                    style={{ 
+                      transform: facingMode === 'user' ? 'scaleX(-1)' : 'none',
+                      minHeight: '200px'
+                    }}
                   />
-                  <div className="mt-3 text-center space-y-2">
+                  <div className="mt-3 space-y-2">
                     <p className="text-xs text-blue-700">
                       {facingMode === 'user' ? 'Front camera active' : 'Back camera active'}
+                      <br />
+                      Position your document clearly in the frame
                     </p>
                     <button
                       type="button"
@@ -454,7 +476,7 @@ export default function ImageTextExtractor({
                       Capture & Extract Text
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </div>
           )}
@@ -471,7 +493,7 @@ export default function ImageTextExtractor({
           )}
 
           {/* Tips */}
-          {showTips && (
+          {showTips && !cameraActive && (
             <div className="mt-4 text-xs text-gray-500 bg-gray-50 p-3 rounded">
               <p className="font-medium mb-1">💡 Image Upload Tips:</p>
               <ul className="space-y-1">
