@@ -899,7 +899,7 @@ export default function QuizViewResults() {
                   ) : (
                     <>
                       <Zap className="h-4 w-4 mr-2 inline" />
-                      Grade Now
+                      Force Grade Now
                     </>
                   )}
                 </button>
