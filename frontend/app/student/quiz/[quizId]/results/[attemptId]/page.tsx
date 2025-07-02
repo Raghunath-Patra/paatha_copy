@@ -124,6 +124,28 @@ export default function QuizResults() {
   const isGraded = results?.questions_with_answers.some(q => q.score !== null) || false;
   const isPendingGrading = results && !isGraded;
 
+  // Safe formatting functions
+  const formatPercentage = (percentage: number | null | undefined): string => {
+    if (percentage === null || percentage === undefined || isNaN(percentage)) {
+      return '0.0';
+    }
+    return percentage.toFixed(1);
+  };
+
+  const formatScore = (score: number | null | undefined): string => {
+    if (score === null || score === undefined || isNaN(score)) {
+      return 'N/A';
+    }
+    return score.toString();
+  };
+
+  const formatMarks = (marks: number | null | undefined): number => {
+    if (marks === null || marks === undefined || isNaN(marks)) {
+      return 0;
+    }
+    return marks;
+  };
+
   const fetchGradingStatus = async () => {
     if (!user || !attemptId || checkingGrading) return;
 
@@ -393,7 +415,7 @@ export default function QuizResults() {
           <div className="lg:col-span-2 space-y-6">
             {/* Overall Score Card */}
             <div className={`rounded-lg border p-6 ${
-              isPendingGrading ? 'bg-blue-50 border-blue-200' : getScoreBgColor(results.summary.percentage)
+              isPendingGrading ? 'bg-blue-50 border-blue-200' : getScoreBgColor(formatMarks(results.summary.percentage))
             }`}>
               <div className="flex items-center justify-between">
                 <div>
@@ -426,11 +448,11 @@ export default function QuizResults() {
                     </div>
                   ) : (
                     <>
-                      <div className={`text-4xl font-bold ${getScoreColor(results.summary.percentage)}`}>
-                        {results.summary.percentage.toFixed(1)}%
+                      <div className={`text-4xl font-bold ${getScoreColor(formatMarks(results.summary.percentage))}`}>
+                        {formatPercentage(results.summary.percentage)}%
                       </div>
                       <div className="text-sm text-gray-600">
-                        {results.summary.obtained_marks}/{results.summary.total_marks} marks
+                        {formatMarks(results.summary.obtained_marks)}/{formatMarks(results.summary.total_marks)} marks
                       </div>
                     </>
                   )}
@@ -513,7 +535,7 @@ export default function QuizResults() {
                         <h4 className="font-medium text-gray-900">{currentQuestion.question_text}</h4>
                         <div className="mt-2 text-sm text-gray-600">
                           <span className="font-medium">Type:</span> {currentQuestion.question_type} • 
-                          <span className="font-medium ml-2">Marks:</span> {currentQuestion.score !== null ? `${currentQuestion.score}/${currentQuestion.marks}` : `${currentQuestion.marks} marks`}
+                          <span className="font-medium ml-2">Marks:</span> {currentQuestion.score !== null ? `${formatScore(currentQuestion.score)}/${currentQuestion.marks}` : `${currentQuestion.marks} marks`}
                           {currentQuestion.time_spent && (
                             <>
                               <span className="font-medium ml-2">Time:</span> {Math.floor(currentQuestion.time_spent / 60)}m {currentQuestion.time_spent % 60}s
@@ -670,7 +692,7 @@ export default function QuizResults() {
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900">Question {index + 1}: {question.question_text}</h4>
                         <div className="mt-1 text-sm text-gray-600">
-                          Score: {question.score !== null ? `${question.score}/${question.marks}` : `${question.marks} marks`}
+                          Score: {question.score !== null ? `${formatScore(question.score)}/${question.marks}` : `${question.marks} marks`}
                         </div>
                       </div>
                     </div>
@@ -748,8 +770,8 @@ export default function QuizResults() {
                   </span>
                   <span className="font-medium">
                     {isPendingGrading ? 
-                      `${results.summary.total_marks} marks` :
-                      `${results.summary.obtained_marks}/${results.summary.total_marks}`
+                      `${formatMarks(results.summary.total_marks)} marks` :
+                      `${formatMarks(results.summary.obtained_marks)}/${formatMarks(results.summary.total_marks)}`
                     }
                   </span>
                 </div>
@@ -781,7 +803,7 @@ export default function QuizResults() {
                     <span className="text-gray-600">Accuracy</span>
                     <span className="font-medium">
                       {results.summary.total_questions > 0 ? 
-                        ((results.summary.correct_answers / results.summary.total_questions) * 100).toFixed(1) : 0}%
+                        formatPercentage((results.summary.correct_answers / results.summary.total_questions) * 100) : '0.0'}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
