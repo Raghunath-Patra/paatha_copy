@@ -1,7 +1,7 @@
-// frontend/app/components/auth/LoginForm.tsx
+// frontend/app/components/auth/LoginForm.tsx - FIXED VERSION
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -35,18 +35,24 @@ export default function LoginForm() {
     password: ''
   });
 
+  // FIXED: Add submission tracking to prevent double submission
+  const [formSubmissionInProgress, setFormSubmissionInProgress] = React.useState(false);
+  const googleInitialized = useRef(false);
+
   // Clear any session-related errors when component mounts
   useEffect(() => {
     if (error && (
       error.includes("Session could not be refreshed") || 
       error.includes("Error refreshing session")
     )) {
-      // Clear the error in the auth context
       setError(null);
     }
   }, [error, setError]);
 
   useEffect(() => {
+    // FIXED: Prevent double initialization
+    if (googleInitialized.current) return;
+    
     // Initialize Google One Tap
     const googleScript = document.createElement('script');
     googleScript.src = 'https://accounts.google.com/gsi/client';
@@ -56,6 +62,8 @@ export default function LoginForm() {
 
     googleScript.onload = () => {
       if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+        googleInitialized.current = true;
+        
         window.google.accounts.id.initialize({
           client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
           callback: handleGoogleOneTapResponse,
@@ -77,8 +85,10 @@ export default function LoginForm() {
           });
         }
 
-        // Prompt One-tap
-        window.google.accounts.id.prompt();
+        // Only prompt One-tap if form submission is not in progress
+        if (!formSubmissionInProgress) {
+          window.google.accounts.id.prompt();
+        }
       }
     };
 
@@ -87,9 +97,15 @@ export default function LoginForm() {
         googleScript.parentNode.removeChild(googleScript);
       }
     };
-  }, []);
+  }, []); // Remove formSubmissionInProgress from dependencies
 
   const handleGoogleOneTapResponse = async (response: any) => {
+    // FIXED: Skip if form submission is in progress
+    if (formSubmissionInProgress || loading) {
+      console.log('Skipping Google One-tap - form submission in progress');
+      return;
+    }
+
     try {
       console.log('Google One-Tap response received:', response);
       if (response.credential) {
@@ -107,11 +123,33 @@ export default function LoginForm() {
     }
   };
 
+  // FIXED: Enhanced form submission with double-submission prevention
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(credentials.email, credentials.password);
-    // Set the initial login flag
-    sessionStorage.setItem('isInitialLogin', 'true');
+    
+    // Prevent double submission
+    if (loading || formSubmissionInProgress) {
+      console.log('Login already in progress, ignoring submission');
+      return;
+    }
+
+    try {
+      setFormSubmissionInProgress(true);
+      console.log('Starting login process');
+      
+      await login(credentials.email, credentials.password);
+      
+      console.log('Login completed successfully');
+      // REMOVED: sessionStorage.setItem('isInitialLogin', 'true'); - This is now handled in the context
+      
+    } catch (error) {
+      console.error('Login submission error:', error);
+    } finally {
+      // Reset form submission flag after a delay to prevent rapid resubmission
+      setTimeout(() => {
+        setFormSubmissionInProgress(false);
+      }, 1000);
+    }
   };
 
   // Filter out session refresh errors for display
@@ -119,6 +157,9 @@ export default function LoginForm() {
     error.includes("Session could not be refreshed") || 
     error.includes("Error refreshing session")
   ) ? error : null;
+
+  // FIXED: Enhanced loading state - check both loading states
+  const isSubmitting = loading || formSubmissionInProgress;
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
@@ -161,6 +202,7 @@ export default function LoginForm() {
             onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
+            disabled={isSubmitting}
           />
         </div>
 
@@ -175,6 +217,7 @@ export default function LoginForm() {
             onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
+            disabled={isSubmitting}
           />
         </div>
 
@@ -187,12 +230,20 @@ export default function LoginForm() {
           </Link>
         </div>
 
+        {/* FIXED: Enhanced button with better loading state */}
         <button
           type="submit"
-          disabled={loading}
-          className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          disabled={isSubmitting}
+          className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
-          {loading ? 'Signing in...' : 'Log In'}
+          {isSubmitting ? (
+            <div className="flex items-center justify-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Signing in...
+            </div>
+          ) : (
+            'Log In'
+          )}
         </button>
         
         <p className="mt-2 text-sm text-gray-600">

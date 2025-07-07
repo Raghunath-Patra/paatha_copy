@@ -1,4 +1,4 @@
-// frontend/app/contexts/SupabaseAuthContext.tsx
+// frontend/app/contexts/SupabaseAuthContext.tsx - FIXED VERSION
 'use client';
 
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
@@ -78,6 +78,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const sessionCheckInterval = useRef<NodeJS.Timeout | null>(null);
   const authOperationInProgress = useRef<boolean>(false);
   const lastRefreshAttempt = useRef<number>(0);
+
+  // FIXED: Add tracking for manual login operations
+  const manualLoginInProgress = useRef<boolean>(false);
 
   // Fetch user profile from Supabase
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
@@ -181,7 +184,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // IMPORTANT: NO VISIBILITY CHANGE HANDLING - this prevents the refresh issue
   // Set up session checking with longer intervals only
   useEffect(() => {
     sessionCheckInterval.current = setInterval(() => {
@@ -195,92 +197,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
   }, [checkSessionExpiration]);
 
-  // // Initialize authentication
-  // useEffect(() => {
-  //   if (initialized.current) return;
-  //   initialized.current = true;
-
-  //   let mounted = true;
-  //   let initTimeoutId: NodeJS.Timeout;
-
-  //   const initializeAuth = async () => {
-  //     try {
-  //       setLoading(true);
-        
-  //       initTimeoutId = setTimeout(() => {
-  //         if (mounted && loading) {
-  //           setLoading(false);
-  //           setUser(null);
-  //           setProfile(null);
-  //           setSession(null);
-  //         }
-  //       }, AUTH_TIMEOUT);
-        
-  //       const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        
-  //       if (sessionError) throw sessionError;
-
-  //       if (currentSession?.user && mounted) {
-  //         setUser(currentSession.user);
-  //         setSession(currentSession);
-  //         const userProfile = await fetchProfile(currentSession.user.id);
-  //         if (mounted && userProfile) {
-  //           setProfile(userProfile);
-  //         }
-  //       }
-
-  //       // Set up Supabase auth listener
-  //       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-  //         async (event, session) => {
-  //           if (event === 'SIGNED_IN' && session?.user) {
-  //             setUser(session.user);
-              
-  //             const originalPath = sessionStorage.getItem('originalPath');
-  //             if (originalPath) {
-  //               sessionStorage.removeItem('originalPath');
-  //               window.location.href = originalPath;
-  //             } else {
-  //               window.location.href = '/';
-  //             }
-  //           } else if (event === 'SIGNED_OUT') {
-  //             setUser(null);
-  //             setSession(null);
-  //             setProfile(null);
-  //           }
-  //         });
-
-  //       authListenerRef.current = { data: { subscription } };
-
-  //     } catch (err) {
-  //       console.error('Auth initialization error:', err);
-  //       if (mounted) {
-  //         setUser(null);
-  //         setProfile(null);
-  //         setSession(null);
-  //         setError(err instanceof Error ? err.message : 'An error occurred during initialization');
-  //       }
-  //     } finally {
-  //       clearTimeout(initTimeoutId);
-  //       if (mounted) {
-  //         setLoading(false);
-  //       }
-  //     }
-  //   };
-
-  //   initializeAuth();
-
-  //   return () => {
-  //     mounted = false;
-  //     clearTimeout(initTimeoutId);
-  //     if (authListenerRef.current) {
-  //       authListenerRef.current.data.subscription.unsubscribe();
-  //     }
-  //   };
-  // }, [fetchProfile, loading]);
-
-
-  // Replace the auth initialization useEffect in SupabaseAuthContext.tsx with this:
-
+  // FIXED: Enhanced auth initialization with better listener handling
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
@@ -314,13 +231,19 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           }
         }
 
-        // FIXED: Simplified auth listener - only handle state, not redirects
+        // FIXED: Enhanced auth listener to prevent duplicate state updates
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log('Auth state change:', event, !!session);
             
+            // FIXED: Skip listener updates during manual operations
+            if (manualLoginInProgress.current) {
+              console.log('Skipping auth listener - manual login in progress');
+              return;
+            }
+            
             if (event === 'SIGNED_IN' && session?.user) {
-              // Only update state, don't handle redirects here
+              console.log('Auth listener: handling SIGNED_IN');
               setUser(session.user);
               setSession(session);
               
@@ -332,10 +255,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
                 }
               }
             } else if (event === 'SIGNED_OUT') {
+              console.log('Auth listener: handling SIGNED_OUT');
               setUser(null);
               setSession(null);
               setProfile(null);
             } else if (event === 'TOKEN_REFRESHED' && session) {
+              console.log('Auth listener: handling TOKEN_REFRESHED');
               setSession(session);
               setUser(session.user);
             }
@@ -370,17 +295,24 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
   }, [fetchProfile, loading, profile]);
 
-  // UPDATED LOGIN FUNCTION - Now handles redirects properly
+  // FIXED: Enhanced login function with better state management
   const login = async (email: string, password: string) => {
-    if (authOperationInProgress.current) {
+    if (authOperationInProgress.current || manualLoginInProgress.current) {
       setError('Another operation is in progress. Please try again.');
       return;
     }
 
     try {
+      // FIXED: Set flags to prevent conflicts
       authOperationInProgress.current = true;
+      manualLoginInProgress.current = true;
       setError(null);
       setLoading(true);
+      
+      // Set flag BEFORE the operation to prevent double redirects
+      sessionStorage.setItem('isInitialLogin', 'true');
+
+      console.log('Starting login with email:', email);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -390,7 +322,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from login');
 
-      // Set user state immediately
+      console.log('Login successful, setting state manually');
+
+      // Set user state immediately (auth listener will be skipped)
       setUser(data.user);
       setSession(data.session);
       
@@ -400,8 +334,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setProfile(userProfile);
       }
       
-      // Set flag to prevent double redirects
-      sessionStorage.setItem('isInitialLogin', 'true');
+      console.log('State set, preparing redirect');
       
       // Handle redirect after everything is set up
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -422,88 +355,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
+      
+      // FIXED: Reset manual login flag after a short delay to allow auth listener to resume
+      setTimeout(() => {
+        manualLoginInProgress.current = false;
+      }, 2000);
     }
   };
 
-  // UPDATED LOGOUT FUNCTION
-  const logout = async () => {
-    if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
-      return;
-    }
-
-    try {
-      authOperationInProgress.current = true;
-      setLoading(true);
-      
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      // Clear state
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      
-      // Redirect to login
-      window.location.href = '/login';
-      
-    } catch (err) {
-      console.error('Logout error:', err);
-      
-      // Clear state even on error
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      window.location.href = '/login';
-    } finally {
-      setLoading(false);
-      authOperationInProgress.current = false;
-    }
-  };
-
-
-  // COMPLETE LOGIN FUNCTION
-  // const login = async (email: string, password: string) => {
-  //   if (authOperationInProgress.current) {
-  //     setError('Another operation is in progress. Please try again.');
-  //     return;
-  //   }
-
-  //   try {
-  //     authOperationInProgress.current = true;
-  //     setError(null);
-  //     setLoading(true);
-
-  //     const { data, error } = await supabase.auth.signInWithPassword({
-  //       email,
-  //       password,
-  //     });
-
-  //     if (error) throw error;
-  //     if (!data.user) throw new Error('No user returned from login');
-
-  //     setUser(data.user);
-  //     setSession(data.session);
-      
-  //     const userProfile = await fetchProfile(data.user.id);
-  //     if (userProfile) {
-  //       setProfile(userProfile);
-  //     }
-      
-  //     // SIMPLIFIED: Let the auth state change trigger the redirect
-  //     // The onAuthStateChange listener will handle the redirect
-  //     console.log('Login successful, auth state will trigger redirect');
-      
-  //   } catch (err) {
-  //     console.error('Login error:', err);
-  //     setError(err instanceof Error ? err.message : 'An error occurred during login');
-  //   } finally {
-  //     setLoading(false);
-  //     authOperationInProgress.current = false;
-  //   }
-  // };
-
-  // COMPLETE REGISTER FUNCTION
+  // FIXED: Enhanced register function
   const register = async (userData: RegisterData) => {
     if (authOperationInProgress.current) {
       setError('Another operation is in progress. Please try again.');
@@ -543,14 +403,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         console.error('Error creating profile:', profileError);
       }
 
-      // Auto-login: We're already logged in after signUp
-      setUser(data.user);
-      setSession(data.session);
-      const profile = await fetchProfile(data.user.id);
-      if (profile) {
-        setProfile(profile);
-      }
-
       router.push('/login?registered=true');
     } catch (err) {
       console.error('Registration error:', err);
@@ -561,15 +413,16 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // COMPLETE GOOGLE SIGN IN FUNCTION
+  // FIXED: Enhanced Google sign in function
   const signInWithGoogle = async (credential?: string) => {
-    if (authOperationInProgress.current) {
+    if (authOperationInProgress.current || manualLoginInProgress.current) {
       setError('Another operation is in progress. Please try again.');
       return;
     }
 
     try {
       authOperationInProgress.current = true;
+      manualLoginInProgress.current = true;
       setError(null);
       setLoading(true);
   
@@ -616,44 +469,51 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
+      
+      // Reset manual login flag
+      setTimeout(() => {
+        manualLoginInProgress.current = false;
+      }, 2000);
     }
   };
 
-  // COMPLETE LOGOUT FUNCTION
-  // const logout = async () => {
-  //   if (authOperationInProgress.current) {
-  //     setError('Another operation is in progress. Please try again.');
-  //     return;
-  //   }
-  
-  //   try {
-  //     authOperationInProgress.current = true;
-  //     setLoading(true);
-      
-  //     const { error } = await supabase.auth.signOut();
-  //     if (error) throw error;
-  
-  //     setUser(null);
-  //     setProfile(null);
-  //     setSession(null);
-      
-  //     window.location.href = '/login';
-  //   } catch (err) {
-  //     console.error('Logout error:', err);
-      
-  //     setUser(null);
-  //     setProfile(null);
-  //     setSession(null);
-  //     window.location.href = '/login';
-  //   } finally {
-  //     setLoading(false);
-  //     authOperationInProgress.current = false;
-  //   }
-  // };
+  // FIXED: Enhanced logout function
+  const logout = async () => {
+    if (authOperationInProgress.current) {
+      setError('Another operation is in progress. Please try again.');
+      return;
+    }
 
+    try {
+      authOperationInProgress.current = true;
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
 
+      // Clear state
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      
+      // Redirect to login
+      window.location.href = '/login';
+      
+    } catch (err) {
+      console.error('Logout error:', err);
+      
+      // Clear state even on error
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
+      authOperationInProgress.current = false;
+    }
+  };
 
-  // COMPLETE UPDATE PROFILE FUNCTION
+  // Update profile function
   const updateProfile = async (userData: Partial<UserProfile>) => {
     if (!user) return;
 
@@ -681,7 +541,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // COMPLETE PASSWORD RESET FUNCTIONS
+  // Password reset functions
   const requestPasswordReset = async (email: string) => {
     if (authOperationInProgress.current) {
       setError('Another operation is in progress. Please try again.');
