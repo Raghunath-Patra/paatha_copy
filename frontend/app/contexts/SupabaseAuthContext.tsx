@@ -400,8 +400,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setProfile(userProfile);
       }
       
+      // Set flag to prevent double redirects
+      sessionStorage.setItem('isInitialLogin', 'true');
+      
       // Handle redirect after everything is set up
-      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure state is set
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       const originalPath = sessionStorage.getItem('originalPath');
       if (originalPath && originalPath !== '/') {
