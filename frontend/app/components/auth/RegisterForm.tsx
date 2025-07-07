@@ -1,6 +1,6 @@
-// frontend/app/components/auth/RegisterForm.tsx
+// frontend/app/components/auth/RegisterForm.tsx - FIXED to be compatible with LoginForm
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import RoleSelection from './RoleSelection';
@@ -14,6 +14,7 @@ declare global {
           initialize: (config: any) => void;
           renderButton: (element: HTMLElement, config: any) => void;
           prompt: () => void;
+          cancel: () => void;
         };
       };
     };
@@ -42,11 +43,29 @@ export default function RegisterForm() {
     confirmPassword: '',
     full_name: ''
   });
-  const { register, signInWithGoogle, loading, error } = useSupabaseAuth();
+  const { register, signInWithGoogle, loading, error, user } = useSupabaseAuth();
   const [passwordError, setPasswordError] = useState<string>('');
   
-  // For Google One-tap
+  // FIXED: Add submission tracking to prevent double submission (matching LoginForm)
+  const [formSubmissionInProgress, setFormSubmissionInProgress] = useState(false);
+  const googleInitialized = useRef(false);
+  
+  // FIXED: Google One-tap initialization with proper authentication checks (matching LoginForm)
   useEffect(() => {
+    // CRITICAL FIX: Don't initialize Google One-tap if user is already authenticated
+    if (user) {
+      console.log('User already authenticated, skipping Google One-tap initialization');
+      return;
+    }
+
+    // Prevent double initialization
+    if (googleInitialized.current) {
+      console.log('Google One-tap already initialized, skipping');
+      return;
+    }
+    
+    console.log('Initializing Google One-tap for registration');
+
     // Initialize Google One Tap
     const googleScript = document.createElement('script');
     googleScript.src = 'https://accounts.google.com/gsi/client';
@@ -55,11 +74,20 @@ export default function RegisterForm() {
     document.head.appendChild(googleScript);
 
     googleScript.onload = () => {
+      // Double-check user is still not authenticated
+      if (user) {
+        console.log('User became authenticated during script load, canceling Google One-tap');
+        return;
+      }
+
       if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+        googleInitialized.current = true;
+        
         window.google.accounts.id.initialize({
           client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
           callback: handleGoogleOneTapResponse,
-          auto_select: true,
+          // FIXED: Don't auto-select to prevent automatic re-authentication
+          auto_select: false,
           cancel_on_tap_outside: false,
           context: 'signup',
           ux_mode: 'popup',
@@ -77,33 +105,72 @@ export default function RegisterForm() {
           });
         }
 
-        // Prompt One-tap
-        window.google.accounts.id.prompt();
+        // FIXED: Only prompt One-tap if form submission is not in progress AND user is not authenticated
+        if (!formSubmissionInProgress && !user) {
+          console.log('Prompting Google One-tap for registration');
+          window.google.accounts.id.prompt();
+        }
       }
+    };
+
+    googleScript.onerror = () => {
+      console.error('Failed to load Google One-tap script');
     };
 
     return () => {
       if (googleScript.parentNode) {
         googleScript.parentNode.removeChild(googleScript);
       }
+      
+      // FIXED: Cancel any pending Google One-tap prompts
+      if (window.google?.accounts?.id?.cancel) {
+        window.google.accounts.id.cancel();
+      }
     };
-  }, []);
+  }, [user, formSubmissionInProgress]); // Include user in dependencies
 
+  // FIXED: Enhanced Google One-tap response handler (matching LoginForm)
   const handleGoogleOneTapResponse = async (response: any) => {
+    // FIXED: Multiple safety checks
+    if (formSubmissionInProgress || loading || user) {
+      console.log('Skipping Google One-tap - conditions not met:', {
+        formSubmissionInProgress,
+        loading,
+        userExists: !!user
+      });
+      return;
+    }
+
     try {
+      console.log('Google One-Tap registration response received:', response);
       if (response.credential) {
+        console.log('Attempting sign up with Google credential');
         // For Google sign-up, we'll default to student role
         // Users can change this later in their profile
         await signInWithGoogle(response.credential);
         sessionStorage.setItem('isInitialLogin', 'true');
+        console.log('Google One-tap registration completed');
+      } else {
+        console.warn('No credential in response:', response);
       }
     } catch (error) {
-      console.error('Google One-tap error:', error);
+      console.error('Google One-tap registration error:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
     }
   };
 
+  // FIXED: Enhanced form submission with double-submission prevention (matching LoginForm)
   const handleBasicFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading || formSubmissionInProgress) {
+      console.log('Registration already in progress, ignoring submission');
+      return;
+    }
+
     setPasswordError('');
     
     if (formData.password !== formData.confirmPassword) {
@@ -111,12 +178,37 @@ export default function RegisterForm() {
       return;
     }
     
-    // Basic validation passed, move to role selection
-    setStep('role');
+    try {
+      setFormSubmissionInProgress(true);
+      console.log('Starting role selection step');
+      
+      // FIXED: Cancel any pending Google One-tap before moving to role selection
+      if (window.google?.accounts?.id?.cancel) {
+        window.google.accounts.id.cancel();
+      }
+      
+      // Basic validation passed, move to role selection
+      setStep('role');
+      
+    } finally {
+      // Reset form submission flag after a delay
+      setTimeout(() => {
+        setFormSubmissionInProgress(false);
+      }, 1000);
+    }
   };
 
   const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
+    // Prevent double submission
+    if (loading || formSubmissionInProgress) {
+      console.log('Registration already in progress, ignoring role selection');
+      return;
+    }
+
     try {
+      setFormSubmissionInProgress(true);
+      console.log('Starting registration with role:', role);
+      
       const registrationData = {
         email: formData.email,
         password: formData.password,
@@ -126,23 +218,54 @@ export default function RegisterForm() {
       };
 
       await register(registrationData);
+      console.log('Registration completed successfully');
+      
     } catch (err) {
       console.error('Registration error:', err);
+    } finally {
+      // Reset form submission flag after a delay
+      setTimeout(() => {
+        setFormSubmissionInProgress(false);
+      }, 1000);
     }
   };
 
-  // Handle regular Google OAuth sign in
+  // FIXED: Handle regular Google OAuth sign in (matching LoginForm)
   const handleGoogleSignIn = async () => {
+    // FIXED: Skip if form submission is in progress or user already authenticated
+    if (formSubmissionInProgress || loading || user) {
+      console.log('Skipping Google OAuth - conditions not met');
+      return;
+    }
+
     try {
+      setFormSubmissionInProgress(true);
+      console.log('Starting Google OAuth registration');
+      
+      // FIXED: Cancel any pending Google One-tap before OAuth
+      if (window.google?.accounts?.id?.cancel) {
+        window.google.accounts.id.cancel();
+      }
+      
       await signInWithGoogle();
+      console.log('Google OAuth registration completed');
+      
     } catch (err) {
-      console.error('Google sign in error:', err);
+      console.error('Google OAuth registration error:', err);
+    } finally {
+      // Reset form submission flag after a delay
+      setTimeout(() => {
+        setFormSubmissionInProgress(false);
+      }, 1000);
     }
   };
 
   if (step === 'role') {
-    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading} />;
+    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading || formSubmissionInProgress} />;
   }
+
+  // FIXED: Enhanced loading state - check both loading states (matching LoginForm)
+  const isSubmitting = loading || formSubmissionInProgress;
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm">
@@ -158,12 +281,12 @@ export default function RegisterForm() {
         </div>
       )}
       
-      {/* Google Sign Up button - a faster option at the top */}
+      {/* FIXED: Google Sign Up button with loading protection */}
       <div className="mb-6">
         <button
           onClick={handleGoogleSignIn}
-          className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50"
-          disabled={loading}
+          disabled={isSubmitting}
+          className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -171,7 +294,9 @@ export default function RegisterForm() {
             <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
             <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
           </svg>
-          <span className="text-gray-700 font-medium">Sign up with Google</span>
+          <span className="text-gray-700 font-medium">
+            {isSubmitting ? 'Signing up...' : 'Sign up with Google'}
+          </span>
         </button>
       </div>
       
@@ -196,6 +321,7 @@ export default function RegisterForm() {
             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
             required
+            disabled={isSubmitting}
           />
         </div>
 
@@ -209,6 +335,7 @@ export default function RegisterForm() {
             value={formData.full_name}
             onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -223,6 +350,7 @@ export default function RegisterForm() {
             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
             required
+            disabled={isSubmitting}
           />
         </div>
 
@@ -237,6 +365,7 @@ export default function RegisterForm() {
             onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-[#ff3131] focus:border-[#ff3131]"
             required
+            disabled={isSubmitting}
           />
         </div>
         
@@ -244,12 +373,20 @@ export default function RegisterForm() {
           Next, you'll choose whether you're a student or teacher to customize your experience.
         </p>
 
+        {/* FIXED: Enhanced button with better loading state (matching LoginForm) */}
         <button
           type="submit"
-          disabled={loading}
-          className="w-full py-2 px-4 bg-[#ff3131] text-white rounded hover:bg-[#e52e2e] disabled:opacity-50"
+          disabled={isSubmitting}
+          className="w-full py-2 px-4 bg-[#ff3131] text-white rounded hover:bg-[#e52e2e] disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
-          {loading ? 'Creating Account...' : 'Continue'}
+          {isSubmitting ? (
+            <div className="flex items-center justify-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Processing...
+            </div>
+          ) : (
+            'Continue'
+          )}
         </button>
 
         <div className="text-center">
@@ -262,8 +399,10 @@ export default function RegisterForm() {
         </div>
       </form>
       
-      {/* Google One-tap button container (alternative placement) */}
-      <div id="google-one-tap-register" className="w-full mt-6 hidden"></div>
+      {/* FIXED: Only show Google One-tap button if user is not authenticated (matching LoginForm) */}
+      {!user && (
+        <div id="google-one-tap-register" className="w-full mt-6 hidden"></div>
+      )}
     </div>
   );
 }
