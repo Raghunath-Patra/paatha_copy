@@ -1,4 +1,4 @@
-// frontend/app/components/common/ProtectedRoute.tsx - SIMPLIFIED FIXED VERSION
+// frontend/app/components/common/ProtectedRoute.tsx - FIXED VERSION
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -42,7 +42,13 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       return;
     }
 
-    const isPublicPath = PUBLIC_PATHS.some(path => pathname?.startsWith(path));
+    // FIXED: Proper path checking - exact matches or specific starts
+    const isPublicPath = PUBLIC_PATHS.some(path => {
+      if (path === '/') {
+        return pathname === '/'; // Exact match for home page
+      }
+      return pathname?.startsWith(path);
+    });
     
     console.log('Route check:', { 
       isPublicPath, 
@@ -58,7 +64,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       return;
     }
 
-    // For private paths, check authentication
+    // FIXED: For private paths (like /teacher/dashboard), check authentication
     if (!user) {
       console.log('No user, redirecting to login');
       // Store the intended path
@@ -79,7 +85,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
 
     // All checks passed, render the page
-    console.log('All checks passed, rendering page');
+    console.log('All checks passed, rendering protected page');
     setShouldRender(true);
 
   }, [user, profile, authLoading, pathname, router]);
