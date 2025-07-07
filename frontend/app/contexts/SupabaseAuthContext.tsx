@@ -195,7 +195,92 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
   }, [checkSessionExpiration]);
 
-  // Initialize authentication
+  // // Initialize authentication
+  // useEffect(() => {
+  //   if (initialized.current) return;
+  //   initialized.current = true;
+
+  //   let mounted = true;
+  //   let initTimeoutId: NodeJS.Timeout;
+
+  //   const initializeAuth = async () => {
+  //     try {
+  //       setLoading(true);
+        
+  //       initTimeoutId = setTimeout(() => {
+  //         if (mounted && loading) {
+  //           setLoading(false);
+  //           setUser(null);
+  //           setProfile(null);
+  //           setSession(null);
+  //         }
+  //       }, AUTH_TIMEOUT);
+        
+  //       const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+  //       if (sessionError) throw sessionError;
+
+  //       if (currentSession?.user && mounted) {
+  //         setUser(currentSession.user);
+  //         setSession(currentSession);
+  //         const userProfile = await fetchProfile(currentSession.user.id);
+  //         if (mounted && userProfile) {
+  //           setProfile(userProfile);
+  //         }
+  //       }
+
+  //       // Set up Supabase auth listener
+  //       const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  //         async (event, session) => {
+  //           if (event === 'SIGNED_IN' && session?.user) {
+  //             setUser(session.user);
+              
+  //             const originalPath = sessionStorage.getItem('originalPath');
+  //             if (originalPath) {
+  //               sessionStorage.removeItem('originalPath');
+  //               window.location.href = originalPath;
+  //             } else {
+  //               window.location.href = '/';
+  //             }
+  //           } else if (event === 'SIGNED_OUT') {
+  //             setUser(null);
+  //             setSession(null);
+  //             setProfile(null);
+  //           }
+  //         });
+
+  //       authListenerRef.current = { data: { subscription } };
+
+  //     } catch (err) {
+  //       console.error('Auth initialization error:', err);
+  //       if (mounted) {
+  //         setUser(null);
+  //         setProfile(null);
+  //         setSession(null);
+  //         setError(err instanceof Error ? err.message : 'An error occurred during initialization');
+  //       }
+  //     } finally {
+  //       clearTimeout(initTimeoutId);
+  //       if (mounted) {
+  //         setLoading(false);
+  //       }
+  //     }
+  //   };
+
+  //   initializeAuth();
+
+  //   return () => {
+  //     mounted = false;
+  //     clearTimeout(initTimeoutId);
+  //     if (authListenerRef.current) {
+  //       authListenerRef.current.data.subscription.unsubscribe();
+  //     }
+  //   };
+  // }, [fetchProfile, loading]);
+
+
+  // Replace the auth initialization useEffect in SupabaseAuthContext.tsx with this:
+
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
@@ -229,23 +314,30 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           }
         }
 
-        // Set up Supabase auth listener
+        // FIXED: Simplified auth listener - only handle state, not redirects
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
+            console.log('Auth state change:', event, !!session);
+            
             if (event === 'SIGNED_IN' && session?.user) {
+              // Only update state, don't handle redirects here
               setUser(session.user);
+              setSession(session);
               
-              const originalPath = sessionStorage.getItem('originalPath');
-              if (originalPath) {
-                sessionStorage.removeItem('originalPath');
-                window.location.href = originalPath;
-              } else {
-                window.location.href = '/';
+              // Fetch profile only if we don't have it or it's different user
+              if (!profile || profile.id !== session.user.id) {
+                const userProfile = await fetchProfile(session.user.id);
+                if (userProfile) {
+                  setProfile(userProfile);
+                }
               }
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
               setSession(null);
               setProfile(null);
+            } else if (event === 'TOKEN_REFRESHED' && session) {
+              setSession(session);
+              setUser(session.user);
             }
           });
 
@@ -276,9 +368,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         authListenerRef.current.data.subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, loading]);
+  }, [fetchProfile, loading, profile]);
 
-  // COMPLETE LOGIN FUNCTION
+  // UPDATED LOGIN FUNCTION - Now handles redirects properly
   const login = async (email: string, password: string) => {
     if (authOperationInProgress.current) {
       setError('Another operation is in progress. Please try again.');
@@ -298,17 +390,28 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from login');
 
+      // Set user state immediately
       setUser(data.user);
       setSession(data.session);
       
+      // Fetch profile
       const userProfile = await fetchProfile(data.user.id);
       if (userProfile) {
         setProfile(userProfile);
       }
       
-      // SIMPLIFIED: Let the auth state change trigger the redirect
-      // The onAuthStateChange listener will handle the redirect
-      console.log('Login successful, auth state will trigger redirect');
+      // Handle redirect after everything is set up
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure state is set
+      
+      const originalPath = sessionStorage.getItem('originalPath');
+      if (originalPath && originalPath !== '/') {
+        sessionStorage.removeItem('originalPath');
+        console.log('Redirecting to original path:', originalPath);
+        window.location.href = originalPath;
+      } else {
+        console.log('Redirecting to home');
+        window.location.href = '/';
+      }
       
     } catch (err) {
       console.error('Login error:', err);
@@ -318,6 +421,84 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       authOperationInProgress.current = false;
     }
   };
+
+  // UPDATED LOGOUT FUNCTION
+  const logout = async () => {
+    if (authOperationInProgress.current) {
+      setError('Another operation is in progress. Please try again.');
+      return;
+    }
+
+    try {
+      authOperationInProgress.current = true;
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      // Clear state
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      
+      // Redirect to login
+      window.location.href = '/login';
+      
+    } catch (err) {
+      console.error('Logout error:', err);
+      
+      // Clear state even on error
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
+      authOperationInProgress.current = false;
+    }
+  };
+
+
+  // COMPLETE LOGIN FUNCTION
+  // const login = async (email: string, password: string) => {
+  //   if (authOperationInProgress.current) {
+  //     setError('Another operation is in progress. Please try again.');
+  //     return;
+  //   }
+
+  //   try {
+  //     authOperationInProgress.current = true;
+  //     setError(null);
+  //     setLoading(true);
+
+  //     const { data, error } = await supabase.auth.signInWithPassword({
+  //       email,
+  //       password,
+  //     });
+
+  //     if (error) throw error;
+  //     if (!data.user) throw new Error('No user returned from login');
+
+  //     setUser(data.user);
+  //     setSession(data.session);
+      
+  //     const userProfile = await fetchProfile(data.user.id);
+  //     if (userProfile) {
+  //       setProfile(userProfile);
+  //     }
+      
+  //     // SIMPLIFIED: Let the auth state change trigger the redirect
+  //     // The onAuthStateChange listener will handle the redirect
+  //     console.log('Login successful, auth state will trigger redirect');
+      
+  //   } catch (err) {
+  //     console.error('Login error:', err);
+  //     setError(err instanceof Error ? err.message : 'An error occurred during login');
+  //   } finally {
+  //     setLoading(false);
+  //     authOperationInProgress.current = false;
+  //   }
+  // };
 
   // COMPLETE REGISTER FUNCTION
   const register = async (userData: RegisterData) => {
@@ -436,36 +617,36 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   // COMPLETE LOGOUT FUNCTION
-  const logout = async () => {
-    if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
-      return;
-    }
+  // const logout = async () => {
+  //   if (authOperationInProgress.current) {
+  //     setError('Another operation is in progress. Please try again.');
+  //     return;
+  //   }
   
-    try {
-      authOperationInProgress.current = true;
-      setLoading(true);
+  //   try {
+  //     authOperationInProgress.current = true;
+  //     setLoading(true);
       
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+  //     const { error } = await supabase.auth.signOut();
+  //     if (error) throw error;
   
-      setUser(null);
-      setProfile(null);
-      setSession(null);
+  //     setUser(null);
+  //     setProfile(null);
+  //     setSession(null);
       
-      window.location.href = '/login';
-    } catch (err) {
-      console.error('Logout error:', err);
+  //     window.location.href = '/login';
+  //   } catch (err) {
+  //     console.error('Logout error:', err);
       
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      window.location.href = '/login';
-    } finally {
-      setLoading(false);
-      authOperationInProgress.current = false;
-    }
-  };
+  //     setUser(null);
+  //     setProfile(null);
+  //     setSession(null);
+  //     window.location.href = '/login';
+  //   } finally {
+  //     setLoading(false);
+  //     authOperationInProgress.current = false;
+  //   }
+  // };
 
 
 

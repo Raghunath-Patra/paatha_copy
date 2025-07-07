@@ -362,20 +362,37 @@ export default function HomePage() {
   
   // Role-based redirect effect
   useEffect(() => {
-    // Only redirect if we have complete auth information and aren't in a loading state
+    // Don't redirect if we're in the middle of a login process
+    if (isLoading) {
+      console.log('Page still loading, skipping redirect check');
+      return;
+    }
+
+    // Don't redirect immediately after login - let login function handle initial redirect
+    const isInitialLogin = sessionStorage.getItem('isInitialLogin');
+    if (isInitialLogin) {
+      console.log('Initial login detected, clearing flag and skipping redirect');
+      sessionStorage.removeItem('isInitialLogin');
+      return;
+    }
+
+    // Only redirect if we have complete auth information
     if (user && profile && !isLoading) {
-      // Add a small delay to ensure all auth state is properly resolved
+      console.log('Checking role-based redirect:', { role: profile.role });
+      
       const redirectTimer = setTimeout(() => {
         if (profile.role === 'teacher') {
+          console.log('Redirecting teacher to dashboard');
           router.push('/teacher/dashboard');
           return;
         } else if (profile.role === 'student') {
+          console.log('Redirecting student to dashboard');
           router.push('/student/dashboard');
           return;
         }
         // If no role is set, stay on landing page
         console.log('User has no role, staying on landing page');
-      }, 100); // Small delay to ensure auth state is stable
+      }, 500); // Longer delay to prevent conflicts
 
       return () => clearTimeout(redirectTimer);
     }
