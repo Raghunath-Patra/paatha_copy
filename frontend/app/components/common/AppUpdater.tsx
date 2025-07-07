@@ -1,4 +1,4 @@
-// app/components/common/AppUpdater.tsx
+// app/components/common/AppUpdater.tsx - FIXED VERSION
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -8,6 +8,7 @@ export default function AppUpdater() {
   const isCheckingRef = useRef(false);
   const lastCheckTime = useRef(0);
   const MIN_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes minimum between checks
+  const INITIAL_DELAY = 2 * 60 * 1000; // 2 minutes initial delay - INCREASED FROM 2 SECONDS
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -52,10 +53,16 @@ export default function AppUpdater() {
         const storedVersion = localStorage.getItem('appVersion');
         const storedLogoVersion = localStorage.getItem('logoVersion');
         
+        // FIXED: Initialize versions if they don't exist (first visit)
+        if (!storedVersion || !storedLogoVersion) {
+          console.log('First visit - storing initial versions without triggering update');
+          localStorage.setItem('appVersion', serverVersion.version);
+          localStorage.setItem('logoVersion', serverVersion.logoVersion || serverVersion.version);
+          return; // Don't trigger update on first visit
+        }
+        
         // If the versions are different, update is available
         if (
-          !storedVersion || 
-          !storedLogoVersion || 
           storedVersion !== serverVersion.version || 
           storedLogoVersion !== (serverVersion.logoVersion || serverVersion.version)
         ) {
@@ -121,10 +128,14 @@ export default function AppUpdater() {
       }
     };
 
-    // Check immediately on component mount (but only once)
+    // FIXED: Much longer initial delay to prevent immediate checks on page load
     const initialCheck = setTimeout(() => {
-      checkForUpdates();
-    }, 2000); // Small delay to let the app settle
+      // Only check if the user has been on the page for a while
+      if (document.visibilityState === 'visible' && !document.hidden) {
+        console.log('Initial update check after delay');
+        checkForUpdates();
+      }
+    }, INITIAL_DELAY); // Now 2 minutes instead of 2 seconds
     
     // Set up interval to check periodically (every 30 minutes)
     intervalId = setInterval(checkForUpdates, 30 * 60 * 1000);
@@ -136,7 +147,7 @@ export default function AppUpdater() {
         const now = Date.now();
         if (now - lastCheckTime.current > MIN_CHECK_INTERVAL) {
           console.log('App came to foreground, checking for updates');
-          setTimeout(checkForUpdates, 1000); // Small delay to avoid immediate check
+          setTimeout(checkForUpdates, 5000); // 5 second delay instead of 1 second
         } else {
           console.log('App came to foreground, but skipping update check due to rate limit');
         }

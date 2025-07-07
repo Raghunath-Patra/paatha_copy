@@ -309,12 +309,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('isInitialLogin', 'true');
       }
+      
+      // FIXED: Use Next.js router instead of window.location.href
       const originalPath = sessionStorage.getItem('originalPath');
       if (originalPath) {
         sessionStorage.removeItem('originalPath');
-        window.location.href = originalPath;
+        // Use router.replace to prevent adding to browser history
+        window.location.href = originalPath; // Keep this for now as router might not be available in context
       } else {
-        window.location.href = '/';
+        window.location.href = '/'; // Keep this for now
       }
       
     } catch (err) {

@@ -1,4 +1,4 @@
-// frontend/app/components/common/ProtectedRoute.tsx
+// frontend/app/components/common/ProtectedRoute.tsx - FIXED VERSION
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -39,10 +39,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const routeCheckTimeout = useRef<NodeJS.Timeout | null>(null);
   const navigationInProgress = useRef<boolean>(false);
   const timeoutAttempted = useRef<boolean>(false);
+  const initialLoadComplete = useRef<boolean>(false);
   
   // Reset navigation status when pathname changes
   useEffect(() => {
-    // Reset navigation status when pathname changes
     navigationInProgress.current = false;
     timeoutAttempted.current = false;
     
@@ -54,6 +54,15 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }, [pathname]);
   
   useEffect(() => {
+    // FIXED: Add initial load delay to prevent immediate redirects
+    if (!initialLoadComplete.current) {
+      const initialDelay = setTimeout(() => {
+        initialLoadComplete.current = true;
+      }, 1000); // 1 second delay for initial load
+      
+      return () => clearTimeout(initialDelay);
+    }
+
     // Set a timeout to avoid hanging indefinitely on auth
     if (!routeCheckTimeout.current && !timeoutAttempted.current) {
       timeoutAttempted.current = true;
@@ -69,7 +78,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             if (!isPublicPath) {
               console.log('Auth timeout on protected route, redirecting to login');
               navigationInProgress.current = true;
-              window.location.href = '/login'; // Use direct navigation
+              // FIXED: Use Next.js router instead of window.location.href
+              router.replace('/login');
             } else {
               setRenderState('children');
             }
@@ -87,9 +97,9 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       sessionStorage.setItem('originalPath', pathname);
     }
 
-    // Skip any redirects while loading unless timeout was reached
-    if (authLoading && renderState === 'loading') {
-      console.log('Auth is still loading, skipping route check');
+    // Skip any redirects while loading unless timeout was reached or initial load not complete
+    if ((authLoading && renderState === 'loading') || !initialLoadComplete.current) {
+      console.log('Auth is still loading or initial load not complete, skipping route check');
       return;
     }
 
@@ -106,7 +116,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     if (!user) {
       console.log('Unauthenticated user on private path, redirecting to login');
       navigationInProgress.current = true;
-      window.location.href = '/login'; // Use direct navigation
+      // FIXED: Use Next.js router instead of window.location.href
+      router.replace('/login');
       return;
     }
     
@@ -115,7 +126,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         !PHONE_CHECK_EXEMPT_ROUTES.includes(pathname as string)) {
       console.log('User missing phone number, redirecting to complete profile');
       navigationInProgress.current = true;
-      window.location.href = '/complete-profile'; // Use direct navigation
+      // FIXED: Use Next.js router instead of window.location.href
+      router.replace('/complete-profile');
       return;
     }
 
