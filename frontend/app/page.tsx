@@ -378,7 +378,6 @@ export default function HomePage() {
     // Don't redirect immediately after login - check for login flag
     const isInitialLogin = sessionStorage.getItem('isInitialLogin');
     if (isInitialLogin) {
-      console.log('Initial login detected, clearing flag and skipping redirect');
       sessionStorage.removeItem('isInitialLogin');
       return;
     }
@@ -391,18 +390,14 @@ export default function HomePage() {
         // Double-check conditions before redirecting
         if (!authLoading && !isLoading && profile.role) {
           if (profile.role === 'teacher') {
-            console.log('Redirecting teacher to dashboard');
             router.push('/teacher/dashboard');
             return;
           } else if (profile.role === 'student') {
-            console.log('Redirecting student to dashboard');
             router.push('/student/dashboard');
             return;
           }
         }
-        // If no role is set, stay on landing page
-        console.log('User has no role or conditions not met, staying on landing page');
-      }, 1500); // INCREASED delay to 1.5 seconds
+      }, 100); 
 
       return () => clearTimeout(redirectTimer);
     }
