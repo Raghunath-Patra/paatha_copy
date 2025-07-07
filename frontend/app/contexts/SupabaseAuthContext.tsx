@@ -319,40 +319,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // Also update the logout function:
-  const logout = async () => {
-    if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
-      return;
-    }
-
-    try {
-      authOperationInProgress.current = true;
-      setLoading(true);
-      
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      
-      // Use router instead of window.location
-      // Note: You might need to pass router to the context if it's not available
-      console.log('Logout successful');
-      
-    } catch (err) {
-      console.error('Logout error:', err);
-      
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-    } finally {
-      setLoading(false);
-      authOperationInProgress.current = false;
-    }
-  };
-
   // COMPLETE REGISTER FUNCTION
   const register = async (userData: RegisterData) => {
     if (authOperationInProgress.current) {
@@ -470,36 +436,36 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   // COMPLETE LOGOUT FUNCTION
-  // const logout = async () => {
-  //   if (authOperationInProgress.current) {
-  //     setError('Another operation is in progress. Please try again.');
-  //     return;
-  //   }
+  const logout = async () => {
+    if (authOperationInProgress.current) {
+      setError('Another operation is in progress. Please try again.');
+      return;
+    }
   
-  //   try {
-  //     authOperationInProgress.current = true;
-  //     setLoading(true);
+    try {
+      authOperationInProgress.current = true;
+      setLoading(true);
       
-  //     const { error } = await supabase.auth.signOut();
-  //     if (error) throw error;
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
   
-  //     setUser(null);
-  //     setProfile(null);
-  //     setSession(null);
+      setUser(null);
+      setProfile(null);
+      setSession(null);
       
-  //     window.location.href = '/login';
-  //   } catch (err) {
-  //     console.error('Logout error:', err);
+      window.location.href = '/login';
+    } catch (err) {
+      console.error('Logout error:', err);
       
-  //     setUser(null);
-  //     setProfile(null);
-  //     setSession(null);
-  //     window.location.href = '/login';
-  //   } finally {
-  //     setLoading(false);
-  //     authOperationInProgress.current = false;
-  //   }
-  // };
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
+      authOperationInProgress.current = false;
+    }
+  };
 
 
 
