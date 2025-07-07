@@ -362,18 +362,24 @@ export default function HomePage() {
   
   // Role-based redirect effect
   useEffect(() => {
-    if (user && profile) {
-      //Check if user has completed profile setup
-      if (profile.role === 'teacher') {
-        router.push('/teacher/dashboard');
-        return;
-      } else if (profile.role === 'student') {
-        router.push('/student/dashboard');
-        return;
-      }
-      //If no role is set, continue to show the landing page
+    // Only redirect if we have complete auth information and aren't in a loading state
+    if (user && profile && !isLoading) {
+      // Add a small delay to ensure all auth state is properly resolved
+      const redirectTimer = setTimeout(() => {
+        if (profile.role === 'teacher') {
+          router.push('/teacher/dashboard');
+          return;
+        } else if (profile.role === 'student') {
+          router.push('/student/dashboard');
+          return;
+        }
+        // If no role is set, stay on landing page
+        console.log('User has no role, staying on landing page');
+      }, 100); // Small delay to ensure auth state is stable
+
+      return () => clearTimeout(redirectTimer);
     }
-  }, [user, profile, router]);
+  }, [user, profile, router, isLoading]);
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {

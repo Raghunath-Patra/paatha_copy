@@ -306,23 +306,47 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setProfile(userProfile);
       }
       
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('isInitialLogin', 'true');
-      }
-      
-      // FIXED: Use Next.js router instead of window.location.href
-      const originalPath = sessionStorage.getItem('originalPath');
-      if (originalPath) {
-        sessionStorage.removeItem('originalPath');
-        // Use router.replace to prevent adding to browser history
-        window.location.href = originalPath; // Keep this for now as router might not be available in context
-      } else {
-        window.location.href = '/'; // Keep this for now
-      }
+      // SIMPLIFIED: Let the auth state change trigger the redirect
+      // The onAuthStateChange listener will handle the redirect
+      console.log('Login successful, auth state will trigger redirect');
       
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during login');
+    } finally {
+      setLoading(false);
+      authOperationInProgress.current = false;
+    }
+  };
+
+  // Also update the logout function:
+  const logout = async () => {
+    if (authOperationInProgress.current) {
+      setError('Another operation is in progress. Please try again.');
+      return;
+    }
+
+    try {
+      authOperationInProgress.current = true;
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      
+      // Use router instead of window.location
+      // Note: You might need to pass router to the context if it's not available
+      console.log('Logout successful');
+      
+    } catch (err) {
+      console.error('Logout error:', err);
+      
+      setUser(null);
+      setProfile(null);
+      setSession(null);
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
@@ -446,36 +470,38 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   // COMPLETE LOGOUT FUNCTION
-  const logout = async () => {
-    if (authOperationInProgress.current) {
-      setError('Another operation is in progress. Please try again.');
-      return;
-    }
+  // const logout = async () => {
+  //   if (authOperationInProgress.current) {
+  //     setError('Another operation is in progress. Please try again.');
+  //     return;
+  //   }
   
-    try {
-      authOperationInProgress.current = true;
-      setLoading(true);
+  //   try {
+  //     authOperationInProgress.current = true;
+  //     setLoading(true);
       
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+  //     const { error } = await supabase.auth.signOut();
+  //     if (error) throw error;
   
-      setUser(null);
-      setProfile(null);
-      setSession(null);
+  //     setUser(null);
+  //     setProfile(null);
+  //     setSession(null);
       
-      window.location.href = '/login';
-    } catch (err) {
-      console.error('Logout error:', err);
+  //     window.location.href = '/login';
+  //   } catch (err) {
+  //     console.error('Logout error:', err);
       
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      window.location.href = '/login';
-    } finally {
-      setLoading(false);
-      authOperationInProgress.current = false;
-    }
-  };
+  //     setUser(null);
+  //     setProfile(null);
+  //     setSession(null);
+  //     window.location.href = '/login';
+  //   } finally {
+  //     setLoading(false);
+  //     authOperationInProgress.current = false;
+  //   }
+  // };
+
+
 
   // COMPLETE UPDATE PROFILE FUNCTION
   const updateProfile = async (userData: Partial<UserProfile>) => {
