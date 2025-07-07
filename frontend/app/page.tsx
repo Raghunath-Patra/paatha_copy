@@ -1,4 +1,4 @@
-// app/page.tsx - Updated with role-based routing
+// app/page.tsx - FIXED Role-based routing to prevent redirect loops
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -48,7 +48,7 @@ const BoardCardSkeleton = () => (
   </div>
 );
 
-// Quick stats component - simplified for guaranteed visibility
+// Quick stats component
 const QuickStats = ({ isVisible }: { isVisible: boolean }) => {
   const stats = [
     { label: "Students", value: "10K+", color: "text-blue-600" },
@@ -159,14 +159,14 @@ const DailyChallengeButton = ({ isVisible }: { isVisible: boolean }) => {
   );
 };
 
-// Features component - fixed visibility and made responsive
+// Features component
 const Features = () => {
   const [isVisible, setIsVisible] = useState(false);
   
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
-    }, 800); // Reduced delay
+    }, 800);
     
     return () => clearTimeout(timer);
   }, []);
@@ -216,7 +216,7 @@ const AuthButton = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
-    }, 800); // Slightly delayed to let logo animate first
+    }, 800);
     
     return () => clearTimeout(timer);
   }, []);
@@ -354,21 +354,28 @@ const CallToAction = () => {
 
 export default function HomePage() {
   const router = useRouter();
-  const { profile, user } = useSupabaseAuth();
+  const { profile, user, loading: authLoading } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [showStats, setShowStats] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
   
-  // Role-based redirect effect
+  // FIXED: Enhanced role-based redirect with better timing and conflict prevention
   useEffect(() => {
-    // Don't redirect if we're in the middle of a login process
-    if (isLoading) {
-      console.log('Page still loading, skipping redirect check');
+    // Don't redirect if auth is still loading
+    if (authLoading || isLoading) {
+      console.log('Auth or page still loading, skipping redirect check');
       return;
     }
 
-    // Don't redirect immediately after login - let login function handle initial redirect
+    // FIXED: Check for Google One-tap in progress to prevent conflicts
+    const isGoogleOneTapActive = document.querySelector('iframe[src*="accounts.google.com"]');
+    if (isGoogleOneTapActive) {
+      console.log('Google One-tap active, skipping redirect to prevent conflicts');
+      return;
+    }
+
+    // Don't redirect immediately after login - check for login flag
     const isInitialLogin = sessionStorage.getItem('isInitialLogin');
     if (isInitialLogin) {
       console.log('Initial login detected, clearing flag and skipping redirect');
@@ -376,27 +383,30 @@ export default function HomePage() {
       return;
     }
 
-    // Only redirect if we have complete auth information
-    if (user && profile && !isLoading) {
+    // FIXED: Add a longer delay before redirect to ensure auth state is fully settled
+    if (user && profile && !authLoading && !isLoading) {
       console.log('Checking role-based redirect:', { role: profile.role });
       
       const redirectTimer = setTimeout(() => {
-        if (profile.role === 'teacher') {
-          console.log('Redirecting teacher to dashboard');
-          router.push('/teacher/dashboard');
-          return;
-        } else if (profile.role === 'student') {
-          console.log('Redirecting student to dashboard');
-          router.push('/student/dashboard');
-          return;
+        // Double-check conditions before redirecting
+        if (!authLoading && !isLoading && profile.role) {
+          if (profile.role === 'teacher') {
+            console.log('Redirecting teacher to dashboard');
+            router.push('/teacher/dashboard');
+            return;
+          } else if (profile.role === 'student') {
+            console.log('Redirecting student to dashboard');
+            router.push('/student/dashboard');
+            return;
+          }
         }
         // If no role is set, stay on landing page
-        console.log('User has no role, staying on landing page');
-      }, 500); // Longer delay to prevent conflicts
+        console.log('User has no role or conditions not met, staying on landing page');
+      }, 1500); // INCREASED delay to 1.5 seconds
 
       return () => clearTimeout(redirectTimer);
     }
-  }, [user, profile, router, isLoading]);
+  }, [user, profile, router, authLoading, isLoading]); // Include all relevant dependencies
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {
@@ -427,7 +437,8 @@ export default function HomePage() {
     };
   }, []);
   
-  if (isLoading) {
+  // FIXED: Better loading condition - consider both auth and page loading
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 px-4">
         <EnhancedSpinner size="lg" message="Preparing your learning journey..." />

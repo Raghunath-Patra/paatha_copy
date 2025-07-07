@@ -1,4 +1,4 @@
-// frontend/app/components/auth/LoginForm.tsx - FIXED VERSION
+// frontend/app/components/auth/LoginForm.tsx - FIXED Google One-tap Integration
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -15,6 +15,7 @@ declare global {
           initialize: (config: any) => void;
           renderButton: (element: HTMLElement, config: any) => void;
           prompt: () => void;
+          cancel: () => void;
         };
       };
     };
@@ -28,14 +29,13 @@ export default function LoginForm() {
   const resetSuccess = searchParams?.get('reset');
   const sessionExpired = searchParams?.get('session_expired');
 
-  const { login, signInWithGoogle, loading, error, setError } = useSupabaseAuth();
+  const { login, signInWithGoogle, loading, error, setError, user } = useSupabaseAuth();
   
   const [credentials, setCredentials] = React.useState({
     email: '',
     password: ''
   });
 
-  // FIXED: Add submission tracking to prevent double submission
   const [formSubmissionInProgress, setFormSubmissionInProgress] = React.useState(false);
   const googleInitialized = useRef(false);
 
@@ -49,10 +49,22 @@ export default function LoginForm() {
     }
   }, [error, setError]);
 
+  // FIXED: Google One-tap initialization with proper authentication checks
   useEffect(() => {
-    // FIXED: Prevent double initialization
-    if (googleInitialized.current) return;
+    // CRITICAL FIX: Don't initialize Google One-tap if user is already authenticated
+    if (user) {
+      console.log('User already authenticated, skipping Google One-tap initialization');
+      return;
+    }
+
+    // Prevent double initialization
+    if (googleInitialized.current) {
+      console.log('Google One-tap already initialized, skipping');
+      return;
+    }
     
+    console.log('Initializing Google One-tap for unauthenticated user');
+
     // Initialize Google One Tap
     const googleScript = document.createElement('script');
     googleScript.src = 'https://accounts.google.com/gsi/client';
@@ -61,13 +73,20 @@ export default function LoginForm() {
     document.head.appendChild(googleScript);
 
     googleScript.onload = () => {
+      // Double-check user is still not authenticated
+      if (user) {
+        console.log('User became authenticated during script load, canceling Google One-tap');
+        return;
+      }
+
       if (window.google && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
         googleInitialized.current = true;
         
         window.google.accounts.id.initialize({
           client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
           callback: handleGoogleOneTapResponse,
-          auto_select: true,
+          // FIXED: Don't auto-select to prevent automatic re-authentication
+          auto_select: false,
           cancel_on_tap_outside: false,
           context: 'signin',
           ux_mode: 'popup',
@@ -85,24 +104,38 @@ export default function LoginForm() {
           });
         }
 
-        // Only prompt One-tap if form submission is not in progress
-        if (!formSubmissionInProgress) {
+        // FIXED: Only prompt One-tap if form submission is not in progress AND user is not authenticated
+        if (!formSubmissionInProgress && !user) {
+          console.log('Prompting Google One-tap');
           window.google.accounts.id.prompt();
         }
       }
+    };
+
+    googleScript.onerror = () => {
+      console.error('Failed to load Google One-tap script');
     };
 
     return () => {
       if (googleScript.parentNode) {
         googleScript.parentNode.removeChild(googleScript);
       }
+      
+      // FIXED: Cancel any pending Google One-tap prompts
+      if (window.google?.accounts?.id?.cancel) {
+        window.google.accounts.id.cancel();
+      }
     };
-  }, []); // Remove formSubmissionInProgress from dependencies
+  }, [user, formSubmissionInProgress]); // Include user in dependencies
 
   const handleGoogleOneTapResponse = async (response: any) => {
-    // FIXED: Skip if form submission is in progress
-    if (formSubmissionInProgress || loading) {
-      console.log('Skipping Google One-tap - form submission in progress');
+    // FIXED: Multiple safety checks
+    if (formSubmissionInProgress || loading || user) {
+      console.log('Skipping Google One-tap - conditions not met:', {
+        formSubmissionInProgress,
+        loading,
+        userExists: !!user
+      });
       return;
     }
 
@@ -111,7 +144,7 @@ export default function LoginForm() {
       if (response.credential) {
         console.log('Attempting sign in with credential');
         await signInWithGoogle(response.credential);
-        console.log('Sign in successful');
+        console.log('Google One-tap sign in completed');
       } else {
         console.warn('No credential in response:', response);
       }
@@ -123,7 +156,6 @@ export default function LoginForm() {
     }
   };
 
-  // FIXED: Enhanced form submission with double-submission prevention
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -135,17 +167,21 @@ export default function LoginForm() {
 
     try {
       setFormSubmissionInProgress(true);
-      console.log('Starting login process');
+      console.log('Starting form login process');
+      
+      // FIXED: Cancel any pending Google One-tap before form login
+      if (window.google?.accounts?.id?.cancel) {
+        window.google.accounts.id.cancel();
+      }
       
       await login(credentials.email, credentials.password);
       
-      console.log('Login completed successfully');
-      // REMOVED: sessionStorage.setItem('isInitialLogin', 'true'); - This is now handled in the context
+      console.log('Form login completed successfully');
       
     } catch (error) {
       console.error('Login submission error:', error);
     } finally {
-      // Reset form submission flag after a delay to prevent rapid resubmission
+      // Reset form submission flag after a delay
       setTimeout(() => {
         setFormSubmissionInProgress(false);
       }, 1000);
@@ -158,7 +194,6 @@ export default function LoginForm() {
     error.includes("Error refreshing session")
   ) ? error : null;
 
-  // FIXED: Enhanced loading state - check both loading states
   const isSubmitting = loading || formSubmissionInProgress;
 
   return (
@@ -230,7 +265,6 @@ export default function LoginForm() {
           </Link>
         </div>
 
-        {/* FIXED: Enhanced button with better loading state */}
         <button
           type="submit"
           disabled={isSubmitting}
@@ -259,8 +293,10 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* Google One-tap button container */}
-        <div id="google-one-tap" className="w-full"></div>
+        {/* FIXED: Only show Google One-tap button if user is not authenticated */}
+        {!user && (
+          <div id="google-one-tap" className="w-full"></div>
+        )}
 
         <div className="text-center mt-4">
           <span className="text-sm text-gray-600">
