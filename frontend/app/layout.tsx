@@ -66,7 +66,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen">
         <SupabaseAuthProvider>
           <ProtectedRoute>
-            {/* <AppUpdater /> 👈 NEW: Smart app updater component */}
+            <AppUpdater /> 👈 NEW: Smart app updater component
             <div className="flex-grow flex flex-col">
               {children}
             </div>
