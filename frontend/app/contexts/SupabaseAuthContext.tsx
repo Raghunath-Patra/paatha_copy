@@ -487,6 +487,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       authOperationInProgress.current = true;
       setLoading(true);
+      // Clear all storage first
+      localStorage.clear();
+      sessionStorage.clear();
       
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
