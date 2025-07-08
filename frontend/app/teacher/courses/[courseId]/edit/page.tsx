@@ -11,9 +11,6 @@ import { ArrowLeft, Save, AlertCircle, RefreshCw } from 'lucide-react';
 interface CourseFormData {
   course_name: string;
   description: string;
-  board: string;
-  class_level: string;
-  subject: string;
   max_students: number;
   is_active: boolean;
 }
@@ -32,47 +29,6 @@ interface Course {
   created_at: string;
 }
 
-// Use the same board structure as create course
-const BOARD_STRUCTURE = {
-  cbse: {
-    display_name: "CBSE",
-    classes: {
-      viii: { display_name: "Class VIII" },
-      ix: { display_name: "Class IX" },
-      x: { display_name: "Class X" },
-      xi: { display_name: "Class XI" },
-      xii: { display_name: "Class XII" }
-    }
-  },
-  karnataka: {
-    display_name: "Karnataka State Board", 
-    classes: {
-      "8th": { display_name: "8th Class" },
-      "9th": { display_name: "9th Class" },
-      "10th": { display_name: "10th Class" },
-      "puc-1": { display_name: "PUC-I" },
-      "puc-2": { display_name: "PUC-II" }
-    }
-  }
-} as const;
-
-interface SubjectInfo {
-  code: string;
-  name: string;
-  type: string;
-  chapters?: Array<{
-    number: number;
-    name: string;
-  }>;
-  shared_mapping?: {
-    source_board: string;
-    source_class: string;
-    source_subject: string;
-  };
-  description?: string;
-  icon?: string;
-}
-
 export default function EditCourse() {
   const params = useParams();
   const router = useRouter();
@@ -83,9 +39,6 @@ export default function EditCourse() {
   const [formData, setFormData] = useState<CourseFormData>({
     course_name: '',
     description: '',
-    board: '',
-    class_level: '',
-    subject: '',
     max_students: 50,
     is_active: true
   });
@@ -94,8 +47,6 @@ export default function EditCourse() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [availableSubjects, setAvailableSubjects] = useState<SubjectInfo[]>([]);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -139,9 +90,6 @@ export default function EditCourse() {
         const initialData: CourseFormData = {
           course_name: courseData.course_name || '',
           description: courseData.description || '',
-          board: courseData.board || '',
-          class_level: courseData.class_level || '',
-          subject: courseData.subject || '',
           max_students: courseData.max_students || 50,
           is_active: courseData.is_active !== undefined ? courseData.is_active : true
         };
@@ -159,46 +107,6 @@ export default function EditCourse() {
 
     loadCourse();
   }, [user, courseId]);
-
-  // Fetch subjects when board and class are selected
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      if (!formData.board || !formData.class_level || !user) return;
-
-      setLoadingSubjects(true);
-      setAvailableSubjects([]);
-
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('No session');
-
-        const subjectsUrl = `${API_URL}/api/subjects/${formData.board}/${formData.class_level}`;
-        const response = await fetch(subjectsUrl, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch subjects');
-        }
-
-        const data = await response.json();
-        setAvailableSubjects(data.subjects || []);
-      } catch (err) {
-        console.error('Error fetching subjects:', err);
-        setError('Failed to load subjects for selected board and class');
-      } finally {
-        setLoadingSubjects(false);
-      }
-    };
-
-    // Only fetch if we have both board and class, and if they're different from original
-    if (formData.board && formData.class_level) {
-      fetchSubjects();
-    }
-  }, [formData.board, formData.class_level, user]);
 
   // Check for changes
   useEffect(() => {
@@ -220,36 +128,18 @@ export default function EditCourse() {
     if (error) setError(null);
     if (successMessage) setSuccessMessage(null);
 
-    if (name === 'board') {
-      // Reset class and subject when board changes
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        class_level: originalData?.class_level || '',
-        subject: originalData?.subject || ''
-      }));
-      setAvailableSubjects([]);
-    } else if (name === 'class_level') {
-      // Reset subject when class changes
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        subject: originalData?.subject || ''
-      }));
-    } else {
-      let processedValue: string | number | boolean = value;
-      
-      if (type === 'checkbox') {
-        processedValue = (e.target as HTMLInputElement).checked;
-      } else if (name === 'max_students') {
-        processedValue = parseInt(value) || 0;
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        [name]: processedValue
-      }));
+    let processedValue: string | number | boolean = value;
+    
+    if (type === 'checkbox') {
+      processedValue = (e.target as HTMLInputElement).checked;
+    } else if (name === 'max_students') {
+      processedValue = parseInt(value) || 0;
     }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: processedValue
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -309,25 +199,6 @@ export default function EditCourse() {
       if (!confirm) return;
     }
     router.back();
-  };
-
-  // Helper functions
-  const getBoardDisplayName = (boardCode: string) => {
-    const board = BOARD_STRUCTURE[boardCode as keyof typeof BOARD_STRUCTURE];
-    return board ? board.display_name : boardCode;
-  };
-
-  const getClassDisplayName = (boardCode: string, classCode: string) => {
-    const board = BOARD_STRUCTURE[boardCode as keyof typeof BOARD_STRUCTURE];
-    if (!board) return classCode;
-    
-    const classInfo = board.classes[classCode as keyof typeof board.classes] as { display_name: string } | undefined;
-    return classInfo ? classInfo.display_name : classCode;
-  };
-
-  const getSubjectDisplayName = (subjectCode: string) => {
-    const subject = availableSubjects.find(s => s.code === subjectCode);
-    return subject ? subject.name : subjectCode;
   };
 
   if (loading) {
@@ -471,104 +342,50 @@ export default function EditCourse() {
               />
             </div>
 
-            {/* Board and Class */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Board <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="board"
-                  value={formData.board}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Board</option>
-                  {Object.entries(BOARD_STRUCTURE).map(([code, boardInfo]) => (
-                    <option key={code} value={code}>
-                      {boardInfo.display_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Class Level <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="class_level"
-                  value={formData.class_level}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  disabled={!formData.board}
-                >
-                  <option value="">Select Class</option>
-                  {formData.board && BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE] && 
-                    Object.entries(BOARD_STRUCTURE[formData.board as keyof typeof BOARD_STRUCTURE].classes).map(([code, classInfo]) => (
-                      <option key={code} value={code}>
-                        {classInfo.display_name}
-                      </option>
-                    ))}
-                </select>
-              </div>
+            {/* Max Students */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Maximum Students
+              </label>
+              <input
+                type="number"
+                name="max_students"
+                value={formData.max_students}
+                onChange={handleInputChange}
+                min={course?.current_students || 1}
+                max="500"
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Current: {course?.current_students || 0} enrolled
+                {course && course.current_students > 0 && (
+                  <span className="text-amber-600">
+                    {' '}(minimum {course.current_students})
+                  </span>
+                )}
+              </p>
             </div>
 
-            {/* Subject and Max Students */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  disabled={!formData.class_level || loadingSubjects}
-                >
-                  <option value="">
-                    {loadingSubjects ? 'Loading subjects...' : 'Select Subject'}
-                  </option>
-                  {availableSubjects.map((subject) => (
-                    <option key={subject.code} value={subject.code}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
-                {loadingSubjects && (
-                  <div className="mt-1 flex items-center text-sm text-gray-500">
-                    <RefreshCw className="animate-spin h-3 w-3 mr-2" />
-                    Loading available subjects...
-                  </div>
-                )}
+            {/* Course Information Display */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium text-gray-900 mb-2">Course Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">Board</p>
+                  <p className="font-medium">{course?.board?.toUpperCase()}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Class</p>
+                  <p className="font-medium">Class {course?.class_level}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Subject</p>
+                  <p className="font-medium">{course?.subject}</p>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Maximum Students
-                </label>
-                <input
-                  type="number"
-                  name="max_students"
-                  value={formData.max_students}
-                  onChange={handleInputChange}
-                  min={course?.current_students || 1}
-                  max="500"
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Current: {course?.current_students || 0} enrolled
-                  {course && course.current_students > 0 && (
-                    <span className="text-amber-600">
-                      {' '}(minimum {course.current_students})
-                    </span>
-                  )}
-                </p>
-              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Board, class, and subject cannot be changed after course creation
+              </p>
             </div>
 
             {/* Warning if course has students */}
@@ -577,10 +394,10 @@ export default function EditCourse() {
                 <div className="flex items-center space-x-2">
                   <AlertCircle className="h-5 w-5 text-amber-600" />
                   <div>
-                    <h4 className="font-medium text-amber-900">Important Notice</h4>
+                    <h4 className="font-medium text-amber-900">Active Course</h4>
                     <p className="text-sm text-amber-800">
                       This course has {course.current_students} enrolled students. 
-                      Changing the board, class, or subject may affect existing quizzes and student progress.
+                      Deactivating the course will prevent new enrollments but won't affect existing students.
                     </p>
                   </div>
                 </div>
@@ -598,7 +415,7 @@ export default function EditCourse() {
               </button>
               <button
                 type="submit"
-                disabled={saving || !hasChanges || loadingSubjects}
+                disabled={saving || !hasChanges}
                 className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 {saving ? (
@@ -634,8 +451,6 @@ export default function EditCourse() {
                 <div className="space-y-1 text-sm">
                   <div><strong>Name:</strong> {course.course_name}</div>
                   <div><strong>Description:</strong> {course.description || 'None'}</div>
-                  <div><strong>Board:</strong> {getBoardDisplayName(course.board)}</div>
-                  <div><strong>Class:</strong> {getClassDisplayName(course.board, course.class_level)}</div>
                   <div><strong>Max Students:</strong> {course.max_students}</div>
                   <div><strong>Status:</strong> {course.is_active ? 'Active' : 'Inactive'}</div>
                 </div>
@@ -645,8 +460,6 @@ export default function EditCourse() {
                 <div className="space-y-1 text-sm">
                   <div><strong>Name:</strong> {formData.course_name}</div>
                   <div><strong>Description:</strong> {formData.description || 'None'}</div>
-                  <div><strong>Board:</strong> {getBoardDisplayName(formData.board)}</div>
-                  <div><strong>Class:</strong> {getClassDisplayName(formData.board, formData.class_level)}</div>
                   <div><strong>Max Students:</strong> {formData.max_students}</div>
                   <div><strong>Status:</strong> {formData.is_active ? 'Active' : 'Inactive'}</div>
                 </div>
