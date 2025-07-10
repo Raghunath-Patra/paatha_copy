@@ -4,9 +4,9 @@ import { AlertTriangle, X, Trash2, Users, FileText, BarChart3 } from 'lucide-rea
 type DeleteCourseModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (courseId: string | number) => void;
+  onConfirm: (courseId: string) => void;
   course: {
-    id: string | number;
+    id: string;
     name: string;
     enrollmentCount?: number;
     quizCount?: number;
