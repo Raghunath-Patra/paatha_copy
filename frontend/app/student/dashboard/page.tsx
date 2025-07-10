@@ -137,7 +137,7 @@ const QuickPracticeButton = () => {
       {/* Content */}
       <div className="relative z-10 flex items-center space-x-2">
         <Gamepad2 className="w-4 h-4" />
-        <span>Quick Practice</span>
+        <span>Start Practice</span>
         <div className={`transform transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}>
           <ChevronRight className="w-4 h-4" />
         </div>
@@ -401,7 +401,7 @@ const TeacherCoursesSection = ({
   );
 };
 
-// AI Learning Paths Section Component
+// AI Learning Paths Section Component (WITHOUT Quick Practice)
 const AILearningPathsSection = () => {
   const router = useRouter();
 
@@ -418,46 +418,12 @@ const AILearningPathsSection = () => {
             <Brain className="h-6 w-6 text-purple-600" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">AI-Powered Learning</h3>
-            <p className="text-sm text-gray-600">Personalized learning paths and practice</p>
+            <h3 className="text-xl font-semibold text-gray-900">AI-Powered Learning Paths</h3>
+            <p className="text-sm text-gray-600">Structured learning by board and class</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <div className="text-2xl animate-pulse">🤖</div>
-          <QuickPracticeButton />
-        </div>
-      </div>
-
-      {/* Quick Practice Banner */}
-      <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 rounded-lg p-6 border border-purple-200">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Daily Challenge & Practice</h4>
-            <p className="text-sm text-gray-600 mb-4">
-              Test your knowledge with AI-generated questions across various topics and difficulty levels
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="text-center p-2 bg-white/50 rounded-lg">
-                <Star className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-                <p className="text-xs font-medium text-gray-700">Adaptive</p>
-              </div>
-              <div className="text-center p-2 bg-white/50 rounded-lg">
-                <Target className="h-5 w-5 text-blue-500 mx-auto mb-1" />
-                <p className="text-xs font-medium text-gray-700">Targeted</p>
-              </div>
-              <div className="text-center p-2 bg-white/50 rounded-lg">
-                <Zap className="h-5 w-5 text-purple-500 mx-auto mb-1" />
-                <p className="text-xs font-medium text-gray-700">Instant</p>
-              </div>
-              <div className="text-center p-2 bg-white/50 rounded-lg">
-                <Award className="h-5 w-5 text-green-500 mx-auto mb-1" />
-                <p className="text-xs font-medium text-gray-700">Rewarding</p>
-              </div>
-            </div>
-          </div>
-          <div className="hidden lg:block ml-6">
-            <div className="text-6xl animate-bounce">🎯</div>
-          </div>
         </div>
       </div>
 
@@ -499,6 +465,161 @@ const AILearningPathsSection = () => {
   );
 };
 
+// NEW: Quick Practice Section Component
+const QuickPracticeSection = () => {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg">
+            <Gamepad2 className="h-6 w-6 text-purple-600" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">Quick Practice & Daily Challenge</h3>
+            <p className="text-sm text-gray-600">AI-generated questions for instant practice</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="text-2xl animate-bounce">🎯</div>
+        </div>
+      </div>
+
+      {/* Quick Practice Banner */}
+      <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 rounded-lg p-8 border border-purple-200">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h4 className="text-2xl font-bold text-gray-900 mb-3">Daily Challenge & Practice</h4>
+            <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+              Test your knowledge with AI-generated questions across various topics and difficulty levels. 
+              Challenge yourself with adaptive questions that grow with your skills!
+            </p>
+            
+            {/* Features Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="text-center p-4 bg-white/70 rounded-lg border border-white/50 hover:bg-white/90 transition-all duration-200">
+                <Star className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-800">Adaptive</p>
+                <p className="text-xs text-gray-600 mt-1">Questions adjust to your level</p>
+              </div>
+              <div className="text-center p-4 bg-white/70 rounded-lg border border-white/50 hover:bg-white/90 transition-all duration-200">
+                <Target className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-800">Targeted</p>
+                <p className="text-xs text-gray-600 mt-1">Focus on weak areas</p>
+              </div>
+              <div className="text-center p-4 bg-white/70 rounded-lg border border-white/50 hover:bg-white/90 transition-all duration-200">
+                <Zap className="h-8 w-8 text-purple-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-800">Instant</p>
+                <p className="text-xs text-gray-600 mt-1">Immediate feedback</p>
+              </div>
+              <div className="text-center p-4 bg-white/70 rounded-lg border border-white/50 hover:bg-white/90 transition-all duration-200">
+                <Award className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-800">Rewarding</p>
+                <p className="text-xs text-gray-600 mt-1">Track your progress</p>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <QuickPracticeButton />
+              </div>
+              <div className="sm:w-auto">
+                <button className="w-full sm:w-auto px-6 py-3 bg-white/80 text-purple-700 rounded-lg border border-purple-200 hover:bg-white hover:border-purple-300 transition-all duration-200 font-medium">
+                  View Progress
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="hidden lg:block ml-8">
+            <div className="relative">
+              <div className="text-8xl animate-bounce filter drop-shadow-lg">🎯</div>
+              <div className="absolute -top-4 -right-4 text-3xl animate-spin-slow">✨</div>
+              <div className="absolute -bottom-2 -left-2 text-2xl animate-pulse">🚀</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Practice Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Questions Answered</p>
+              <p className="text-3xl font-bold text-purple-600">247</p>
+              <p className="text-xs text-gray-500 mt-1">This week</p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <Brain className="h-8 w-8 text-purple-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Accuracy Rate</p>
+              <p className="text-3xl font-bold text-green-600">87%</p>
+              <p className="text-xs text-gray-500 mt-1">Last 100 questions</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-lg">
+              <Target className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Daily Streak</p>
+              <p className="text-3xl font-bold text-orange-600">12</p>
+              <p className="text-xs text-gray-500 mt-1">Days in a row</p>
+            </div>
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <Zap className="h-8 w-8 text-orange-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Performance */}
+      <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Practice Sessions</h4>
+        <div className="space-y-3">
+          {[
+            { subject: "Mathematics", score: 92, questions: 15, time: "2 hours ago" },
+            { subject: "Physics", score: 78, questions: 12, time: "Yesterday" },
+            { subject: "Chemistry", score: 85, questions: 18, time: "2 days ago" },
+          ].map((session, index) => (
+            <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex-1">
+                <h5 className="font-medium text-gray-900">{session.subject}</h5>
+                <p className="text-sm text-gray-600">{session.questions} questions • {session.time}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-bold text-blue-600">{session.score}%</span>
+                <p className="text-xs text-gray-500">Score</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 4s linear infinite;
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export default function StudentDashboard() {
   const router = useRouter();
   const { user, profile } = useSupabaseAuth();
@@ -526,8 +647,8 @@ export default function StudentDashboard() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
-  // NEW: Tab state
-  const [activeTab, setActiveTab] = useState<'teacher' | 'ai'>('teacher');
+  // UPDATED: Tab state to include 'practice'
+  const [activeTab, setActiveTab] = useState<'teacher' | 'ai' | 'practice'>('teacher');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -896,7 +1017,7 @@ export default function StudentDashboard() {
                   Welcome back, {profile?.full_name || 'Student'}!
                 </h2>
                 <p className="text-gray-600 text-lg">
-                  Access teacher-led courses and AI-powered learning paths all in one place.
+                  Access teacher-led courses, AI learning paths, and quick practice all in one place.
                 </p>
               </div>
             </div>
@@ -952,7 +1073,7 @@ export default function StudentDashboard() {
       `}</style>
     </div>
 
-        {/* Tab Navigation */}
+        {/* UPDATED: Tab Navigation - Added Practice Tab */}
         <div className="mb-8">
           <div className="bg-white rounded-lg shadow-sm p-1 inline-flex">
             <button
@@ -978,13 +1099,26 @@ export default function StudentDashboard() {
             >
               <div className="flex items-center space-x-2">
                 <Brain className="h-4 w-4" />
-                <span>AI-Powered Learning</span>
+                <span>Learning Paths</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('practice')}
+              className={`px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'practice'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Gamepad2 className="h-4 w-4" />
+                <span>Quick Practice</span>
               </div>
             </button>
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* UPDATED: Tab Content - Added Practice Tab */}
         <div className="transition-all duration-300">
           {activeTab === 'teacher' ? (
             <TeacherCoursesSection
@@ -996,8 +1130,10 @@ export default function StudentDashboard() {
               getQuizStatusInfo={getQuizStatusInfo}
               isQuizClickable={isQuizClickable}
             />
-          ) : (
+          ) : activeTab === 'ai' ? (
             <AILearningPathsSection />
+          ) : (
+            <QuickPracticeSection />
           )}
         </div>
 
