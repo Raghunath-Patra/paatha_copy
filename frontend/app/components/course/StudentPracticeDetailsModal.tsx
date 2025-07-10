@@ -579,16 +579,6 @@ const StudentPracticeDetailsModal: React.FC<StudentPracticeDetailsModalProps> = 
           </div>
           <div className="flex space-x-2">
             <button
-              onClick={() => {
-                // Export functionality could go here
-                console.log('Export data for:', studentName);
-              }}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 flex items-center space-x-2"
-            >
-              <Download className="h-4 w-4" />
-              <span>Export</span>
-            </button>
-            <button
               onClick={onClose}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
