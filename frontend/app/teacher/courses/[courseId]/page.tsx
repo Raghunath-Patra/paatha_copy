@@ -193,6 +193,9 @@ export default function CourseDetailPage() {
     error: null as string | null
   });
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
@@ -274,6 +277,41 @@ export default function CourseDetailPage() {
 
     loadCourseData();
   }, [user, courseId]);
+
+  const handleDeleteCourse = async (courseId: string) => {
+    if (!user || !course) return;
+
+    try {
+      setIsDeleting(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const response = await fetch(`${API_URL}/api/teacher/courses/${courseId}`, {
+        method: 'DELETE',
+        headers
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete course');
+      }
+
+      // Success - redirect to courses list
+      router.push('/teacher/dashboard');
+      
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      alert('Failed to delete course. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   // NEW: Load Practice Performance Data
   const loadPracticeData = async (forceReload = false) => {
@@ -2121,11 +2159,11 @@ const sendPublicNotice = async (e: React.FormEvent) => {
       onClose={() => setShowDeleteModal(false)}
       onConfirm={handleDeleteCourse}
       course={{
-        id: "CS101",
-        name: "Introduction to Computer Science",
-        enrollmentCount: 45,
-        quizCount: 12,
-        attemptCount: 156
+        id: course.id,
+        name: course.course_name,
+        enrollmentCount: stats?.total_students || 0,
+        quizCount: stats?.total_quizzes || 0,
+        attemptCount: stats?.total_attempts || 0
       }}
       isDeleting={isDeleting}
     />
