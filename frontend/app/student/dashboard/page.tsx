@@ -883,22 +883,17 @@ export default function StudentDashboard() {
                   Access teacher-led courses and AI-powered learning paths all in one place.
                 </p>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-lg font-bold text-blue-600">{stats.total_courses}</div>
-                    <div className="text-xs text-blue-700">Courses</div>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Brain className="w-5 h-5 text-blue-500" />
+                    <span className="font-medium text-gray-900">AI Learning Boost</span>
                   </div>
-                  <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="text-lg font-bold text-green-600">{stats.completed_quizzes}</div>
-                    <div className="text-xs text-green-700">Completed</div>
-                  </div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <div className="text-lg font-bold text-purple-600">{stats.total_quizzes_available}</div>
-                    <div className="text-xs text-purple-700">Available</div>
-                  </div>
-                  <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                    <div className="text-lg font-bold text-yellow-600">{safeToFixed(stats.average_score)}%</div>
-                    <div className="text-xs text-yellow-700">Avg Score</div>
+                  <p className="text-sm text-gray-700">
+                    Your AI tutor adapts to your pace and identifies knowledge gaps automatically.
+                  </p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Zap className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-medium text-gray-800">40% faster skill growth with AI assistance</span>
                   </div>
                 </div>
               </div>

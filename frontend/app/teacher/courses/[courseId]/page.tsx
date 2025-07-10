@@ -1218,23 +1218,6 @@ const sendPublicNotice = async (e: React.FormEvent) => {
             {/* Practice Performance Tab */}
 {activeTab === 'practice' && (
   <div>
-    <div className="flex items-center justify-between mb-6">
-      <h3 className="text-lg font-medium text-gray-900">Student Practice Analytics</h3>
-      <div className="flex items-center space-x-3">
-        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-2">
-          <Download className="h-4 w-4" />
-          <span>Export Data</span>
-        </button>
-        <button
-          onClick={() => loadPracticeData(true)}
-          disabled={practiceLoading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${practiceLoading ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </button>
-      </div>
-    </div>
 
     {/* MOVE: Practice Performance Filters from Students tab */}
     <div className="mb-6 bg-gray-50 p-4 rounded-lg">
@@ -1523,11 +1506,9 @@ const sendPublicNotice = async (e: React.FormEvent) => {
                   </div>
 
                   <div className="ml-4 flex flex-col space-y-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      onClick={() => setActiveTab('practice')}> {/* Link to detailed practice view ---------------------------------*/}
                       View Details
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800 text-sm">
-                      Send Message
                     </button>
                   </div>
                 </div>
@@ -1987,7 +1968,7 @@ const sendPublicNotice = async (e: React.FormEvent) => {
             <div className="text-sm text-blue-700">
               <p className="font-medium">Course: {course.course_name}</p>
               <p>Code: {course.course_code}</p>
-              <p className="mt-1">The student will receive an invitation email to join this course.</p>
+              <p className="mt-1">The student will receive an invitation to join this course.</p>
             </div>
           </div>
         </div>
