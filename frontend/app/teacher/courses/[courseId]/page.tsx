@@ -200,6 +200,9 @@ export default function CourseDetailPage() {
     studentName: ''
   });
 
+  const [authHeaders, setAuthHeaders] = useState<Record<string, string>>({});
+
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -273,6 +276,8 @@ export default function CourseDetailPage() {
             : 0
         };
         setStats(courseStats);
+
+        setAuthHeaders(headers);
 
       } catch (err) {
         console.error('Error loading course data:', err);
@@ -2183,10 +2188,7 @@ const sendPublicNotice = async (e: React.FormEvent) => {
         courseId={courseId}
         studentName={studentDetailsModal.studentName}
         apiUrl={API_URL || ''}
-        authHeaders={{
-          'Authorization': `Bearer ${user?.access_token}`,
-          'Content-Type': 'application/json'
-        }}
+        authHeaders={authHeaders}
       />
     </div>
   );
