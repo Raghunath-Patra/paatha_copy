@@ -7,6 +7,7 @@ import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
 import { supabase } from '../../../utils/supabase';
 import Navigation from '../../../components/navigation/Navigation';
 import DeleteCourseModal from '../../../components/course/DeleteCourseModal';
+import StudentPracticeDetailsModal from '../../../components/course/StudentPracticeDetailsModal';
 import { 
   ArrowLeft,
   Users,
@@ -193,6 +194,12 @@ export default function CourseDetailPage() {
     error: null as string | null
   });
 
+  const [studentDetailsModal, setStudentDetailsModal] = useState({
+    isOpen: false,
+    studentId: '',
+    studentName: ''
+  });
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -311,6 +318,23 @@ export default function CourseDetailPage() {
       setIsDeleting(false);
       setShowDeleteModal(false);
     }
+  };
+
+  // NEW: Open Student Details Modal
+  const openStudentDetailsModal = (studentId: string, studentName: string) => {
+    setStudentDetailsModal({
+      isOpen: true,
+      studentId,
+      studentName
+    });
+  };
+
+  const closeStudentDetailsModal = () => {
+    setStudentDetailsModal({
+      isOpen: false,
+      studentId: '',
+      studentName: ''
+    });
   };
 
   // NEW: Load Practice Performance Data
@@ -1174,7 +1198,7 @@ const sendPublicNotice = async (e: React.FormEvent) => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <button 
-                            onClick={() => setActiveTab('practice')}
+                            onClick={() => openStudentDetailsModal(student.student_id, student.student_name)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             View Details
@@ -1506,8 +1530,10 @@ const sendPublicNotice = async (e: React.FormEvent) => {
                   </div>
 
                   <div className="ml-4 flex flex-col space-y-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      onClick={() => setActiveTab('practice')}> {/* Link to detailed practice view ---------------------------------*/}
+                    <button 
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      onClick={() => openStudentDetailsModal(student.student_id, student.student_name)}
+                    >
                       View Details
                     </button>
                   </div>
@@ -2149,6 +2175,19 @@ const sendPublicNotice = async (e: React.FormEvent) => {
       isDeleting={isDeleting}
     />
 
+      {/* Student Practice Details Modal */}
+      <StudentPracticeDetailsModal
+        isOpen={studentDetailsModal.isOpen}
+        onClose={closeStudentDetailsModal}
+        studentId={studentDetailsModal.studentId}
+        courseId={courseId}
+        studentName={studentDetailsModal.studentName}
+        apiUrl={API_URL || ''}
+        authHeaders={{
+          'Authorization': `Bearer ${user?.access_token}`,
+          'Content-Type': 'application/json'
+        }}
+      />
     </div>
   );
 }
