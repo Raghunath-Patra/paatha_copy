@@ -28,10 +28,16 @@ import {
   GraduationCap,
   Zap, 
   Bell, 
-  RefreshCw
+  RefreshCw,
+  Users,
+  Brain,
+  Plus,
+  Search,
+  Star,
+  Gamepad2
 } from 'lucide-react';
 
-// Board structure for quick access to learning paths
+// Board structure for AI-driven learning paths
 const BOARD_STRUCTURE = {
   cbse: {
     display_name: "CBSE",
@@ -105,78 +111,41 @@ const safeToFixed = (value: number | null | undefined, decimals: number = 1): st
   return value.toFixed(decimals);
 };
 
-// Daily Challenge Button Component
-const DailyChallengeButton = () => {
+// Quick Practice Button Component
+const QuickPracticeButton = () => {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleChallengeClick = () => {
+  const handlePracticeClick = () => {
     router.push('/try');
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-8 relative overflow-hidden">
-      {/* Background gradient animation */}
-      <div className="absolute inset-0 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 opacity-50"></div>
+    <button
+      onClick={handlePracticeClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group relative w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-white transition-all duration-300 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 overflow-hidden"
+    >
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Daily Challenge</h3>
-            <p className="text-sm text-gray-600">Test your knowledge and earn points!</p>
-          </div>
-          <div className="text-3xl animate-bounce">🎯</div>
-        </div>
-        
-        <button
-          onClick={handleChallengeClick}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="group w-full relative inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 overflow-hidden"
-        >
-          {/* Animated background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          
-          {/* Shine effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
-          
-          {/* Content */}
-          <div className="relative z-10 flex items-center space-x-3">
-            <Zap className="w-5 h-5" />
-            <span>Start Daily Challenge</span>
-            <div className={`transform transition-transform duration-300 ${isHovered ? 'translate-x-2' : ''}`}>
-              <ChevronRight className="w-5 h-5" />
-            </div>
-          </div>
-          
-          {/* Floating particles effect */}
-          <div className="absolute inset-0 overflow-hidden rounded-lg">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-white/40 rounded-full animate-ping"
-                style={{
-                  left: `${20 + i * 20}%`,
-                  top: `${30 + (i % 2) * 40}%`,
-                  animationDelay: `${i * 0.5}s`,
-                  animationDuration: '2s'
-                }}
-              />
-            ))}
-          </div>
-        </button>
-        
-        <div className="mt-3 text-center">
-          <p className="text-xs text-gray-500">
-            Boost your learning with daily practice questions
-          </p>
+      {/* Shine effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+      
+      {/* Content */}
+      <div className="relative z-10 flex items-center space-x-2">
+        <Gamepad2 className="w-4 h-4" />
+        <span>Quick Practice</span>
+        <div className={`transform transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}>
+          <ChevronRight className="w-4 h-4" />
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 
-// Board Card Component for Dashboard
+// Board Card Component for AI Learning Paths
 const BoardCard = ({ board, displayName, classes, onClick }: {
   board: string;
   displayName: string;
@@ -187,7 +156,7 @@ const BoardCard = ({ board, displayName, classes, onClick }: {
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 relative overflow-hidden group"
+      className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300 hover:scale-105 relative overflow-hidden group border border-gray-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -197,7 +166,7 @@ const BoardCard = ({ board, displayName, classes, onClick }: {
       <div className="relative z-10">
         <div className="flex items-center mb-4">
           <div className="p-2 bg-blue-100 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors duration-300">
-            <GraduationCap className="h-6 w-6 text-blue-600" />
+            <Brain className="h-6 w-6 text-blue-600" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">{displayName}</h3>
         </div>
@@ -237,8 +206,202 @@ const BoardCard = ({ board, displayName, classes, onClick }: {
   );
 };
 
-// Learning Path Selection Component
-const LearningPathSelection = () => {
+// Teacher Courses Section Component
+const TeacherCoursesSection = ({ 
+  courses, 
+  availableQuizzes, 
+  onJoinCourse, 
+  onViewAllQuizzes,
+  onQuizClick,
+  getQuizStatusInfo,
+  isQuizClickable 
+}: {
+  courses: Course[];
+  availableQuizzes: QuizSummary[];
+  onJoinCourse: () => void;
+  onViewAllQuizzes: () => void;
+  onQuizClick: (quiz: QuizSummary) => void;
+  getQuizStatusInfo: (quiz: QuizSummary) => any;
+  isQuizClickable: (quiz: QuizSummary) => boolean;
+}) => {
+  const router = useRouter();
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Users className="h-6 w-6 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">Teacher-Led Courses</h3>
+            <p className="text-sm text-gray-600">Courses created by your teachers</p>
+          </div>
+        </div>
+        <button
+          onClick={onJoinCourse}
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Join Course</span>
+        </button>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Enrolled Courses</p>
+              <p className="text-2xl font-bold text-blue-600">{courses.length}</p>
+            </div>
+            <GraduationCap className="h-8 w-8 text-blue-400" />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Available Quizzes</p>
+              <p className="text-2xl font-bold text-green-600">{availableQuizzes.length}</p>
+            </div>
+            <PlayCircle className="h-8 w-8 text-green-400" />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Avg Score</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {safeToFixed(courses.reduce((sum, course) => sum + (course.average_score || 0), 0) / (courses.length || 1))}%
+              </p>
+            </div>
+            <Award className="h-8 w-8 text-purple-400" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* My Courses */}
+        <div className="bg-white rounded-lg shadow border border-gray-200">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-medium text-gray-900">My Courses</h4>
+              <button
+                onClick={() => router.push('/student/courses')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+              >
+                <span>View All</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {courses.slice(0, 4).map((course) => (
+                <div key={course.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex-1">
+                    <h5 className="font-medium text-gray-900 text-sm">{course.course_name}</h5>
+                    <p className="text-xs text-gray-600">
+                      {course.teacher_name} • {course.board.toUpperCase()} • Class {course.class_level}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {course.completed_quizzes}/{course.total_quizzes} quizzes completed
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                      {course.course_code}
+                    </span>
+                    <div className="mt-1">
+                      <span className="text-sm font-medium text-blue-600">
+                        {safeToFixed(course.average_score)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {courses.length === 0 && (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-2">No courses joined yet</p>
+                  <button
+                    onClick={onJoinCourse}
+                    className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                  >
+                    Join your first course
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Available Quizzes */}
+        <div className="bg-white rounded-lg shadow border border-gray-200">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-medium text-gray-900">Available Quizzes</h4>
+              <button
+                onClick={onViewAllQuizzes}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+              >
+                <span>View All</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {availableQuizzes.slice(0, 4).map((quiz) => {
+                const statusInfo = getQuizStatusInfo(quiz);
+                const Icon = statusInfo.icon;
+                const clickable = isQuizClickable(quiz);
+                
+                return (
+                  <div 
+                    key={quiz.id} 
+                    className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                      clickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
+                    }`}
+                    onClick={() => clickable && onQuizClick(quiz)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h5 className="font-medium text-gray-900 text-sm">{quiz.title}</h5>
+                        <Icon className="h-3 w-3 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-600">{quiz.course_name}</p>
+                      <p className="text-xs text-gray-500">
+                        {quiz.total_marks} marks • {quiz.time_limit ? `${quiz.time_limit} min` : 'No limit'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {quiz.my_attempts}/{quiz.attempts_allowed} attempts
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+              {availableQuizzes.length === 0 && (
+                <div className="text-center py-8">
+                  <PlayCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-2">No quizzes available</p>
+                  <p className="text-xs text-gray-400">
+                    Join courses to access quizzes
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// AI Learning Paths Section Component
+const AILearningPathsSection = () => {
   const router = useRouter();
 
   const handleClassSelect = (board: string, classLevel: string) => {
@@ -246,20 +409,64 @@ const LearningPathSelection = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-8 relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-full opacity-50"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100 to-transparent rounded-tr-full opacity-50"></div>
-      
-      <div className="relative z-10">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <Brain className="h-6 w-6 text-purple-600" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">AI-Powered Learning</h3>
+            <p className="text-sm text-gray-600">Personalized learning paths and practice</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="text-2xl animate-pulse">🤖</div>
+          <QuickPracticeButton />
+        </div>
+      </div>
+
+      {/* Quick Practice Banner */}
+      <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 rounded-lg p-6 border border-purple-200">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">Daily Challenge & Practice</h4>
+            <p className="text-sm text-gray-600 mb-4">
+              Test your knowledge with AI-generated questions across various topics and difficulty levels
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="text-center p-2 bg-white/50 rounded-lg">
+                <Star className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
+                <p className="text-xs font-medium text-gray-700">Adaptive</p>
+              </div>
+              <div className="text-center p-2 bg-white/50 rounded-lg">
+                <Target className="h-5 w-5 text-blue-500 mx-auto mb-1" />
+                <p className="text-xs font-medium text-gray-700">Targeted</p>
+              </div>
+              <div className="text-center p-2 bg-white/50 rounded-lg">
+                <Zap className="h-5 w-5 text-purple-500 mx-auto mb-1" />
+                <p className="text-xs font-medium text-gray-700">Instant</p>
+              </div>
+              <div className="text-center p-2 bg-white/50 rounded-lg">
+                <Award className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                <p className="text-xs font-medium text-gray-700">Rewarding</p>
+              </div>
+            </div>
+          </div>
+          <div className="hidden lg:block ml-6">
+            <div className="text-6xl animate-bounce">🎯</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Learning Paths */}
+      <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="flex items-center mb-2">
-              <Target className="h-6 w-6 text-blue-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">Explore Learning Paths</h3>
-            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">Explore Learning Paths</h4>
             <p className="text-sm text-gray-600">
-              Browse subjects by board and class to start your learning journey
+              Browse subjects by board and class for structured learning
             </p>
           </div>
           <div className="hidden sm:block">
@@ -283,7 +490,7 @@ const LearningPathSelection = () => {
           <div className="flex items-center text-sm text-blue-800">
             <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
             <span className="font-medium">Pro Tip:</span>
-            <span className="ml-1">Access comprehensive study materials tailored to your curriculum</span>
+            <span className="ml-1">AI adapts to your learning pace and provides personalized recommendations</span>
           </div>
         </div>
       </div>
@@ -309,21 +516,24 @@ export default function StudentDashboard() {
   const [joiningCourse, setJoiningCourse] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   
-  // New state for quiz modal
+  // Quiz modal states
   const [showAllQuizzesModal, setShowAllQuizzesModal] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>('all'); // 'all', 'available', 'completed', 'expired'
+  const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  // NEW: Notification states
+  // Notification states
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+
+  // NEW: Tab state
+  const [activeTab, setActiveTab] = useState<'teacher' | 'ai'>('teacher');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Check if user is a student
   useEffect(() => {
     if (profile && profile.role !== 'student') {
-      router.push('/teacher/dashboard'); // Redirect teachers to teacher dashboard
+      router.push('/teacher/dashboard');
     }
   }, [profile, router]);
 
@@ -335,7 +545,6 @@ export default function StudentDashboard() {
       try {
         setLoading(true);
         
-        // Get access token
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('No session');
 
@@ -344,7 +553,6 @@ export default function StudentDashboard() {
           'Content-Type': 'application/json'
         };
 
-        // Fetch enrolled courses
         const coursesResponse = await fetch(`${API_URL}/api/student/courses/`, {
           headers
         });
@@ -356,7 +564,6 @@ export default function StudentDashboard() {
         const coursesData = await coursesResponse.json();
         setCourses(coursesData);
 
-        // Fetch ALL quizzes from all courses (not just recent)
         const allQuizzes: QuizSummary[] = [];
         for (const course of coursesData) {
           try {
@@ -367,7 +574,7 @@ export default function StudentDashboard() {
               const quizzes = await quizzesResponse.json();
               allQuizzes.push(...quizzes.map((quiz: QuizSummary) => ({
                 ...quiz,
-                course_name: course.course_name // Add course name for display
+                course_name: course.course_name
               })));
             }
           } catch (err) {
@@ -375,7 +582,6 @@ export default function StudentDashboard() {
           }
         }
 
-        // Sort by created date or start time
         allQuizzes.sort((a, b) => {
           const dateA = new Date(a.start_time || 0);
           const dateB = new Date(b.start_time || 0);
@@ -384,11 +590,9 @@ export default function StudentDashboard() {
 
         setAllQuizzes(allQuizzes);
 
-        // Calculate stats with null safety
         const totalQuizzesAvailable = allQuizzes.length;
         const completedQuizzes = allQuizzes.filter(quiz => quiz.status === 'completed').length;
         
-        // Safe calculation of average score
         const validCourses = coursesData.filter((course: Course) => 
           course.average_score !== null && course.average_score !== undefined && !isNaN(course.average_score)
         );
@@ -403,7 +607,6 @@ export default function StudentDashboard() {
           average_score: averageScore
         });
 
-        // NEW: Fetch notification count
         await fetchNotificationCount();
 
       } catch (err) {
@@ -442,7 +645,6 @@ export default function StudentDashboard() {
         throw new Error(errorData.detail || 'Failed to join course');
       }
 
-      // Refresh the page to show the new course
       window.location.reload();
     } catch (err) {
       setJoinError(err instanceof Error ? err.message : 'An error occurred');
@@ -451,54 +653,41 @@ export default function StudentDashboard() {
     }
   };
 
-  // NEW: Fetch notification count
-const fetchNotificationCount = async () => {
-  if (!user) return;
+  const fetchNotificationCount = async () => {
+    if (!user) return;
 
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-    const headers = {
-      'Authorization': `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json'
-    };
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      };
 
-    const response = await fetch(`${API_URL}/api/student/courses/notifications?limit=1`, {
-      headers
-    });
+      const response = await fetch(`${API_URL}/api/student/courses/notifications?limit=1`, {
+        headers
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      setNotificationCount(data.stats.unread_count);
-      setHasUnreadNotifications(data.stats.unread_count > 0);
+      if (response.ok) {
+        const data = await response.json();
+        setNotificationCount(data.stats.unread_count);
+        setHasUnreadNotifications(data.stats.unread_count > 0);
+      }
+    } catch (err) {
+      console.error('Error fetching notification count:', err);
     }
-  } catch (err) {
-    console.error('Error fetching notification count:', err);
-  }
-};
+  };
 
-// NEW: Handle notification updates
-const handleNotificationUpdate = () => {
-  fetchNotificationCount();
-};
+  const handleNotificationUpdate = () => {
+    fetchNotificationCount();
+  };
 
   const handleQuizClick = (quiz: QuizSummary) => {
     router.push(`/student/quiz/${quiz.id}`);
-    // if (quiz.status === 'completed') {
-    //   // For completed quizzes, we don't have attempt ID here, so go to quiz page
-    //   // The quiz page will show previous attempts
-    //   router.push(`/student/quiz/${quiz.id}`);
-    // } else if (quiz.quiz_status_value === 'in_progress' && 
-    //            (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) {
-    //   // For available quizzes, go to take quiz
-    //   router.push(`/student/quiz/${quiz.id}`);
-    // }
   };
 
-  // Helper functions for quiz status
   const getQuizStatusInfo = (quiz: QuizSummary) => {
-    // First check quiz timing status
     if (quiz.quiz_status_value === 'not_started') {
       return {
         label: 'Not Started',
@@ -510,7 +699,6 @@ const handleNotificationUpdate = () => {
     }
     
     if (quiz.quiz_status_value === 'time_expired') {
-      // Check if user has any attempts to view results
       if(quiz.my_attempts == quiz.attempts_allowed) {
         return {
           label: 'Expired',
@@ -579,25 +767,19 @@ const handleNotificationUpdate = () => {
   };
 
   const isQuizClickable = (quiz: QuizSummary) => {
-    // Always allow clicking if user has made at least one attempt (to view results)
     if (quiz.my_attempts > 0) {
       return true;
     }
     
-    // For quizzes not yet attempted, check timing and attempt availability
     if (quiz.quiz_status_value === 'in_progress') {
-      // Quiz is in valid time window
       const hasAttemptsLeft = quiz.my_attempts < quiz.attempts_allowed;
       if (hasAttemptsLeft && (quiz.status === 'not_started' || quiz.status === 'in_progress')) {
         return true;
       }
     }
     
-    // Don't allow clicking for expired quizzes with no attempts
-    // or quizzes that haven't started yet
     return false;
   };
-
 
   const getFilteredQuizzes = () => {
     switch (filterStatus) {
@@ -657,11 +839,10 @@ const handleNotificationUpdate = () => {
     );
   }
 
-  // Show available quizzes instead of recent ones
   const availableQuizzes = allQuizzes.filter(quiz => 
     quiz.quiz_status_value === 'in_progress' && 
     (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))
-  ).slice(0, 5); // Show only first 5 available quizzes
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -670,7 +851,6 @@ const handleNotificationUpdate = () => {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
           <div className="flex items-center space-x-4">
-            {/* NEW: Notification Bell */}
             <button
               onClick={() => setShowNotifications(true)}
               className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -690,7 +870,6 @@ const handleNotificationUpdate = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8 bg-white rounded-lg shadow-lg p-6 relative overflow-hidden">
-          {/* Background decoration */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-50 via-purple-50 to-transparent rounded-bl-full opacity-60"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-green-50 to-transparent rounded-tr-full opacity-60"></div>
           
@@ -701,10 +880,9 @@ const handleNotificationUpdate = () => {
                   Welcome back, {profile?.full_name || 'Student'}!
                 </h2>
                 <p className="text-gray-600 mb-4">
-                  Join courses, take quizzes, and track your learning progress.
+                  Access teacher-led courses and AI-powered learning paths all in one place.
                 </p>
                 
-                {/* Quick stats in welcome section */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
                     <div className="text-lg font-bold text-blue-600">{stats.total_courses}</div>
@@ -731,50 +909,53 @@ const handleNotificationUpdate = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* NEW: View Notifications */}
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-1 inline-flex">
             <button
-              onClick={() => setShowNotifications(true)}
-              className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors relative"
+              onClick={() => setActiveTab('teacher')}
+              className={`px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'teacher'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
             >
-              <div className="text-center">
-                <Bell className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-600">View Notifications</p>
-                {hasUnreadNotifications && (
-                  <span className="absolute top-2 right-2 h-6 w-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4" />
+                <span>Teacher-Led Courses</span>
               </div>
             </button>
-
             <button
-              onClick={() => setShowJoinForm(true)}
-              className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+              onClick={() => setActiveTab('ai')}
+              className={`px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'ai'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
             >
-              <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <p className="text-sm font-medium text-gray-600">Join New Course</p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setShowAllQuizzesModal(true)}
-              className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-colors"
-            >
-              <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-sm font-medium text-gray-600">Browse All Quizzes</p>
+              <div className="flex items-center space-x-2">
+                <Brain className="h-4 w-4" />
+                <span>AI-Powered Learning</span>
               </div>
             </button>
           </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="transition-all duration-300">
+          {activeTab === 'teacher' ? (
+            <TeacherCoursesSection
+              courses={courses}
+              availableQuizzes={availableQuizzes}
+              onJoinCourse={() => setShowJoinForm(true)}
+              onViewAllQuizzes={() => setShowAllQuizzesModal(true)}
+              onQuizClick={handleQuizClick}
+              getQuizStatusInfo={getQuizStatusInfo}
+              isQuizClickable={isQuizClickable}
+            />
+          ) : (
+            <AILearningPathsSection />
+          )}
         </div>
 
         {/* Join Course Modal */}
@@ -844,7 +1025,6 @@ const handleNotificationUpdate = () => {
                 </button>
               </div>
               
-              {/* Filter Tabs */}
               <div className="border-b overflow-x-auto">
                 <nav className="flex space-x-4 sm:space-x-8 px-4 sm:px-6 min-w-max">
                   {[
@@ -944,7 +1124,6 @@ const handleNotificationUpdate = () => {
                             )}
                           </div>
                           
-                          {/* Action button for clickable quizzes */}
                           {clickable && (
                             <div className="mt-3 pt-3 border-t">
                               <div className="flex items-center justify-between">
@@ -977,128 +1156,8 @@ const handleNotificationUpdate = () => {
             </div>
           </div>
         )}
-
-        {/* Daily Challenge Section */}
-        <DailyChallengeButton />
-
-        {/* Learning Path Selection */}
-        <LearningPathSelection />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* My Courses */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">My Courses</h3>
-              <button
-                onClick={() => router.push('/student/courses')}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                View All
-              </button>
-            </div>
-            <div className="space-y-4">
-              {courses.slice(0, 5).map((course) => (
-                <div key={course.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                  <div className="flex-1 mb-2 sm:mb-0">
-                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">{course.course_name}</h4>
-                    <p className="text-sm text-gray-600">
-                      {course.teacher_name} • {course.board.toUpperCase()} • Class {course.class_level}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-500">
-                      {course.completed_quizzes}/{course.total_quizzes} quizzes completed
-                    </p>
-                  </div>
-                  <div className="text-left sm:text-right flex-shrink-0">
-                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block mb-1">
-                      {course.course_code}
-                    </span>
-                    <div className="sm:mt-1">
-                      <span className="text-sm font-medium text-blue-600">
-                        {safeToFixed(course.average_score)}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {courses.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No courses joined yet</p>
-                  <button
-                    onClick={() => setShowJoinForm(true)}
-                    className="mt-2 text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Join your first course
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Available Quizzes */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Available Quizzes</h3>
-              <button
-                onClick={() => setShowAllQuizzesModal(true)}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                View All
-              </button>
-            </div>
-            <div className="space-y-4">
-              {availableQuizzes.map((quiz) => {
-                const statusInfo = getQuizStatusInfo(quiz);
-                const Icon = statusInfo.icon;
-                const clickable = isQuizClickable(quiz);
-                
-                return (
-                  <div 
-                    key={quiz.id} 
-                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg transition-colors ${
-                      clickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-not-allowed opacity-75'
-                    }`}
-                    onClick={() => clickable && handleQuizClick(quiz)}
-                  >
-                    <div className="flex-1 mb-2 sm:mb-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium text-gray-900 text-sm sm:text-base">{quiz.title}</h4>
-                        <Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                      </div>
-                      <p className="text-sm text-gray-600">{quiz.course_name}</p>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        {quiz.total_marks} marks • {quiz.time_limit ? `${quiz.time_limit} min` : 'No time limit'}
-                      </p>
-                    </div>
-                    <div className="text-left sm:text-right flex-shrink-0">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color} mb-1`}>
-                        {statusInfo.label}
-                      </span>
-                      <p className="text-xs text-gray-500">
-                        {quiz.my_attempts}/{quiz.attempts_allowed} attempts
-                      </p>
-                      {quiz.best_score !== undefined && quiz.best_score !== null && (
-                        <p className="text-xs text-blue-600">
-                          Best: {safeToFixed(quiz.best_score)}%
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              {availableQuizzes.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No quizzes available to take right now</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Check back later or join more courses
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* NEW: Student Notifications Component */}
       <StudentNotifications
         isOpen={showNotifications}
         onClose={() => setShowNotifications(false)}
