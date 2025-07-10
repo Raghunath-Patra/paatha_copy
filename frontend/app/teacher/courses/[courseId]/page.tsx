@@ -162,6 +162,10 @@ export default function CourseDetailPage() {
   const [selectedChapter, setSelectedChapter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // NEW: Student Management Modal States
+  const [addStudentModal, setAddStudentModal] = useState({ isOpen: false });
+  const [publicNoticeModal, setPublicNoticeModal] = useState({ isOpen: false });
+
   // NEW: Notification Management States
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState<'all' | 'pending' | 'invitations' | 'notices'>('all');
