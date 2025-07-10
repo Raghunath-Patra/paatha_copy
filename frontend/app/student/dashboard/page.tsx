@@ -869,40 +869,87 @@ export default function StudentDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}
-        <div className="mb-8 bg-white rounded-lg shadow-lg p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-50 via-purple-50 to-transparent rounded-bl-full opacity-60"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-green-50 to-transparent rounded-tr-full opacity-60"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center justify-between">
+        <div className="mb-8 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-2xl shadow-2xl p-8 relative overflow-hidden border border-white/20">
+      {/* Enhanced Background Elements */}
+      <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-blue-400/20 via-purple-400/20 to-transparent rounded-bl-full opacity-80 animate-pulse"></div>
+      <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-green-400/20 via-emerald-400/20 to-transparent rounded-tr-full opacity-80 animate-pulse"></div>
+      <div className="absolute top-1/2 left-1/3 w-20 h-20 bg-yellow-300/10 rounded-full blur-xl animate-bounce"></div>
+      
+      {/* Floating Sparkles */}
+      <div className="absolute top-4 right-20 animate-float">
+        <Sparkles className="w-5 h-5 text-purple-400/60" />
+      </div>
+      <div className="absolute bottom-6 right-1/3 animate-float-delayed">
+        <Sparkles className="w-4 h-4 text-blue-400/60" />
+      </div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-1">
                   Welcome back, {profile?.full_name || 'Student'}!
                 </h2>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 text-lg">
                   Access teacher-led courses and AI-powered learning paths all in one place.
                 </p>
-                
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Brain className="w-5 h-5 text-blue-500" />
-                    <span className="font-medium text-gray-900">AI Learning Boost</span>
-                  </div>
-                  <p className="text-sm text-gray-700">
-                    Your AI tutor adapts to your pace and identifies knowledge gaps automatically.
-                  </p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <Zap className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm font-medium text-gray-800">40% faster skill growth with AI assistance</span>
-                  </div>
-                </div>
               </div>
-              <div className="hidden lg:block">
-                <div className="text-4xl animate-bounce">🎓</div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 backdrop-blur-sm p-5 rounded-xl border border-blue-200/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <Brain className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-gray-900 text-lg">AI Learning Boost</span>
+              </div>
+              <p className="text-gray-700 mb-3 leading-relaxed">
+                Your AI tutor adapts to your pace and identifies knowledge gaps automatically.
+              </p>
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-lg border border-yellow-200/50">
+                <Zap className="w-5 h-5 text-yellow-500" />
+                <span className="font-bold text-gray-800">40% faster skill growth with AI assistance</span>
               </div>
             </div>
           </div>
+          
+          <div className="hidden lg:block ml-6">
+            <div className="relative">
+              <div className="text-6xl animate-bounce filter drop-shadow-lg">🎓</div>
+              <div className="absolute -top-2 -right-2 text-2xl animate-spin-slow">✨</div>
+            </div>
+          </div>
         </div>
+      </div>
+      
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float-delayed 3s ease-in-out infinite 1.5s;
+        }
+        .animate-spin-slow {
+          animation: spin-slow 4s linear infinite;
+        }
+      `}</style>
+    </div>
 
         {/* Tab Navigation */}
         <div className="mb-8">
