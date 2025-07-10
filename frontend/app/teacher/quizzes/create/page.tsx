@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
 import { supabase } from '../../../utils/supabase';
 import Navigation from '../../../components/navigation/Navigation';
@@ -32,6 +32,7 @@ interface QuizFormData {
 
 export default function CreateQuiz() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, profile } = useSupabaseAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [formData, setFormData] = useState<QuizFormData>({
@@ -50,8 +51,12 @@ export default function CreateQuiz() {
   const [loading, setLoading] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [presetCourse, setPresetCourse] = useState<Course | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // Get course_id from URL parameters
+  const courseIdFromUrl = searchParams.get('course_id');
 
   // Check if user is a teacher
   useEffect(() => {
@@ -82,6 +87,18 @@ export default function CreateQuiz() {
 
         const coursesData = await response.json();
         setCourses(coursesData);
+
+        // If course_id is provided in URL, preset the form
+        if (courseIdFromUrl) {
+          const selectedCourse = coursesData.find((course: Course) => course.id === courseIdFromUrl);
+          if (selectedCourse) {
+            setPresetCourse(selectedCourse);
+            setFormData(prev => ({
+              ...prev,
+              course_id: selectedCourse.id
+            }));
+          }
+        }
       } catch (err) {
         console.error('Error fetching courses:', err);
         setError('Failed to load courses. Please try again.');
@@ -91,7 +108,7 @@ export default function CreateQuiz() {
     };
 
     fetchCourses();
-  }, [user]);
+  }, [user, courseIdFromUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,6 +165,15 @@ export default function CreateQuiz() {
     }));
   };
 
+  const handleBackNavigation = () => {
+    // If we came from a specific course, go back to that course
+    if (courseIdFromUrl) {
+      router.push(`/teacher/courses/${courseIdFromUrl}`);
+    } else {
+      router.back();
+    }
+  };
+
   if (loadingCourses) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -194,14 +220,21 @@ export default function CreateQuiz() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => router.back()}
+              onClick={handleBackNavigation}
               className="text-gray-600 hover:text-gray-900"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">Create New Quiz</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Create New Quiz</h1>
+              {presetCourse && (
+                <p className="text-sm text-gray-600">
+                  for <span className="font-medium">{presetCourse.course_name}</span>
+                </p>
+              )}
+            </div>
           </div>
           <Navigation />
         </div>
@@ -235,6 +268,11 @@ export default function CreateQuiz() {
                   </option>
                 ))}
               </select>
+              {presetCourse && (
+                <p className="text-sm text-green-600 mt-1">
+                  ✓ Pre-selected from course page
+                </p>
+              )}
             </div>
 
             {/* Basic Information */}
@@ -425,7 +463,7 @@ export default function CreateQuiz() {
             <div className="flex gap-4">
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={handleBackNavigation}
                 className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 Cancel
