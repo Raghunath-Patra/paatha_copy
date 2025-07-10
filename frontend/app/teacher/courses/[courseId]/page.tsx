@@ -162,10 +162,6 @@ export default function CourseDetailPage() {
   const [selectedChapter, setSelectedChapter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // NEW: Student Management Modal States
-  const [addStudentModal, setAddStudentModal] = useState({ isOpen: false });
-  const [publicNoticeModal, setPublicNoticeModal] = useState({ isOpen: false });
-
   // NEW: Notification Management States
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState<'all' | 'pending' | 'invitations' | 'notices'>('all');
@@ -178,6 +174,24 @@ export default function CourseDetailPage() {
     read: 0
   });
   const [notificationLoading, setNotificationLoading] = useState(false);
+
+  const [addStudentModal, setAddStudentModal] = useState({ isOpen: false });
+  const [publicNoticeModal, setPublicNoticeModal] = useState({ isOpen: false });
+
+  // NEW: Add these additional state variables for modal functionality
+  const [inviteStudentForm, setInviteStudentForm] = useState({
+    student_email: '',
+    loading: false,
+    error: null
+  });
+
+  const [publicNoticeForm, setPublicNoticeForm] = useState({
+    title: '',
+    message: '',
+    priority: 'medium',
+    loading: false,
+    error: null
+  });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -391,6 +405,114 @@ export default function CourseDetailPage() {
       setNotificationLoading(false);
     }
   };
+
+  // Send Course Invitation
+const sendCourseInvitation = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!user || !course) return;
+
+  try {
+    setInviteStudentForm(prev => ({ ...prev, loading: true, error: null }));
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session');
+
+    const headers = {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    };
+
+    const invitationData = {
+      student_email: inviteStudentForm.student_email,
+      course_name: course.course_name,
+      teacher_name: profile?.full_name || 'Teacher'
+    };
+
+    const response = await fetch(`${API_URL}/api/teacher/courses/${courseId}/invite-student`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(invitationData)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to send invitation');
+    }
+
+    // Success
+    alert('✅ Invitation sent successfully!');
+    setInviteStudentForm({ student_email: '', loading: false, error: null });
+    setAddStudentModal({ isOpen: false });
+    
+    // Refresh notifications if modal is open
+    if (showNotificationModal) {
+      fetchCourseNotifications();
+    }
+
+  } catch (err) {
+    console.error('Error sending invitation:', err);
+    setInviteStudentForm(prev => ({
+      ...prev,
+      loading: false,
+      error: err instanceof Error ? err.message : 'Failed to send invitation'
+    }));
+  }
+};
+
+// Send Public Notice
+const sendPublicNotice = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!user || !course) return;
+
+  try {
+    setPublicNoticeForm(prev => ({ ...prev, loading: true, error: null }));
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session');
+
+    const headers = {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    };
+
+    const noticeData = {
+      title: publicNoticeForm.title,
+      message: publicNoticeForm.message,
+      priority: publicNoticeForm.priority
+    };
+
+    const response = await fetch(`${API_URL}/api/teacher/courses/${courseId}/public-notice`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(noticeData)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to send notice');
+    }
+
+    // Success
+    alert('📢 Public notice sent successfully!');
+    setPublicNoticeForm({ title: '', message: '', priority: 'medium', loading: false, error: null });
+    setPublicNoticeModal({ isOpen: false });
+    
+    // Refresh notifications if modal is open
+    if (showNotificationModal) {
+      fetchCourseNotifications();
+    }
+
+  } catch (err) {
+    console.error('Error sending notice:', err);
+    setPublicNoticeForm(prev => ({
+      ...prev,
+      loading: false,
+      error: err instanceof Error ? err.message : 'Failed to send notice'
+    }));
+  }
+};
 
   // NEW: Format notification date
   const formatNotificationDate = (dateString: string) => {
@@ -1795,6 +1917,212 @@ export default function CourseDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Add Student Modal */}
+{addStudentModal.isOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg w-full max-w-md">
+      <div className="flex items-center justify-between p-6 border-b">
+        <h3 className="text-lg font-medium text-gray-900">Invite Student to Course</h3>
+        <button
+          onClick={() => {
+            setAddStudentModal({ isOpen: false });
+            setInviteStudentForm({ student_email: '', loading: false, error: null });
+          }}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+      
+      <form onSubmit={sendCourseInvitation} className="p-6">
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Student Email Address
+          </label>
+          <input
+            type="email"
+            value={inviteStudentForm.student_email}
+            onChange={(e) => setInviteStudentForm(prev => ({ ...prev, student_email: e.target.value }))}
+            placeholder="Enter student's email address"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+            disabled={inviteStudentForm.loading}
+          />
+        </div>
+
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <div className="flex items-start space-x-2">
+            <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+            <div className="text-sm text-blue-700">
+              <p className="font-medium">Course: {course.course_name}</p>
+              <p>Code: {course.course_code}</p>
+              <p className="mt-1">The student will receive an invitation email to join this course.</p>
+            </div>
+          </div>
+        </div>
+
+        {inviteStudentForm.error && (
+          <div className="mb-4 p-3 bg-red-50 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <p className="text-sm text-red-700">{inviteStudentForm.error}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex space-x-3">
+          <button
+            type="button"
+            onClick={() => {
+              setAddStudentModal({ isOpen: false });
+              setInviteStudentForm({ student_email: '', loading: false, error: null });
+            }}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+            disabled={inviteStudentForm.loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={inviteStudentForm.loading || !inviteStudentForm.student_email}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+          >
+            {inviteStudentForm.loading ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Sending...</span>
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span>Send Invitation</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+{/* Public Notice Modal */}
+{publicNoticeModal.isOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg w-full max-w-md">
+      <div className="flex items-center justify-between p-6 border-b">
+        <h3 className="text-lg font-medium text-gray-900">Send Public Notice</h3>
+        <button
+          onClick={() => {
+            setPublicNoticeModal({ isOpen: false });
+            setPublicNoticeForm({ title: '', message: '', priority: 'medium', loading: false, error: null });
+          }}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+      
+      <form onSubmit={sendPublicNotice} className="p-6">
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Notice Title
+          </label>
+          <input
+            type="text"
+            value={publicNoticeForm.title}
+            onChange={(e) => setPublicNoticeForm(prev => ({ ...prev, title: e.target.value }))}
+            placeholder="Enter notice title"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            required
+            disabled={publicNoticeForm.loading}
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Message
+          </label>
+          <textarea
+            value={publicNoticeForm.message}
+            onChange={(e) => setPublicNoticeForm(prev => ({ ...prev, message: e.target.value }))}
+            placeholder="Enter your message here..."
+            rows={4}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            required
+            disabled={publicNoticeForm.loading}
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Priority
+          </label>
+          <select
+            value={publicNoticeForm.priority}
+            onChange={(e) => setPublicNoticeForm(prev => ({ ...prev, priority: e.target.value }))}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            disabled={publicNoticeForm.loading}
+          >
+            <option value="low">Low Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="high">High Priority</option>
+          </select>
+        </div>
+
+        <div className="mb-4 p-3 bg-purple-50 rounded-lg">
+          <div className="flex items-start space-x-2">
+            <Bell className="h-5 w-5 text-purple-600 mt-0.5" />
+            <div className="text-sm text-purple-700">
+              <p className="font-medium">To: All students in {course.course_name}</p>
+              <p className="mt-1">This notice will be sent to all {students.length} enrolled students.</p>
+            </div>
+          </div>
+        </div>
+
+        {publicNoticeForm.error && (
+          <div className="mb-4 p-3 bg-red-50 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <p className="text-sm text-red-700">{publicNoticeForm.error}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex space-x-3">
+          <button
+            type="button"
+            onClick={() => {
+              setPublicNoticeModal({ isOpen: false });
+              setPublicNoticeForm({ title: '', message: '', priority: 'medium', loading: false, error: null });
+            }}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+            disabled={publicNoticeForm.loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={publicNoticeForm.loading || !publicNoticeForm.title || !publicNoticeForm.message}
+            className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+          >
+            {publicNoticeForm.loading ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Sending...</span>
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span>Send Notice</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
     </div>
   );
