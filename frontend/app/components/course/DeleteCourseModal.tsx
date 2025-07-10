@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
 import { AlertTriangle, X, Trash2, Users, FileText, BarChart3 } from 'lucide-react';
 
-const DeleteCourseModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
+type DeleteCourseModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (courseId: string | number) => void;
+  course: {
+    id: string | number;
+    name: string;
+    enrollmentCount?: number;
+    quizCount?: number;
+    attemptCount?: number;
+  } | null;
+  isDeleting?: boolean;
+};
+
+const DeleteCourseModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
   course,
-  isDeleting = false 
-}) => {
+  isDeleting = false
+}: DeleteCourseModalProps) => {
   const [confirmationText, setConfirmationText] = useState('');
   const [showDetails, setShowDetails] = useState(false);
 
@@ -15,7 +29,9 @@ const DeleteCourseModal = ({
 
   const handleDelete = () => {
     if (isConfirmationValid) {
-      onConfirm(course.id);
+      if (course) {
+        onConfirm(course.id);
+      }
     }
   };
 
