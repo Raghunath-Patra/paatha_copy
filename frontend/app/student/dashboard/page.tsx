@@ -288,7 +288,7 @@ const TeacherCoursesSection = ({
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-medium text-gray-900">My Courses</h4>
               <button
-                onClick={}
+                // onClick={() => router.push('/student/courses')}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
               >
                 <span>View All</span>
