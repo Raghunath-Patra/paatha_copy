@@ -29,6 +29,7 @@ import {
   Zap, 
   Bell, 
   RefreshCw,
+  Sparkles,
   Users,
   Brain,
   Plus,
