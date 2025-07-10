@@ -674,7 +674,19 @@ const sendPublicNotice = async (e: React.FormEvent) => {
               </button>
               <h1 className="text-2xl font-bold text-gray-900">Course Details</h1>
             </div>
-            <Navigation />
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => {
+                  setShowNotificationModal(true);
+                  fetchCourseNotifications();
+                }}
+                className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center"
+                title="Manage Notifications"
+              >
+                <Bell className="h-5 w-5" />
+              </button>
+              <Navigation />
+            </div>
           </div>
         </div>
       </div>
@@ -738,16 +750,6 @@ const sendPublicNotice = async (e: React.FormEvent) => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => {
-                  setShowNotificationModal(true);
-                  fetchCourseNotifications();
-                }}
-                className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center"
-                title="Manage Notifications"
-              >
-                <Bell className="h-5 w-5" />
-              </button>
               <button
                 onClick={() => setPublicNoticeModal(prev => ({ ...prev, isOpen: true }))}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-2"
