@@ -524,11 +524,6 @@ const QuickPracticeSection = () => {
               <div className="flex-1">
                 <QuickPracticeButton />
               </div>
-              <div className="sm:w-auto">
-                <button className="w-full sm:w-auto px-6 py-3 bg-white/80 text-purple-700 rounded-lg border border-purple-200 hover:bg-white hover:border-purple-300 transition-all duration-200 font-medium">
-                  View Progress
-                </button>
-              </div>
             </div>
           </div>
           
@@ -539,71 +534,6 @@ const QuickPracticeSection = () => {
               <div className="absolute -bottom-2 -left-2 text-2xl animate-pulse">🚀</div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Practice Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Questions Answered</p>
-              <p className="text-3xl font-bold text-purple-600">247</p>
-              <p className="text-xs text-gray-500 mt-1">This week</p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Brain className="h-8 w-8 text-purple-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Accuracy Rate</p>
-              <p className="text-3xl font-bold text-green-600">87%</p>
-              <p className="text-xs text-gray-500 mt-1">Last 100 questions</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Target className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Daily Streak</p>
-              <p className="text-3xl font-bold text-orange-600">12</p>
-              <p className="text-xs text-gray-500 mt-1">Days in a row</p>
-            </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Zap className="h-8 w-8 text-orange-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Performance */}
-      <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Practice Sessions</h4>
-        <div className="space-y-3">
-          {[
-            { subject: "Mathematics", score: 92, questions: 15, time: "2 hours ago" },
-            { subject: "Physics", score: 78, questions: 12, time: "Yesterday" },
-            { subject: "Chemistry", score: 85, questions: 18, time: "2 days ago" },
-          ].map((session, index) => (
-            <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex-1">
-                <h5 className="font-medium text-gray-900">{session.subject}</h5>
-                <p className="text-sm text-gray-600">{session.questions} questions • {session.time}</p>
-              </div>
-              <div className="text-right">
-                <span className="text-lg font-bold text-blue-600">{session.score}%</span>
-                <p className="text-xs text-gray-500">Score</p>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
