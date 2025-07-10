@@ -227,7 +227,7 @@ export default function CourseDetailPage() {
         };
 
         // If we don't have course data, fetch it
-        
+        if (!course) {
           const courseResponse = await fetch(`${API_URL}/api/teacher/courses/${courseId}`, {
             headers
           });
@@ -238,7 +238,7 @@ export default function CourseDetailPage() {
 
           const courseData = await courseResponse.json();
           setCourse(courseData);
-        
+        }
 
         // Fetch students
         const studentsResponse = await fetch(`${API_URL}/api/teacher/courses/${courseId}/students`, {
