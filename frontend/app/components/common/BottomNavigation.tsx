@@ -19,6 +19,17 @@ export default function BottomNavigation() {
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigationCompletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Check if we should show navigation based on URL pattern
+  const shouldShowNavigation = useCallback(() => {
+    // Check if URL contains 'cbse' or 'karnataka' in the path
+    return pathname.includes('/cbse') || pathname.includes('/karnataka');
+  }, [pathname]);
+
+  // Don't render anything if we shouldn't show navigation
+  if (!shouldShowNavigation()) {
+    return null;
+  }
+  
   // Extract route parameters
   const board = params?.board as string;
   const classLevel = params?.class as string;

@@ -870,7 +870,7 @@ const sendPublicNotice = async (e: React.FormEvent) => {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Course Overview</h3>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Recent Activity</h4>
+                      <h4 className="font-medium text-gray-900 mb-3">Recent Quizzes</h4>
                       <div className="space-y-3">
                         {quizzes.slice(0, 3).map((quiz) => (
                           <div key={quiz.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
