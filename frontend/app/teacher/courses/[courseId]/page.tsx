@@ -253,12 +253,12 @@ export default function CourseDetailPage() {
         // Calculate stats AFTER data is loaded
         const courseStats: CourseStats = {
           total_students: studentsData.length,
-          active_students: studentsData.filter(s => s.status === 'active').length,
+          active_students: studentsData.filter((s: Student) => s.status === 'active').length,
           total_quizzes: quizzesData.length,
-          published_quizzes: quizzesData.filter(q => q.is_published).length,
-          total_attempts: quizzesData.reduce((sum, q) => sum + q.total_attempts, 0),
+          published_quizzes: quizzesData.filter((q: Quiz) => q.is_published).length,
+          total_attempts: quizzesData.reduce((sum: number, q: Quiz) => sum + q.total_attempts, 0),
           average_class_score: studentsData.length > 0 
-            ? studentsData.reduce((sum, s) => sum + s.average_score, 0) / studentsData.length 
+            ? studentsData.reduce((sum: number, s: Student) => sum + s.average_score, 0) / studentsData.length 
             : 0
         };
         setStats(courseStats);
