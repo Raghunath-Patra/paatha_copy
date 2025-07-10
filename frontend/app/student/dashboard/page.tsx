@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { supabase } from '../../utils/supabase';
 import Navigation from '../../components/navigation/Navigation';
+import StudentNotifications from '../../components/notifications/StudentNotifications';
 import { 
   Clock, 
   Calendar, 
@@ -25,7 +26,9 @@ import {
   Target,
   ChevronRight,
   GraduationCap,
-  Zap
+  Zap, 
+  Bell, 
+  RefreshCw
 } from 'lucide-react';
 
 // Board structure for quick access to learning paths
@@ -310,6 +313,11 @@ export default function StudentDashboard() {
   const [showAllQuizzesModal, setShowAllQuizzesModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all'); // 'all', 'available', 'completed', 'expired'
 
+  // NEW: Notification states
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Check if user is a student
@@ -395,6 +403,9 @@ export default function StudentDashboard() {
           average_score: averageScore
         });
 
+        // NEW: Fetch notification count
+        await fetchNotificationCount();
+
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -440,69 +451,37 @@ export default function StudentDashboard() {
     }
   };
 
-  // Helper functions for quiz status
-  // const getQuizStatusInfo = (quiz: QuizSummary) => {
-  //   // First check quiz timing status
-  //   if (quiz.quiz_status_value === 'not_started') {
-  //     return {
-  //       label: 'Not Started',
-  //       color: 'bg-gray-100 text-gray-800',
-  //       icon: Timer,
-  //       description: 'Quiz will start later'
-  //     };
-  //   }
-    
-  //   if (quiz.quiz_status_value === 'time_expired') {
-  //     return {
-  //       label: 'Expired',
-  //       color: 'bg-red-100 text-red-800',
-  //       icon: Ban,
-  //       description: 'Quiz time has ended'
-  //     };
-  //   }
+  // NEW: Fetch notification count
+const fetchNotificationCount = async () => {
+  if (!user) return;
 
-  //   // If quiz is in valid time window, check student status
-  //   switch (quiz.status) {
-  //     case 'not_started':
-  //       return {
-  //         label: 'Available',
-  //         color: 'bg-blue-100 text-blue-800',
-  //         icon: PlayCircle,
-  //         description: 'Ready to start'
-  //       };
-  //     case 'in_progress':
-  //       return {
-  //         label: 'In Progress',
-  //         color: 'bg-yellow-100 text-yellow-800',
-  //         icon: PauseCircle,
-  //         description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
-  //       };
-  //     case 'completed':
-  //       return {
-  //         label: 'Completed',
-  //         color: 'bg-green-100 text-green-800',
-  //         icon: CheckCircle,
-  //         description: `${quiz.my_attempts}/${quiz.attempts_allowed} attempts used`
-  //       };
-  //     default:
-  //       return {
-  //         label: 'Unknown',
-  //         color: 'bg-gray-100 text-gray-800',
-  //         icon: AlertCircle,
-  //         description: ''
-  //       };
-  //   }
-  // };
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
 
-  // const isQuizClickable = (quiz: QuizSummary) => {
-  //   // Can click if:
-  //   // 1. Available to attempt (in time window and has attempts left)
-  //   // 2. Completed (to view results)
-  //   // return (quiz.quiz_status_value === 'in_progress' && 
-  //   //         (quiz.status === 'not_started' || (quiz.status === 'in_progress' && quiz.my_attempts < quiz.attempts_allowed))) ||
-  //   //        quiz.status === 'completed';
-  //   return true; // For now, allow all quizzes to be clickable
-  // };
+    const headers = {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    };
+
+    const response = await fetch(`${API_URL}/api/student/courses/notifications?limit=1`, {
+      headers
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setNotificationCount(data.stats.unread_count);
+      setHasUnreadNotifications(data.stats.unread_count > 0);
+    }
+  } catch (err) {
+    console.error('Error fetching notification count:', err);
+  }
+};
+
+// NEW: Handle notification updates
+const handleNotificationUpdate = () => {
+  fetchNotificationCount();
+};
 
   const handleQuizClick = (quiz: QuizSummary) => {
     router.push(`/student/quiz/${quiz.id}`);
@@ -690,7 +669,21 @@ export default function StudentDashboard() {
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
-          <Navigation />
+          <div className="flex items-center space-x-4">
+            {/* NEW: Notification Bell */}
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Bell className="h-6 w-6" />
+              {hasUnreadNotifications && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </span>
+              )}
+            </button>
+            <Navigation />
+          </div>
         </div>
       </div>
 
@@ -741,7 +734,23 @@ export default function StudentDashboard() {
         {/* Quick Actions */}
         <div className="bg-white p-6 rounded-lg shadow mb-8">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* NEW: View Notifications */}
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors relative"
+            >
+              <div className="text-center">
+                <Bell className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm font-medium text-gray-600">View Notifications</p>
+                {hasUnreadNotifications && (
+                  <span className="absolute top-2 right-2 h-6 w-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </div>
+            </button>
+
             <button
               onClick={() => setShowJoinForm(true)}
               className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
@@ -1088,6 +1097,13 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      {/* NEW: Student Notifications Component */}
+      <StudentNotifications
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        onNotificationUpdate={handleNotificationUpdate}
+      />
     </div>
   );
 }

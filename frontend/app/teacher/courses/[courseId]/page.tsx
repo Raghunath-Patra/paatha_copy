@@ -34,7 +34,14 @@ import {
   Filter,
   Search,
   Download,
-  RefreshCw
+  RefreshCw,
+  Send,
+  Bell,
+  X,
+  AlertCircle,
+  Info,
+  ClipboardList,
+  MessageSquare
 } from 'lucide-react';
 
 interface Course {
@@ -154,6 +161,19 @@ export default function CourseDetailPage() {
   const [selectedStudent, setSelectedStudent] = useState<string>('all');
   const [selectedChapter, setSelectedChapter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // NEW: Notification Management States
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState<'all' | 'pending' | 'invitations' | 'notices'>('all');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationStats, setNotificationStats] = useState({
+    total_sent: 0,
+    pending: 0,
+    accepted: 0,
+    declined: 0,
+    read: 0
+  });
+  const [notificationLoading, setNotificationLoading] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -324,6 +344,60 @@ export default function CourseDetailPage() {
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     }
+  };
+
+  // NEW: Fetch Course Notifications
+  const fetchCourseNotifications = async () => {
+    if (!user || !course) return;
+
+    try {
+      setNotificationLoading(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const params = new URLSearchParams();
+      if (notificationFilter !== 'all') {
+        if (notificationFilter === 'invitations') {
+          params.append('type', 'course_invitation');
+        } else if (notificationFilter === 'notices') {
+          params.append('type', 'public_notice');
+        } else {
+          params.append('status', notificationFilter);
+        }
+      }
+
+      const response = await fetch(`${API_URL}/api/teacher/courses/${courseId}/notifications?${params}`, {
+        headers
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications);
+        setNotificationStats(data.stats);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    } finally {
+      setNotificationLoading(false);
+    }
+  };
+
+  // NEW: Format notification date
+  const formatNotificationDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getQuizStatusInfo = (quiz: Quiz) => {
@@ -702,7 +776,7 @@ export default function CourseDetailPage() {
             {/* Students Tab */}
 {activeTab === 'students' && (
   <div>
-    {/* Data View Toggle - Keep but simplify */}
+    {/* Data View Toggle - Enhanced with notifications */}
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-lg font-medium text-gray-900">Student Management</h3>
       <div className="flex items-center space-x-4">
@@ -729,10 +803,34 @@ export default function CourseDetailPage() {
             Practice Summary
           </button>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
-          <UserPlus className="h-4 w-4" />
-          <span>Add Student</span>
-        </button>
+        
+        {/* NEW: Student Management Buttons */}
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => {
+              setShowNotificationModal(true);
+              fetchCourseNotifications();
+            }}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center space-x-2"
+          >
+            <ClipboardList className="h-4 w-4" />
+            <span>Manage Notifications</span>
+          </button>
+          <button 
+            onClick={() => setPublicNoticeModal(prev => ({ ...prev, isOpen: true }))}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-2"
+          >
+            <Bell className="h-4 w-4" />
+            <span>Send Notice</span>
+          </button>
+          <button 
+            onClick={() => setAddStudentModal(prev => ({ ...prev, isOpen: true }))}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+          >
+            <UserPlus className="h-4 w-4" />
+            <span>Add Student</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1552,6 +1650,148 @@ export default function CourseDetailPage() {
           </div>
         </div>
       </div>
+      {/* NEW: Notification Management Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-medium text-gray-900">Course Notifications</h3>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Notification Stats */}
+            <div className="p-6 border-b bg-gray-50">
+              <div className="grid grid-cols-5 gap-4 text-center">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{notificationStats.total_sent}</div>
+                  <div className="text-sm text-blue-700">Total Sent</div>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-600">{notificationStats.pending}</div>
+                  <div className="text-sm text-yellow-700">Pending</div>
+                </div>
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{notificationStats.accepted}</div>
+                  <div className="text-sm text-green-700">Accepted</div>
+                </div>
+                <div className="p-3 bg-red-100 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">{notificationStats.declined}</div>
+                  <div className="text-sm text-red-700">Declined</div>
+                </div>
+                <div className="p-3 bg-gray-100 rounded-lg">
+                  <div className="text-2xl font-bold text-gray-600">{notificationStats.read}</div>
+                  <div className="text-sm text-gray-700">Read</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="border-b overflow-x-auto">
+              <nav className="flex space-x-8 px-6">
+                {[
+                  { key: 'all', label: 'All', count: notifications.length },
+                  { key: 'pending', label: 'Pending', count: notificationStats.pending },
+                  { key: 'invitations', label: 'Invitations', count: notifications.filter(n => n.type === 'course_invitation').length },
+                  { key: 'notices', label: 'Notices', count: notifications.filter(n => n.type === 'public_notice').length }
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setNotificationFilter(tab.key as any)}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                      notificationFilter === tab.key
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {tab.label} ({tab.count})
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Notifications List */}
+            <div className="p-6 max-h-[50vh] overflow-y-auto">
+              {notificationLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">No notifications found</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <div key={notification.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            {notification.type === 'course_invitation' ? (
+                              <UserPlus className="h-5 w-5 text-blue-600" />
+                            ) : (
+                              <Bell className="h-5 w-5 text-purple-600" />
+                            )}
+                            <h4 className="font-medium text-gray-900">{notification.title}</h4>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              notification.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              notification.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                              notification.status === 'declined' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {notification.status}
+                            </span>
+                          </div>
+                          
+                          <p className="text-gray-600 mb-2">{notification.message}</p>
+                          
+                          {notification.student && (
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <span>To: {notification.student.full_name}</span>
+                              <span>({notification.student.email})</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 mt-2">
+                            <span>Sent: {formatNotificationDate(notification.created_at)}</span>
+                            {notification.responded_at && (
+                              <span>Responded: {formatNotificationDate(notification.responded_at)}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t p-4 bg-gray-50 flex justify-between">
+              <button
+                onClick={() => fetchCourseNotifications()}
+                disabled={notificationLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${notificationLoading ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
