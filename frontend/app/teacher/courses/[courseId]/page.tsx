@@ -1874,7 +1874,7 @@ const sendPublicNotice = async (e: React.FormEvent) => {
                             </span>
                           </div>
                           
-                          <p className="text-gray-600 mb-2">{notification.message}</p>
+                          {/* <p className="text-gray-600 mb-2">{notification.message}</p> */}
                           
                           {notification.student && (
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
