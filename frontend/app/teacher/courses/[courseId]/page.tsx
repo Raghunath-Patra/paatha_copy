@@ -207,16 +207,6 @@ export default function CourseDetailPage() {
       try {
         setLoading(true);
 
-        // Try to get course data from sessionStorage first
-        // const storedCourseData = sessionStorage.getItem('courseData');
-        // if (storedCourseData) {
-        //   const courseData = JSON.parse(storedCourseData);
-        //   if (courseData.id === courseId) {
-        //     setCourse(courseData);
-        //     sessionStorage.removeItem('courseData');
-        //   }
-        // }
-
         // Get access token for API calls
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('No session');
@@ -226,27 +216,26 @@ export default function CourseDetailPage() {
           'Content-Type': 'application/json'
         };
 
-        // If we don't have course data, fetch it
-        if (!course) {
-          const courseResponse = await fetch(`${API_URL}/api/teacher/courses/${courseId}`, {
-            headers
-          });
+        // Fetch course data first
+        const courseResponse = await fetch(`${API_URL}/api/teacher/courses/${courseId}`, {
+          headers
+        });
 
-          if (!courseResponse.ok) {
-            throw new Error('Failed to fetch course details');
-          }
-
-          const courseData = await courseResponse.json();
-          setCourse(courseData);
+        if (!courseResponse.ok) {
+          throw new Error('Failed to fetch course details');
         }
+
+        const courseData = await courseResponse.json();
+        setCourse(courseData);
 
         // Fetch students
         const studentsResponse = await fetch(`${API_URL}/api/teacher/courses/${courseId}/students`, {
           headers
         });
 
+        let studentsData = [];
         if (studentsResponse.ok) {
-          const studentsData = await studentsResponse.json();
+          studentsData = await studentsResponse.json();
           setStudents(studentsData);
         }
 
@@ -255,20 +244,21 @@ export default function CourseDetailPage() {
           headers
         });
 
+        let quizzesData = [];
         if (quizzesResponse.ok) {
-          const quizzesData = await quizzesResponse.json();
+          quizzesData = await quizzesResponse.json();
           setQuizzes(quizzesData);
         }
 
-        // Calculate stats from available data
+        // Calculate stats AFTER data is loaded
         const courseStats: CourseStats = {
-          total_students: students.length,
-          active_students: students.filter(s => s.status === 'active').length,
-          total_quizzes: quizzes.length,
-          published_quizzes: quizzes.filter(q => q.is_published).length,
-          total_attempts: quizzes.reduce((sum, q) => sum + q.total_attempts, 0),
-          average_class_score: students.length > 0 
-            ? students.reduce((sum, s) => sum + s.average_score, 0) / students.length 
+          total_students: studentsData.length,
+          active_students: studentsData.filter(s => s.status === 'active').length,
+          total_quizzes: quizzesData.length,
+          published_quizzes: quizzesData.filter(q => q.is_published).length,
+          total_attempts: quizzesData.reduce((sum, q) => sum + q.total_attempts, 0),
+          average_class_score: studentsData.length > 0 
+            ? studentsData.reduce((sum, s) => sum + s.average_score, 0) / studentsData.length 
             : 0
         };
         setStats(courseStats);
