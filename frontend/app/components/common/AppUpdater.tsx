@@ -8,7 +8,7 @@ export default function AppUpdater() {
   const isCheckingRef = useRef(false);
   const lastCheckTime = useRef(0);
   const MIN_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes minimum between checks
-  const INITIAL_DELAY = 2 * 60 * 1000; // 2 minutes initial delay - INCREASED FROM 2 SECONDS
+  const INITIAL_DELAY = 2 * 1000; //  initial delay - INCREASED FROM 2 SECONDS
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
