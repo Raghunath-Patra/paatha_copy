@@ -282,7 +282,7 @@ export default function CourseDetailPage() {
     };
 
     loadCourseData();
-  }, [user, courseId, course]);
+  }, [user, courseId]);
 
   // NEW: Load Practice Performance Data
   const loadPracticeData = async (forceReload = false) => {
