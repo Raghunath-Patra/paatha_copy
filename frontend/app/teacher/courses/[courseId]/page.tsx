@@ -739,6 +739,23 @@ const sendPublicNotice = async (e: React.FormEvent) => {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button
+                onClick={() => {
+                  setShowNotificationModal(true);
+                  fetchCourseNotifications();
+                }}
+                className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center"
+                title="Manage Notifications"
+              >
+                <Bell className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setPublicNoticeModal(prev => ({ ...prev, isOpen: true }))}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-2"
+              >
+                <Bell className="h-4 w-4" />
+                <span>Send Notice</span>
+              </button>
+              <button
                 onClick={() => router.push(`/teacher/courses/${courseId}/edit`)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
               >
@@ -929,25 +946,7 @@ const sendPublicNotice = async (e: React.FormEvent) => {
           </button>
         </div>
         
-        {/* NEW: Student Management Buttons */}
         <div className="flex space-x-2">
-          <button 
-            onClick={() => {
-              setShowNotificationModal(true);
-              fetchCourseNotifications();
-            }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center space-x-2"
-          >
-            <ClipboardList className="h-4 w-4" />
-            <span>Manage Notifications</span>
-          </button>
-          <button 
-            onClick={() => setPublicNoticeModal(prev => ({ ...prev, isOpen: true }))}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-2"
-          >
-            <Bell className="h-4 w-4" />
-            <span>Send Notice</span>
-          </button>
           <button 
             onClick={() => setAddStudentModal(prev => ({ ...prev, isOpen: true }))}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
