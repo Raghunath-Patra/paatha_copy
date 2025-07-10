@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
 import { supabase } from '../../../utils/supabase';
 import Navigation from '../../../components/navigation/Navigation';
+import DeleteCourseModal from '../../../components/course/DeleteCourseModal';
 import { 
   ArrowLeft,
   Users,
@@ -1755,7 +1756,8 @@ const sendPublicNotice = async (e: React.FormEvent) => {
                     <p className="text-sm text-red-600 mb-4">
                       These actions cannot be undone. Please be careful.
                     </p>
-                    <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2">
+                    <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2"
+                      onClick={() => setShowDeleteModal(true)}>
                       <Trash2 className="h-4 w-4" />
                       <span>Delete Course</span>
                     </button>
@@ -2113,6 +2115,20 @@ const sendPublicNotice = async (e: React.FormEvent) => {
     </div>
   </div>
 )}
+
+    <DeleteCourseModal
+      isOpen={showDeleteModal}
+      onClose={() => setShowDeleteModal(false)}
+      onConfirm={handleDeleteCourse}
+      course={{
+        id: "CS101",
+        name: "Introduction to Computer Science",
+        enrollmentCount: 45,
+        quizCount: 12,
+        attemptCount: 156
+      }}
+      isDeleting={isDeleting}
+    />
 
     </div>
   );
