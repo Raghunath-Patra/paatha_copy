@@ -178,11 +178,10 @@ export default function CourseDetailPage() {
   const [addStudentModal, setAddStudentModal] = useState({ isOpen: false });
   const [publicNoticeModal, setPublicNoticeModal] = useState({ isOpen: false });
 
-  // NEW: Add these additional state variables for modal functionality
-  const [inviteStudentForm, setInviteStudentForm] = useState({
+    const [inviteStudentForm, setInviteStudentForm] = useState({
     student_email: '',
     loading: false,
-    error: null
+    error: null as string | null
   });
 
   const [publicNoticeForm, setPublicNoticeForm] = useState({
@@ -190,7 +189,7 @@ export default function CourseDetailPage() {
     message: '',
     priority: 'medium',
     loading: false,
-    error: null
+    error: null as string | null
   });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
