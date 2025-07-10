@@ -208,14 +208,14 @@ export default function CourseDetailPage() {
         setLoading(true);
 
         // Try to get course data from sessionStorage first
-        const storedCourseData = sessionStorage.getItem('courseData');
-        if (storedCourseData) {
-          const courseData = JSON.parse(storedCourseData);
-          if (courseData.id === courseId) {
-            setCourse(courseData);
-            sessionStorage.removeItem('courseData');
-          }
-        }
+        // const storedCourseData = sessionStorage.getItem('courseData');
+        // if (storedCourseData) {
+        //   const courseData = JSON.parse(storedCourseData);
+        //   if (courseData.id === courseId) {
+        //     setCourse(courseData);
+        //     sessionStorage.removeItem('courseData');
+        //   }
+        // }
 
         // Get access token for API calls
         const { data: { session } } = await supabase.auth.getSession();
@@ -227,7 +227,7 @@ export default function CourseDetailPage() {
         };
 
         // If we don't have course data, fetch it
-        if (!course) {
+        
           const courseResponse = await fetch(`${API_URL}/api/teacher/courses/${courseId}`, {
             headers
           });
@@ -238,7 +238,7 @@ export default function CourseDetailPage() {
 
           const courseData = await courseResponse.json();
           setCourse(courseData);
-        }
+        
 
         // Fetch students
         const studentsResponse = await fetch(`${API_URL}/api/teacher/courses/${courseId}/students`, {
