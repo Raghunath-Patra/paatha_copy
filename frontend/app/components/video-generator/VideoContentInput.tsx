@@ -77,13 +77,13 @@ export default function VideoContentInput({
     setStatus({ type: 'info', message: 'Generating script and visuals...' });
 
     try {
-
       const { headers, isAuthorized } = await getAuthHeaders();
             
       if (!isAuthorized) {
         console.error('Not authenticated');
         return;
       }
+      
       const response = await fetch(`${API_URL}/api/video-generator/generate-script`, {
         method: 'POST',
         headers: headers,
@@ -94,11 +94,19 @@ export default function VideoContentInput({
 
       if (result.success) {
         setStatus({ type: 'success', message: 'Script generated successfully!' });
-        onScriptGenerated(result.data, result.data.lessonSteps);
+        
+        // ✅ Fix: Use result.project instead of result.data
+        // ✅ Add validation to ensure the data exists
+        if (result.project && result.project.lessonSteps) {
+          onScriptGenerated(result.project, result.project.lessonSteps);
+        } else {
+          throw new Error('Invalid response structure from server');
+        }
       } else {
         throw new Error(result.error || 'Failed to generate script');
       }
     } catch (error) {
+      console.error('Script generation error:', error);
       setStatus({ 
         type: 'error', 
         message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` 
