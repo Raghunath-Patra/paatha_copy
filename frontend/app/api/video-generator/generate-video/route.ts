@@ -1,32 +1,15 @@
 // frontend/app/api/video-generator/generate-video/route.ts - Updated to proxy to backend
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getAuthHeaders } from '../../../utils/auth'; 
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL;
-
-async function getAuthHeaders() {
-  const cookieStore = cookies();
-  const token = cookieStore.get('auth-token')?.value;
-  
-  if (!token) {
-    return null;
-  }
-  
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  };
-}
 
 export async function POST(request: NextRequest) {
   try {
     const authHeaders = await getAuthHeaders();
-    
-    if (!authHeaders) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
+        if (!authHeaders.isAuthorized) {
+        throw new Error('Authentication required');
     }
 
     const body = await request.json();
@@ -42,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Proxy to backend video generation service
     const response = await fetch(`${API_URL}/api/video/generate-video`, {
       method: 'POST',
-      headers: authHeaders,
+      headers: authHeaders.headers,
       body: JSON.stringify(body),
     });
 
