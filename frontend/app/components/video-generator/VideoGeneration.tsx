@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getAuthHeaders } from '../../utils/auth';
 
 interface VideoGenerationProps {
   project: any;
@@ -28,6 +29,14 @@ export default function VideoGeneration({
     setStatus({ type: 'info', message: 'Generating video with optimized processing...' });
 
     try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        setStatus({ type: 'error', message: 'Authentication required' });
+        return;
+      }
+
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setGenerationProgress(prev => {
@@ -39,14 +48,11 @@ export default function VideoGeneration({
         });
       }, 500);
 
-      const response = await fetch(`${API_URL}/api/video-generator/generate-video`, {
+      const response = await fetch(`${API_URL}/api/generate-video`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
-          projectId: project.projectId,
-          slides: slides
+          projectId: project.id // Updated to match server expectation
         })
       });
 
@@ -57,7 +63,8 @@ export default function VideoGeneration({
 
       if (result.success) {
         setStatus({ type: 'success', message: 'Video generated successfully!' });
-        setVideoUrl(result.videoUrl || `/api/video-generator/video/${project.projectId}`);
+        // Updated to construct video URL from server response
+        setVideoUrl(`${API_URL}/api/video/${result.projectId}`);
         
         // Delay before calling onVideoGenerated to show success state
         setTimeout(() => {
@@ -79,7 +86,9 @@ export default function VideoGeneration({
 
   const downloadVideo = () => {
     if (videoUrl) {
-      window.open(videoUrl, '_blank');
+      // Updated to use download endpoint
+      const downloadUrl = `${API_URL}/api/download/${project.id}`;
+      window.open(downloadUrl, '_blank');
     }
   };
 

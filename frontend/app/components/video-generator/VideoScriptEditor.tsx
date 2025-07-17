@@ -2,8 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
+  // Update the project prop type to handle the new structure
 interface VideoScriptEditorProps {
-  project: any;
+  project: {
+    id: string;
+    title: string;
+    lessonSteps: any[];
+    speakers: any;
+    visualFunctions: any;
+  };
   slides: any[];
   onSlidesUpdate: (slides: any[]) => void;
   onProceedToVideo: () => void;
@@ -42,6 +49,7 @@ export default function VideoScriptEditor({
     }
   }, [currentSlideIndex, slides, previewCanvas]);
 
+  // Update the visual function execution to handle the new structure
   const updateSlidePreview = (slide: any, index: number) => {
     if (!previewCanvas) return;
 
@@ -79,15 +87,20 @@ export default function VideoScriptEditor({
     ctx.lineWidth = 2;
     ctx.strokeRect(200, 200, 600, 400);
 
-    // Draw visual if available
+    // Draw visual if available - updated to handle new structure
     if (slide.visual && slide.visual.type && project.visualFunctions) {
       try {
         const visualFunction = project.visualFunctions[slide.visual.type];
         if (visualFunction) {
-          // Execute the visual function
-          const func = new Function('ctx', 'param1', 'param2', 'param3', 
-            visualFunction.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '')
-          );
+          // Handle function execution based on whether it's a string or function
+          let func;
+          if (typeof visualFunction === 'string') {
+            func = new Function('ctx', 'param1', 'param2', 'param3', 
+              visualFunction.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '')
+            );
+          } else {
+            func = visualFunction;
+          }
           
           if (slide.visual.params && slide.visual.params.length > 0) {
             func(ctx, ...slide.visual.params);

@@ -41,21 +41,40 @@ export default function VideoContentInput({
     setStatus({ type: 'info', message: 'Generating complete video... This may take 5-15 minutes.' });
 
     try {
-      const response = await fetch(`${API_URL}/api/video-generator/generate-complete`, {
+      // First generate script
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        return;
+      }
+
+      const scriptResponse = await fetch(`${API_URL}/api/generate-script`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({ content }),
       });
 
-      const result = await response.json();
+      const scriptResult = await scriptResponse.json();
 
-      if (result.success) {
+      if (!scriptResult.success) {
+        throw new Error(scriptResult.error || 'Failed to generate script');
+      }
+
+      // Then generate video
+      const videoResponse = await fetch(`${API_URL}/api/generate-video`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ projectId: scriptResult.project.id }),
+      });
+
+      const videoResult = await videoResponse.json();
+
+      if (videoResult.success) {
         setStatus({ type: 'success', message: 'Complete video generated successfully!' });
         onCompleteVideoGenerated();
       } else {
-        throw new Error(result.error || 'Failed to generate video');
+        throw new Error(videoResult.error || 'Failed to generate video');
       }
     } catch (error) {
       setStatus({ 
@@ -83,8 +102,8 @@ export default function VideoContentInput({
         console.error('Not authenticated');
         return;
       }
-      
-      const response = await fetch(`${API_URL}/api/video-generator/generate-script`, {
+
+      const response = await fetch(`${API_URL}/api/generate-script`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ content }),
@@ -94,19 +113,12 @@ export default function VideoContentInput({
 
       if (result.success) {
         setStatus({ type: 'success', message: 'Script generated successfully!' });
-        
-        // ✅ Fix: Use result.project instead of result.data
-        // ✅ Add validation to ensure the data exists
-        if (result.project && result.project.lessonSteps) {
-          onScriptGenerated(result.project, result.project.lessonSteps);
-        } else {
-          throw new Error('Invalid response structure from server');
-        }
+        // Update to match server response structure
+        onScriptGenerated(result.project, result.project.lessonSteps);
       } else {
         throw new Error(result.error || 'Failed to generate script');
       }
     } catch (error) {
-      console.error('Script generation error:', error);
       setStatus({ 
         type: 'error', 
         message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` 

@@ -25,6 +25,22 @@ export default function VideoProjectBrowser({
     loadProjects();
   }, []);
 
+  // Update the project mapping to handle the database structure
+  const transformProjectForFrontend = (project: any) => {
+    return {
+      projectId: project.id, // Map database 'id' to 'projectId'
+      title: project.title,
+      createdAt: project.created_at,
+      status: project.status,
+      lessonStepsCount: project.lesson_steps?.length || 0,
+      speakers: project.speakers?.map((s: any) => s.name) || [],
+      visualFunctions: project.visualFunctions?.map((vf: any) => vf.function_name) || [],
+      hasVideo: project.videos && project.videos.length > 0,
+      videoFiles: project.videos?.map((v: any) => v.storage_path) || []
+    };
+  };
+
+// Update the loadProjects function to transform the data
   const loadProjects = async () => {
     setLoading(true);
     try {
@@ -36,13 +52,15 @@ export default function VideoProjectBrowser({
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/video-generator/projects`, {
-        headers // ✅ Add the auth headers
+      const response = await fetch(`${API_URL}/api/projects`, {
+        headers
       });
       const result = await response.json();
       
       if (result.success) {
-        setProjects(result.projects || []);
+        // Transform the projects to match frontend expectations
+        const transformedProjects = result.projects.map(transformProjectForFrontend);
+        setProjects(transformedProjects);
       } else {
         console.error('Failed to load projects:', result.error);
         setProjects([]);
@@ -55,24 +73,19 @@ export default function VideoProjectBrowser({
     }
   };
 
-  const getStatusInfo = (status: string) => {
-    const statusMap = {
-      'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-green-100 text-green-800' },
-      'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-yellow-100 text-yellow-800' },
-      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-blue-100 text-blue-800' },
-      'empty': { text: 'Empty', emoji: '❓', color: 'bg-gray-100 text-gray-800' }
-    };
-    return statusMap[status as keyof typeof statusMap] || statusMap.empty;
-  };
-
-  const handleProjectClick = (project: any) => {
-    setSelectedProject(project);
-  };
-
   const handleDeleteProject = async (projectId: string) => {
     try {
-      const response = await fetch(`${API_URL}/api/video-generator/projects/${projectId}`, {
-        method: 'DELETE'
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        return;
+      }
+
+      // Updated endpoint
+      const response = await fetch(`${API_URL}/api/project/${projectId}`, {
+        method: 'DELETE',
+        headers
       });
       
       if (response.ok) {
@@ -86,14 +99,32 @@ export default function VideoProjectBrowser({
   };
 
   const handlePlayVideo = (projectId: string) => {
-    // Open video in new tab
-    window.open(`/api/video-generator/video/${projectId}`, '_blank');
+    // Updated endpoint
+    window.open(`${API_URL}/api/video/${projectId}`, '_blank');
   };
 
   const handleDownloadVideo = (projectId: string) => {
-    // Download video
-    window.open(`/api/video-generator/download/${projectId}`, '_blank');
+    // Updated endpoint
+    window.open(`${API_URL}/api/download/${projectId}`, '_blank');
   };
+
+  // Helper function to map status to display info
+  function getStatusInfo(status: string) {
+    switch (status) {
+      case 'completed':
+        return { text: 'Completed', color: 'bg-green-100 text-green-800', emoji: '✅' };
+      case 'script_ready':
+        return { text: 'Script Ready', color: 'bg-yellow-100 text-yellow-800', emoji: '📝' };
+      case 'input_only':
+        return { text: 'Input Only', color: 'bg-blue-100 text-blue-800', emoji: '🛠️' };
+      case 'processing':
+        return { text: 'Processing', color: 'bg-purple-100 text-purple-800', emoji: '⏳' };
+      case 'failed':
+        return { text: 'Failed', color: 'bg-red-100 text-red-800', emoji: '❌' };
+      default:
+        return { text: status, color: 'bg-gray-100 text-gray-800', emoji: '📁' };
+    }
+  }
 
   if (loading) {
     return (
