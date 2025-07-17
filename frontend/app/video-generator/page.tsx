@@ -18,7 +18,7 @@ export default function VideoGeneratorPage() {
   const { user, profile, loading: authLoading } = useSupabaseAuth();
   const [currentTab, setCurrentTab] = useState('projects');
   const [currentStep, setCurrentStep] = useState(1);
-  const [workflowMode, setWorkflowMode] = useState('simple');
+  const [workflowMode, setWorkflowMode] = useState<'simple' | 'advanced'>('simple');
   const [currentProject, setCurrentProject] = useState(null);
   const [slides, setSlides] = useState([]);
   const [allProjects, setAllProjects] = useState<any[]>([]); // Fix: Explicitly type as any[]
