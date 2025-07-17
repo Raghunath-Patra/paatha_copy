@@ -39,7 +39,7 @@ export default function VideoContentInput({
     setStatus({ type: 'info', message: 'Generating complete video... This may take 5-15 minutes.' });
 
     try {
-      const response = await fetch('/api/video/generate-complete', {
+      const response = await fetch('/api/video-generator/generate-complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ export default function VideoContentInput({
     setStatus({ type: 'info', message: 'Generating script and visuals...' });
 
     try {
-      const response = await fetch('/api/video/generate-script', {
+      const response = await fetch('/api/video-generator/generate-script', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -37,7 +37,7 @@ export default function VideoGeneration({
         });
       }, 500);
 
-      const response = await fetch('/api/video/generate-video', {
+      const response = await fetch('/api/video-generator/generate-video', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
