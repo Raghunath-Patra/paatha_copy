@@ -1,58 +1,55 @@
+// frontend/app/api/video-generator/projects/route.ts - Updated to proxy to backend
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-// Mock projects data - in a real app, this would come from a database
-const mockProjects = [
-  {
-    projectId: 'project_1704123456789',
-    title: 'Chemistry Lab Experiment',
-    createdAt: '2024-01-01T10:00:00Z',
-    status: 'completed',
-    lessonStepsCount: 5,
-    speakers: ['teacher', 'student1', 'student2'],
-    visualFunctions: ['chemicalReactionVisual', 'moleculeStructure'],
-    hasVideo: true,
-    videoFiles: ['chemistry_lab_final.mp4']
-  },
-  {
-    projectId: 'project_1704123456790',
-    title: 'Math Problem Solving',
-    createdAt: '2024-01-02T14:30:00Z',
-    status: 'script_ready',
-    lessonStepsCount: 3,
-    speakers: ['teacher', 'student1'],
-    visualFunctions: ['graphVisual', 'equationSolver'],
-    hasVideo: false,
-    videoFiles: []
-  },
-  {
-    projectId: 'project_1704123456791',
-    title: 'History Timeline',
-    createdAt: '2024-01-03T09:15:00Z',
-    status: 'input_only',
-    lessonStepsCount: 2,
-    speakers: ['teacher'],
-    visualFunctions: ['timelineVisual'],
-    hasVideo: false,
-    videoFiles: []
+const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL;
+
+async function getAuthHeaders() {
+  const cookieStore = cookies();
+  const token = cookieStore.get('auth-token')?.value;
+  
+  if (!token) {
+    return null;
   }
-];
+  
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
-    // In a real application, you would:
-    // 1. Get the user ID from the session/auth token
-    // 2. Query the database for projects belonging to that user
-    // 3. Return the user's projects
+    const authHeaders = await getAuthHeaders();
     
-    return NextResponse.json({
-      success: true,
-      projects: mockProjects
+    if (!authHeaders) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Proxy to backend video generation service
+    const response = await fetch(`${API_URL}/api/video/projects`, {
+      method: 'GET',
+      headers: authHeaders,
     });
 
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: data.detail || 'Failed to fetch projects' },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json(data);
+
   } catch (error) {
-    console.error('Error loading projects:', error);
+    console.error('Error in projects route:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to load projects' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
