@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const project = scriptData.data;
     const videoResponse = await fetch(`${API_URL}/api/video/generate-video`, {
       method: 'POST',
-      headers: authHeaders,
+      headers: authHeaders.headers,
       body: JSON.stringify({
         projectId: project.projectId,
         slides: project.lessonSteps || []
