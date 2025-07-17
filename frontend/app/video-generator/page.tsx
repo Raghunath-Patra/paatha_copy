@@ -13,15 +13,45 @@ import VideoScriptEditor from '../components/video-generator/VideoScriptEditor';
 import VideoGeneration from '../components/video-generator/VideoGeneration';
 import VideoProjectBrowser from '../components/video-generator/VideoProjectBrowser';
 
+// Type definitions
+type WorkflowMode = 'simple' | 'advanced';
+type TabType = 'projects' | 'create';
+
+interface Project {
+  projectId: string;
+  title: string;
+  createdAt: string;
+  status: string;
+  lessonStepsCount?: number;
+  speakers?: string[];
+  visualFunctions?: string[];
+  hasVideo?: boolean;
+  videoFiles?: string[];
+}
+
+interface Slide {
+  title: string;
+  speaker: string;
+  content: string;
+  content2?: string;
+  narration?: string;
+  visualDuration?: number;
+  isComplex?: boolean;
+  visual?: {
+    type: string;
+    params: any[];
+  };
+}
+
 export default function VideoGeneratorPage() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useSupabaseAuth();
-  const [currentTab, setCurrentTab] = useState('projects');
+  const [currentTab, setCurrentTab] = useState<TabType>('projects');
   const [currentStep, setCurrentStep] = useState(1);
-  const [workflowMode, setWorkflowMode] = useState<'simple' | 'advanced'>('simple');
-  const [currentProject, setCurrentProject] = useState(null);
-  const [slides, setSlides] = useState([]);
-  const [allProjects, setAllProjects] = useState<any[]>([]); // Fix: Explicitly type as any[]
+  const [workflowMode, setWorkflowMode] = useState<WorkflowMode>('simple');
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -81,7 +111,7 @@ export default function VideoGeneratorPage() {
             <VideoProjectBrowser
               projects={allProjects}
               setProjects={setAllProjects}
-              onProjectSelect={(project) => {
+              onProjectSelect={(project: Project) => {
                 setCurrentProject(project);
                 setCurrentTab('create');
                 setCurrentStep(2);
@@ -126,7 +156,7 @@ export default function VideoGeneratorPage() {
               {currentStep === 1 && (
                 <VideoContentInput
                   workflowMode={workflowMode}
-                  onScriptGenerated={(project, projectSlides) => {
+                  onScriptGenerated={(project: Project, projectSlides: Slide[]) => {
                     setCurrentProject(project);
                     setSlides(projectSlides);
                     setCurrentStep(2);
