@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import Navigation from '../components/navigation/Navigation';
 import EnhancedSpinner from '../components/common/EnhancedSpinner';
+import { getAuthHeaders } from '../utils/auth';
 
-// Import video generation components (we'll create these)
+// Import video generation components
 import VideoWorkflowSelector from '../components/video-generator/VideoWorkflowSelector';
 import VideoContentInput from '../components/video-generator/VideoContentInput';
 import VideoScriptEditor from '../components/video-generator/VideoScriptEditor';
@@ -17,6 +18,7 @@ import VideoProjectBrowser from '../components/video-generator/VideoProjectBrows
 type WorkflowMode = 'simple' | 'advanced';
 type TabType = 'projects' | 'create';
 
+// Updated Project interface for project browser
 interface Project {
   projectId: string;
   title: string;
@@ -27,6 +29,16 @@ interface Project {
   visualFunctions?: string[];
   hasVideo?: boolean;
   videoFiles?: string[];
+}
+
+// Full project interface for script editor
+interface FullProject {
+  id: string;
+  title: string;
+  lessonSteps: any[];
+  speakers: any;
+  visualFunctions: any;
+  status: string;
 }
 
 interface Slide {
@@ -49,9 +61,12 @@ export default function VideoGeneratorPage() {
   const [currentTab, setCurrentTab] = useState<TabType>('projects');
   const [currentStep, setCurrentStep] = useState(1);
   const [workflowMode, setWorkflowMode] = useState<WorkflowMode>('simple');
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [currentProject, setCurrentProject] = useState<FullProject | null>(null);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -60,10 +75,127 @@ export default function VideoGeneratorPage() {
     }
   }, [user, authLoading, router]);
 
-  if (authLoading) {
+  // Function to fetch full project details
+  const fetchFullProject = async (projectId: string): Promise<FullProject | null> => {
+    try {
+      setLoading(true);
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        return null;
+      }
+
+      const response = await fetch(`${API_URL}/api/project/${projectId}`, {
+        headers
+      });
+      
+      const result = await response.json();
+      
+      if (result.success && result.project) {
+        const { project, speakers, visualFunctions, lessonSteps } = result.project;
+        
+        // Transform the data to match VideoScriptEditor expectations
+        const speakersObj: any = {};
+        speakers.forEach((speaker: any) => {
+          speakersObj[speaker.speaker_key] = {
+            voice: speaker.voice,
+            model: speaker.model,
+            name: speaker.name,
+            color: speaker.color,
+            gender: speaker.gender
+          };
+        });
+        
+        const visualFunctionsObj: any = {};
+        visualFunctions.forEach((vf: any) => {
+          try {
+            // Try to reconstruct the function from the stored string
+            visualFunctionsObj[vf.function_name] = new Function('ctx', 'param1', 'param2', 'param3', 
+              vf.function_code.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '')
+            );
+          } catch (error) {
+            console.error(`Error reconstructing function ${vf.function_name}:`, error);
+          }
+        });
+        
+        const transformedLessonSteps = lessonSteps.map((step: any) => ({
+          speaker: step.speaker,
+          title: step.title,
+          content: step.content,
+          content2: step.content2,
+          narration: step.narration,
+          visualDuration: step.visual_duration,
+          isComplex: step.is_complex,
+          visual: step.visual_type ? {
+            type: step.visual_type,
+            params: step.visual_params || []
+          } : null
+        }));
+        
+        return {
+          id: project.id,
+          title: project.title,
+          lessonSteps: transformedLessonSteps,
+          speakers: speakersObj,
+          visualFunctions: visualFunctionsObj,
+          status: project.status
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching full project:', error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle project selection from browser
+  const handleProjectSelect = async (project: Project) => {
+    console.log('Selected project:', project);
+    
+    // Fetch full project details
+    const fullProject = await fetchFullProject(project.projectId);
+    
+    if (fullProject) {
+      setCurrentProject(fullProject);
+      setSlides(fullProject.lessonSteps);
+      setCurrentTab('create');
+      
+      // Determine which step to go to based on project status
+      if (fullProject.status === 'input_only') {
+        setCurrentStep(1);
+      } else if (fullProject.status === 'script_ready' || fullProject.status === 'completed') {
+        setCurrentStep(2);
+      }
+    } else {
+      console.error('Failed to fetch full project details');
+    }
+  };
+
+  // Handle script generation completion
+  const handleScriptGenerated = (project: any, projectSlides: Slide[]) => {
+    // Transform the generated project to match FullProject structure
+    const fullProject: FullProject = {
+      id: project.id,
+      title: project.title,
+      lessonSteps: projectSlides,
+      speakers: project.speakers || {},
+      visualFunctions: project.visualFunctions || {},
+      status: 'script_ready'
+    };
+    
+    setCurrentProject(fullProject);
+    setSlides(projectSlides);
+    setCurrentStep(2);
+  };
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
-        <EnhancedSpinner size="lg" message="Loading video generator..." />
+        <EnhancedSpinner size="lg" message={loading ? "Loading project..." : "Loading video generator..."} />
       </div>
     );
   }
@@ -94,7 +226,12 @@ export default function VideoGeneratorPage() {
             📁 My Projects
           </button>
           <button
-            onClick={() => setCurrentTab('create')}
+            onClick={() => {
+              setCurrentTab('create');
+              setCurrentStep(1);
+              setCurrentProject(null);
+              setSlides([]);
+            }}
             className={`px-6 py-3 rounded-lg font-semibold transition-all ${
               currentTab === 'create'
                 ? 'bg-red-500 text-white shadow-md'
@@ -111,11 +248,7 @@ export default function VideoGeneratorPage() {
             <VideoProjectBrowser
               projects={allProjects}
               setProjects={setAllProjects}
-              onProjectSelect={(project: Project) => {
-                setCurrentProject(project);
-                setCurrentTab('create');
-                setCurrentStep(2);
-              }}
+              onProjectSelect={handleProjectSelect}
             />
           ) : (
             <div className="p-6">
@@ -156,11 +289,7 @@ export default function VideoGeneratorPage() {
               {currentStep === 1 && (
                 <VideoContentInput
                   workflowMode={workflowMode}
-                  onScriptGenerated={(project: Project, projectSlides: Slide[]) => {
-                    setCurrentProject(project);
-                    setSlides(projectSlides);
-                    setCurrentStep(2);
-                  }}
+                  onScriptGenerated={handleScriptGenerated}
                   onCompleteVideoGenerated={() => {
                     // Refresh projects and show success
                     setCurrentTab('projects');
