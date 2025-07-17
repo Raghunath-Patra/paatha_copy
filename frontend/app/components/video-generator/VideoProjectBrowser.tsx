@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getAuthHeaders } from '../../utils/auth';
 
 interface VideoProjectBrowserProps {
   projects: any[];
@@ -27,7 +28,17 @@ export default function VideoProjectBrowser({
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/video-generator/projects`);
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        setProjects([]);
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/video-generator/projects`, {
+        headers // ✅ Add the auth headers
+      });
       const result = await response.json();
       
       if (result.success) {
