@@ -64,7 +64,7 @@ export async function DELETE(
     // Proxy to backend
     const response = await fetch(`${API_URL}/api/video/projects/${projectId}`, {
       method: 'DELETE',
-      headers: authHeaders,
+      headers: authHeaders.headers,
     });
 
     const data = await response.json();
