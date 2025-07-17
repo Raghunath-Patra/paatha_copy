@@ -20,6 +20,8 @@ export default function VideoGeneration({
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   const generateVideo = async () => {
     setIsGenerating(true);
     setGenerationProgress(0);
@@ -37,7 +39,7 @@ export default function VideoGeneration({
         });
       }, 500);
 
-      const response = await fetch('/api/video-generator/generate-video', {
+      const response = await fetch(`${API_URL}/api/video-generator/generate-video`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

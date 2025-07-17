@@ -18,6 +18,8 @@ export default function VideoProjectBrowser({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     loadProjects();
   }, []);
@@ -25,7 +27,7 @@ export default function VideoProjectBrowser({
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/video-generator/projects');
+      const response = await fetch(`${API_URL}/api/video-generator/projects`);
       const result = await response.json();
       
       if (result.success) {
@@ -58,7 +60,7 @@ export default function VideoProjectBrowser({
 
   const handleDeleteProject = async (projectId: string) => {
     try {
-      const response = await fetch(`/api/video-generator/projects/${projectId}`, {
+      const response = await fetch(`${API_URL}/api/video-generator/projects/${projectId}`, {
         method: 'DELETE'
       });
       

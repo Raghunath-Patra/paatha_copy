@@ -17,6 +17,7 @@ export default function VideoContentInput({
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -39,7 +40,7 @@ export default function VideoContentInput({
     setStatus({ type: 'info', message: 'Generating complete video... This may take 5-15 minutes.' });
 
     try {
-      const response = await fetch('/api/video-generator/generate-complete', {
+      const response = await fetch(`${API_URL}/api/video-generator/generate-complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +76,7 @@ export default function VideoContentInput({
     setStatus({ type: 'info', message: 'Generating script and visuals...' });
 
     try {
-      const response = await fetch('/api/video-generator/generate-script', {
+      const response = await fetch(`${API_URL}/api/video-generator/generate-script`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
