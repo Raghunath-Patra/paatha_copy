@@ -109,22 +109,19 @@ export default function VideoProjectBrowser({
   };
 
   // Helper function to map status to display info
-  function getStatusInfo(status: string) {
-    switch (status) {
-      case 'completed':
-        return { text: 'Completed', color: 'bg-green-100 text-green-800', emoji: '✅' };
-      case 'script_ready':
-        return { text: 'Script Ready', color: 'bg-yellow-100 text-yellow-800', emoji: '📝' };
-      case 'input_only':
-        return { text: 'Input Only', color: 'bg-blue-100 text-blue-800', emoji: '🛠️' };
-      case 'processing':
-        return { text: 'Processing', color: 'bg-purple-100 text-purple-800', emoji: '⏳' };
-      case 'failed':
-        return { text: 'Failed', color: 'bg-red-100 text-red-800', emoji: '❌' };
-      default:
-        return { text: status, color: 'bg-gray-100 text-gray-800', emoji: '📁' };
-    }
-  }
+  const getStatusInfo = (status: string) => {
+    const statusMap = {
+      'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-green-100 text-green-800' },
+      'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-yellow-100 text-yellow-800' },
+      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-blue-100 text-blue-800' },
+      'empty': { text: 'Empty', emoji: '❓', color: 'bg-gray-100 text-gray-800' }
+    };
+    return statusMap[status as keyof typeof statusMap] || statusMap.empty;
+  };
+
+  const handleProjectClick = (project: any) => {
+    setSelectedProject(project);
+  };
 
   if (loading) {
     return (
