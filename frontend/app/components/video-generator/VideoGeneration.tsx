@@ -48,7 +48,7 @@ export default function VideoGeneration({
         });
       }, 500);
 
-      const response = await fetch(`${API_URL}/api/generate-video`, {
+      const response = await fetch(`${API_URL}/api/video-generator/generate-video`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -64,7 +64,7 @@ export default function VideoGeneration({
       if (result.success) {
         setStatus({ type: 'success', message: 'Video generated successfully!' });
         // Updated to construct video URL from server response
-        setVideoUrl(`${API_URL}/api/video/${result.projectId}`);
+        setVideoUrl(`${API_URL}/api/video-generator/video/${result.projectId}`);
         
         // Delay before calling onVideoGenerated to show success state
         setTimeout(() => {
@@ -87,7 +87,7 @@ export default function VideoGeneration({
   const downloadVideo = () => {
     if (videoUrl) {
       // Updated to use download endpoint
-      const downloadUrl = `${API_URL}/api/download/${project.id}`;
+      const downloadUrl = `${API_URL}/api/video-generator/download/${project.id}`;
       window.open(downloadUrl, '_blank');
     }
   };

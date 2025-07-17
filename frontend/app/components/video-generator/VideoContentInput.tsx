@@ -49,7 +49,7 @@ export default function VideoContentInput({
         return;
       }
 
-      const scriptResponse = await fetch(`${API_URL}/api/generate-script`, {
+      const scriptResponse = await fetch(`${API_URL}/api/video-generator/generate-script`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ content }),
@@ -62,7 +62,7 @@ export default function VideoContentInput({
       }
 
       // Then generate video
-      const videoResponse = await fetch(`${API_URL}/api/generate-video`, {
+      const videoResponse = await fetch(`${API_URL}/api/video-generator/generate-video`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ projectId: scriptResult.project.id }),
@@ -103,7 +103,7 @@ export default function VideoContentInput({
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/generate-script`, {
+      const response = await fetch(`${API_URL}/api/video-generator/generate-script`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ content }),

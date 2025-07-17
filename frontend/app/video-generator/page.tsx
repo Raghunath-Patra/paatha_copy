@@ -86,7 +86,7 @@ export default function VideoGeneratorPage() {
         return null;
       }
 
-      const response = await fetch(`${API_URL}/api/project/${projectId}`, {
+      const response = await fetch(`${API_URL}/api/video-generator/project/${projectId}`, {
         headers
       });
       

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // For complete generation, we'll do script + video in sequence
     // First generate script
-    const scriptResponse = await fetch(`${API_URL}/api/video/generate-script`, {
+    const scriptResponse = await fetch(`${API_URL}/api/video-generator/generate-script`, {
       method: 'POST',
       headers: authHeaders.headers,
       body: JSON.stringify({ content: body.content }),
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Then generate video from the script
     const project = scriptData.data;
-    const videoResponse = await fetch(`${API_URL}/api/video/generate-video`, {
+    const videoResponse = await fetch(`${API_URL}/api/video-generator/generate-video`, {
       method: 'POST',
       headers: authHeaders.headers,
       body: JSON.stringify({

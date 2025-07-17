@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Proxy to backend video generation service
-    const response = await fetch(`${API_URL}/api/video/generate-video`, {
+    const response = await fetch(`${API_URL}/api/video-generator/generate-video`, {
       method: 'POST',
       headers: authHeaders.headers,
       body: JSON.stringify(body),

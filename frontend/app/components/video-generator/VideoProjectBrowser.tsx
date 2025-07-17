@@ -52,7 +52,7 @@ export default function VideoProjectBrowser({
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/projects`, {
+      const response = await fetch(`${API_URL}/api/video-generator/projects`, {
         headers
       });
       const result = await response.json();
@@ -83,7 +83,7 @@ export default function VideoProjectBrowser({
       }
 
       // Updated endpoint
-      const response = await fetch(`${API_URL}/api/project/${projectId}`, {
+      const response = await fetch(`${API_URL}/api/video-generator/project/${projectId}`, {
         method: 'DELETE',
         headers
       });
@@ -100,12 +100,12 @@ export default function VideoProjectBrowser({
 
   const handlePlayVideo = (projectId: string) => {
     // Updated endpoint
-    window.open(`${API_URL}/api/video/${projectId}`, '_blank');
+    window.open(`${API_URL}/api/video-generator/video/${projectId}`, '_blank');
   };
 
   const handleDownloadVideo = (projectId: string) => {
     // Updated endpoint
-    window.open(`${API_URL}/api/download/${projectId}`, '_blank');
+    window.open(`${API_URL}/api/video-generator/download/${projectId}`, '_blank');
   };
 
   // Helper function to map status to display info
