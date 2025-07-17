@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { getAuthHeaders } from '../../utils/auth';
 
 interface VideoContentInputProps {
   workflowMode: 'simple' | 'advanced';
@@ -76,11 +77,16 @@ export default function VideoContentInput({
     setStatus({ type: 'info', message: 'Generating script and visuals...' });
 
     try {
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+            
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        return;
+      }
       const response = await fetch(`${API_URL}/api/video-generator/generate-script`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({ content }),
       });
 
