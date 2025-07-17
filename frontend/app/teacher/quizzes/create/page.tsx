@@ -165,14 +165,36 @@ export default function CreateQuiz() {
     }));
   };
 
+  // FIXED: Better back navigation logic
   const handleBackNavigation = () => {
-    // If we came from a specific course, go back to that course
+    // Check if we have a course ID and if it's a valid navigation
     if (courseIdFromUrl) {
-      router.push(`/teacher/courses/${courseIdFromUrl}`);
+      // Use router.replace to avoid adding to history stack
+      router.replace(`/teacher/courses/${courseIdFromUrl}`);
     } else {
-      router.back();
+      // If no course ID, go to teacher dashboard
+      router.replace('/teacher/dashboard');
     }
   };
+
+  // FIXED: Handle browser back button to prevent infinite loop
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent default back navigation if we're coming from a course page
+      if (courseIdFromUrl) {
+        event.preventDefault();
+        router.replace(`/teacher/courses/${courseIdFromUrl}`);
+      }
+    };
+
+    // Add event listener for browser back button
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [courseIdFromUrl, router]);
 
   if (loadingCourses) {
     return (
@@ -221,7 +243,8 @@ export default function CreateQuiz() {
           <div className="flex items-center space-x-4">
             <button
               onClick={handleBackNavigation}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Go back to course"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -464,14 +487,14 @@ export default function CreateQuiz() {
               <button
                 type="button"
                 onClick={handleBackNavigation}
-                className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 {loading ? 'Creating Quiz...' : 'Create Quiz & Add Questions'}
               </button>
