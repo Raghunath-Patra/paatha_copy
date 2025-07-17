@@ -21,7 +21,7 @@ export default function VideoGeneratorPage() {
   const [workflowMode, setWorkflowMode] = useState('simple');
   const [currentProject, setCurrentProject] = useState(null);
   const [slides, setSlides] = useState([]);
-  const [allProjects, setAllProjects] = useState([]);
+  const [allProjects, setAllProjects] = useState<any[]>([]); // Fix: Explicitly type as any[]
 
   // Redirect to login if not authenticated
   useEffect(() => {
