@@ -40,6 +40,11 @@ export default function VideoScriptEditor({
   const [visualFunctions, setVisualFunctions] = useState<any[]>([]);
   const [aiModifyType, setAiModifyType] = useState<'content' | 'visual'>('content');
 
+  // Add these new state variables for visual functions tab
+  const [selectedVisualFunction, setSelectedVisualFunction] = useState<any>(null);
+  const [visualPreviewCanvas, setVisualPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
+  const visualCanvasRef = useRef<HTMLCanvasElement>(null);
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Initialize canvas for preview
@@ -51,7 +56,20 @@ export default function VideoScriptEditor({
       setPreviewCanvas(canvas);
       updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
     }
+    if (visualCanvasRef.current) {
+      const canvas = visualCanvasRef.current;
+      canvas.width = 1000;
+      canvas.height = 700;
+      setVisualPreviewCanvas(canvas);
+    }
   }, []);
+
+  // Update visual preview when selected function changes
+  useEffect(() => {
+    if (visualPreviewCanvas && selectedVisualFunction && activeTab === 'visuals') {
+      updateVisualPreview(selectedVisualFunction);
+    }
+  }, [selectedVisualFunction, visualPreviewCanvas, activeTab]);
 
   // Update preview when slide changes
   useEffect(() => {
@@ -128,6 +146,51 @@ export default function VideoScriptEditor({
 
     // Draw avatars
     drawAvatars(ctx, slide.speaker);
+  };
+
+  const updateVisualPreview = (visualFunction: any) => {
+    if (!visualPreviewCanvas) return;
+
+    const ctx = visualPreviewCanvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.fillStyle = '#f8f9fa';
+    ctx.fillRect(0, 0, 1000, 700);
+
+    // Draw background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1000, 700);
+
+    // Draw title
+    ctx.fillStyle = '#6b46c1';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 500, 40);
+
+    // Draw function area border
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(200, 200, 600, 400);
+
+    // Execute the visual function
+    try {
+      const func = eval(`(${visualFunction.function_code})`);
+      func(ctx, 'param1', 'param2', 'param3'); // Default test parameters
+    } catch (error) {
+      console.error('Error executing visual function:', error);
+      ctx.fillStyle = '#ef4444';
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Error in visual function', 500, 400);
+      ctx.fillText(
+        typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string'
+          ? (error as any).message
+          : 'Unknown error',
+        500,
+        420
+      );
+    }
   };
 
   const getBackgroundColor = (speaker: string) => {
@@ -314,6 +377,71 @@ export default function VideoScriptEditor({
 
     } catch (error) {
       console.error('Error in AI chat:', error);
+      setUpdateStatus({ 
+        type: 'error', 
+        message: `AI modification failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    }
+  };
+
+
+  const handleVisualAIChat = async () => {
+    if (!chatMessage.trim() || !selectedVisualFunction) return;
+    
+    try {
+      setUpdateStatus({ type: 'info', message: 'AI is modifying the visual function...' });
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/visual-function/${selectedVisualFunction.function_name}/ai-modify`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          currentCode: selectedVisualFunction.function_code,
+          modification: chatMessage
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'AI modification failed');
+      }
+
+      if (result.updatedCode) {
+        // Update the selected visual function
+        const updatedFunction = {
+          ...selectedVisualFunction,
+          function_code: result.updatedCode
+        };
+        setSelectedVisualFunction(updatedFunction);
+        
+        // Update the visual functions list
+        setVisualFunctions(prev => 
+          prev.map(vf => 
+            vf.function_name === selectedVisualFunction.function_name 
+              ? { ...vf, function_code: result.updatedCode }
+              : vf
+          )
+        );
+        
+        // Update preview
+        updateVisualPreview(updatedFunction);
+        
+        setUpdateStatus({ 
+          type: 'success', 
+          message: 'AI modifications applied! Review and save to confirm changes.' 
+        });
+      }
+      
+      setChatMessage('');
+
+    } catch (error) {
+      console.error('Error in visual AI chat:', error);
       setUpdateStatus({ 
         type: 'error', 
         message: `AI modification failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
@@ -554,7 +682,15 @@ export default function VideoScriptEditor({
                     </div>
                   ) : (
                     visualFunctions.map((vf) => (
-                      <div key={vf.function_name} className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                      <div 
+                        key={vf.function_name} 
+                        onClick={() => setSelectedVisualFunction(vf)}
+                        className={`border rounded-lg p-4 transition-colors cursor-pointer ${
+                          selectedVisualFunction?.function_name === vf.function_name
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-200 hover:border-purple-300'
+                        }`}
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex-1">
                             <h5 className="font-medium text-gray-800">{vf.function_name}</h5>
@@ -563,7 +699,10 @@ export default function VideoScriptEditor({
                             </p>
                           </div>
                           <button
-                            onClick={() => setEditingVisualFunction({name: vf.function_name, code: vf.function_code})}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingVisualFunction({name: vf.function_name, code: vf.function_code});
+                            }}
                             className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
                           >
                             ✏️ Edit
@@ -594,24 +733,39 @@ export default function VideoScriptEditor({
         {/* Right Panel - Preview & Editor */}
         <div className="bg-white rounded-lg p-6 shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">🖼️ Slide Preview</h3>
+            <h3 className="text-lg font-semibold">
+              {activeTab === 'slides' ? '🖼️ Slide Preview' : '🎨 Visual Function Preview'}
+            </h3>
             {activeTab === 'slides' && (
               <span className="text-sm text-gray-600">
                 Slide {currentSlideIndex + 1} of {slides.length}
+              </span>
+            )}
+            {activeTab === 'visuals' && selectedVisualFunction && (
+              <span className="text-sm text-purple-600">
+                {selectedVisualFunction.function_name}
               </span>
             )}
           </div>
           
           {/* Canvas Preview */}
           <div className="mb-4 border-2 border-gray-200 rounded-lg overflow-hidden">
-            <canvas
-              ref={canvasRef}
-              style={{ width: '100%', height: 'auto', maxHeight: '350px' }}
-              className="block"
-            />
+            {activeTab === 'slides' ? (
+              <canvas
+                ref={canvasRef}
+                style={{ width: '100%', height: 'auto', maxHeight: '350px' }}
+                className="block"
+              />
+            ) : (
+              <canvas
+                ref={visualCanvasRef}
+                style={{ width: '100%', height: 'auto', maxHeight: '350px' }}
+                className="block"
+              />
+            )}
           </div>
 
-          {/* Content Editor - Only show for slides tab */}
+          {/* Content Editor - For slides tab */}
           {activeTab === 'slides' && (
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-medium mb-3">✏️ Edit Content</h4>
@@ -652,7 +806,7 @@ export default function VideoScriptEditor({
                 )}
               </div>
 
-              {/* Enhanced AI Chat */}
+              {/* Enhanced AI Chat for Slides */}
               {showChat && (
                 <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-white">
                   <div className="text-sm text-gray-600 mb-3">
@@ -742,27 +896,89 @@ export default function VideoScriptEditor({
             </div>
           )}
 
-          {/* Visual Functions Preview - Only show for visuals tab */}
+          {/* Visual Function Editor - For visuals tab */}
           {activeTab === 'visuals' && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-medium mb-3">🎨 Function Preview</h4>
-              <div className="text-sm text-gray-600 mb-3">
-                Select a visual function from the left panel to see its details and edit it.
-              </div>
-              {visualFunctions.length > 0 && (
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-sm text-gray-600">
-                    Total Functions: <span className="font-medium">{visualFunctions.length}</span>
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Functions in use: <span className="font-medium">
-                      {Object.values(visualFunctions.reduce((acc: any, vf) => {
-                        const usageCount = slides.filter(slide => slide.visual?.type === vf.function_name).length;
-                        if (usageCount > 0) acc[vf.function_name] = true;
-                        return acc;
-                      }, {})).length}
-                    </span>
-                  </p>
+            <div className="bg-purple-50 rounded-lg p-4">
+              {selectedVisualFunction ? (
+                <>
+                  <h4 className="font-medium mb-3">🎨 Edit Visual Function</h4>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Function Name</label>
+                    <input
+                      type="text"
+                      value={selectedVisualFunction.function_name}
+                      readOnly
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm bg-gray-100"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Function Code</label>
+                    <textarea
+                      value={selectedVisualFunction.function_code}
+                      onChange={(e) => setSelectedVisualFunction({
+                        ...selectedVisualFunction,
+                        function_code: e.target.value
+                      })}
+                      className="w-full h-32 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-purple-500 focus:outline-none"
+                      placeholder="Edit the visual function code..."
+                    />
+                  </div>
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
+                      disabled={isUpdating}
+                      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300"
+                    >
+                      {isUpdating ? '⏳ Saving...' : '💾 Save Function'}
+                    </button>
+                    <button
+                      onClick={() => setShowChat(!showChat)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      🤖 AI Chat
+                    </button>
+                    <button
+                      onClick={() => updateVisualPreview(selectedVisualFunction)}
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      🔄 Refresh Preview
+                    </button>
+                  </div>
+
+                  {/* AI Chat for Visual Functions */}
+                  {showChat && (
+                    <div className="mt-4 border border-purple-300 rounded-lg p-3 bg-white">
+                      <div className="text-sm text-purple-600 mb-3">
+                        Ask AI to modify the visual function code...
+                      </div>
+                      <div className="text-xs text-gray-500 mb-2">
+                        e.g., "Add more colors", "Make it bigger", "Add animation", "Draw a bar chart instead"
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={chatMessage}
+                          onChange={(e) => setChatMessage(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleVisualAIChat()}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-purple-500 focus:outline-none"
+                          placeholder="Describe how you want to modify this visual function..."
+                        />
+                        <button
+                          onClick={handleVisualAIChat}
+                          disabled={!chatMessage.trim()}
+                          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          🎨 Modify
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-4xl mb-2">🎨</div>
+                  <h4 className="font-medium mb-2">Select a Visual Function</h4>
+                  <p className="text-sm">Choose a function from the left panel to preview and edit it here.</p>
                 </div>
               )}
             </div>
