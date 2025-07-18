@@ -34,6 +34,13 @@ export default function VideoScriptEditor({
   const [updateStatus, setUpdateStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [showVisualEditor, setShowVisualEditor] = useState(false);
+  const [editingVisualFunction, setEditingVisualFunction] = useState<{name: string, code: string} | null>(null);
+  const [showSpeakerEditor, setShowSpeakerEditor] = useState(false);
+  const [visualFunctions, setVisualFunctions] = useState<any[]>([]);
+  const [aiModifyType, setAiModifyType] = useState<'content' | 'visual'>('content');
+
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Initialize canvas for preview
@@ -205,7 +212,7 @@ export default function VideoScriptEditor({
         originalSlide.narration !== updatedSlide.narration || 
         originalSlide.speaker !== updatedSlide.speaker;
 
-      const response = await fetch(`${API_URL}/api/project/${project.id}/step/${currentSlideIndex + 1}`, {
+      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/step/${currentSlideIndex + 1}`, {
         method: 'PUT',
         headers: headers,
         body: JSON.stringify({
@@ -251,11 +258,12 @@ export default function VideoScriptEditor({
     }
   };
 
+  // Replace the existing handleAIChat method with this enhanced version:
   const handleAIChat = async () => {
     if (!chatMessage.trim()) return;
     
     try {
-      setUpdateStatus({ type: 'info', message: 'AI is processing your request...' });
+      setUpdateStatus({ type: 'info', message: `AI is processing your ${aiModifyType} modification...` });
 
       const { headers, isAuthorized } = await getAuthHeaders();
       
@@ -263,13 +271,14 @@ export default function VideoScriptEditor({
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`${API_URL}/api/project/${project.id}/step/${currentSlideIndex + 1}/ai-modify`, {
+      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/step/${currentSlideIndex + 1}/ai-modify`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
           currentSlide: JSON.parse(editingSlide),
           modification: chatMessage,
-          availableVisualFunctions: Object.keys(project.visualFunctions || {})
+          availableVisualFunctions: Object.keys(project.visualFunctions || {}),
+          modifyType: aiModifyType
         })
       });
 
@@ -279,12 +288,30 @@ export default function VideoScriptEditor({
         throw new Error(result.error || 'AI modification failed');
       }
 
-      // Update the editing slide with AI suggestions
-      setEditingSlide(JSON.stringify(result.modifiedSlide, null, 2));
-      setUpdateStatus({ 
-        type: 'success', 
-        message: 'AI modifications applied! Review and save to confirm changes.' 
-      });
+      if (aiModifyType === 'visual' && result.updatedVisualFunction) {
+        // Visual function was updated
+        setUpdateStatus({ 
+          type: 'success', 
+          message: `AI updated the visual function "${result.updatedVisualFunction.name}"! The changes are saved and will appear in the preview.` 
+        });
+        
+        // Update the visual functions in project (if you're tracking them locally)
+        if (project.visualFunctions) {
+          project.visualFunctions[result.updatedVisualFunction.name] = eval(`(${result.updatedVisualFunction.code})`);
+        }
+        
+        // Refresh the preview to show the updated visual
+        updateSlidePreview(JSON.parse(editingSlide), currentSlideIndex);
+        
+      } else if (result.modifiedSlide) {
+        // Slide content was updated
+        setEditingSlide(JSON.stringify(result.modifiedSlide, null, 2));
+        setUpdateStatus({ 
+          type: 'success', 
+          message: 'AI modifications applied! Review and save to confirm changes.' 
+        });
+      }
+      
       setChatMessage('');
 
     } catch (error) {
@@ -304,7 +331,7 @@ export default function VideoScriptEditor({
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`${API_URL}/api/project/${project.id}/export-pdf`, {
+      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/export-pdf`, {
         method: 'GET',
         headers: headers
       });
@@ -332,6 +359,87 @@ export default function VideoScriptEditor({
       });
     }
   };
+
+  const loadVisualFunctions = async () => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) return;
+
+      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/visual-functions`, {
+        method: 'GET',
+        headers: headers
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setVisualFunctions(result.visualFunctions);
+      }
+    } catch (error) {
+      console.error('Error loading visual functions:', error);
+    }
+  };
+
+  const saveVisualFunction = async (functionName: string, functionCode: string) => {
+    try {
+      setIsUpdating(true);
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) throw new Error('Authentication required');
+
+      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/visual-function/${functionName}`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify({ functionCode })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+
+      setUpdateStatus({ type: 'success', message: 'Visual function updated successfully!' });
+      await loadVisualFunctions(); // Reload functions
+      setEditingVisualFunction(null);
+
+    } catch (error) {
+      setUpdateStatus({ 
+        type: 'error', 
+        message: `Failed to save visual function: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const deleteVisualFunction = async (functionName: string) => {
+    if (!confirm(`Are you sure you want to delete the visual function "${functionName}"?`)) return;
+
+    try {
+      setIsUpdating(true);
+      const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) throw new Error('Authentication required');
+
+      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/visual-function/${functionName}`, {
+        method: 'DELETE',
+        headers: headers
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+
+      setUpdateStatus({ type: 'success', message: 'Visual function deleted successfully!' });
+      await loadVisualFunctions();
+
+    } catch (error) {
+      setUpdateStatus({ 
+        type: 'error', 
+        message: `Failed to delete visual function: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  useEffect(() => {
+    loadVisualFunctions();
+  }, [project.id]);
 
   // Initialize first slide
   useEffect(() => {
@@ -443,11 +551,49 @@ export default function VideoScriptEditor({
             </div>
 
             {/* AI Chat */}
+            {/* Enhanced AI Chat */}
             {showChat && (
               <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-white">
-                <div className="text-sm text-gray-600 mb-2">
-                  Ask AI to modify the visual or content...
+                <div className="text-sm text-gray-600 mb-3">
+                  Ask AI to modify the content or visual function...
                 </div>
+                
+                {/* AI Modification Type Selector */}
+                <div className="flex gap-2 mb-3">
+                  <button
+                    onClick={() => setAiModifyType('content')}
+                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                      aiModifyType === 'content'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    📝 Content
+                  </button>
+                  <button
+                    onClick={() => setAiModifyType('visual')}
+                    disabled={!JSON.parse(editingSlide).visual?.type}
+                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                      aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    🎨 Visual
+                  </button>
+                </div>
+                
+                {/* Help Text */}
+                <div className="text-xs text-gray-500 mb-2">
+                  {aiModifyType === 'content' 
+                    ? 'Modify slide title, content, narration, or speaker...'
+                    : JSON.parse(editingSlide).visual?.type
+                      ? `Modify the "${JSON.parse(editingSlide).visual.type}" visual function...`
+                      : 'No visual function in this slide'
+                  }
+                </div>
+                
+                {/* Chat Input */}
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -455,16 +601,30 @@ export default function VideoScriptEditor({
                     onChange={(e) => setChatMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAIChat()}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-red-500 focus:outline-none"
-                    placeholder="Describe your changes..."
+                    placeholder={
+                      aiModifyType === 'content' 
+                        ? "e.g., Make the explanation simpler, change speaker to teacher..."
+                        : "e.g., Add more colors, make the chart bigger, add animation..."
+                    }
                   />
                   <button
                     onClick={handleAIChat}
-                    disabled={!chatMessage.trim()}
+                    disabled={!chatMessage.trim() || (aiModifyType === 'visual' && !JSON.parse(editingSlide).visual?.type)}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    Send
+                    {aiModifyType === 'content' ? '📝 Modify' : '🎨 Edit Visual'}
                   </button>
                 </div>
+                
+                {/* Visual Function Info */}
+                {aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type && (
+                  <div className="mt-2 text-xs text-purple-600 bg-purple-50 p-2 rounded">
+                    <strong>Current visual:</strong> {JSON.parse(editingSlide).visual.type}
+                    {JSON.parse(editingSlide).visual.params && (
+                      <span> (params: {JSON.stringify(JSON.parse(editingSlide).visual.params)})</span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -479,6 +639,109 @@ export default function VideoScriptEditor({
               </div>
             )}
           </div>
+            {/* Visual Functions Manager */}
+{showVisualEditor && (
+  <div className="mt-4 border border-gray-300 rounded-lg p-4 bg-white">
+    <div className="flex justify-between items-center mb-4">
+      <h4 className="font-medium">🎨 Visual Functions Manager</h4>
+      <button
+        onClick={() => setShowVisualEditor(false)}
+        className="text-gray-500 hover:text-gray-700"
+      >
+        ✕
+      </button>
+    </div>
+    
+    {/* Visual Functions List */}
+    <div className="space-y-3 max-h-60 overflow-y-auto mb-4">
+      {visualFunctions.map((vf) => (
+        <div key={vf.function_name} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <div>
+            <span className="font-medium">{vf.function_name}</span>
+            <p className="text-xs text-gray-600">
+              Updated: {new Date(vf.updated_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditingVisualFunction({name: vf.function_name, code: vf.function_code})}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => deleteVisualFunction(vf.function_name)}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+    
+    {/* Add New Function Button */}
+    <button
+      onClick={() => setEditingVisualFunction({name: '', code: 'function newVisual(ctx, param1, param2, param3) {\n  // Your visual code here\n  ctx.fillStyle = "#ff6b6b";\n  ctx.fillRect(250, 250, 200, 100);\n}'})}
+      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+    >
+      ➕ Add New Function
+    </button>
+  </div>
+)}
+
+{/* Visual Function Editor Modal */}
+{editingVisualFunction && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-6 w-4/5 max-w-4xl max-h-4/5 overflow-y-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">
+          {editingVisualFunction.name ? `Edit Function: ${editingVisualFunction.name}` : 'Create New Function'}
+        </h3>
+        <button
+          onClick={() => setEditingVisualFunction(null)}
+          className="text-gray-500 hover:text-gray-700 text-xl"
+        >
+          ✕
+        </button>
+      </div>
+      
+      {!editingVisualFunction.name && (
+        <input
+          type="text"
+          placeholder="Function name (e.g., drawChart)"
+          value={editingVisualFunction.name}
+          onChange={(e) => setEditingVisualFunction({...editingVisualFunction, name: e.target.value})}
+          className="w-full p-3 border border-gray-300 rounded-md mb-4 focus:border-red-500 focus:outline-none"
+        />
+      )}
+      
+      <textarea
+        value={editingVisualFunction.code}
+        onChange={(e) => setEditingVisualFunction({...editingVisualFunction, code: e.target.value})}
+        className="w-full h-80 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
+        placeholder="Enter your visual function code..."
+      />
+      
+      <div className="flex justify-end gap-3 mt-4">
+        <button
+          onClick={() => setEditingVisualFunction(null)}
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => editingVisualFunction.name && saveVisualFunction(editingVisualFunction.name, editingVisualFunction.code)}
+          disabled={!editingVisualFunction.name || !editingVisualFunction.code || isUpdating}
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          {isUpdating ? 'Saving...' : 'Save Function'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
         </div>
       </div>
 
@@ -490,6 +753,14 @@ export default function VideoScriptEditor({
         >
           ← Back to Input
         </button>
+
+        <button
+        onClick={() => setShowVisualEditor(!showVisualEditor)}
+        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+      >
+        🎨 Manage Visuals
+      </button>
+
         <button
           onClick={downloadPDF}
           className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
