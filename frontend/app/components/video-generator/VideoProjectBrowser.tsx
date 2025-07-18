@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getAuthHeaders } from '../../utils/auth';
+import VideoPlayerPopup from './VideoPlayerPopup';
 
 interface VideoProjectBrowserProps {
   projects: any[];
@@ -18,12 +19,28 @@ export default function VideoProjectBrowser({
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  
+  // Video player state
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState('');
+  const [currentVideoProject, setCurrentVideoProject] = useState<any>(null);
+  const [videoLoading, setVideoLoading] = useState<string | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     loadProjects();
   }, []);
+
+  // Cleanup blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
+        console.log('🧹 Cleaning up blob URL on unmount');
+        URL.revokeObjectURL(currentVideoUrl);
+      }
+    };
+  }, [currentVideoUrl]);
 
   // Update the project mapping to handle the database structure
   const transformProjectForFrontend = (project: any) => {
@@ -40,7 +57,7 @@ export default function VideoProjectBrowser({
     };
   };
 
-// Update the loadProjects function to transform the data
+  // Update the loadProjects function to transform the data
   const loadProjects = async () => {
     setLoading(true);
     try {
@@ -98,57 +115,75 @@ export default function VideoProjectBrowser({
     }
   };
 
-  const handlePlayVideo = async (projectId: string) => {
+  // Updated handlePlayVideo to use popup player
+  const handlePlayVideo = async (project: any) => {
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
       
       if (!isAuthorized) {
-        console.error('Not authenticated');
         alert('Please log in to play videos');
         return;
       }
 
-      // Create a form to submit with headers (for authenticated requests)
-      const response = await fetch(`${API_URL}/api/video-generator/stream/${projectId}`, {
+      setVideoLoading(project.projectId);
+      
+      console.log('🎬 Fetching authenticated video for project:', project.projectId);
+      
+      // Fetch video with authentication headers
+      const videoResponse = await fetch(`${API_URL}/api/video-generator/stream/${project.projectId}`, {
         method: 'GET',
-        headers
+        headers // Includes Authorization header
       });
-
-      if (response.ok) {
-        // Get the video blob and create object URL
-        const blob = await response.blob();
-        const videoUrl = URL.createObjectURL(blob);
+      
+      if (!videoResponse.ok) {
+        setVideoLoading(null);
+        console.error('Video fetch failed:', videoResponse.status);
         
-        // Open in new tab with video player
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Video Player - ${projectId}</title>
-              <style>
-                body { margin: 0; padding: 20px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-                video { max-width: 100%; max-height: 100%; }
-              </style>
-            </head>
-            <body>
-              <video controls autoplay>
-                <source src="${videoUrl}" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </body>
-            </html>
-          `);
+        if (videoResponse.status === 401 || videoResponse.status === 403) {
+          alert('Not authorized to access this video.');
+        } else if (videoResponse.status === 404) {
+          alert('Video not found. It may still be processing.');
+        } else {
+          alert('Failed to load video. Please try again.');
         }
-      } else {
-        console.error('Failed to load video');
-        alert('Failed to load video. Please try again.');
+        return;
       }
+      
+      console.log('✅ Video fetched successfully, creating blob URL');
+      
+      // Convert to blob and create object URL
+      const videoBlob = await videoResponse.blob();
+      const blobUrl = URL.createObjectURL(videoBlob);
+      
+      // Clean up any previous blob URL
+      if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(currentVideoUrl);
+      }
+      
+      // Open the SAME popup player with blob URL
+      setCurrentVideoUrl(blobUrl);           // ← Blob URL instead of direct URL
+      setCurrentVideoProject(project);
+      setShowVideoPlayer(true);              // ← Same popup opening
+      setVideoLoading(null);
+      
     } catch (error) {
-      console.error('Error playing video:', error);
-      alert('Error playing video. Please try again.');
+      console.error('❌ Error fetching authenticated video:', error);
+      setVideoLoading(null);
+      alert('Error loading video. Please check your connection.');
     }
+  };
+
+  // Close video player and cleanup (Updated for blob cleanup)
+  const handleCloseVideoPlayer = () => {
+    // Clean up blob URL to free memory
+    if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
+      console.log('🧹 Cleaning up blob URL on close');
+      URL.revokeObjectURL(currentVideoUrl);
+    }
+    
+    setShowVideoPlayer(false);
+    setCurrentVideoUrl('');
+    setCurrentVideoProject(null);
   };
 
   const handleDownloadVideo = async (projectId: string) => {
@@ -258,6 +293,7 @@ export default function VideoProjectBrowser({
         {projects.map((project) => {
           const statusInfo = getStatusInfo(project.status);
           const createdDate = new Date(project.createdAt).toLocaleDateString();
+          const isLoadingVideo = videoLoading === project.projectId;
 
           return (
             <div
@@ -291,10 +327,22 @@ export default function VideoProjectBrowser({
                 {project.status === 'completed' && (
                   <>
                     <button
-                      onClick={() => handlePlayVideo(project.projectId)}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                      onClick={() => handlePlayVideo(project)}
+                      disabled={isLoadingVideo}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        isLoadingVideo 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-500 hover:bg-green-600'
+                      } text-white`}
                     >
-                      ▶️ Play
+                      {isLoadingVideo ? (
+                        <>
+                          <span className="animate-spin inline-block mr-1">⏳</span>
+                          Loading...
+                        </>
+                      ) : (
+                        '▶️ Play'
+                      )}
                     </button>
                     <button
                       onClick={() => handleDownloadVideo(project.projectId)}
@@ -337,6 +385,17 @@ export default function VideoProjectBrowser({
           );
         })}
       </div>
+
+      {/* Video Player Popup */}
+      {showVideoPlayer && currentVideoProject && (
+        <VideoPlayerPopup
+          isOpen={showVideoPlayer}        
+          onClose={handleCloseVideoPlayer} 
+          videoUrl={currentVideoUrl}
+          projectTitle={currentVideoProject.title}
+          projectId={currentVideoProject.projectId}
+        />
+      )}
 
       {/* Project Details Modal */}
       {selectedProject && (
@@ -390,7 +449,10 @@ export default function VideoProjectBrowser({
             <div className="flex justify-center gap-3 mt-6">
               {selectedProject.status === 'completed' && (
                 <button
-                  onClick={() => handlePlayVideo(selectedProject.projectId)}
+                  onClick={() => {
+                    handlePlayVideo(selectedProject);
+                    setSelectedProject(null);
+                  }}
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   ▶️ Play Video
