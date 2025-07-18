@@ -337,25 +337,57 @@ export default function VideoScriptEditor({
       });
 
       if (!response.ok) {
-        throw new Error('PDF generation failed');
+        throw new Error('Script export failed');
       }
 
-      const blob = await response.blob();
+      // Get HTML content as text
+      const htmlContent = await response.text();
+      
+      // Create a blob with HTML content
+      const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `${project.title.replace(/[^a-zA-Z0-9]/g, '_')}_script.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Open in new window for printing
+      const newWindow = window.open(url, '_blank');
+      
+      if (newWindow) {
+        // Optional: Auto-trigger print dialog after content loads
+        newWindow.onload = () => {
+          setTimeout(() => {
+            // Show a helpful message
+            newWindow.focus();
+            
+            // Optionally auto-open print dialog (some browsers block this)
+            newWindow.print();
+          }, 500);
+        };
+        
+        // Clean up the blob URL after a delay
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 5000);
+      } else {
+        // Fallback: download as HTML file if popup blocked
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `${project.title.replace(/[^a-zA-Z0-9]/g, '_')}_script.html`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        setUpdateStatus({ 
+          type: 'success', 
+          message: 'Script downloaded as HTML. Open the file and use your browser\'s print function to save as PDF.' 
+        });
+      }
 
     } catch (error) {
-      console.error('Error downloading PDF:', error);
+      console.error('Error exporting script:', error);
       setUpdateStatus({ 
         type: 'error', 
-        message: `PDF download failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+        message: `Script export failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
       });
     }
   };
