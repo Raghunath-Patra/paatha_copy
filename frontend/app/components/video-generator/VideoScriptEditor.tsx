@@ -175,21 +175,45 @@ export default function VideoScriptEditor({
 
     // Execute the visual function
     try {
-      const func = eval(`(${visualFunction.function_code})`);
-      func(ctx, 'param1', 'param2', 'param3'); // Default test parameters
+      // Parse the function code properly
+      let functionCode = visualFunction.function_code.trim();
+      
+      // If it's already a complete function, use it as is
+      // If it's just the function body, wrap it in a function
+      let func;
+      
+      if (functionCode.startsWith('function')) {
+        // It's a complete function definition like "function myFunc(ctx, p1, p2, p3) { ... }"
+        // Extract just the function body
+        const match = functionCode.match(/function\s+\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
+        if (match) {
+          const functionBody = match[1];
+          func = new Function('ctx', 'param1', 'param2', 'param3', functionBody);
+        } else {
+          throw new Error('Invalid function format');
+        }
+      } else {
+        // It's just the function body, wrap it in a function
+        func = new Function('ctx', 'param1', 'param2', 'param3', functionCode);
+      }
+      
+      // Execute with default test parameters
+      func(ctx, 'param1', 'param2', 'param3');
+      
     } catch (error) {
       console.error('Error executing visual function:', error);
       ctx.fillStyle = '#ef4444';
       ctx.font = '16px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('Error in visual function', 500, 400);
-      ctx.fillText(
-        typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string'
-          ? (error as any).message
-          : 'Unknown error',
-        500,
-        420
-      );
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      ctx.fillText(errorMessage, 500, 420);
+      
+      // Show more detailed error info for debugging
+      ctx.fillStyle = '#666';
+      ctx.font = '12px Arial';
+      ctx.fillText('Check the console for more details', 500, 450);
     }
   };
 
