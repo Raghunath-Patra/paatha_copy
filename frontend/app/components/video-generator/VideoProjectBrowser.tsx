@@ -98,14 +98,98 @@ export default function VideoProjectBrowser({
     }
   };
 
-  const handlePlayVideo = (projectId: string) => {
-    // Updated endpoint
-    window.open(`${API_URL}/api/video-generator/stream/${projectId}`, '_blank');
+  const handlePlayVideo = async (projectId: string) => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        alert('Please log in to play videos');
+        return;
+      }
+
+      // Create a form to submit with headers (for authenticated requests)
+      const response = await fetch(`${API_URL}/api/video-generator/stream/${projectId}`, {
+        method: 'GET',
+        headers
+      });
+
+      if (response.ok) {
+        // Get the video blob and create object URL
+        const blob = await response.blob();
+        const videoUrl = URL.createObjectURL(blob);
+        
+        // Open in new tab with video player
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Video Player - ${projectId}</title>
+              <style>
+                body { margin: 0; padding: 20px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                video { max-width: 100%; max-height: 100%; }
+              </style>
+            </head>
+            <body>
+              <video controls autoplay>
+                <source src="${videoUrl}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </body>
+            </html>
+          `);
+        }
+      } else {
+        console.error('Failed to load video');
+        alert('Failed to load video. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error playing video:', error);
+      alert('Error playing video. Please try again.');
+    }
   };
 
-  const handleDownloadVideo = (projectId: string) => {
-    // Updated endpoint
-    window.open(`${API_URL}/api/video-generator/download/${projectId}`, '_blank');
+  const handleDownloadVideo = async (projectId: string) => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        alert('Please log in to download videos');
+        return;
+      }
+
+      // Use the download endpoint (assuming it exists)
+      const response = await fetch(`${API_URL}/api/video-generator/download/${projectId}`, {
+        method: 'GET',
+        headers
+      });
+
+      if (response.ok) {
+        // Get the video blob
+        const blob = await response.blob();
+        
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `video-${projectId}.mp4`; // You can customize the filename
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Clean up the object URL
+        URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download video');
+        alert('Failed to download video. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading video:', error);
+      alert('Error downloading video. Please try again.');
+    }
   };
 
   // Helper function to map status to display info
