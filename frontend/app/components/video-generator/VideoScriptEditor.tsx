@@ -542,15 +542,6 @@ export default function VideoScriptEditor({
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="text-lg font-medium text-gray-800">Manage Visual Functions</h4>
-                  <button
-                    onClick={() => setEditingVisualFunction({
-                      name: '', 
-                      code: 'function newVisual(ctx, param1, param2, param3) {\n  // Your visual code here\n  ctx.fillStyle = "#ff6b6b";\n  ctx.fillRect(250, 250, 200, 100);\n}'
-                    })}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    ➕ Add New Function
-                  </button>
                 </div>
                 
                 {/* Visual Functions List */}
