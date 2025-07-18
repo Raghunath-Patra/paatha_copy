@@ -34,12 +34,11 @@ export default function VideoScriptEditor({
   const [updateStatus, setUpdateStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [showVisualEditor, setShowVisualEditor] = useState(false);
+  // Tab management
+  const [activeTab, setActiveTab] = useState<'slides' | 'visuals'>('slides');
   const [editingVisualFunction, setEditingVisualFunction] = useState<{name: string, code: string} | null>(null);
-  const [showSpeakerEditor, setShowSpeakerEditor] = useState(false);
   const [visualFunctions, setVisualFunctions] = useState<any[]>([]);
   const [aiModifyType, setAiModifyType] = useState<'content' | 'visual'>('content');
-
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -258,7 +257,6 @@ export default function VideoScriptEditor({
     }
   };
 
-  // Replace the existing handleAIChat method with this enhanced version:
   const handleAIChat = async () => {
     if (!chatMessage.trim()) return;
     
@@ -430,39 +428,24 @@ export default function VideoScriptEditor({
       await loadVisualFunctions(); // Reload functions
       setEditingVisualFunction(null);
 
+      // Update project visual functions locally
+      if (project.visualFunctions) {
+        try {
+          project.visualFunctions[functionName] = eval(`(${functionCode})`);
+          // Refresh preview if current slide uses this visual
+          const currentSlide = slides[currentSlideIndex];
+          if (currentSlide?.visual?.type === functionName) {
+            updateSlidePreview(currentSlide, currentSlideIndex);
+          }
+        } catch (error) {
+          console.error('Error updating local visual function:', error);
+        }
+      }
+
     } catch (error) {
       setUpdateStatus({ 
         type: 'error', 
         message: `Failed to save visual function: ${error instanceof Error ? error.message : 'Unknown error'}` 
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const deleteVisualFunction = async (functionName: string) => {
-    if (!confirm(`Are you sure you want to delete the visual function "${functionName}"?`)) return;
-
-    try {
-      setIsUpdating(true);
-      const { headers, isAuthorized } = await getAuthHeaders();
-      if (!isAuthorized) throw new Error('Authentication required');
-
-      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/visual-function/${functionName}`, {
-        method: 'DELETE',
-        headers: headers
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-
-      setUpdateStatus({ type: 'success', message: 'Visual function deleted successfully!' });
-      await loadVisualFunctions();
-
-    } catch (error) {
-      setUpdateStatus({ 
-        type: 'error', 
-        message: `Failed to delete visual function: ${error instanceof Error ? error.message : 'Unknown error'}` 
       });
     } finally {
       setIsUpdating(false);
@@ -487,58 +470,145 @@ export default function VideoScriptEditor({
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Slides Panel */}
-        <div className="bg-white rounded-lg p-6 shadow-md">
-          <h3 className="text-lg font-semibold mb-4">📋 Lesson Steps</h3>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {slides.map((slide, index) => (
-              <div
-                key={index}
-                onClick={() => selectSlide(index)}
-                className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
-                  currentSlideIndex === index
-                    ? 'border-red-500 bg-red-50'
-                    : 'border-gray-200 hover:border-red-300'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-medium text-sm">
-                    {slide.visual?.type ? '🎨' : '📝'} Slide {index + 1}
-                    {hasSlideChanged() && currentSlideIndex === index && (
-                      <span className="ml-2 text-orange-500">●</span>
+        {/* Left Panel with Tabs */}
+        <div className="bg-white rounded-lg shadow-md">
+          {/* Tab Navigation */}
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('slides')}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'slides'
+                  ? 'bg-red-50 text-red-600 border-b-2 border-red-500'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              }`}
+            >
+              📋 Lesson Steps
+            </button>
+            <button
+              onClick={() => setActiveTab('visuals')}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'visuals'
+                  ? 'bg-purple-50 text-purple-600 border-b-2 border-purple-500'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              }`}
+            >
+              🎨 Visual Functions
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeTab === 'slides' ? (
+              /* Slides Tab Content */
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {slides.map((slide, index) => (
+                  <div
+                    key={index}
+                    onClick={() => selectSlide(index)}
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
+                      currentSlideIndex === index
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-200 hover:border-red-300'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-medium text-sm">
+                        {slide.visual?.type ? '🎨' : '📝'} Slide {index + 1}
+                        {hasSlideChanged() && currentSlideIndex === index && (
+                          <span className="ml-2 text-orange-500">●</span>
+                        )}
+                      </span>
+                      <span className="text-xs text-gray-500">{slide.speaker}</span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-800 mb-1">
+                      {slide.title || 'Untitled Slide'}
+                    </div>
+                    <div className="text-xs text-gray-600 mb-2">
+                      Speaker: {project.speakers?.[slide.speaker]?.name || slide.speaker}
+                    </div>
+                    <div className="text-xs text-gray-600 line-clamp-2">
+                      {(slide.content || '') + ' ' + (slide.content2 || '')}
+                    </div>
+                    {slide.visual?.type && (
+                      <div className="text-xs text-red-600 mt-1">
+                        Visual: {slide.visual.type}
+                      </div>
                     )}
-                  </span>
-                  <span className="text-xs text-gray-500">{slide.speaker}</span>
-                </div>
-                <div className="text-sm font-semibold text-gray-800 mb-1">
-                  {slide.title || 'Untitled Slide'}
-                </div>
-                <div className="text-xs text-gray-600 mb-2">
-                  Speaker: {project.speakers?.[slide.speaker]?.name || slide.speaker}
-                </div>
-                <div className="text-xs text-gray-600 line-clamp-2">
-                  {(slide.content || '') + ' ' + (slide.content2 || '')}
-                </div>
-                {slide.visual?.type && (
-                  <div className="text-xs text-red-600 mt-1">
-                    Visual: {slide.visual.type}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
+            ) : (
+              /* Visual Functions Tab Content */
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-medium text-gray-800">Manage Visual Functions</h4>
+                  <button
+                    onClick={() => setEditingVisualFunction({
+                      name: '', 
+                      code: 'function newVisual(ctx, param1, param2, param3) {\n  // Your visual code here\n  ctx.fillStyle = "#ff6b6b";\n  ctx.fillRect(250, 250, 200, 100);\n}'
+                    })}
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    ➕ Add New Function
+                  </button>
+                </div>
+                
+                {/* Visual Functions List */}
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {visualFunctions.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-4xl mb-2">🎨</div>
+                      <p>No visual functions yet</p>
+                      <p className="text-sm">Create your first visual function to get started!</p>
+                    </div>
+                  ) : (
+                    visualFunctions.map((vf) => (
+                      <div key={vf.function_name} className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-800">{vf.function_name}</h5>
+                            <p className="text-xs text-gray-500">
+                              Updated: {new Date(vf.updated_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setEditingVisualFunction({name: vf.function_name, code: vf.function_code})}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                          >
+                            ✏️ Edit
+                          </button>
+                        </div>
+                        
+                        {/* Function Preview */}
+                        <div className="bg-gray-50 rounded p-2 mt-2">
+                          <pre className="text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap line-clamp-3">
+                            {vf.function_code.substring(0, 150)}
+                            {vf.function_code.length > 150 && '...'}
+                          </pre>
+                        </div>
+                        
+                        {/* Usage Info */}
+                        <div className="mt-2 text-xs text-purple-600">
+                          Used in: {slides.filter(slide => slide.visual?.type === vf.function_name).length} slide(s)
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Preview Panel */}
+        {/* Right Panel - Preview & Editor */}
         <div className="bg-white rounded-lg p-6 shadow-md">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">🖼️ Slide Preview</h3>
-            <button
-              onClick={() => setShowVisualEditor(!showVisualEditor)}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              🎨 Manage Visuals
-            </button>
+            {activeTab === 'slides' && (
+              <span className="text-sm text-gray-600">
+                Slide {currentSlideIndex + 1} of {slides.length}
+              </span>
+            )}
           </div>
           
           {/* Canvas Preview */}
@@ -550,236 +620,289 @@ export default function VideoScriptEditor({
             />
           </div>
 
-          {/* Visual Functions Manager */}
-          {showVisualEditor && (
-            <div className="mb-4 border border-gray-300 rounded-lg p-4 bg-gray-50">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="font-medium">🎨 Visual Functions Manager</h4>
+          {/* Content Editor - Only show for slides tab */}
+          {activeTab === 'slides' && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium mb-3">✏️ Edit Content</h4>
+              <textarea
+                value={editingSlide}
+                onChange={(e) => setEditingSlide(e.target.value)}
+                className="w-full h-32 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
+                placeholder="Edit the content for this slide..."
+              />
+              <div className="flex gap-2 mt-3 flex-wrap">
                 <button
-                  onClick={() => setShowVisualEditor(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  onClick={saveSlideEdit}
+                  disabled={isUpdating || !hasSlideChanged()}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    hasSlideChanged() && !isUpdating
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
-                  ✕
+                  {isUpdating ? '⏳ Updating...' : '💾 Save Changes'}
                 </button>
+                <button
+                  onClick={() => setShowChat(!showChat)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  🤖 AI Chat
+                </button>
+                {hasSlideChanged() && (
+                  <button
+                    onClick={() => {
+                      selectSlide(currentSlideIndex);
+                      setUpdateStatus({ type: 'info', message: 'Changes discarded' });
+                    }}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    ↶ Discard Changes
+                  </button>
+                )}
               </div>
-              
-              {/* Visual Functions List */}
-              <div className="space-y-3 max-h-60 overflow-y-auto mb-4">
-                {visualFunctions.map((vf) => (
-                  <div key={vf.function_name} className="flex justify-between items-center p-3 bg-white rounded-lg border">
-                    <div>
-                      <span className="font-medium">{vf.function_name}</span>
-                      <p className="text-xs text-gray-600">
-                        Updated: {new Date(vf.updated_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setEditingVisualFunction({name: vf.function_name, code: vf.function_code})}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => deleteVisualFunction(vf.function_name)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
+
+              {/* Enhanced AI Chat */}
+              {showChat && (
+                <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-white">
+                  <div className="text-sm text-gray-600 mb-3">
+                    Ask AI to modify the content or visual function...
                   </div>
-                ))}
-              </div>
-              
-              {/* Add New Function Button */}
-              <button
-                onClick={() => setEditingVisualFunction({name: '', code: 'function newVisual(ctx, param1, param2, param3) {\n  // Your visual code here\n  ctx.fillStyle = "#ff6b6b";\n  ctx.fillRect(250, 250, 200, 100);\n}'})}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                ➕ Add New Function
-              </button>
+                  
+                  {/* AI Modification Type Selector */}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setAiModifyType('content')}
+                      className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                        aiModifyType === 'content'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      📝 Content
+                    </button>
+                    <button
+                      onClick={() => setAiModifyType('visual')}
+                      disabled={!JSON.parse(editingSlide).visual?.type}
+                      className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                        aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      🎨 Visual
+                    </button>
+                  </div>
+                  
+                  {/* Help Text */}
+                  <div className="text-xs text-gray-500 mb-2">
+                    {aiModifyType === 'content' 
+                      ? 'Modify slide title, content, narration, or speaker...'
+                      : JSON.parse(editingSlide).visual?.type
+                        ? `Modify the "${JSON.parse(editingSlide).visual.type}" visual function...`
+                        : 'No visual function in this slide'
+                    }
+                  </div>
+                  
+                  {/* Chat Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAIChat()}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-red-500 focus:outline-none"
+                      placeholder={
+                        aiModifyType === 'content' 
+                          ? "e.g., Make the explanation simpler, change speaker to teacher..."
+                          : "e.g., Add more colors, make the chart bigger, add animation..."
+                      }
+                    />
+                    <button
+                      onClick={handleAIChat}
+                      disabled={!chatMessage.trim() || (aiModifyType === 'visual' && !JSON.parse(editingSlide).visual?.type)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      {aiModifyType === 'content' ? '📝 Modify' : '🎨 Edit Visual'}
+                    </button>
+                  </div>
+                  
+                  {/* Visual Function Info */}
+                  {aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type && (
+                    <div className="mt-2 text-xs text-purple-600 bg-purple-50 p-2 rounded">
+                      <strong>Current visual:</strong> {JSON.parse(editingSlide).visual.type}
+                      {JSON.parse(editingSlide).visual.params && (
+                        <span> (params: {JSON.stringify(JSON.parse(editingSlide).visual.params)})</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Status Message */}
+              {updateStatus && (
+                <div className={`mt-4 p-3 rounded-lg ${
+                  updateStatus.type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+                  updateStatus.type === 'error' ? 'bg-red-100 text-red-800 border border-red-300' :
+                  'bg-blue-100 text-blue-800 border border-blue-300'
+                }`}>
+                  {updateStatus.message}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Edit Controls */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium mb-3">✏️ Edit Content</h4>
-            <textarea
-              value={editingSlide}
-              onChange={(e) => setEditingSlide(e.target.value)}
-              className="w-full h-32 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
-              placeholder="Edit the content for this slide..."
-            />
-            <div className="flex gap-2 mt-3 flex-wrap">
-              <button
-                onClick={saveSlideEdit}
-                disabled={isUpdating || !hasSlideChanged()}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  hasSlideChanged() && !isUpdating
-                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {isUpdating ? '⏳ Updating...' : '💾 Save Changes'}
-              </button>
-              <button
-                onClick={() => setShowChat(!showChat)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                🤖 AI Chat
-              </button>
-              {hasSlideChanged() && (
-                <button
-                  onClick={() => {
-                    selectSlide(currentSlideIndex);
-                    setUpdateStatus({ type: 'info', message: 'Changes discarded' });
-                  }}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  ↶ Discard Changes
-                </button>
+          {/* Visual Functions Preview - Only show for visuals tab */}
+          {activeTab === 'visuals' && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium mb-3">🎨 Function Preview</h4>
+              <div className="text-sm text-gray-600 mb-3">
+                Select a visual function from the left panel to see its details and edit it.
+              </div>
+              {visualFunctions.length > 0 && (
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <p className="text-sm text-gray-600">
+                    Total Functions: <span className="font-medium">{visualFunctions.length}</span>
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Functions in use: <span className="font-medium">
+                      {Object.values(visualFunctions.reduce((acc: any, vf) => {
+                        const usageCount = slides.filter(slide => slide.visual?.type === vf.function_name).length;
+                        if (usageCount > 0) acc[vf.function_name] = true;
+                        return acc;
+                      }, {})).length}
+                    </span>
+                  </p>
+                </div>
               )}
             </div>
-
-            {/* Enhanced AI Chat */}
-            {showChat && (
-              <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-white">
-                <div className="text-sm text-gray-600 mb-3">
-                  Ask AI to modify the content or visual function...
-                </div>
-                
-                {/* AI Modification Type Selector */}
-                <div className="flex gap-2 mb-3">
-                  <button
-                    onClick={() => setAiModifyType('content')}
-                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                      aiModifyType === 'content'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    📝 Content
-                  </button>
-                  <button
-                    onClick={() => setAiModifyType('visual')}
-                    disabled={!JSON.parse(editingSlide).visual?.type}
-                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                      aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed'
-                    }`}
-                  >
-                    🎨 Visual
-                  </button>
-                </div>
-                
-                {/* Help Text */}
-                <div className="text-xs text-gray-500 mb-2">
-                  {aiModifyType === 'content' 
-                    ? 'Modify slide title, content, narration, or speaker...'
-                    : JSON.parse(editingSlide).visual?.type
-                      ? `Modify the "${JSON.parse(editingSlide).visual.type}" visual function...`
-                      : 'No visual function in this slide'
-                  }
-                </div>
-                
-                {/* Chat Input */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAIChat()}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-red-500 focus:outline-none"
-                    placeholder={
-                      aiModifyType === 'content' 
-                        ? "e.g., Make the explanation simpler, change speaker to teacher..."
-                        : "e.g., Add more colors, make the chart bigger, add animation..."
-                    }
-                  />
-                  <button
-                    onClick={handleAIChat}
-                    disabled={!chatMessage.trim() || (aiModifyType === 'visual' && !JSON.parse(editingSlide).visual?.type)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    {aiModifyType === 'content' ? '📝 Modify' : '🎨 Edit Visual'}
-                  </button>
-                </div>
-                
-                {/* Visual Function Info */}
-                {aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type && (
-                  <div className="mt-2 text-xs text-purple-600 bg-purple-50 p-2 rounded">
-                    <strong>Current visual:</strong> {JSON.parse(editingSlide).visual.type}
-                    {JSON.parse(editingSlide).visual.params && (
-                      <span> (params: {JSON.stringify(JSON.parse(editingSlide).visual.params)})</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Status Message */}
-            {updateStatus && (
-              <div className={`mt-4 p-3 rounded-lg ${
-                updateStatus.type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
-                updateStatus.type === 'error' ? 'bg-red-100 text-red-800 border border-red-300' :
-                'bg-blue-100 text-blue-800 border border-blue-300'
-              }`}>
-                {updateStatus.message}
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
       {/* Visual Function Editor Modal */}
       {editingVisualFunction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-4/5 max-w-4xl max-h-4/5 overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                {editingVisualFunction.name ? `Edit Function: ${editingVisualFunction.name}` : 'Create New Function'}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-800">
+                {editingVisualFunction.name ? (
+                  <>🎨 Edit Function: <span className="text-purple-600">{editingVisualFunction.name}</span></>
+                ) : (
+                  '🎨 Create New Visual Function'
+                )}
               </h3>
               <button
                 onClick={() => setEditingVisualFunction(null)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
               >
                 ✕
               </button>
             </div>
             
+            {/* Function Name Input - Only for new functions */}
             {!editingVisualFunction.name && (
-              <input
-                type="text"
-                placeholder="Function name (e.g., drawChart)"
-                value={editingVisualFunction.name}
-                onChange={(e) => setEditingVisualFunction({...editingVisualFunction, name: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-md mb-4 focus:border-red-500 focus:outline-none"
-              />
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Function Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., drawChart, createGraph, animateShape"
+                  value={editingVisualFunction.name}
+                  onChange={(e) => setEditingVisualFunction({...editingVisualFunction, name: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Choose a descriptive name for your visual function (letters, numbers, and underscores only)
+                </p>
+              </div>
             )}
             
-            <textarea
-              value={editingVisualFunction.code}
-              onChange={(e) => setEditingVisualFunction({...editingVisualFunction, code: e.target.value})}
-              className="w-full h-80 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
-              placeholder="Enter your visual function code..."
-            />
+            {/* Function Code Editor */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Function Code
+              </label>
+              <textarea
+                value={editingVisualFunction.code}
+                onChange={(e) => setEditingVisualFunction({...editingVisualFunction, code: e.target.value})}
+                className="w-full h-96 p-4 border border-gray-300 rounded-lg text-sm font-mono resize-none focus:border-purple-500 focus:outline-none bg-gray-50"
+                placeholder="function myVisual(ctx, param1, param2, param3) {
+  // Your visual code here
+  // ctx is the canvas 2D context
+  // Use ctx.fillRect(), ctx.arc(), ctx.fillText(), etc.
+  
+  ctx.fillStyle = '#ff6b6b';
+  ctx.fillRect(250, 250, 200, 100);
+  
+  ctx.fillStyle = '#4ecdc4';
+  ctx.font = '20px Arial';
+  ctx.fillText('Hello World!', 300, 300);
+}"
+              />
+              <div className="mt-2 text-xs text-gray-600 bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                <strong>💡 Tips:</strong>
+                <ul className="mt-1 space-y-1 list-disc list-inside">
+                  <li>Use <code>ctx</code> for canvas drawing operations</li>
+                  <li>Parameters <code>param1, param2, param3</code> can be passed from slides</li>
+                  <li>Canvas size is 1000x700 pixels, drawing area is 200x200 to 800x600</li>
+                  <li>Use <code>ctx.fillStyle</code>, <code>ctx.strokeStyle</code> for colors</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Usage Information */}
+            {editingVisualFunction.name && (
+              <div className="mb-6 bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <h4 className="font-medium text-purple-800 mb-2">📊 Function Usage</h4>
+                <p className="text-sm text-purple-700">
+                  This function is currently used in{' '}
+                  <span className="font-semibold">
+                    {slides.filter(slide => slide.visual?.type === editingVisualFunction.name).length}
+                  </span>{' '}
+                  slide(s)
+                </p>
+                {slides.filter(slide => slide.visual?.type === editingVisualFunction.name).length > 0 && (
+                  <p className="text-xs text-purple-600 mt-1">
+                    Changes will affect all slides using this function
+                  </p>
+                )}
+              </div>
+            )}
             
-            <div className="flex justify-end gap-3 mt-4">
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setEditingVisualFunction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => editingVisualFunction.name && saveVisualFunction(editingVisualFunction.name, editingVisualFunction.code)}
-                disabled={!editingVisualFunction.name || !editingVisualFunction.code || isUpdating}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
+                disabled={!editingVisualFunction.name || !editingVisualFunction.code.trim() || isUpdating}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                {isUpdating ? 'Saving...' : 'Save Function'}
+                {isUpdating ? '⏳ Saving...' : '💾 Save Function'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Message - Global */}
+      {updateStatus && (
+        <div className={`mt-6 p-4 rounded-lg max-w-2xl mx-auto ${
+          updateStatus.type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+          updateStatus.type === 'error' ? 'bg-red-100 text-red-800 border border-red-300' :
+          'bg-blue-100 text-blue-800 border border-blue-300'
+        }`}>
+          <div className="flex items-center">
+            <span className="mr-2">
+              {updateStatus.type === 'success' ? '✅' : 
+               updateStatus.type === 'error' ? '❌' : 'ℹ️'}
+            </span>
+            {updateStatus.message}
           </div>
         </div>
       )}
