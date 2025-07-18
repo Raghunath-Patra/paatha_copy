@@ -1,3 +1,5 @@
+// VideoProjectBrowser.tsx - FIXED VERSION with proper streaming
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -42,10 +44,10 @@ export default function VideoProjectBrowser({
     };
   }, [currentVideoUrl]);
 
-  // Update the project mapping to handle the database structure
+  // Transform project data for frontend
   const transformProjectForFrontend = (project: any) => {
     return {
-      projectId: project.id, // Map database 'id' to 'projectId'
+      projectId: project.id,
       title: project.title,
       createdAt: project.created_at,
       status: project.status,
@@ -57,7 +59,6 @@ export default function VideoProjectBrowser({
     };
   };
 
-  // Update the loadProjects function to transform the data
   const loadProjects = async () => {
     setLoading(true);
     try {
@@ -75,7 +76,6 @@ export default function VideoProjectBrowser({
       const result = await response.json();
       
       if (result.success) {
-        // Transform the projects to match frontend expectations
         const transformedProjects = result.projects.map(transformProjectForFrontend);
         setProjects(transformedProjects);
       } else {
@@ -99,7 +99,6 @@ export default function VideoProjectBrowser({
         return;
       }
 
-      // Updated endpoint
       const response = await fetch(`${API_URL}/api/video-generator/project/${projectId}`, {
         method: 'DELETE',
         headers
@@ -115,7 +114,7 @@ export default function VideoProjectBrowser({
     }
   };
 
-  // Updated handlePlayVideo to use popup player
+  // FIXED: Use signed URL approach instead of blob
   const handlePlayVideo = async (project: any) => {
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
@@ -127,29 +126,90 @@ export default function VideoProjectBrowser({
 
       setVideoLoading(project.projectId);
       
-      console.log('🎬 Fetching authenticated video for project:', project.projectId);
+      console.log('🎬 Getting signed URL for project:', project.projectId);
       
-      // Fetch video with authentication headers
-      const videoResponse = await fetch(`${API_URL}/api/video-generator/stream/${project.projectId}`, {
+      // Get signed URL instead of downloading blob
+      const signedUrlResponse = await fetch(`${API_URL}/api/video-generator/stream/${project.projectId}`, {
         method: 'GET',
-        headers // Includes Authorization header
+        headers
+      });
+      
+      if (!signedUrlResponse.ok) {
+        setVideoLoading(null);
+        console.error('Signed URL fetch failed:', signedUrlResponse.status);
+        
+        if (signedUrlResponse.status === 401 || signedUrlResponse.status === 403) {
+          alert('Not authorized to access this video.');
+        } else if (signedUrlResponse.status === 404) {
+          alert('Video not found. It may still be processing.');
+        } else {
+          alert('Failed to get video URL. Please try again.');
+        }
+        return;
+      }
+      
+      const urlData = await signedUrlResponse.json();
+      console.log('✅ Signed URL received:', urlData);
+      
+      if (!urlData.success || !urlData.streamUrl) {
+        setVideoLoading(null);
+        alert('Invalid video URL received.');
+        return;
+      }
+      
+      // Clean up any previous blob URL
+      if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(currentVideoUrl);
+      }
+      
+      // Use signed URL directly - no blob needed
+      setCurrentVideoUrl(urlData.streamUrl);
+      setCurrentVideoProject(project);
+      setShowVideoPlayer(true);
+      setVideoLoading(null);
+      
+    } catch (error) {
+      console.error('❌ Error getting video URL:', error);
+      setVideoLoading(null);
+      alert('Error loading video. Please check your connection.');
+    }
+  };
+
+  // ALTERNATIVE: Download as blob approach (for offline viewing)
+  const handlePlayVideoOffline = async (project: any) => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        alert('Please log in to play videos');
+        return;
+      }
+
+      setVideoLoading(project.projectId);
+      
+      console.log('🎬 Downloading video for offline play:', project.projectId);
+      
+      // Download video with auth headers
+      const videoResponse = await fetch(`${API_URL}/api/video-generator/download/${project.projectId}`, {
+        method: 'GET',
+        headers
       });
       
       if (!videoResponse.ok) {
         setVideoLoading(null);
-        console.error('Video fetch failed:', videoResponse.status);
+        console.error('Video download failed:', videoResponse.status);
         
         if (videoResponse.status === 401 || videoResponse.status === 403) {
           alert('Not authorized to access this video.');
         } else if (videoResponse.status === 404) {
           alert('Video not found. It may still be processing.');
         } else {
-          alert('Failed to load video. Please try again.');
+          alert('Failed to download video. Please try again.');
         }
         return;
       }
       
-      console.log('✅ Video fetched successfully, creating blob URL');
+      console.log('✅ Video downloaded, creating blob URL');
       
       // Convert to blob and create object URL
       const videoBlob = await videoResponse.blob();
@@ -160,22 +220,21 @@ export default function VideoProjectBrowser({
         URL.revokeObjectURL(currentVideoUrl);
       }
       
-      // Open the SAME popup player with blob URL
-      setCurrentVideoUrl(blobUrl);           // ← Blob URL instead of direct URL
+      setCurrentVideoUrl(blobUrl);
       setCurrentVideoProject(project);
-      setShowVideoPlayer(true);              // ← Same popup opening
+      setShowVideoPlayer(true);
       setVideoLoading(null);
       
     } catch (error) {
-      console.error('❌ Error fetching authenticated video:', error);
+      console.error('❌ Error downloading video:', error);
       setVideoLoading(null);
       alert('Error loading video. Please check your connection.');
     }
   };
 
-  // Close video player and cleanup (Updated for blob cleanup)
+  // Close video player and cleanup
   const handleCloseVideoPlayer = () => {
-    // Clean up blob URL to free memory
+    // Clean up blob URL to free memory (only if it's a blob)
     if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
       console.log('🧹 Cleaning up blob URL on close');
       URL.revokeObjectURL(currentVideoUrl);
@@ -196,26 +255,20 @@ export default function VideoProjectBrowser({
         return;
       }
 
-      // Use the download endpoint (assuming it exists)
       const response = await fetch(`${API_URL}/api/video-generator/download/${projectId}`, {
         method: 'GET',
         headers
       });
 
       if (response.ok) {
-        // Get the video blob
         const blob = await response.blob();
-        
-        // Create download link
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `video-${projectId}.mp4`; // You can customize the filename
+        a.download = `video-${projectId}.mp4`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        
-        // Clean up the object URL
         URL.revokeObjectURL(url);
       } else {
         console.error('Failed to download video');
@@ -334,6 +387,7 @@ export default function VideoProjectBrowser({
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-green-500 hover:bg-green-600'
                       } text-white`}
+                      title="Stream video (recommended)"
                     >
                       {isLoadingVideo ? (
                         <>
@@ -341,12 +395,24 @@ export default function VideoProjectBrowser({
                           Loading...
                         </>
                       ) : (
-                        '▶️ Play'
+                        '▶️ Stream'
                       )}
                     </button>
                     <button
+                      onClick={() => handlePlayVideoOffline(project)}
+                      disabled={isLoadingVideo}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        isLoadingVideo 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-blue-500 hover:bg-blue-600'
+                      } text-white`}
+                      title="Download and play offline"
+                    >
+                      📥 Offline
+                    </button>
+                    <button
                       onClick={() => handleDownloadVideo(project.projectId)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                     >
                       ⬇️ Download
                     </button>
