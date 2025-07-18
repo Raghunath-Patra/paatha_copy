@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { getAuthHeaders } from '../../utils/auth';
 
-  // Update the project prop type to handle the new structure
 interface VideoScriptEditorProps {
   project: {
     id: string;
@@ -27,9 +27,14 @@ export default function VideoScriptEditor({
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [previewCanvas, setPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const [editingSlide, setEditingSlide] = useState<string>('');
+  const [originalSlide, setOriginalSlide] = useState<any>(null);
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Initialize canvas for preview
   useEffect(() => {
@@ -49,7 +54,6 @@ export default function VideoScriptEditor({
     }
   }, [currentSlideIndex, slides, previewCanvas]);
 
-  // Update the visual function execution to handle the new structure
   const updateSlidePreview = (slide: any, index: number) => {
     if (!previewCanvas) return;
 
@@ -87,12 +91,11 @@ export default function VideoScriptEditor({
     ctx.lineWidth = 2;
     ctx.strokeRect(200, 200, 600, 400);
 
-    // Draw visual if available - updated to handle new structure
+    // Draw visual if available
     if (slide.visual && slide.visual.type && project.visualFunctions) {
       try {
         const visualFunction = project.visualFunctions[slide.visual.type];
         if (visualFunction) {
-          // Handle function execution based on whether it's a string or function
           let func;
           if (typeof visualFunction === 'string') {
             func = new Function('ctx', 'param1', 'param2', 'param3', 
@@ -110,7 +113,6 @@ export default function VideoScriptEditor({
         }
       } catch (error) {
         console.error('Error executing visual function:', error);
-        // Draw error placeholder
         ctx.fillStyle = '#ff6b6b';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
@@ -164,33 +166,179 @@ export default function VideoScriptEditor({
 
   const selectSlide = (index: number) => {
     setCurrentSlideIndex(index);
-    setEditingSlide(JSON.stringify(slides[index], null, 2));
+    const slideData = JSON.stringify(slides[index], null, 2);
+    setEditingSlide(slideData);
+    setOriginalSlide(JSON.parse(JSON.stringify(slides[index]))); // Deep copy
+    setUpdateStatus(null);
   };
 
-  const saveSlideEdit = () => {
+  const hasSlideChanged = () => {
+    if (!originalSlide) return false;
     try {
-      const updatedSlide = JSON.parse(editingSlide);
-      const updatedSlides = [...slides];
-      updatedSlides[currentSlideIndex] = updatedSlide;
-      onSlidesUpdate(updatedSlides);
-      alert('Slide updated successfully!');
-    } catch (error) {
-      alert('Invalid JSON format. Please check your edits.');
+      const currentSlideData = JSON.parse(editingSlide);
+      return JSON.stringify(originalSlide) !== JSON.stringify(currentSlideData);
+    } catch {
+      return false;
     }
   };
 
-  const downloadPDF = () => {
-    // Mock PDF download
-    alert('PDF download functionality would be implemented here');
+  const saveSlideEdit = async () => {
+    try {
+      const updatedSlide = JSON.parse(editingSlide);
+      
+      if (!hasSlideChanged()) {
+        setUpdateStatus({ type: 'info', message: 'No changes detected' });
+        return;
+      }
+
+      setIsUpdating(true);
+      setUpdateStatus({ type: 'info', message: 'Updating slide...' });
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        throw new Error('Authentication required');
+      }
+
+      // Check if narration or speaker changed (requires audio regeneration)
+      const needsAudioRegeneration = 
+        originalSlide.narration !== updatedSlide.narration || 
+        originalSlide.speaker !== updatedSlide.speaker;
+
+      const response = await fetch(`${API_URL}/api/project/${project.id}/step/${currentSlideIndex + 1}`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify({
+          stepData: updatedSlide,
+          regenerateAudio: needsAudioRegeneration
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update slide');
+      }
+
+      // Update local state
+      const updatedSlides = [...slides];
+      updatedSlides[currentSlideIndex] = updatedSlide;
+      onSlidesUpdate(updatedSlides);
+      
+      // Update original slide reference
+      setOriginalSlide(JSON.parse(JSON.stringify(updatedSlide)));
+
+      if (needsAudioRegeneration) {
+        setUpdateStatus({ 
+          type: 'success', 
+          message: 'Slide updated successfully! New audio is being generated...' 
+        });
+      } else {
+        setUpdateStatus({ 
+          type: 'success', 
+          message: 'Slide updated successfully!' 
+        });
+      }
+
+    } catch (error) {
+      console.error('Error updating slide:', error);
+      setUpdateStatus({ 
+        type: 'error', 
+        message: `Update failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleChatSubmit = () => {
+  const handleAIChat = async () => {
     if (!chatMessage.trim()) return;
     
-    // Mock AI response
-    alert('AI chat functionality would be implemented here');
-    setChatMessage('');
+    try {
+      setUpdateStatus({ type: 'info', message: 'AI is processing your request...' });
+
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${API_URL}/api/project/${project.id}/step/${currentSlideIndex + 1}/ai-modify`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          currentSlide: JSON.parse(editingSlide),
+          modification: chatMessage,
+          availableVisualFunctions: Object.keys(project.visualFunctions || {})
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'AI modification failed');
+      }
+
+      // Update the editing slide with AI suggestions
+      setEditingSlide(JSON.stringify(result.modifiedSlide, null, 2));
+      setUpdateStatus({ 
+        type: 'success', 
+        message: 'AI modifications applied! Review and save to confirm changes.' 
+      });
+      setChatMessage('');
+
+    } catch (error) {
+      console.error('Error in AI chat:', error);
+      setUpdateStatus({ 
+        type: 'error', 
+        message: `AI modification failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    }
   };
+
+  const downloadPDF = async () => {
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${API_URL}/api/project/${project.id}/export-pdf`, {
+        method: 'GET',
+        headers: headers
+      });
+
+      if (!response.ok) {
+        throw new Error('PDF generation failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `${project.title.replace(/[^a-zA-Z0-9]/g, '_')}_script.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      setUpdateStatus({ 
+        type: 'error', 
+        message: `PDF download failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    }
+  };
+
+  // Initialize first slide
+  useEffect(() => {
+    if (slides.length > 0 && editingSlide === '') {
+      selectSlide(0);
+    }
+  }, [slides]);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -216,6 +364,9 @@ export default function VideoScriptEditor({
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-medium text-sm">
                     {slide.visual?.type ? '🎨' : '📝'} Slide {index + 1}
+                    {hasSlideChanged() && currentSlideIndex === index && (
+                      <span className="ml-2 text-orange-500">●</span>
+                    )}
                   </span>
                   <span className="text-xs text-gray-500">{slide.speaker}</span>
                 </div>
@@ -257,15 +408,20 @@ export default function VideoScriptEditor({
             <textarea
               value={editingSlide}
               onChange={(e) => setEditingSlide(e.target.value)}
-              className="w-full h-24 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
+              className="w-full h-32 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
               placeholder="Edit the content for this slide..."
             />
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-3 flex-wrap">
               <button
                 onClick={saveSlideEdit}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                disabled={isUpdating || !hasSlideChanged()}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  hasSlideChanged() && !isUpdating
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
-                💾 Save Changes
+                {isUpdating ? '⏳ Updating...' : '💾 Save Changes'}
               </button>
               <button
                 onClick={() => setShowChat(!showChat)}
@@ -273,6 +429,17 @@ export default function VideoScriptEditor({
               >
                 🤖 AI Chat
               </button>
+              {hasSlideChanged() && (
+                <button
+                  onClick={() => {
+                    selectSlide(currentSlideIndex);
+                    setUpdateStatus({ type: 'info', message: 'Changes discarded' });
+                  }}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  ↶ Discard Changes
+                </button>
+              )}
             </div>
 
             {/* AI Chat */}
@@ -286,17 +453,29 @@ export default function VideoScriptEditor({
                     type="text"
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleChatSubmit()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAIChat()}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-red-500 focus:outline-none"
                     placeholder="Describe your changes..."
                   />
                   <button
-                    onClick={handleChatSubmit}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    onClick={handleAIChat}
+                    disabled={!chatMessage.trim()}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     Send
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Status Message */}
+            {updateStatus && (
+              <div className={`mt-4 p-3 rounded-lg ${
+                updateStatus.type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+                updateStatus.type === 'error' ? 'bg-red-100 text-red-800 border border-red-300' :
+                'bg-blue-100 text-blue-800 border border-blue-300'
+              }`}>
+                {updateStatus.message}
               </div>
             )}
           </div>
