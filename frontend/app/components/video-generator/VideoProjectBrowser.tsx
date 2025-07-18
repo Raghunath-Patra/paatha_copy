@@ -100,7 +100,7 @@ export default function VideoProjectBrowser({
 
   const handlePlayVideo = (projectId: string) => {
     // Updated endpoint
-    window.open(`${API_URL}/api/video-generator/video/${projectId}`, '_blank');
+    window.open(`${API_URL}/api/video-generator/stream/${projectId}`, '_blank');
   };
 
   const handleDownloadVideo = (projectId: string) => {
