@@ -499,7 +499,15 @@ export default function VideoScriptEditor({
 
         {/* Preview Panel */}
         <div className="bg-white rounded-lg p-6 shadow-md">
-          <h3 className="text-lg font-semibold mb-4">🖼️ Slide Preview</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">🖼️ Slide Preview</h3>
+            <button
+              onClick={() => setShowVisualEditor(!showVisualEditor)}
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              🎨 Manage Visuals
+            </button>
+          </div>
           
           {/* Canvas Preview */}
           <div className="mb-4 border-2 border-gray-200 rounded-lg overflow-hidden">
@@ -509,6 +517,57 @@ export default function VideoScriptEditor({
               className="block"
             />
           </div>
+
+          {/* Visual Functions Manager */}
+          {showVisualEditor && (
+            <div className="mb-4 border border-gray-300 rounded-lg p-4 bg-gray-50">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-medium">🎨 Visual Functions Manager</h4>
+                <button
+                  onClick={() => setShowVisualEditor(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* Visual Functions List */}
+              <div className="space-y-3 max-h-60 overflow-y-auto mb-4">
+                {visualFunctions.map((vf) => (
+                  <div key={vf.function_name} className="flex justify-between items-center p-3 bg-white rounded-lg border">
+                    <div>
+                      <span className="font-medium">{vf.function_name}</span>
+                      <p className="text-xs text-gray-600">
+                        Updated: {new Date(vf.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingVisualFunction({name: vf.function_name, code: vf.function_code})}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteVisualFunction(vf.function_name)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Add New Function Button */}
+              <button
+                onClick={() => setEditingVisualFunction({name: '', code: 'function newVisual(ctx, param1, param2, param3) {\n  // Your visual code here\n  ctx.fillStyle = "#ff6b6b";\n  ctx.fillRect(250, 250, 200, 100);\n}'})}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                ➕ Add New Function
+              </button>
+            </div>
+          )}
 
           {/* Edit Controls */}
           <div className="bg-gray-50 rounded-lg p-4">
@@ -550,7 +609,6 @@ export default function VideoScriptEditor({
               )}
             </div>
 
-            {/* AI Chat */}
             {/* Enhanced AI Chat */}
             {showChat && (
               <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-white">
@@ -639,111 +697,60 @@ export default function VideoScriptEditor({
               </div>
             )}
           </div>
-            {/* Visual Functions Manager */}
-{showVisualEditor && (
-  <div className="mt-4 border border-gray-300 rounded-lg p-4 bg-white">
-    <div className="flex justify-between items-center mb-4">
-      <h4 className="font-medium">🎨 Visual Functions Manager</h4>
-      <button
-        onClick={() => setShowVisualEditor(false)}
-        className="text-gray-500 hover:text-gray-700"
-      >
-        ✕
-      </button>
-    </div>
-    
-    {/* Visual Functions List */}
-    <div className="space-y-3 max-h-60 overflow-y-auto mb-4">
-      {visualFunctions.map((vf) => (
-        <div key={vf.function_name} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-          <div>
-            <span className="font-medium">{vf.function_name}</span>
-            <p className="text-xs text-gray-600">
-              Updated: {new Date(vf.updated_at).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setEditingVisualFunction({name: vf.function_name, code: vf.function_code})}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => deleteVisualFunction(vf.function_name)}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-            >
-              Delete
-            </button>
+        </div>
+      </div>
+
+      {/* Visual Function Editor Modal */}
+      {editingVisualFunction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-4/5 max-w-4xl max-h-4/5 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                {editingVisualFunction.name ? `Edit Function: ${editingVisualFunction.name}` : 'Create New Function'}
+              </h3>
+              <button
+                onClick={() => setEditingVisualFunction(null)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {!editingVisualFunction.name && (
+              <input
+                type="text"
+                placeholder="Function name (e.g., drawChart)"
+                value={editingVisualFunction.name}
+                onChange={(e) => setEditingVisualFunction({...editingVisualFunction, name: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-md mb-4 focus:border-red-500 focus:outline-none"
+              />
+            )}
+            
+            <textarea
+              value={editingVisualFunction.code}
+              onChange={(e) => setEditingVisualFunction({...editingVisualFunction, code: e.target.value})}
+              className="w-full h-80 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
+              placeholder="Enter your visual function code..."
+            />
+            
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setEditingVisualFunction(null)}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => editingVisualFunction.name && saveVisualFunction(editingVisualFunction.name, editingVisualFunction.code)}
+                disabled={!editingVisualFunction.name || !editingVisualFunction.code || isUpdating}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? 'Saving...' : 'Save Function'}
+              </button>
+            </div>
           </div>
         </div>
-      ))}
-    </div>
-    
-    {/* Add New Function Button */}
-    <button
-      onClick={() => setEditingVisualFunction({name: '', code: 'function newVisual(ctx, param1, param2, param3) {\n  // Your visual code here\n  ctx.fillStyle = "#ff6b6b";\n  ctx.fillRect(250, 250, 200, 100);\n}'})}
-      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-    >
-      ➕ Add New Function
-    </button>
-  </div>
-)}
-
-{/* Visual Function Editor Modal */}
-{editingVisualFunction && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg p-6 w-4/5 max-w-4xl max-h-4/5 overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">
-          {editingVisualFunction.name ? `Edit Function: ${editingVisualFunction.name}` : 'Create New Function'}
-        </h3>
-        <button
-          onClick={() => setEditingVisualFunction(null)}
-          className="text-gray-500 hover:text-gray-700 text-xl"
-        >
-          ✕
-        </button>
-      </div>
-      
-      {!editingVisualFunction.name && (
-        <input
-          type="text"
-          placeholder="Function name (e.g., drawChart)"
-          value={editingVisualFunction.name}
-          onChange={(e) => setEditingVisualFunction({...editingVisualFunction, name: e.target.value})}
-          className="w-full p-3 border border-gray-300 rounded-md mb-4 focus:border-red-500 focus:outline-none"
-        />
       )}
-      
-      <textarea
-        value={editingVisualFunction.code}
-        onChange={(e) => setEditingVisualFunction({...editingVisualFunction, code: e.target.value})}
-        className="w-full h-80 p-3 border border-gray-300 rounded-md text-sm font-mono resize-none focus:border-red-500 focus:outline-none"
-        placeholder="Enter your visual function code..."
-      />
-      
-      <div className="flex justify-end gap-3 mt-4">
-        <button
-          onClick={() => setEditingVisualFunction(null)}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => editingVisualFunction.name && saveVisualFunction(editingVisualFunction.name, editingVisualFunction.code)}
-          disabled={!editingVisualFunction.name || !editingVisualFunction.code || isUpdating}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isUpdating ? 'Saving...' : 'Save Function'}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-        </div>
-      </div>
 
       {/* Navigation */}
       <div className="flex justify-center gap-4 mt-8">
@@ -755,18 +762,12 @@ export default function VideoScriptEditor({
         </button>
 
         <button
-        onClick={() => setShowVisualEditor(!showVisualEditor)}
-        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-      >
-        🎨 Manage Visuals
-      </button>
-
-        <button
           onClick={downloadPDF}
           className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
           📄 Download PDF
         </button>
+        
         <button
           onClick={onProceedToVideo}
           className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
