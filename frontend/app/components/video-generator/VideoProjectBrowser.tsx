@@ -126,9 +126,9 @@ export default function VideoProjectBrowser({
 
       setVideoLoading(project.projectId);
       
-      console.log('🎬 Getting signed URL for project:', project.projectId);
+      console.log('🎬 Getting video URL for project:', project.projectId);
       
-      // Get signed URL instead of downloading blob
+      // Get signed URL for streaming
       const signedUrlResponse = await fetch(`${API_URL}/api/video-generator/stream/${project.projectId}`, {
         method: 'GET',
         headers
@@ -136,7 +136,7 @@ export default function VideoProjectBrowser({
       
       if (!signedUrlResponse.ok) {
         setVideoLoading(null);
-        console.error('Signed URL fetch failed:', signedUrlResponse.status);
+        console.error('Video URL fetch failed:', signedUrlResponse.status);
         
         if (signedUrlResponse.status === 401 || signedUrlResponse.status === 403) {
           alert('Not authorized to access this video.');
@@ -149,7 +149,7 @@ export default function VideoProjectBrowser({
       }
       
       const urlData = await signedUrlResponse.json();
-      console.log('✅ Signed URL received:', urlData);
+      console.log('✅ Video URL received:', urlData);
       
       if (!urlData.success || !urlData.streamUrl) {
         setVideoLoading(null);
@@ -157,12 +157,12 @@ export default function VideoProjectBrowser({
         return;
       }
       
-      // Clean up any previous blob URL
+      // Clean up any previous blob URL (just in case)
       if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
         URL.revokeObjectURL(currentVideoUrl);
       }
       
-      // Use signed URL directly - no blob needed
+      // Use signed URL for streaming
       setCurrentVideoUrl(urlData.streamUrl);
       setCurrentVideoProject(project);
       setShowVideoPlayer(true);
@@ -395,10 +395,10 @@ export default function VideoProjectBrowser({
                           Loading...
                         </>
                       ) : (
-                        '▶️ Stream'
+                        '▶️ Play'
                       )}
                     </button>
-                    <button
+                    {/* <button
                       onClick={() => handlePlayVideoOffline(project)}
                       disabled={isLoadingVideo}
                       className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
@@ -409,7 +409,7 @@ export default function VideoProjectBrowser({
                       title="Download and play offline"
                     >
                       📥 Offline
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => handleDownloadVideo(project.projectId)}
                       className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
