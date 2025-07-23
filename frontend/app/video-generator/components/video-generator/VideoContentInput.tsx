@@ -6,7 +6,7 @@ import { getAuthHeaders } from '../../../utils/auth';
 interface VideoContentInputProps {
   workflowMode: 'simple' | 'advanced';
   onScriptGenerated: (project: any, slides: any[]) => void;
-  onCompleteVideoGenerated: () => void;
+  onCompleteVideoGenerated: (projectId: string) => void;
 }
 
 export default function VideoContentInput({ 
@@ -72,7 +72,7 @@ export default function VideoContentInput({
 
       if (videoResult.success) {
         setStatus({ type: 'success', message: 'Complete video generated successfully!' });
-        onCompleteVideoGenerated();
+        onCompleteVideoGenerated(videoResult.projectId);
       } else {
         throw new Error(videoResult.error || 'Failed to generate video');
       }
