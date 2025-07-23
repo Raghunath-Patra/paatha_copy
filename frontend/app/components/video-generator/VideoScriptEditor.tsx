@@ -156,38 +156,51 @@ export default function VideoScriptEditor({
     const ctx = visualPreviewCanvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas completely
+    // Completely clear the canvas
     ctx.clearRect(0, 0, 1000, 700);
     
-    // Set a clean white background
-    ctx.fillStyle = '#ffffff';
+    // Set a clean background
+    ctx.fillStyle = '#f8f9fa';
     ctx.fillRect(0, 0, 1000, 700);
 
-    // Draw title
+    // Draw a simple header only
     ctx.fillStyle = '#6b46c1';
-    ctx.font = 'bold 24px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 500, 40);
+    ctx.fillText(`Preview: ${visualFunction.function_name}`, 500, 30);
 
-    // Draw function area border (just for reference)
+    // Create a contained area for the visual function
+    const visualArea = {
+      x: 50,
+      y: 50,
+      width: 900,
+      height: 600
+    };
+
+    // Draw visual area background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
+    
+    // Draw visual area border
     ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 1;
-    ctx.setLineDash([5, 5]); // Dashed line
-    ctx.strokeRect(200, 200, 600, 400);
-    ctx.setLineDash([]); // Reset line dash
+    ctx.strokeRect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
 
-    // Reset canvas state before executing function
+    // Save context state
     ctx.save();
     
-    // Execute the visual function
+    // Clip to visual area to prevent function from drawing outside
+    ctx.beginPath();
+    ctx.rect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
+    ctx.clip();
+
     try {
-      // Parse the function code properly
+      // Parse and execute the function code
       let functionCode = visualFunction.function_code.trim();
-      
       let func;
       
       if (functionCode.startsWith('function')) {
-        // It's a complete function definition
+        // Complete function definition
         const match = functionCode.match(/function\s+\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
         if (match) {
           const functionBody = match[1];
@@ -196,33 +209,58 @@ export default function VideoScriptEditor({
           throw new Error('Invalid function format');
         }
       } else {
-        // It's just the function body
+        // Just function body
         func = new Function('ctx', 'param1', 'param2', 'param3', functionCode);
       }
       
-      // Execute with default test parameters
-      func(ctx, 'param1', 'param2', 'param3');
+      // Execute the function with the canvas context
+      func(ctx, 'sample1', 'sample2', 'sample3');
       
     } catch (error) {
       console.error('Error executing visual function:', error);
       
-      // Show error in a more user-friendly way
+      // Restore context for error display
+      ctx.restore();
+      
+      // Display error message
       ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 18px Arial';
+      ctx.font = 'bold 16px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('⚠️ Error in Visual Function', 500, 350);
+      ctx.fillText('⚠️ Error in Visual Function', 500, 300);
       
       ctx.fillStyle = '#dc2626';
       ctx.font = '14px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      ctx.fillText(errorMessage, 500, 380);
+      
+      // Word wrap the error message
+      const words = errorMessage.split(' ');
+      let line = '';
+      let y = 330;
+      
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        
+        if (testWidth > 600 && n > 0) {
+          ctx.fillText(line, 500, y);
+          line = words[n] + ' ';
+          y += 20;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, 500, y);
       
       ctx.fillStyle = '#666';
       ctx.font = '12px Arial';
-      ctx.fillText('Check the console for detailed error information', 500, 410);
-    } finally {
-      ctx.restore(); // Restore canvas state
+      ctx.fillText('Check the browser console for detailed error information', 500, y + 40);
+      
+      return; // Exit early for error case
     }
+    
+    // Restore context state
+    ctx.restore();
   };
 
   const getBackgroundColor = (speaker: string) => {
