@@ -1,4 +1,4 @@
-/ File: frontend/app/video-generator/[projectId]/edit/page.tsx (Edit project)
+// File: frontend/app/video-generator/[projectId]/edit/page.tsx (Edit project)
 'use client';
 
 import React, { useState, useEffect } from 'react';

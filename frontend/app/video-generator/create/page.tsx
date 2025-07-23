@@ -1,4 +1,4 @@
-/ File: frontend/app/video-generator/create/page.tsx (New project creation)
+// File: frontend/app/video-generator/create/page.tsx (New project creation)
 'use client';
 
 import React, { useState } from 'react';
