@@ -54,7 +54,9 @@ export default function VideoScriptEditor({
       canvas.width = 1000;
       canvas.height = 700;
       setPreviewCanvas(canvas);
-      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+      if (activeTab === 'slides' && slides[currentSlideIndex]) {
+        updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+      }
     }
     if (visualCanvasRef.current) {
       const canvas = visualCanvasRef.current;
@@ -73,12 +75,19 @@ export default function VideoScriptEditor({
     }
   }, [activeTab, selectedVisualFunction, currentSlideIndex, visualPreviewCanvas, previewCanvas]);
 
-  // Update preview when slide changes
+  // Update preview when slide changes (only for slides tab)
   useEffect(() => {
-    if (previewCanvas && slides[currentSlideIndex]) {
+    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
       updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
     }
-  }, [currentSlideIndex, slides, previewCanvas]);
+  }, [currentSlideIndex, slides, previewCanvas, activeTab]);
+
+  // Update visual preview when visual function changes (only for visuals tab)
+  useEffect(() => {
+    if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
+      updateVisualPreview(selectedVisualFunction);
+    }
+  }, [selectedVisualFunction, visualPreviewCanvas, activeTab]);
 
   const updateSlidePreview = (slide: any, index: number) => {
     if (!previewCanvas) return;
@@ -454,7 +463,6 @@ export default function VideoScriptEditor({
     }
   };
 
-
   const handleVisualAIChat = async () => {
     if (!chatMessage.trim() || !selectedVisualFunction) return;
     
@@ -630,10 +638,18 @@ export default function VideoScriptEditor({
       if (project.visualFunctions) {
         try {
           project.visualFunctions[functionName] = eval(`(${functionCode})`);
-          // Refresh preview if current slide uses this visual
-          const currentSlide = slides[currentSlideIndex];
-          if (currentSlide?.visual?.type === functionName) {
-            updateSlidePreview(currentSlide, currentSlideIndex);
+          // Refresh preview if current slide uses this visual (only for slides tab)
+          if (activeTab === 'slides') {
+            const currentSlide = slides[currentSlideIndex];
+            if (currentSlide?.visual?.type === functionName) {
+              updateSlidePreview(currentSlide, currentSlideIndex);
+            }
+          }
+          // Refresh visual preview if this is the selected visual function (only for visuals tab)
+          if (activeTab === 'visuals' && selectedVisualFunction?.function_name === functionName) {
+            const updatedFunction = { ...selectedVisualFunction, function_code: functionCode };
+            setSelectedVisualFunction(updatedFunction);
+            updateVisualPreview(updatedFunction);
           }
         } catch (error) {
           console.error('Error updating local visual function:', error);
