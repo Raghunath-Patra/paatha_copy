@@ -49,29 +49,42 @@ export default function VideoScriptEditor({
 
   // Initialize canvas for preview
   useEffect(() => {
+    console.log('🔧 Initializing canvases...');
+    
     if (canvasRef.current) {
       const canvas = canvasRef.current;
       canvas.width = 1000;
       canvas.height = 700;
       setPreviewCanvas(canvas);
+      console.log('✅ Slide preview canvas initialized');
+      
       if (activeTab === 'slides' && slides[currentSlideIndex]) {
+        console.log('🖼️ Initial slide preview update');
         updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
       }
     }
+    
     if (visualCanvasRef.current) {
       const canvas = visualCanvasRef.current;
       canvas.width = 1000;
       canvas.height = 700;
       setVisualPreviewCanvas(canvas);
+      console.log('✅ Visual preview canvas initialized');
     }
   }, []);
 
   // Handle canvas updates based on active tab and selection
   useEffect(() => {
+    console.log(`🔄 Tab/selection change effect: activeTab=${activeTab}, hasPreviewCanvas=${!!previewCanvas}, hasVisualCanvas=${!!visualPreviewCanvas}`);
+    
     if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
+      console.log(`🖼️ Updating slide preview for slide ${currentSlideIndex}`);
       updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
     } else if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
+      console.log(`🎨 Updating visual preview for function: ${selectedVisualFunction.function_name}`);
       updateVisualPreview(selectedVisualFunction);
+    } else {
+      console.log('⏸️ No update needed - missing requirements');
     }
   }, [activeTab, selectedVisualFunction, currentSlideIndex, visualPreviewCanvas, previewCanvas]);
 
@@ -160,98 +173,121 @@ export default function VideoScriptEditor({
   };
 
   const updateVisualPreview = (visualFunction: any) => {
-    if (!visualPreviewCanvas) return;
+    if (!visualPreviewCanvas) {
+      console.log('❌ Visual preview canvas not available');
+      return;
+    }
 
     const ctx = visualPreviewCanvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      console.log('❌ Could not get 2D context from visual preview canvas');
+      return;
+    }
 
-    // Completely clear the canvas
+    console.log('🎨 Starting visual function preview for:', visualFunction.function_name);
+
+    // Completely clear the canvas with a solid color
     ctx.clearRect(0, 0, 1000, 700);
-    
-    // Set a clean background
-    ctx.fillStyle = '#f8f9fa';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 1000, 700);
 
-    // Draw a simple header only
+    // Draw a simple header
     ctx.fillStyle = '#6b46c1';
-    ctx.font = 'bold 20px Arial';
+    ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`Preview: ${visualFunction.function_name}`, 500, 30);
+    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 500, 40);
 
-    // Create a contained area for the visual function
-    const visualArea = {
-      x: 50,
-      y: 50,
-      width: 900,
-      height: 600
+    // Create a working area for the visual function
+    const workingArea = {
+      x: 100,
+      y: 80,
+      width: 800,
+      height: 500
     };
 
-    // Draw visual area background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
+    // Draw working area background (light gray)
+    ctx.fillStyle = '#f8f9fa';
+    ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
     
-    // Draw visual area border
-    ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
+    // Draw working area border
+    ctx.strokeStyle = '#dee2e6';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
 
-    // Save context state
-    ctx.save();
-    
-    // Clip to visual area to prevent function from drawing outside
-    ctx.beginPath();
-    ctx.rect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
-    ctx.clip();
+    // Add instruction text
+    ctx.fillStyle = '#6c757d';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Visual function output will appear below:', 500, 70);
 
     try {
+      console.log('🔧 Executing visual function code...');
+      
+      // Save context state before executing user code
+      ctx.save();
+      
+      // Reset text alignment for user code
+      ctx.textAlign = 'left';
+      
       // Parse and execute the function code
       let functionCode = visualFunction.function_code.trim();
       let func;
       
       if (functionCode.startsWith('function')) {
-        // Complete function definition
+        // Complete function definition - extract function body
         const match = functionCode.match(/function\s+\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
         if (match) {
           const functionBody = match[1];
           func = new Function('ctx', 'param1', 'param2', 'param3', functionBody);
         } else {
-          throw new Error('Invalid function format');
+          throw new Error('Invalid function format - could not parse function definition');
         }
       } else {
         // Just function body
         func = new Function('ctx', 'param1', 'param2', 'param3', functionCode);
       }
       
-      // Execute the function with the canvas context
-      func(ctx, 'sample1', 'sample2', 'sample3');
+      // Execute the function with sample parameters
+      console.log('✅ Function compiled successfully, executing...');
+      func(ctx, 'param1_sample', 'param2_sample', 'param3_sample');
+      console.log('✅ Visual function executed successfully');
       
     } catch (error) {
-      console.error('Error executing visual function:', error);
+      console.error('❌ Error executing visual function:', error);
       
       // Restore context for error display
       ctx.restore();
       
-      // Display error message
-      ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 16px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚠️ Error in Visual Function', 500, 300);
+      // Clear the working area and show error
+      ctx.fillStyle = '#fff5f5';
+      ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
-      ctx.fillStyle = '#dc2626';
+      ctx.strokeStyle = '#f56565';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
+      
+      // Display error message
+      ctx.fillStyle = '#e53e3e';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚠️ Error in Visual Function', 500, 250);
+      
+      ctx.fillStyle = '#c53030';
       ctx.font = '14px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       // Word wrap the error message
+      const maxWidth = 600;
       const words = errorMessage.split(' ');
       let line = '';
-      let y = 330;
+      let y = 280;
       
       for (let n = 0; n < words.length; n++) {
         const testLine = line + words[n] + ' ';
         const metrics = ctx.measureText(testLine);
         const testWidth = metrics.width;
         
-        if (testWidth > 600 && n > 0) {
+        if (testWidth > maxWidth && n > 0) {
           ctx.fillText(line, 500, y);
           line = words[n] + ' ';
           y += 20;
@@ -259,17 +295,21 @@ export default function VideoScriptEditor({
           line = testLine;
         }
       }
-      ctx.fillText(line, 500, y);
+      if (line) {
+        ctx.fillText(line, 500, y);
+      }
       
-      ctx.fillStyle = '#666';
+      ctx.fillStyle = '#718096';
       ctx.font = '12px Arial';
-      ctx.fillText('Check the browser console for detailed error information', 500, y + 40);
+      ctx.fillText('Check the browser console for detailed error information', 500, y + 30);
       
       return; // Exit early for error case
     }
     
     // Restore context state
     ctx.restore();
+    
+    console.log('✅ Visual function preview completed');
   };
 
   const getBackgroundColor = (speaker: string) => {
@@ -310,6 +350,44 @@ export default function VideoScriptEditor({
       ctx.textAlign = 'center';
       ctx.fillText(config.name, x, y + 25);
     });
+  };
+
+  const handleVisualFunctionSelect = (visualFunction: any) => {
+    console.log('🎨 Selecting visual function:', visualFunction.function_name);
+    setSelectedVisualFunction(visualFunction);
+    setUpdateStatus(null);
+    
+    // Immediately update the preview
+    if (visualPreviewCanvas && activeTab === 'visuals') {
+      console.log('🖼️ Immediately updating visual preview');
+      updateVisualPreview(visualFunction);
+    }
+  };
+
+  const handleTabSwitch = (newTab: 'slides' | 'visuals') => {
+    console.log(`🔄 Switching to tab: ${newTab}`);
+    setActiveTab(newTab);
+    setShowChat(false); // Close any open chat
+    setUpdateStatus(null); // Clear any status messages
+    
+    // Clear the inactive canvas to prevent confusion
+    if (newTab === 'slides' && visualPreviewCanvas) {
+      console.log('🧹 Clearing visual preview canvas');
+      const ctx = visualPreviewCanvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, 1000, 700);
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, 1000, 700);
+      }
+    } else if (newTab === 'visuals' && previewCanvas) {
+      console.log('🧹 Clearing slide preview canvas');
+      const ctx = previewCanvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, 1000, 700);
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, 1000, 700);
+      }
+    }
   };
 
   const selectSlide = (index: number) => {
@@ -689,7 +767,7 @@ export default function VideoScriptEditor({
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-200">
             <button
-              onClick={() => setActiveTab('slides')}
+              onClick={() => handleTabSwitch('slides')}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'slides'
                   ? 'bg-red-50 text-red-600 border-b-2 border-red-500'
@@ -699,7 +777,7 @@ export default function VideoScriptEditor({
               📋 Lesson Steps
             </button>
             <button
-              onClick={() => setActiveTab('visuals')}
+              onClick={() => handleTabSwitch('visuals')}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'visuals'
                   ? 'bg-purple-50 text-purple-600 border-b-2 border-purple-500'
@@ -770,7 +848,7 @@ export default function VideoScriptEditor({
                     visualFunctions.map((vf) => (
                       <div 
                         key={vf.function_name} 
-                        onClick={() => setSelectedVisualFunction(vf)}
+                        onClick={() => handleVisualFunctionSelect(vf)}
                         className={`border rounded-lg p-4 transition-colors cursor-pointer ${
                           selectedVisualFunction?.function_name === vf.function_name
                             ? 'border-purple-500 bg-purple-50'
