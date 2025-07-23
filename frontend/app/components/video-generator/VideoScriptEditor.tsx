@@ -57,11 +57,6 @@ export default function VideoScriptEditor({
       canvas.height = 700;
       setPreviewCanvas(canvas);
       console.log('✅ Slide preview canvas initialized');
-      
-      if (activeTab === 'slides' && slides[currentSlideIndex]) {
-        console.log('🖼️ Initial slide preview update');
-        updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-      }
     }
     
     if (visualCanvasRef.current) {
@@ -72,6 +67,22 @@ export default function VideoScriptEditor({
       console.log('✅ Visual preview canvas initialized');
     }
   }, []);
+
+  // Separate effect for initial slide preview (only after both canvas and slides are ready)
+  useEffect(() => {
+    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
+      console.log('🖼️ Initial slide preview update');
+      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+    }
+  }, [previewCanvas, slides, currentSlideIndex, activeTab]);
+
+  // Separate effect for when visual canvas becomes available
+  useEffect(() => {
+    if (visualPreviewCanvas && activeTab === 'visuals' && selectedVisualFunction) {
+      console.log('🎨 Visual canvas became available, updating preview');
+      updateVisualPreview(selectedVisualFunction);
+    }
+  }, [visualPreviewCanvas, activeTab, selectedVisualFunction]);
 
   // Handle canvas updates based on active tab and selection
   useEffect(() => {
@@ -354,13 +365,27 @@ export default function VideoScriptEditor({
 
   const handleVisualFunctionSelect = (visualFunction: any) => {
     console.log('🎨 Selecting visual function:', visualFunction.function_name);
+    console.log('🎨 Canvas state:', { 
+      hasVisualCanvas: !!visualPreviewCanvas,
+      activeTab,
+      canvasRef: !!visualCanvasRef.current 
+    });
+    
     setSelectedVisualFunction(visualFunction);
     setUpdateStatus(null);
     
-    // Immediately update the preview
+    // Immediately update the preview if canvas is ready
     if (visualPreviewCanvas && activeTab === 'visuals') {
       console.log('🖼️ Immediately updating visual preview');
       updateVisualPreview(visualFunction);
+    } else if (visualCanvasRef.current && activeTab === 'visuals') {
+      console.log('🔧 Canvas ref exists but state not set, forcing update...');
+      // Force set the canvas state if ref exists but state doesn't
+      const canvas = visualCanvasRef.current;
+      setVisualPreviewCanvas(canvas);
+      // The useEffect will handle the update once state is set
+    } else {
+      console.log('❌ Cannot update preview - canvas not ready');
     }
   };
 
