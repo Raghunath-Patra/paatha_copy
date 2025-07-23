@@ -64,27 +64,14 @@ export default function VideoScriptEditor({
     }
   }, []);
 
-  // Update visual preview when selected function changes
+  // Handle canvas updates based on active tab and selection
   useEffect(() => {
-    if (visualPreviewCanvas && selectedVisualFunction && activeTab === 'visuals') {
+    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
+      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+    } else if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
       updateVisualPreview(selectedVisualFunction);
     }
-  }, [selectedVisualFunction, visualPreviewCanvas, activeTab]);
-
-  // Clear and update canvas when switching tabs
-  useEffect(() => {
-    if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
-      // Small delay to ensure canvas is ready
-      setTimeout(() => {
-        updateVisualPreview(selectedVisualFunction);
-      }, 100);
-    } else if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
-      // Small delay to ensure canvas is ready
-      setTimeout(() => {
-        updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-      }, 100);
-    }
-  }, [activeTab]);
+  }, [activeTab, selectedVisualFunction, currentSlideIndex, visualPreviewCanvas, previewCanvas]);
 
   // Update preview when slide changes
   useEffect(() => {
