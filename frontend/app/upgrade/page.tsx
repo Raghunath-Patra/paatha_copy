@@ -13,7 +13,6 @@ interface PricingInfo {
   yearly_price?: number;
   daily_question_limit: number;
   monthly_question_limit: number;
-  carry_forward: boolean;
 }
 
 declare global {
@@ -94,8 +93,7 @@ export default function UpgradePage() {
               six_month_price: premiumPlan.six_month_price,
               yearly_price: premiumPlan.yearly_price,
               daily_question_limit: premiumPlan.daily_question_limit,
-              monthly_question_limit: premiumPlan.monthly_question_limit,
-              carry_forward: premiumPlan.carry_forward
+              monthly_question_limit: premiumPlan.monthly_question_limit
             });
           }
         }
