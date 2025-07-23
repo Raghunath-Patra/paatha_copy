@@ -9,13 +9,15 @@ import VideoPlayerPopup from './VideoPlayerPopup';
 interface VideoProjectBrowserProps {
   projects: any[];
   setProjects: (projects: any[]) => void;
-  onProjectSelect: (project: any) => void;
+  onProjectAction: (projectId: string, action: string) => void;
+  onCreateNew: () => void;
 }
 
 export default function VideoProjectBrowser({
   projects,
   setProjects,
-  onProjectSelect
+  onProjectAction,
+  onCreateNew
 }: VideoProjectBrowserProps) {
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<any>(null);
@@ -313,7 +315,7 @@ export default function VideoProjectBrowser({
           You haven't created any video projects yet. Click "Create New" to get started!
         </p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={onCreateNew}
           className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
           ➕ Create Your First Project
@@ -334,7 +336,7 @@ export default function VideoProjectBrowser({
             🔄 Refresh
           </button>
           <button
-            onClick={() => window.location.reload()}
+            onClick={onCreateNew}
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             ➕ New Project
@@ -378,50 +380,17 @@ export default function VideoProjectBrowser({
 
               <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                 {project.status === 'completed' && (
-                  <>
-                    <button
-                      onClick={() => handlePlayVideo(project)}
-                      disabled={isLoadingVideo}
-                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                        isLoadingVideo 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-green-500 hover:bg-green-600'
-                      } text-white`}
-                      title="Stream video (recommended)"
-                    >
-                      {isLoadingVideo ? (
-                        <>
-                          <span className="animate-spin inline-block mr-1">⏳</span>
-                          Loading...
-                        </>
-                      ) : (
-                        '▶️ Play'
-                      )}
-                    </button>
-                    {/* <button
-                      onClick={() => handlePlayVideoOffline(project)}
-                      disabled={isLoadingVideo}
-                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                        isLoadingVideo 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-blue-500 hover:bg-blue-600'
-                      } text-white`}
-                      title="Download and play offline"
-                    >
-                      📥 Offline
-                    </button> */}
-                    <button
-                      onClick={() => handleDownloadVideo(project.projectId)}
-                      className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
-                    >
-                      ⬇️ Download
-                    </button>
-                  </>
+                  <button
+                    onClick={() => onProjectAction(project.projectId, 'play')}
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                  >
+                    ▶️ Play
+                  </button>
                 )}
                 
                 {(project.status === 'script_ready' || project.status === 'completed') && (
                   <button
-                    onClick={() => onProjectSelect(project)}
+                    onClick={() => onProjectAction(project.projectId, 'edit')}
                     className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                   >
                     ✏️ Edit
@@ -430,13 +399,19 @@ export default function VideoProjectBrowser({
                 
                 {project.status === 'input_only' && (
                   <button
-                    onClick={() => onProjectSelect(project)}
+                    onClick={() => onProjectAction(project.projectId, 'continue')}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                   >
                     ▶️ Continue
                   </button>
                 )}
                 
+                <button
+                  onClick={() => onProjectAction(project.projectId, 'download')}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                >
+                  ⬇️ Download
+                </button>
                 <button
                   onClick={() => {
                     setProjectToDelete(project.projectId);
