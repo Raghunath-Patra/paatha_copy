@@ -9,14 +9,48 @@ import EnhancedSpinner from '../../../components/common/EnhancedSpinner';
 import VideoScriptEditor from '../../components/video-generator/VideoScriptEditor';
 import { getAuthHeaders } from '../../../utils/auth';
 
+// Define proper TypeScript interfaces
+interface Slide {
+  speaker: string;
+  title: string;
+  content: string;
+  content2?: string;
+  narration: string;
+  visualDuration: number;
+  isComplex: boolean;
+  visual?: {
+    type: string;
+    params: any[];
+  } | null;
+}
+
+interface Speaker {
+  voice: string;
+  model: string;
+  name: string;
+  color: string;
+  gender: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  lessonSteps: Slide[];
+  speakers: Record<string, Speaker>;
+  visualFunctions: Record<string, Function>;
+  status: string;
+}
+
 export default function EditProjectPage() {
   const router = useRouter();
   const params = useParams();
   const { user } = useSupabaseAuth();
-  const [project, setProject] = useState(null);
-  const [slides, setSlides] = useState([]);
+  
+  // Use proper TypeScript types instead of null
+  const [project, setProject] = useState<Project | null>(null);
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const projectId = params.projectId as string;
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -48,11 +82,11 @@ export default function EditProjectPage() {
       if (result.success && result.project) {
         const { project, speakers, visualFunctions, lessonSteps } = result.project;
         
-        // Transform data for VideoScriptEditor
-        const transformedProject = {
+        // Transform data for VideoScriptEditor with proper typing
+        const transformedProject: Project = {
           id: project.id,
           title: project.title,
-          lessonSteps: lessonSteps.map((step: any) => ({
+          lessonSteps: lessonSteps.map((step: any): Slide => ({
             speaker: step.speaker,
             title: step.title,
             content: step.content,
@@ -65,7 +99,7 @@ export default function EditProjectPage() {
               params: step.visual_params || []
             } : null
           })),
-          speakers: speakers.reduce((acc: any, speaker: any) => {
+          speakers: speakers.reduce((acc: Record<string, Speaker>, speaker: any) => {
             acc[speaker.speaker_key] = {
               voice: speaker.voice,
               model: speaker.model,
@@ -75,7 +109,7 @@ export default function EditProjectPage() {
             };
             return acc;
           }, {}),
-          visualFunctions: visualFunctions.reduce((acc: any, vf: any) => {
+          visualFunctions: visualFunctions.reduce((acc: Record<string, Function>, vf: any) => {
             try {
               acc[vf.function_name] = new Function('ctx', 'param1', 'param2', 'param3', 
                 vf.function_code.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '')
@@ -95,7 +129,7 @@ export default function EditProjectPage() {
       }
     } catch (error) {
       console.error('Error fetching project:', error);
-      setError(error.message);
+      setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
