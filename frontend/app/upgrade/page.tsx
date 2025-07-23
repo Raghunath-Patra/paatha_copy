@@ -33,7 +33,6 @@ export default function UpgradePage() {
     yearly_price: 299900, // Default price in paise (₹2,999)
     daily_question_limit: 30,
     monthly_question_limit: 900,
-    carry_forward: true
   });
   const [promoCode, setPromoCode] = useState('');
   const [promoCodeStatus, setPromoCodeStatus] = useState<{
