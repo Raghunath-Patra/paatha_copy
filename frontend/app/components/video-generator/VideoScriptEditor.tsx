@@ -71,6 +71,21 @@ export default function VideoScriptEditor({
     }
   }, [selectedVisualFunction, visualPreviewCanvas, activeTab]);
 
+  // Clear and update canvas when switching tabs
+  useEffect(() => {
+    if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
+      // Small delay to ensure canvas is ready
+      setTimeout(() => {
+        updateVisualPreview(selectedVisualFunction);
+      }, 100);
+    } else if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
+      // Small delay to ensure canvas is ready
+      setTimeout(() => {
+        updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+      }, 100);
+    }
+  }, [activeTab]);
+
   // Update preview when slide changes
   useEffect(() => {
     if (previewCanvas && slides[currentSlideIndex]) {
@@ -154,11 +169,10 @@ export default function VideoScriptEditor({
     const ctx = visualPreviewCanvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas
-    ctx.fillStyle = '#f8f9fa';
-    ctx.fillRect(0, 0, 1000, 700);
-
-    // Draw background
+    // Clear canvas completely
+    ctx.clearRect(0, 0, 1000, 700);
+    
+    // Set a clean white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 1000, 700);
 
@@ -168,23 +182,25 @@ export default function VideoScriptEditor({
     ctx.textAlign = 'center';
     ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 500, 40);
 
-    // Draw function area border
+    // Draw function area border (just for reference)
     ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]); // Dashed line
     ctx.strokeRect(200, 200, 600, 400);
+    ctx.setLineDash([]); // Reset line dash
 
+    // Reset canvas state before executing function
+    ctx.save();
+    
     // Execute the visual function
     try {
       // Parse the function code properly
       let functionCode = visualFunction.function_code.trim();
       
-      // If it's already a complete function, use it as is
-      // If it's just the function body, wrap it in a function
       let func;
       
       if (functionCode.startsWith('function')) {
-        // It's a complete function definition like "function myFunc(ctx, p1, p2, p3) { ... }"
-        // Extract just the function body
+        // It's a complete function definition
         const match = functionCode.match(/function\s+\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
         if (match) {
           const functionBody = match[1];
@@ -193,7 +209,7 @@ export default function VideoScriptEditor({
           throw new Error('Invalid function format');
         }
       } else {
-        // It's just the function body, wrap it in a function
+        // It's just the function body
         func = new Function('ctx', 'param1', 'param2', 'param3', functionCode);
       }
       
@@ -202,18 +218,23 @@ export default function VideoScriptEditor({
       
     } catch (error) {
       console.error('Error executing visual function:', error);
+      
+      // Show error in a more user-friendly way
       ctx.fillStyle = '#ef4444';
-      ctx.font = '16px Arial';
+      ctx.font = 'bold 18px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Error in visual function', 500, 400);
+      ctx.fillText('⚠️ Error in Visual Function', 500, 350);
       
+      ctx.fillStyle = '#dc2626';
+      ctx.font = '14px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      ctx.fillText(errorMessage, 500, 420);
+      ctx.fillText(errorMessage, 500, 380);
       
-      // Show more detailed error info for debugging
       ctx.fillStyle = '#666';
       ctx.font = '12px Arial';
-      ctx.fillText('Check the console for more details', 500, 450);
+      ctx.fillText('Check the console for detailed error information', 500, 410);
+    } finally {
+      ctx.restore(); // Restore canvas state
     }
   };
 
