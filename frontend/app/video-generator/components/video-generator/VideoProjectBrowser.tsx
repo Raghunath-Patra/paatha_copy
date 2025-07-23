@@ -337,11 +337,24 @@ export default function VideoProjectBrowser({
               <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                 {project.status === 'completed' && (
                   <button
-                    onClick={() => onProjectAction(project.projectId, 'play')}
-                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
-                  >
-                    ▶️ Play
-                  </button>
+                      onClick={() => handlePlayVideo(project)}
+                      disabled={isLoadingVideo}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        isLoadingVideo 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-500 hover:bg-green-600'
+                      } text-white`}
+                      title="Stream video (recommended)"
+                    >
+                      {isLoadingVideo ? (
+                        <>
+                          <span className="animate-spin inline-block mr-1">⏳</span>
+                          Loading...
+                        </>
+                      ) : (
+                        '▶️ Play'
+                      )}
+                    </button>
                 )}
                 
                 {(project.status === 'script_ready' || project.status === 'completed') && (
