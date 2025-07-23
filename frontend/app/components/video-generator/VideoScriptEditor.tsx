@@ -45,6 +45,8 @@ export default function VideoScriptEditor({
   const [visualPreviewCanvas, setVisualPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const visualCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [originalVisualCode, setOriginalVisualCode] = useState<string>('');
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Initialize canvas for preview
@@ -372,6 +374,7 @@ export default function VideoScriptEditor({
     });
     
     setSelectedVisualFunction(visualFunction);
+    setOriginalVisualCode(visualFunction.function_code);
     setUpdateStatus(null);
     
     // Immediately update the preview if canvas is ready
@@ -431,6 +434,10 @@ export default function VideoScriptEditor({
     } catch {
       return false;
     }
+  };
+
+  const hasVisualCodeChanged = () => {
+    return selectedVisualFunction && originalVisualCode !== selectedVisualFunction.function_code;
   };
 
   const saveSlideEdit = async () => {
@@ -736,6 +743,7 @@ export default function VideoScriptEditor({
       setUpdateStatus({ type: 'success', message: 'Visual function updated successfully!' });
       await loadVisualFunctions(); // Reload functions
       setEditingVisualFunction(null);
+      setOriginalVisualCode(functionCode);
 
       // Update project visual functions locally
       if (project.visualFunctions) {
@@ -1115,8 +1123,12 @@ export default function VideoScriptEditor({
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
-                      disabled={isUpdating}
-                      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300"
+                      disabled={isUpdating || !hasVisualCodeChanged()}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        hasVisualCodeChanged() && !isUpdating
+                          ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
                     >
                       {isUpdating ? '⏳ Saving...' : '💾 Save Function'}
                     </button>
@@ -1275,9 +1287,13 @@ export default function VideoScriptEditor({
                 Cancel
               </button>
               <button
-                onClick={() => editingVisualFunction.name && saveVisualFunction(editingVisualFunction.name, editingVisualFunction.code)}
-                disabled={!editingVisualFunction.name || !editingVisualFunction.code.trim() || isUpdating}
-                className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
+                disabled={isUpdating || !hasVisualCodeChanged()}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  hasVisualCodeChanged() && !isUpdating
+                    ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 {isUpdating ? '⏳ Saving...' : '💾 Save Function'}
               </button>
