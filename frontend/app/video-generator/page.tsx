@@ -9,10 +9,24 @@ import EnhancedSpinner from '../components/common/EnhancedSpinner';
 import { getAuthHeaders } from '../utils/auth';
 import VideoProjectBrowser from './components/video-generator/VideoProjectBrowser';
 
+// Define the Project interface
+interface Project {
+  projectId: string;
+  title: string;
+  createdAt: string;
+  status: string;
+  lessonStepsCount: number;
+  speakers: string[];
+  visualFunctions: string[];
+  hasVideo: boolean;
+  videoFiles: string[];
+}
+
 export default function VideoGeneratorPage() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useSupabaseAuth();
-  const [projects, setProjects] = useState([]);
+  // Fix: Properly type the projects state
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;

@@ -1,4 +1,4 @@
-// VideoProjectBrowser.tsx - FIXED VERSION with proper streaming
+// VideoProjectBrowser.tsx - FIXED VERSION with proper TypeScript types
 
 'use client';
 
@@ -6,9 +6,22 @@ import React, { useState, useEffect } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 import VideoPlayerPopup from './VideoPlayerPopup';
 
+// Define proper TypeScript interfaces
+interface Project {
+  projectId: string;
+  title: string;
+  createdAt: string;
+  status: string;
+  lessonStepsCount: number;
+  speakers: string[];
+  visualFunctions: string[];
+  hasVideo: boolean;
+  videoFiles: string[];
+}
+
 interface VideoProjectBrowserProps {
-  projects: any[];
-  setProjects: (projects: any[]) => void;
+  projects: Project[];
+  setProjects: (projects: Project[]) => void;
   onProjectAction: (projectId: string, action: string) => void;
   onCreateNew: () => void;
 }
@@ -20,14 +33,14 @@ export default function VideoProjectBrowser({
   onCreateNew
 }: VideoProjectBrowserProps) {
   const [loading, setLoading] = useState(true);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   
   // Video player state
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
-  const [currentVideoProject, setCurrentVideoProject] = useState<any>(null);
+  const [currentVideoProject, setCurrentVideoProject] = useState<Project | null>(null);
   const [videoLoading, setVideoLoading] = useState<string | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -47,7 +60,7 @@ export default function VideoProjectBrowser({
   }, [currentVideoUrl]);
 
   // Transform project data for frontend
-  const transformProjectForFrontend = (project: any) => {
+  const transformProjectForFrontend = (project: any): Project => {
     return {
       projectId: project.id,
       title: project.title,
@@ -116,8 +129,8 @@ export default function VideoProjectBrowser({
     }
   };
 
-  // FIXED: Use signed URL approach instead of blob
-  const handlePlayVideo = async (project: any) => {
+  // Use signed URL approach for streaming
+  const handlePlayVideo = async (project: Project) => {
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
       
@@ -172,63 +185,6 @@ export default function VideoProjectBrowser({
       
     } catch (error) {
       console.error('❌ Error getting video URL:', error);
-      setVideoLoading(null);
-      alert('Error loading video. Please check your connection.');
-    }
-  };
-
-  // ALTERNATIVE: Download as blob approach (for offline viewing)
-  const handlePlayVideoOffline = async (project: any) => {
-    try {
-      const { headers, isAuthorized } = await getAuthHeaders();
-      
-      if (!isAuthorized) {
-        alert('Please log in to play videos');
-        return;
-      }
-
-      setVideoLoading(project.projectId);
-      
-      console.log('🎬 Downloading video for offline play:', project.projectId);
-      
-      // Download video with auth headers
-      const videoResponse = await fetch(`${API_URL}/api/video-generator/download/${project.projectId}`, {
-        method: 'GET',
-        headers
-      });
-      
-      if (!videoResponse.ok) {
-        setVideoLoading(null);
-        console.error('Video download failed:', videoResponse.status);
-        
-        if (videoResponse.status === 401 || videoResponse.status === 403) {
-          alert('Not authorized to access this video.');
-        } else if (videoResponse.status === 404) {
-          alert('Video not found. It may still be processing.');
-        } else {
-          alert('Failed to download video. Please try again.');
-        }
-        return;
-      }
-      
-      console.log('✅ Video downloaded, creating blob URL');
-      
-      // Convert to blob and create object URL
-      const videoBlob = await videoResponse.blob();
-      const blobUrl = URL.createObjectURL(videoBlob);
-      
-      // Clean up any previous blob URL
-      if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(currentVideoUrl);
-      }
-      
-      setCurrentVideoUrl(blobUrl);
-      setCurrentVideoProject(project);
-      setShowVideoPlayer(true);
-      setVideoLoading(null);
-      
-    } catch (error) {
-      console.error('❌ Error downloading video:', error);
       setVideoLoading(null);
       alert('Error loading video. Please check your connection.');
     }
@@ -293,7 +249,7 @@ export default function VideoProjectBrowser({
     return statusMap[status as keyof typeof statusMap] || statusMap.empty;
   };
 
-  const handleProjectClick = (project: any) => {
+  const handleProjectClick = (project: Project) => {
     setSelectedProject(project);
   };
 
