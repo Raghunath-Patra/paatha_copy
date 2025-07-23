@@ -490,14 +490,14 @@ export default function VideoProjectBrowser({
             <div className="flex justify-center gap-3 mt-6">
               {selectedProject.status === 'completed' && (
                 <button
-                  onClick={() => onProjectAction(project.projectId, 'play')}
+                  onClick={() => onProjectAction(selectedProject.projectId, 'play')}
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   ▶️ Play Video
                 </button>
               )}
               <button
-                onClick={() => onProjectAction(project.projectId, 'edit')}
+                onClick={() => onProjectAction(selectedProject.projectId, 'edit')}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 ✏️ Edit Project
