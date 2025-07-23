@@ -407,7 +407,7 @@ export default function VideoProjectBrowser({
                 )}
                 
                 <button
-                  onClick={() => onProjectAction(project.projectId, 'download')}
+                  onClick={() => handleDownloadVideo(project.projectId)}
                   className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                 >
                   ⬇️ Download
