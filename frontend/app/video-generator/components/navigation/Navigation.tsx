@@ -18,7 +18,7 @@ interface Profile {
 }
 
 const Navigation: React.FC = () => {
-  const { profile, signOut } = useSupabaseAuth();
+  const { profile } = useSupabaseAuth();
   const [balance, setBalance] = useState<UserBalance | null>(null);
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -75,15 +75,6 @@ const Navigation: React.FC = () => {
     return profile.full_name?.charAt(0).toUpperCase() || 
            profile.email?.charAt(0).toUpperCase() || 
            '?';
-  };
-
-  const handleSignOut = async (): Promise<void> => {
-    try {
-      setShowUserMenu(false);
-      await signOut();
-    } catch (error: unknown) {
-      console.error('Error signing out:', error);
-    }
   };
 
   const isLowCredits: boolean = balance !== null && balance.available_credits < 100;
@@ -203,12 +194,6 @@ const Navigation: React.FC = () => {
             
             <hr className="my-1" />
             
-            <button
-              onClick={handleSignOut}
-              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-            >
-              Sign Out
-            </button>
           </div>
         )}
       </div>
