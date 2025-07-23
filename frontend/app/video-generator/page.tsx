@@ -8,11 +8,11 @@ import EnhancedSpinner from '../components/common/EnhancedSpinner';
 import { getAuthHeaders } from '../utils/auth';
 
 // Import video generation components
-import VideoWorkflowSelector from '../components/video-generator/VideoWorkflowSelector';
-import VideoContentInput from '../components/video-generator/VideoContentInput';
-import VideoScriptEditor from '../components/video-generator/VideoScriptEditor';
-import VideoGeneration from '../components/video-generator/VideoGeneration';
-import VideoProjectBrowser from '../components/video-generator/VideoProjectBrowser';
+import VideoWorkflowSelector from './components/video-generator/VideoWorkflowSelector';
+import VideoContentInput from './components/video-generator/VideoContentInput';
+import VideoScriptEditor from './components/video-generator/VideoScriptEditor';
+import VideoGeneration from './components/video-generator/VideoGeneration';
+import VideoProjectBrowser from './components/video-generator/VideoProjectBrowser';
 
 // Type definitions
 type WorkflowMode = 'simple' | 'advanced';

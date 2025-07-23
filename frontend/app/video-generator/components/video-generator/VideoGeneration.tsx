@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { getAuthHeaders } from '../../utils/auth';
+import { getAuthHeaders } from '../../../utils/auth';
 
 interface VideoGenerationProps {
   project: any;

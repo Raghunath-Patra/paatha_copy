@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { getAuthHeaders } from '../../utils/auth';
+import { getAuthHeaders } from '../../../utils/auth';
 
 interface VideoScriptEditorProps {
   project: {

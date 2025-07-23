@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getAuthHeaders } from '../../utils/auth';
+import { getAuthHeaders } from '../../../utils/auth';
 import VideoPlayerPopup from './VideoPlayerPopup';
 
 interface VideoProjectBrowserProps {

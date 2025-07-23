@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { getAuthHeaders } from '../../utils/auth';
+import { getAuthHeaders } from '../../../utils/auth';
 
 interface VideoContentInputProps {
   workflowMode: 'simple' | 'advanced';
