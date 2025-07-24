@@ -559,7 +559,7 @@ export default function VideoGeneratorPage() {
           </div>
           
           {/* Credits row - full width on mobile, right-aligned on larger screens */}
-          <div className="flex justify-start sm:justify-end">
+          <div className="flex justify-end">
             <CreditDisplay userBalance={userBalance} onClick={handleCreditsClick} />
           </div>
         </div>
