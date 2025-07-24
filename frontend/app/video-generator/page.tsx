@@ -400,7 +400,7 @@ const FloatingOrbs = () => {
 const ShimmerText = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => {
   return (
     <div className={`relative ${className}`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer bg-[length:200%_100%]"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-overlay bg-[length:200%_100%]"></div>
       {children}
     </div>
   );
@@ -434,11 +434,16 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
       <div className={`relative z-10 max-w-4xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
         {/* Main Heading with enhanced animations */}
         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3 sm:mb-4 leading-tight">
-          <span className="inline-block animate-fade-in-up">Create Amazing Videos with</span>{' '}
           <ShimmerText className="inline-block">
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent animate-gradient-text bg-[length:200%_auto]">
+            <span className="inline-block animate-fade-in-up bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent animate-shimmer-text bg-[length:200%_100%]">
+              Create Amazing Videos with
+            </span>
+          </ShimmerText>{' '}
+          <ShimmerText className="inline-block relative">
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent animate-gradient-text bg-[length:200%_auto] relative z-10">
               AI Magic
             </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-sweep bg-[length:100%_100%] z-20"></div>
           </ShimmerText>
         </h1>
         
@@ -491,6 +496,39 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
         }
+
+        @keyframes shimmer-overlay {
+        0% { 
+          background-position: -200% 0;
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% { 
+          background-position: 200% 0;
+          opacity: 0;
+        }
+      }
+
+      @keyframes shimmer-text {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+
+      @keyframes shimmer-sweep {
+        0% { 
+          background-position: -100% 0;
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% { 
+          background-position: 100% 0;
+          opacity: 0;
+        }
+      }
         
         @keyframes fade-in-up {
           0% { opacity: 0; transform: translateY(20px); }
@@ -519,6 +557,19 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
         
         .animate-shimmer {
           animation: shimmer 2s infinite;
+        }
+
+        .animate-shimmer-overlay {
+          animation: shimmer-overlay 3s ease-in-out infinite;
+        }
+
+        .animate-shimmer-text {
+          animation: shimmer-text 3s ease-in-out infinite;
+        }
+
+        .animate-shimmer-sweep {
+          animation: shimmer-sweep 2.5s ease-in-out infinite;
+          animation-delay: 1s;
         }
         
         .animate-fade-in-up {
