@@ -436,12 +436,12 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3 sm:mb-4 leading-tight">
           <ShimmerText className="inline-block">
             <span className="inline-block animate-fade-in-up bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent animate-shimmer-text bg-[length:200%_100%]">
-              Create Amazing Videos with
+              Create Amazing Videos 
             </span>
           </ShimmerText>{' '}
           <ShimmerText className="inline-block relative">
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent animate-gradient-text bg-[length:200%_auto] relative z-10">
-              AI Magic
+              with AI
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-sweep bg-[length:100%_100%] z-20"></div>
           </ShimmerText>
