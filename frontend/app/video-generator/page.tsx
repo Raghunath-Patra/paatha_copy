@@ -229,9 +229,9 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
   if (!userBalance) {
     return (
       <div className="animate-pulse">
-        <div className="flex items-center space-x-3 bg-white px-4 py-3 rounded-lg shadow-sm">
-          <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
-          <div className="w-24 h-5 bg-gray-200 rounded"></div>
+        <div className="flex items-center space-x-2 sm:space-x-3 bg-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-sm">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 rounded-full flex-shrink-0"></div>
+          <div className="w-20 sm:w-24 h-4 sm:h-5 bg-gray-200 rounded"></div>
         </div>
       </div>
     );
@@ -246,15 +246,13 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
     <div className="relative">
       <button
         onClick={handleCreditClick}
-        className="flex items-center space-x-3 bg-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border hover:border-blue-300 group"
+        className="flex items-center space-x-2 sm:space-x-3 bg-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border hover:border-blue-300 group"
       >
-        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-          <span className="text-blue-600 text-sm font-bold">₹</span>
+        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-blue-600 text-xs sm:text-sm font-bold">₹</span>
         </div>
-        <div className="text-left">
-          <div className="text-base font-semibold text-gray-900 group-hover:text-blue-600">
-            {formatNumber(userBalance.available_credits)} credits left
-          </div>
+        <div className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-blue-600 whitespace-nowrap">
+          {formatNumber(userBalance.available_credits)} credits left
         </div>
       </button>
 
