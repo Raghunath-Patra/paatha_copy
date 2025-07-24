@@ -1,4 +1,4 @@
-// VideoProjectBrowser.tsx - Refactored for compact UI, consistent layout, and improved actions
+// VideoProjectBrowser.tsx - Refactored for flexible button layout and improved UI
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -61,11 +61,11 @@ const ProjectCardSkeleton = () => (
     </div>
 
     {/* Action Buttons Skeleton */}
-    <div className="grid grid-cols-4 gap-2 mt-4">
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+    <div className="flex gap-2 mt-4">
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
     </div>
   </div>
 );
@@ -301,7 +301,7 @@ export default function VideoProjectBrowser({
     return <EmptyProjectsState onCreateNew={onCreateNew} />;
   }
 
-  const baseButtonClass = "w-full flex justify-center items-center px-2 py-2.5 rounded-lg text-white font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:bg-gray-400";
+  const baseButtonClass = "flex-grow md:flex-grow-0 flex justify-center items-center px-3 py-2.5 rounded-lg text-white font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:bg-gray-400";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
@@ -366,75 +366,63 @@ export default function VideoProjectBrowser({
                   </div>
                 </div>
 
-                {/* Action Buttons Grid */}
-                <div className="grid grid-cols-4 gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
-                  {/* Slot 1: Play Button */}
-                  <div>
-                    {project.status === 'completed' && (
-                      <button
-                        onClick={() => handlePlayVideo(project)}
-                        disabled={isLoadingVideo}
-                        className={`${baseButtonClass} bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600`}
-                        title="Play Video"
-                      >
-                        {isLoadingVideo ? <LoadingIcon /> : <PlayIcon />}
-                        <span className="hidden md:inline ml-2">Play</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Slot 2: Edit/Continue Button */}
-                  <div>
-                    {(project.status === 'script_ready' || project.status === 'completed') && (
-                      <button
-                        onClick={() => onProjectAction(project.projectId, 'edit')}
-                        className={`${baseButtonClass} bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600`}
-                        title="Edit Project"
-                      >
-                        <EditIcon />
-                        <span className="hidden md:inline ml-2">Edit</span>
-                      </button>
-                    )}
-                    {project.status === 'input_only' && (
-                      <button
-                        onClick={() => onProjectAction(project.projectId, 'continue')}
-                        className={`${baseButtonClass} bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700`}
-                        title="Continue Project"
-                      >
-                        <ContinueIcon />
-                        <span className="hidden md:inline ml-2">Continue</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Slot 3: Download Button */}
-                  <div>
-                    {project.status === 'completed' && (
-                      <button
-                        onClick={() => handleDownloadVideo(project.projectId)}
-                        className={`${baseButtonClass} bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600`}
-                        title="Download Video"
-                      >
-                        <DownloadIcon />
-                         <span className="hidden md:inline ml-2">Download</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Slot 4: Delete Button */}
-                  <div>
+                {/* Action Buttons: Flex layout for responsive sizing */}
+                <div className="flex flex-wrap gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
+                  {project.status === 'completed' && (
                     <button
-                      onClick={() => {
-                        setProjectToDelete(project.projectId);
-                        setShowDeleteModal(true);
-                      }}
-                      className={`${baseButtonClass} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600`}
-                      title="Delete Project"
+                      onClick={() => handlePlayVideo(project)}
+                      disabled={isLoadingVideo}
+                      className={`${baseButtonClass} bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600`}
+                      title="Play Video"
                     >
-                      <DeleteIcon />
-                       <span className="hidden md:inline ml-2">Delete</span>
+                      {isLoadingVideo ? <LoadingIcon /> : <PlayIcon />}
+                      <span className="hidden md:inline ml-2">Play</span>
                     </button>
-                  </div>
+                  )}
+
+                  {(project.status === 'script_ready' || project.status === 'completed') && (
+                    <button
+                      onClick={() => onProjectAction(project.projectId, 'edit')}
+                      className={`${baseButtonClass} bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600`}
+                      title="Edit Project"
+                    >
+                      <EditIcon />
+                      <span className="hidden md:inline ml-2">Edit</span>
+                    </button>
+                  )}
+                  {project.status === 'input_only' && (
+                    <button
+                      onClick={() => onProjectAction(project.projectId, 'continue')}
+                      className={`${baseButtonClass} bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700`}
+                      title="Continue Project"
+                    >
+                      <ContinueIcon />
+                      <span className="hidden md:inline ml-2">Continue</span>
+                    </button>
+                  )}
+
+                  {project.status === 'completed' && (
+                    <button
+                      onClick={() => handleDownloadVideo(project.projectId)}
+                      className={`${baseButtonClass} bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600`}
+                      title="Download Video"
+                    >
+                      <DownloadIcon />
+                       <span className="hidden md:inline ml-2">Download</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setProjectToDelete(project.projectId);
+                      setShowDeleteModal(true);
+                    }}
+                    className={`${baseButtonClass} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600`}
+                    title="Delete Project"
+                  >
+                    <DeleteIcon />
+                     <span className="hidden md:inline ml-2">Delete</span>
+                  </button>
                 </div>
               </div>
             );
