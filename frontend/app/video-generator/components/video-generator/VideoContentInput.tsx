@@ -8,9 +8,11 @@ const styles = `
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
+  }
 
   .animate-shimmer {
     animation: shimmer 2s infinite linear;
+  }
 
   @keyframes gradient-x {
     0%, 100% {
@@ -110,11 +112,15 @@ const FileUploadArea = ({
     if (files.length > 0) {
       const file = files[0];
       if (file.type === 'text/markdown' || file.name.endsWith('.md') || file.type === 'text/plain') {
-        // Simulate file input change event
-        const fakeEvent = {
-          target: { files: [file] }
-        } as React.ChangeEvent<HTMLInputElement>;
-        onFileUpload(fakeEvent);
+        // Create a proper FileList-like object and simulate the input change
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        if (fileInputRef.current) {
+          fileInputRef.current.files = dataTransfer.files;
+          const event = new Event('change', { bubbles: true });
+          fileInputRef.current.dispatchEvent(event);
+        }
       }
     }
   };
@@ -449,21 +455,21 @@ export default function VideoContentInput({
             className="w-full h-80 p-6 border-2 border-gray-300 rounded-xl font-mono text-sm resize-vertical focus:border-blue-500 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-white shadow-inner"
             placeholder="# Your Educational Content
 
-            ## Activity 2.1: Understanding Chemical Reactions
+## Activity 2.1: Understanding Chemical Reactions
 
-            * Collect the following solutions from the laboratory...
-            * Test each solution with indicators...
+* Collect the following solutions from the laboratory...
+* Test each solution with indicators...
 
-            ### Expected Observations:
-            - Acids turn blue litmus red
-            - Bases turn red litmus blue
+### Expected Observations:
+- Acids turn blue litmus red
+- Bases turn red litmus blue
 
-            **Learning Objectives:**
-            Students will understand the properties of acids and bases through hands-on experimentation.
+**Learning Objectives:**
+Students will understand the properties of acids and bases through hands-on experimentation.
 
-            ---
+---
 
-            Start typing or paste your content here. Supports Markdown formatting for better structure!"
+Start typing or paste your content here. Supports Markdown formatting for better structure!"
           />
           {/* Character Counter */}
           <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-white/80 backdrop-blur-sm px-2 py-1 rounded">
@@ -570,15 +576,3 @@ export default function VideoContentInput({
     </>
   );
 }
-
-// Add custom CSS classes for animations (add to your global CSS or Tailwind config)
-/*
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
-}
-*/
