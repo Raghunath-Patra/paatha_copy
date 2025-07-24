@@ -1,4 +1,508 @@
-'use client';
+{/* Header with shimmer effect */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
+            <span className="text-2xl">✏️</span>
+          </div>
+          <div className="relative">
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2 bg-[length:200%_100%] animate-shimmer">
+              Review & Edit Script
+            </h2>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer-slide opacity-30"></div>
+          </div>
+          <p className="text-slate-600 max-w-2xl mx-auto">
+            Fine-tune your lesson content and visual functions with AI assistance
+          </p>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+          {/* Left Panel - Tabs (2/5 width) */}
+          <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
+            {/* Tab Navigation */}
+            <div className="flex border-b border-slate-200/60">
+              <button
+                onClick={() => handleTabSwitch('slides')}
+                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-200 relative ${
+                  activeTab === 'slides'
+                    ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700'
+                    : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                }`}
+              >
+                {activeTab === 'slides' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                )}
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-lg">📋</span>
+                  <span className="hidden sm:inline">Lesson Steps</span>
+                  <span className="sm:hidden">Steps</span>
+                </div>
+              </button>
+              <button
+                onClick={() => handleTabSwitch('visuals')}
+                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-200 relative ${
+                  activeTab === 'visuals'
+                    ? 'bg-gradient-to-r from-purple-50 to-blue-50 text-purple-700'
+                    : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                }`}
+              >
+                {activeTab === 'visuals' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500"></div>
+                )}
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-lg">🎨</span>
+                  <span className="hidden sm:inline">Visual Functions</span>
+                  <span className="sm:hidden">Visuals</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-6">
+              {activeTab === 'slides' ? (
+                /* Slides Tab Content */
+                <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+                  {isLoading ? (
+                    // Skeleton loading for slides
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <SlideSkeleton key={index} />
+                    ))
+                  ) : (
+                    slides.map((slide, index) => (
+                      <div
+                        key={index}
+                        onClick={() => selectSlide(index)}
+                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02] ${
+                          currentSlideIndex === index
+                            ? 'border-blue-400 bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg'
+                            : 'border-slate-200 hover:border-blue-300 bg-white hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">
+                              {slide.visual?.type ? '🎨' : '📝'}
+                            </span>
+                            <span className="font-semibold text-slate-800">
+                              Slide {index + 1}
+                            </span>
+                            {hasSlideChanged() && currentSlideIndex === index && (
+                              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                            )}
+                          </div>
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+                            {slide.speaker}
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-slate-800 mb-2 line-clamp-1">
+                          {slide.title || 'Untitled Slide'}
+                        </div>
+                        <div className="text-xs text-slate-600 mb-2">
+                          Speaker: {project.speakers?.[slide.speaker]?.name || slide.speaker}
+                        </div>
+                        <div className="text-xs text-slate-600 line-clamp-2 mb-2">
+                          {(slide.content || '') + ' ' + (slide.content2 || '')}
+                        </div>
+                        {slide.visual?.type && (
+                          <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
+                            <span>🎨</span>
+                            Visual: {slide.visual.type}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                /* Visual Functions Tab Content */
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="text-lg font-semibold text-slate-800">Manage Visual Functions</h4>
+                    <div className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                      {visualFunctions.length} functions
+                    </div>
+                  </div>
+                  
+                  {/* Visual Functions List */}
+                  <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
+                    {isLoading ? (
+                      // Skeleton loading for visual functions
+                      Array.from({ length: 2 }).map((_, index) => (
+                        <VisualFunctionSkeleton key={index} />
+                      ))
+                    ) : visualFunctions.length === 0 ? (
+                      <div className="text-center py-12 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100">
+                        <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-2xl">🎨</span>
+                        </div>
+                        <h3 className="font-semibold text-slate-800 mb-2">No visual functions yet</h3>
+                        <p className="text-sm text-slate-600">Create your first visual function to get started!</p>
+                      </div>
+                    ) : (
+                      visualFunctions.map((vf) => (
+                        <div 
+                          key={vf.function_name} 
+                          onClick={() => handleVisualFunctionSelect(vf)}
+                          className={`border rounded-xl p-4 transition-all duration-200 cursor-pointer transform hover:scale-[1.02] ${
+                            selectedVisualFunction?.function_name === vf.function_name
+                              ? 'border-purple-400 bg-gradient-to-r from-purple-50 to-blue-50 shadow-lg'
+                              : 'border-slate-200 hover:border-purple-300 bg-white hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-slate-800 mb-1">{vf.function_name}</h5>
+                              <p className="text-xs text-slate-500">
+                                Updated: {new Date(vf.updated_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingVisualFunction({name: vf.function_name, code: vf.function_code});
+                              }}
+                              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-md"
+                            >
+                              ✏️ Edit
+                            </button>
+                          </div>
+                          
+                          {/* Function Preview */}
+                          <div className="bg-slate-50 rounded-lg p-3 mb-3">
+                            <pre className="text-xs text-slate-600 overflow-x-auto whitespace-pre-wrap line-clamp-3 font-mono">
+                              {vf.function_code.substring(0, 150)}
+                              {vf.function_code.length > 150 && '...'}
+                            </pre>
+                          </div>
+                          
+                          {/* Usage Info */}
+                          <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
+                            <span>📊</span>
+                            Used in: {slides.filter(slide => slide.visual?.type === vf.function_name).length} slide(s)
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Middle Panel - Preview (3/5 width) */}
+          <div className="xl:col-span-3 space-y-6">
+            {/* Preview Section */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h3 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                  {activeTab === 'slides' ? (
+                    <>
+                      <span className="text-2xl">🖼️</span>
+                      <span>Slide Preview</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl">🎨</span>
+                      <span>Visual Function Preview</span>
+                    </>
+                  )}
+                </h3>
+                {activeTab === 'slides' && (
+                  <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700">
+                    <span>📄</span>
+                    Slide {currentSlideIndex + 1} of {slides.length}
+                  </div>
+                )}
+                {activeTab === 'visuals' && selectedVisualFunction && (
+                  <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
+                    <span>⚙️</span>
+                    {selectedVisualFunction.function_name}
+                  </div>
+                )}
+              </div>
+              
+              {/* Canvas Preview */}
+              <div className="mb-6">
+                {isLoading ? (
+                  <CanvasSkeleton />
+                ) : (
+                  <div className="border-2 border-slate-200 rounded-xl overflow-hidden shadow-inner bg-white">
+                    {activeTab === 'slides' ? (
+                      <canvas
+                        ref={canvasRef}
+                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
+                        className="block"
+                      />
+                    ) : (
+                      <canvas
+                        ref={visualCanvasRef}
+                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
+                        className="block"
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Editor Section - Split Layout */}
+            {activeTab === 'slides' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Edit Content - Left Side */}
+                <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-6 border border-slate-200">
+                  <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
+                    <span className="text-lg">✏️</span>
+                    Edit Content
+                  </h4>
+                  <textarea
+                    value={editingSlide}
+                    onChange={(e) => setEditingSlide(e.target.value)}
+                    className="w-full h-48 p-4 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                    placeholder="Edit the content for this slide..."
+                  />
+                  <div className="flex gap-3 mt-4 flex-wrap">
+                    <button
+                      onClick={saveSlideEdit}
+                      disabled={isUpdating || !hasSlideChanged()}
+                      className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
+                        hasSlideChanged() && !isUpdating
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg'
+                          : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      {isUpdating ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Updating...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span>💾</span>
+                          Save Changes
+                        </div>
+                      )}
+                    </button>
+                    {hasSlideChanged() && (
+                      <button
+                        onClick={() => {
+                          selectSlide(currentSlideIndex);
+                          setUpdateStatus({ type: 'info', message: 'Changes discarded' });
+                        }}
+                        className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>↶</span>
+                          Discard Changes
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* AI Chat - Right Side */}
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+                  <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
+                    <span className="text-lg">🤖</span>
+                    AI Assistant
+                  </h4>
+                  
+                  {/* AI Modification Type Selector */}
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      onClick={() => setAiModifyType('content')}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        aiModifyType === 'content'
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105'
+                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>📝</span>
+                        Content
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setAiModifyType('visual')}
+                      disabled={!JSON.parse(editingSlide).visual?.type}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type
+                          ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg transform scale-105'
+                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>🎨</span>
+                        Visual
+                      </div>
+                    </button>
+                  </div>
+                  
+                  {/* Help Text */}
+                  <div className="text-xs text-slate-500 mb-3 p-3 rounded-lg bg-white/50">
+                    {aiModifyType === 'content' 
+                      ? '💡 Modify slide title, content, narration, or speaker...'
+                      : JSON.parse(editingSlide).visual?.type
+                        ? `💡 Modify the "${JSON.parse(editingSlide).visual.type}" visual function...`
+                        : '⚠️ No visual function in this slide'
+                    }
+                  </div>
+                  
+                  {/* Chat Interface */}
+                  <div className="space-y-3">
+                    <textarea
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      className="w-full h-24 px-4 py-3 border border-slate-300 rounded-xl text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                      placeholder={
+                        aiModifyType === 'content' 
+                          ? "e.g., Make the explanation simpler, change speaker to teacher..."
+                          : "e.g., Add more colors, make the chart bigger, add animation..."
+                      }
+                    />
+                    <button
+                      onClick={handleAIChat}
+                      disabled={!chatMessage.trim() || (aiModifyType === 'visual' && !JSON.parse(editingSlide).visual?.type)}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                    >
+                      {aiModifyType === 'content' ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <span>📝</span>
+                          Modify Content
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2">
+                          <span>🎨</span>
+                          Edit Visual
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                  
+                  {/* Visual Function Info */}
+                  {aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type && (
+                    <div className="mt-4 text-xs bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
+                      <div className="flex items-center gap-2 font-semibold text-purple-700 mb-1">
+                        <span>🎯</span>
+                        Current visual: {JSON.parse(editingSlide).visual.type}
+                      </div>
+                      {JSON.parse(editingSlide).visual.params && (
+                        <div className="text-purple-600">
+                          Parameters: {JSON.stringify(JSON.parse(editingSlide).visual.params)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Visual Function Editor - For visuals tab */}
+            {activeTab === 'visuals' && (
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+                {selectedVisualFunction ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Edit Code - Left Side */}
+                    <div>
+                      <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
+                        <span className="text-lg">🎨</span>
+                        Edit Visual Function
+                      </h4>
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Function Name</label>
+                        <input
+                          type="text"
+                          value={selectedVisualFunction.function_name}
+                          readOnly
+                          className="w-full p-3 border border-slate-300 rounded-xl text-sm bg-slate-100 font-mono"
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Function Code</label>
+                        <textarea
+                          value={selectedVisualFunction.function_code}
+                          onChange={(e) => setSelectedVisualFunction({
+                            ...selectedVisualFunction,
+                            function_code: e.target.value
+                          })}
+                          className="w-full h-48 p-4 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                          placeholder="Edit the visual function code..."
+                        />
+                      </div>
+                      <div className="flex gap-3 flex-wrap">
+                        <button
+                          onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
+                          disabled={isUpdating || !hasVisualCodeChanged()}
+                          className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
+                            hasVisualCodeChanged() && !isUpdating
+                              ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg'
+                              : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {isUpdating ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Saving...
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span>💾</span>
+                              Save Function
+                            </div>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => updateVisualPreview(selectedVisualFunction)}
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>🔄</span>
+                            Refresh Preview
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* AI Chat - Right Side */}
+                    <div>
+                      <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
+                        <span className="text-lg">🤖</span>
+                        AI Assistant
+                      </h4>
+                      <div className="text-xs text-slate-500 mb-3 p-3 rounded-lg bg-white/50">
+                        💡 e.g., "Add more colors", "Make it bigger", "Add animation", "Draw a bar chart instead"
+                      </div>
+                      <div className="space-y-3">
+                        <textarea
+                          value={chatMessage}
+                          onChange={(e) => setChatMessage(e.target.value)}
+                          className="w-full h-32 px-4 py-3 border border-slate-300 rounded-xl text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                          placeholder="Describe how you want to modify this visual function..."
+                        />
+                        <button
+                          onClick={handleVisualAIChat}
+                          disabled={!chatMessage.trim()}
+                          className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span>🎨</span>
+                            Modify Function
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">🎨</span>
+                    </div>
+                    <h4 className="font-semibold text-slate-800 mb-2">Select a Visual Function</h4>
+                    <p className="text-sm text-slate-600">Choose a function from the left panel to preview and edit it here.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
