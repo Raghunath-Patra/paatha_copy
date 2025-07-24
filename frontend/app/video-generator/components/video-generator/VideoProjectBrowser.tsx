@@ -62,19 +62,32 @@ const ProjectCardSkeleton = () => (
 );
 
 const ProjectGridSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-4 sm:p-6 lg:p-8">
-    <div className="max-w-7xl mx-auto">
-      {/* Header Skeleton */}
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
+    <div className="w-full">
+      {/* Header - Always Visible */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-64 animate-pulse"></div>
+        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
+          <span className="text-3xl">📁</span>
+          My Video Projects
+        </h1>
         <div className="flex gap-3">
-          <div className="h-10 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
-          <div className="h-10 w-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+          <button
+            disabled
+            className="bg-gray-300 text-gray-500 px-4 py-2 rounded-xl font-medium cursor-not-allowed transition-all"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            disabled
+            className="bg-gray-300 text-gray-500 px-6 py-2 rounded-xl font-medium cursor-not-allowed transition-all"
+          >
+            ➕ New Project
+          </button>
         </div>
       </div>
 
       {/* Grid Skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
         {[...Array(8)].map((_, i) => (
           <ProjectCardSkeleton key={i} />
         ))}
@@ -93,8 +106,8 @@ const ProjectGridSkeleton = () => (
 
 // Enhanced Empty State Component
 const EmptyProjectsState = ({ onCreateNew }: { onCreateNew: () => void }) => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-4 sm:p-6 lg:p-8">
-    <div className="max-w-7xl mx-auto">
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
+    <div className="w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
         <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
