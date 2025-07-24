@@ -39,6 +39,36 @@ const styles = `
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
   }
+
+  @keyframes slideInFromTop {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutToTop {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideInFromTop 0.3s ease-out;
+  }
+
+  .animate-slide-out {
+    animation: slideOutToTop 0.3s ease-in;
+  }
 `;
 
 interface VideoContentInputProps {
@@ -217,6 +247,7 @@ export default function VideoContentInput({
   const [generationProgress, setGenerationProgress] = useState(0);
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [fileUploadNotification, setFileUploadNotification] = useState<{ message: string; isVisible: boolean; isExiting: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -226,15 +257,22 @@ export default function VideoContentInput({
       const reader = new FileReader();
       reader.onload = (e) => {
         setContent(e.target?.result as string);
-        setStatus({ 
-          type: 'success', 
-          message: `File "${file.name}" loaded successfully! ${(e.target?.result as string).length} characters loaded.` 
-        });
         
-        // Auto-hide success message after 3 seconds
+        // Show notification
+        const message = `File "${file.name}" loaded successfully! ${(e.target?.result as string).length} characters loaded.`;
+        setFileUploadNotification({ message, isVisible: true, isExiting: false });
+        
+        // Start exit animation after 2.5 seconds
         setTimeout(() => {
-          setStatus(null);
-        }, 3000);
+          setFileUploadNotification(prev => 
+            prev ? { ...prev, isExiting: true } : null
+          );
+        }, 2500);
+        
+        // Remove notification completely after animation
+        setTimeout(() => {
+          setFileUploadNotification(null);
+        }, 2800);
       };
       reader.readAsText(file);
     }
@@ -391,6 +429,25 @@ export default function VideoContentInput({
     <>
       {/* Inject custom CSS styles */}
       <style dangerouslySetInnerHTML={{ __html: styles }} />
+      
+      {/* File Upload Notification */}
+      {fileUploadNotification && (
+        <div className={`fixed top-4 right-4 z-50 max-w-md ${
+          fileUploadNotification.isExiting ? 'animate-slide-out' : 'animate-slide-in'
+        }`}>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-4 rounded-lg shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center bg-green-500 text-white font-bold">
+                ✓
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-green-800">Success!</div>
+                <div className="text-green-700">{fileUploadNotification.message}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="max-w-4xl mx-auto">
       {/* Enhanced Header with Gradient Text */}
