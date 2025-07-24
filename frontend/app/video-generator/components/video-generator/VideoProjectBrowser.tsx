@@ -70,7 +70,7 @@ const EmptyProjectsState = ({ onCreateNew }: { onCreateNew: () => void }) => (
     </p>
     <button
       onClick={onCreateNew}
-      className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
     >
       ➕ Create Your First Project
     </button>
@@ -327,7 +327,7 @@ export default function VideoProjectBrowser({
           </button>
           <button
             onClick={onCreateNew}
-            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
           >
             ➕ New Project
           </button>
@@ -344,7 +344,7 @@ export default function VideoProjectBrowser({
             <div
               key={project.projectId}
               onClick={() => handleProjectClick(project)}
-              className="bg-white rounded-lg p-4 shadow-md border-2 border-transparent hover:border-red-300 transition-all cursor-pointer hover:shadow-lg"
+              className="bg-white rounded-lg p-4 shadow-md border-2 border-transparent hover:border-blue-300 transition-all cursor-pointer hover:shadow-lg"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
@@ -501,7 +501,7 @@ export default function VideoProjectBrowser({
               )}
               <button
                 onClick={() => onProjectAction(selectedProject.projectId, 'edit')}
-                className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
               >
                 ✏️ Edit Project
               </button>
