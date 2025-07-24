@@ -29,9 +29,110 @@ interface UserBalance {
     total_credits: number;
   } | null;
   purchased_at: string | null;
+  is_new_user?: boolean;
+  eligible_for_bonus?: boolean;
 }
 
-// Credit Display Component with Popup
+// Animated Bonus Popup Component
+const BonusClaimPopup = ({ 
+  isOpen, 
+  onClaim, 
+  onClose, 
+  loading = false 
+}: { 
+  isOpen: boolean; 
+  onClaim: () => void; 
+  onClose: () => void;
+  loading?: boolean;
+}) => {
+  const [animationPhase, setAnimationPhase] = useState(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer1 = setTimeout(() => setAnimationPhase(1), 300);
+      const timer2 = setTimeout(() => setAnimationPhase(2), 800);
+      const timer3 = setTimeout(() => setAnimationPhase(3), 1300);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 opacity-50"></div>
+        
+        {/* Floating Emojis */}
+        <div className="absolute top-4 left-4 text-2xl animate-bounce" style={{ animationDelay: '0s' }}>🎉</div>
+        <div className="absolute top-6 right-6 text-xl animate-bounce" style={{ animationDelay: '0.5s' }}>✨</div>
+        <div className="absolute bottom-6 left-6 text-xl animate-bounce" style={{ animationDelay: '1s' }}>🚀</div>
+        <div className="absolute bottom-4 right-4 text-2xl animate-bounce" style={{ animationDelay: '1.5s' }}>💫</div>
+        
+        {/* Content */}
+        <div className="relative z-10">
+          {/* Welcome Message */}
+          <div className={`transition-all duration-500 ${animationPhase >= 1 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
+            <div className="text-6xl mb-4 animate-pulse">🎁</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              Welcome to Video Generator!
+            </h2>
+          </div>
+
+          {/* Bonus Announcement */}
+          <div className={`transition-all duration-500 ${animationPhase >= 2 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
+            <p className="text-gray-600 mb-4">
+              As a new user, you're eligible for
+            </p>
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xl font-bold py-3 px-6 rounded-lg mb-4 animate-pulse">
+              FREE BONUS CREDITS!
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className={`transition-all duration-500 ${animationPhase >= 3 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
+            <p className="text-sm text-gray-500 mb-6">
+              Get started with AI-powered video creation immediately!
+            </p>
+            
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={loading}
+              >
+                Maybe Later
+              </button>
+              <button
+                onClick={onClaim}
+                disabled={loading}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span>Claiming...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🎉</span>
+                    <span>Claim Free Credits</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | null, onClick: () => void }) => {
   const [showPopup, setShowPopup] = useState(false);
   
@@ -235,6 +336,8 @@ export default function VideoGeneratorPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
+  const [showBonusPopup, setShowBonusPopup] = useState(false);
+  const [claimingBonus, setClaimingBonus] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -255,6 +358,11 @@ export default function VideoGeneratorPage() {
         if (balanceResponse.ok) {
           const balanceData = await balanceResponse.json();
           setUserBalance(balanceData);
+          
+          // Show bonus popup for new users
+          if (balanceData.is_new_user && balanceData.eligible_for_bonus) {
+            setShowBonusPopup(true);
+          }
         }
       } catch (error) {
         console.error('Error fetching user balance:', error);
@@ -267,6 +375,55 @@ export default function VideoGeneratorPage() {
       fetchUserBalance();
     }
   }, [user, authLoading, API_URL]);
+
+  const handleClaimBonus = async () => {
+    try {
+      setClaimingBonus(true);
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        alert('Please log in to claim bonus credits');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/video-credits/claim-bonus`, {
+        method: 'POST',
+        headers
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update user balance with new credits
+        setUserBalance(prev => prev ? {
+          ...prev,
+          available_credits: result.new_balance,
+          current_package: {
+            name: result.package_name,
+            total_credits: result.credits_granted
+          },
+          is_new_user: false,
+          eligible_for_bonus: false
+        } : null);
+
+        // Show success message
+        alert(`🎉 ${result.message}`);
+        setShowBonusPopup(false);
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.detail || 'Failed to claim bonus credits'}`);
+      }
+    } catch (error) {
+      console.error('Error claiming bonus:', error);
+      alert('Error claiming bonus credits. Please try again.');
+    } finally {
+      setClaimingBonus(false);
+    }
+  };
+
+  const handleCloseBonusPopup = () => {
+    setShowBonusPopup(false);
+  };
 
   const handleProjectAction = (projectId: string, action: string) => {
     switch (action) {
@@ -330,6 +487,14 @@ export default function VideoGeneratorPage() {
             onCreateNew={handleCreateNew}
           />
         </div>
+
+        {/* Bonus Claim Popup */}
+        <BonusClaimPopup
+          isOpen={showBonusPopup}
+          onClaim={handleClaimBonus}
+          onClose={handleCloseBonusPopup}
+          loading={claimingBonus}
+        />
       </div>
     </div>
   );
