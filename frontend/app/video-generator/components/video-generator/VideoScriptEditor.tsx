@@ -1,508 +1,4 @@
-{/* Header with shimmer effect */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
-            <span className="text-2xl">✏️</span>
-          </div>
-          <div className="relative">
-            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2 bg-[length:200%_100%] animate-shimmer">
-              Review & Edit Script
-            </h2>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer-slide opacity-30"></div>
-          </div>
-          <p className="text-slate-600 max-w-2xl mx-auto">
-            Fine-tune your lesson content and visual functions with AI assistance
-          </p>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-          {/* Left Panel - Tabs (2/5 width) */}
-          <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
-            {/* Tab Navigation */}
-            <div className="flex border-b border-slate-200/60">
-              <button
-                onClick={() => handleTabSwitch('slides')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-200 relative ${
-                  activeTab === 'slides'
-                    ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-                }`}
-              >
-                {activeTab === 'slides' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                )}
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-lg">📋</span>
-                  <span className="hidden sm:inline">Lesson Steps</span>
-                  <span className="sm:hidden">Steps</span>
-                </div>
-              </button>
-              <button
-                onClick={() => handleTabSwitch('visuals')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-200 relative ${
-                  activeTab === 'visuals'
-                    ? 'bg-gradient-to-r from-purple-50 to-blue-50 text-purple-700'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-                }`}
-              >
-                {activeTab === 'visuals' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500"></div>
-                )}
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-lg">🎨</span>
-                  <span className="hidden sm:inline">Visual Functions</span>
-                  <span className="sm:hidden">Visuals</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-6">
-              {activeTab === 'slides' ? (
-                /* Slides Tab Content */
-                <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-                  {isLoading ? (
-                    // Skeleton loading for slides
-                    Array.from({ length: 3 }).map((_, index) => (
-                      <SlideSkeleton key={index} />
-                    ))
-                  ) : (
-                    slides.map((slide, index) => (
-                      <div
-                        key={index}
-                        onClick={() => selectSlide(index)}
-                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02] ${
-                          currentSlideIndex === index
-                            ? 'border-blue-400 bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg'
-                            : 'border-slate-200 hover:border-blue-300 bg-white hover:shadow-md'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {slide.visual?.type ? '🎨' : '📝'}
-                            </span>
-                            <span className="font-semibold text-slate-800">
-                              Slide {index + 1}
-                            </span>
-                            {hasSlideChanged() && currentSlideIndex === index && (
-                              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                            )}
-                          </div>
-                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                            {slide.speaker}
-                          </span>
-                        </div>
-                        <div className="text-sm font-semibold text-slate-800 mb-2 line-clamp-1">
-                          {slide.title || 'Untitled Slide'}
-                        </div>
-                        <div className="text-xs text-slate-600 mb-2">
-                          Speaker: {project.speakers?.[slide.speaker]?.name || slide.speaker}
-                        </div>
-                        <div className="text-xs text-slate-600 line-clamp-2 mb-2">
-                          {(slide.content || '') + ' ' + (slide.content2 || '')}
-                        </div>
-                        {slide.visual?.type && (
-                          <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
-                            <span>🎨</span>
-                            Visual: {slide.visual.type}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              ) : (
-                /* Visual Functions Tab Content */
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h4 className="text-lg font-semibold text-slate-800">Manage Visual Functions</h4>
-                    <div className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                      {visualFunctions.length} functions
-                    </div>
-                  </div>
-                  
-                  {/* Visual Functions List */}
-                  <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
-                    {isLoading ? (
-                      // Skeleton loading for visual functions
-                      Array.from({ length: 2 }).map((_, index) => (
-                        <VisualFunctionSkeleton key={index} />
-                      ))
-                    ) : visualFunctions.length === 0 ? (
-                      <div className="text-center py-12 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100">
-                        <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <span className="text-2xl">🎨</span>
-                        </div>
-                        <h3 className="font-semibold text-slate-800 mb-2">No visual functions yet</h3>
-                        <p className="text-sm text-slate-600">Create your first visual function to get started!</p>
-                      </div>
-                    ) : (
-                      visualFunctions.map((vf) => (
-                        <div 
-                          key={vf.function_name} 
-                          onClick={() => handleVisualFunctionSelect(vf)}
-                          className={`border rounded-xl p-4 transition-all duration-200 cursor-pointer transform hover:scale-[1.02] ${
-                            selectedVisualFunction?.function_name === vf.function_name
-                              ? 'border-purple-400 bg-gradient-to-r from-purple-50 to-blue-50 shadow-lg'
-                              : 'border-slate-200 hover:border-purple-300 bg-white hover:shadow-md'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <h5 className="font-semibold text-slate-800 mb-1">{vf.function_name}</h5>
-                              <p className="text-xs text-slate-500">
-                                Updated: {new Date(vf.updated_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingVisualFunction({name: vf.function_name, code: vf.function_code});
-                              }}
-                              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-md"
-                            >
-                              ✏️ Edit
-                            </button>
-                          </div>
-                          
-                          {/* Function Preview */}
-                          <div className="bg-slate-50 rounded-lg p-3 mb-3">
-                            <pre className="text-xs text-slate-600 overflow-x-auto whitespace-pre-wrap line-clamp-3 font-mono">
-                              {vf.function_code.substring(0, 150)}
-                              {vf.function_code.length > 150 && '...'}
-                            </pre>
-                          </div>
-                          
-                          {/* Usage Info */}
-                          <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
-                            <span>📊</span>
-                            Used in: {slides.filter(slide => slide.visual?.type === vf.function_name).length} slide(s)
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Middle Panel - Preview (3/5 width) */}
-          <div className="xl:col-span-3 space-y-6">
-            {/* Preview Section */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <h3 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
-                  {activeTab === 'slides' ? (
-                    <>
-                      <span className="text-2xl">🖼️</span>
-                      <span>Slide Preview</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-2xl">🎨</span>
-                      <span>Visual Function Preview</span>
-                    </>
-                  )}
-                </h3>
-                {activeTab === 'slides' && (
-                  <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700">
-                    <span>📄</span>
-                    Slide {currentSlideIndex + 1} of {slides.length}
-                  </div>
-                )}
-                {activeTab === 'visuals' && selectedVisualFunction && (
-                  <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
-                    <span>⚙️</span>
-                    {selectedVisualFunction.function_name}
-                  </div>
-                )}
-              </div>
-              
-              {/* Canvas Preview */}
-              <div className="mb-6">
-                {isLoading ? (
-                  <CanvasSkeleton />
-                ) : (
-                  <div className="border-2 border-slate-200 rounded-xl overflow-hidden shadow-inner bg-white">
-                    {activeTab === 'slides' ? (
-                      <canvas
-                        ref={canvasRef}
-                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
-                        className="block"
-                      />
-                    ) : (
-                      <canvas
-                        ref={visualCanvasRef}
-                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
-                        className="block"
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Editor Section - Split Layout */}
-            {activeTab === 'slides' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Edit Content - Left Side */}
-                <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-6 border border-slate-200">
-                  <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
-                    <span className="text-lg">✏️</span>
-                    Edit Content
-                  </h4>
-                  <textarea
-                    value={editingSlide}
-                    onChange={(e) => setEditingSlide(e.target.value)}
-                    className="w-full h-48 p-4 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                    placeholder="Edit the content for this slide..."
-                  />
-                  <div className="flex gap-3 mt-4 flex-wrap">
-                    <button
-                      onClick={saveSlideEdit}
-                      disabled={isUpdating || !hasSlideChanged()}
-                      className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
-                        hasSlideChanged() && !isUpdating
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg'
-                          : 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {isUpdating ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Updating...
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>💾</span>
-                          Save Changes
-                        </div>
-                      )}
-                    </button>
-                    {hasSlideChanged() && (
-                      <button
-                        onClick={() => {
-                          selectSlide(currentSlideIndex);
-                          setUpdateStatus({ type: 'info', message: 'Changes discarded' });
-                        }}
-                        className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>↶</span>
-                          Discard Changes
-                        </div>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* AI Chat - Right Side */}
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
-                  <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
-                    <span className="text-lg">🤖</span>
-                    AI Assistant
-                  </h4>
-                  
-                  {/* AI Modification Type Selector */}
-                  <div className="flex gap-2 mb-4">
-                    <button
-                      onClick={() => setAiModifyType('content')}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                        aiModifyType === 'content'
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105'
-                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1">
-                        <span>📝</span>
-                        Content
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setAiModifyType('visual')}
-                      disabled={!JSON.parse(editingSlide).visual?.type}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                        aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type
-                          ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg transform scale-105'
-                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1">
-                        <span>🎨</span>
-                        Visual
-                      </div>
-                    </button>
-                  </div>
-                  
-                  {/* Help Text */}
-                  <div className="text-xs text-slate-500 mb-3 p-3 rounded-lg bg-white/50">
-                    {aiModifyType === 'content' 
-                      ? '💡 Modify slide title, content, narration, or speaker...'
-                      : JSON.parse(editingSlide).visual?.type
-                        ? `💡 Modify the "${JSON.parse(editingSlide).visual.type}" visual function...`
-                        : '⚠️ No visual function in this slide'
-                    }
-                  </div>
-                  
-                  {/* Chat Interface */}
-                  <div className="space-y-3">
-                    <textarea
-                      value={chatMessage}
-                      onChange={(e) => setChatMessage(e.target.value)}
-                      className="w-full h-24 px-4 py-3 border border-slate-300 rounded-xl text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                      placeholder={
-                        aiModifyType === 'content' 
-                          ? "e.g., Make the explanation simpler, change speaker to teacher..."
-                          : "e.g., Add more colors, make the chart bigger, add animation..."
-                      }
-                    />
-                    <button
-                      onClick={handleAIChat}
-                      disabled={!chatMessage.trim() || (aiModifyType === 'visual' && !JSON.parse(editingSlide).visual?.type)}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
-                    >
-                      {aiModifyType === 'content' ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <span>📝</span>
-                          Modify Content
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center gap-2">
-                          <span>🎨</span>
-                          Edit Visual
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                  
-                  {/* Visual Function Info */}
-                  {aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type && (
-                    <div className="mt-4 text-xs bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
-                      <div className="flex items-center gap-2 font-semibold text-purple-700 mb-1">
-                        <span>🎯</span>
-                        Current visual: {JSON.parse(editingSlide).visual.type}
-                      </div>
-                      {JSON.parse(editingSlide).visual.params && (
-                        <div className="text-purple-600">
-                          Parameters: {JSON.stringify(JSON.parse(editingSlide).visual.params)}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Visual Function Editor - For visuals tab */}
-            {activeTab === 'visuals' && (
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
-                {selectedVisualFunction ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Edit Code - Left Side */}
-                    <div>
-                      <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
-                        <span className="text-lg">🎨</span>
-                        Edit Visual Function
-                      </h4>
-                      <div className="mb-4">
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">Function Name</label>
-                        <input
-                          type="text"
-                          value={selectedVisualFunction.function_name}
-                          readOnly
-                          className="w-full p-3 border border-slate-300 rounded-xl text-sm bg-slate-100 font-mono"
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">Function Code</label>
-                        <textarea
-                          value={selectedVisualFunction.function_code}
-                          onChange={(e) => setSelectedVisualFunction({
-                            ...selectedVisualFunction,
-                            function_code: e.target.value
-                          })}
-                          className="w-full h-48 p-4 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                          placeholder="Edit the visual function code..."
-                        />
-                      </div>
-                      <div className="flex gap-3 flex-wrap">
-                        <button
-                          onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
-                          disabled={isUpdating || !hasVisualCodeChanged()}
-                          className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
-                            hasVisualCodeChanged() && !isUpdating
-                              ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg'
-                              : 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                          }`}
-                        >
-                          {isUpdating ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              Saving...
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span>💾</span>
-                              Save Function
-                            </div>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => updateVisualPreview(selectedVisualFunction)}
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span>🔄</span>
-                            Refresh Preview
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* AI Chat - Right Side */}
-                    <div>
-                      <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
-                        <span className="text-lg">🤖</span>
-                        AI Assistant
-                      </h4>
-                      <div className="text-xs text-slate-500 mb-3 p-3 rounded-lg bg-white/50">
-                        💡 e.g., "Add more colors", "Make it bigger", "Add animation", "Draw a bar chart instead"
-                      </div>
-                      <div className="space-y-3">
-                        <textarea
-                          value={chatMessage}
-                          onChange={(e) => setChatMessage(e.target.value)}
-                          className="w-full h-32 px-4 py-3 border border-slate-300 rounded-xl text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                          placeholder="Describe how you want to modify this visual function..."
-                        />
-                        <button
-                          onClick={handleVisualAIChat}
-                          disabled={!chatMessage.trim()}
-                          className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <span>🎨</span>
-                            Modify Function
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">🎨</span>
-                    </div>
-                    <h4 className="font-semibold text-slate-800 mb-2">Select a Visual Function</h4>
-                    <p className="text-sm text-slate-600">Choose a function from the left panel to preview and edit it here.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>'use client';
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
@@ -579,7 +75,6 @@ export default function VideoScriptEditor({
   const [previewCanvas, setPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const [editingSlide, setEditingSlide] = useState<string>('');
   const [originalSlide, setOriginalSlide] = useState<any>(null);
-  const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -588,15 +83,13 @@ export default function VideoScriptEditor({
 
   // Tab management
   const [activeTab, setActiveTab] = useState<'slides' | 'visuals'>('slides');
-  const [editingVisualFunction, setEditingVisualFunction] = useState<{name: string, code: string} | null>(null);
   const [visualFunctions, setVisualFunctions] = useState<any[]>([]);
   const [aiModifyType, setAiModifyType] = useState<'content' | 'visual'>('content');
 
-  // Add these new state variables for visual functions tab
+  // Visual functions tab state
   const [selectedVisualFunction, setSelectedVisualFunction] = useState<any>(null);
   const [visualPreviewCanvas, setVisualPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const visualCanvasRef = useRef<HTMLCanvasElement>(null);
-
   const [originalVisualCode, setOriginalVisualCode] = useState<string>('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -628,50 +121,14 @@ export default function VideoScriptEditor({
     }
   }, []);
 
-  // Separate effect for initial slide preview (only after both canvas and slides are ready)
+  // Handle canvas updates based on active tab
   useEffect(() => {
     if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
-      console.log('🖼️ Initial slide preview update');
-      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-    }
-  }, [previewCanvas, slides, currentSlideIndex, activeTab]);
-
-  // Separate effect for when visual canvas becomes available
-  useEffect(() => {
-    if (visualPreviewCanvas && activeTab === 'visuals' && selectedVisualFunction) {
-      console.log('🎨 Visual canvas became available, updating preview');
-      updateVisualPreview(selectedVisualFunction);
-    }
-  }, [visualPreviewCanvas, activeTab, selectedVisualFunction]);
-
-  // Handle canvas updates based on active tab and selection
-  useEffect(() => {
-    console.log(`🔄 Tab/selection change effect: activeTab=${activeTab}, hasPreviewCanvas=${!!previewCanvas}, hasVisualCanvas=${!!visualPreviewCanvas}`);
-    
-    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
-      console.log(`🖼️ Updating slide preview for slide ${currentSlideIndex}`);
       updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
     } else if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
-      console.log(`🎨 Updating visual preview for function: ${selectedVisualFunction.function_name}`);
       updateVisualPreview(selectedVisualFunction);
-    } else {
-      console.log('⏸️ No update needed - missing requirements');
     }
   }, [activeTab, selectedVisualFunction, currentSlideIndex, visualPreviewCanvas, previewCanvas]);
-
-  // Update preview when slide changes (only for slides tab)
-  useEffect(() => {
-    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
-      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-    }
-  }, [currentSlideIndex, slides, previewCanvas, activeTab]);
-
-  // Update visual preview when visual function changes (only for visuals tab)
-  useEffect(() => {
-    if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
-      updateVisualPreview(selectedVisualFunction);
-    }
-  }, [selectedVisualFunction, visualPreviewCanvas, activeTab]);
 
   const updateSlidePreview = (slide: any, index: number) => {
     if (!previewCanvas) return;
@@ -744,100 +201,62 @@ export default function VideoScriptEditor({
   };
 
   const updateVisualPreview = (visualFunction: any) => {
-    if (!visualPreviewCanvas) {
-      console.log('❌ Visual preview canvas not available');
-      return;
-    }
+    if (!visualPreviewCanvas) return;
 
     const ctx = visualPreviewCanvas.getContext('2d');
-    if (!ctx) {
-      console.log('❌ Could not get 2D context from visual preview canvas');
-      return;
-    }
+    if (!ctx) return;
 
-    console.log('🎨 Starting visual function preview for:', visualFunction.function_name);
-
-    // Completely clear the canvas with a solid color
+    // Clear canvas
     ctx.clearRect(0, 0, 1000, 700);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 1000, 700);
 
-    // Draw a simple header
+    // Draw header
     ctx.fillStyle = '#6b46c1';
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 500, 40);
 
-    // Create a working area for the visual function
-    const workingArea = {
-      x: 100,
-      y: 80,
-      width: 800,
-      height: 500
-    };
-
-    // Draw working area background (light gray)
+    // Create working area
+    const workingArea = { x: 100, y: 80, width: 800, height: 500 };
     ctx.fillStyle = '#f8f9fa';
     ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
-    
-    // Draw working area border
     ctx.strokeStyle = '#dee2e6';
     ctx.lineWidth = 2;
     ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
 
-    // Add instruction text
-    ctx.fillStyle = '#6c757d';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Visual function output will appear below:', 500, 70);
-
     try {
-      console.log('🔧 Executing visual function code...');
-      
-      // Save context state before executing user code
       ctx.save();
-      
-      // Reset text alignment for user code
       ctx.textAlign = 'left';
       
-      // Parse and execute the function code
       let functionCode = visualFunction.function_code.trim();
       let func;
       
       if (functionCode.startsWith('function')) {
-        // Complete function definition - extract function body
         const match = functionCode.match(/function\s+\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
         if (match) {
           const functionBody = match[1];
           func = new Function('ctx', 'param1', 'param2', 'param3', functionBody);
         } else {
-          throw new Error('Invalid function format - could not parse function definition');
+          throw new Error('Invalid function format');
         }
       } else {
-        // Just function body
         func = new Function('ctx', 'param1', 'param2', 'param3', functionCode);
       }
       
-      // Execute the function with sample parameters
-      console.log('✅ Function compiled successfully, executing...');
       func(ctx, 'param1_sample', 'param2_sample', 'param3_sample');
-      console.log('✅ Visual function executed successfully');
       
     } catch (error) {
-      console.error('❌ Error executing visual function:', error);
-      
-      // Restore context for error display
+      console.error('Error executing visual function:', error);
       ctx.restore();
       
-      // Clear the working area and show error
+      // Show error
       ctx.fillStyle = '#fff5f5';
       ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
-      
       ctx.strokeStyle = '#f56565';
       ctx.lineWidth = 2;
       ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
-      // Display error message
       ctx.fillStyle = '#e53e3e';
       ctx.font = 'bold 18px Arial';
       ctx.textAlign = 'center';
@@ -846,41 +265,11 @@ export default function VideoScriptEditor({
       ctx.fillStyle = '#c53030';
       ctx.font = '14px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      // Word wrap the error message
-      const maxWidth = 600;
-      const words = errorMessage.split(' ');
-      let line = '';
-      let y = 280;
-      
-      for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
-        const metrics = ctx.measureText(testLine);
-        const testWidth = metrics.width;
-        
-        if (testWidth > maxWidth && n > 0) {
-          ctx.fillText(line, 500, y);
-          line = words[n] + ' ';
-          y += 20;
-        } else {
-          line = testLine;
-        }
-      }
-      if (line) {
-        ctx.fillText(line, 500, y);
-      }
-      
-      ctx.fillStyle = '#718096';
-      ctx.font = '12px Arial';
-      ctx.fillText('Check the browser console for detailed error information', 500, y + 30);
-      
-      return; // Exit early for error case
+      ctx.fillText(errorMessage.substring(0, 80), 500, 280);
+      return;
     }
     
-    // Restore context state
     ctx.restore();
-    
-    console.log('✅ Visual function preview completed');
   };
 
   const getBackgroundColor = (speaker: string) => {
@@ -924,41 +313,21 @@ export default function VideoScriptEditor({
   };
 
   const handleVisualFunctionSelect = (visualFunction: any) => {
-    console.log('🎨 Selecting visual function:', visualFunction.function_name);
-    console.log('🎨 Canvas state:', { 
-      hasVisualCanvas: !!visualPreviewCanvas,
-      activeTab,
-      canvasRef: !!visualCanvasRef.current 
-    });
-    
     setSelectedVisualFunction(visualFunction);
     setOriginalVisualCode(visualFunction.function_code);
     setUpdateStatus(null);
     
-    // Immediately update the preview if canvas is ready
     if (visualPreviewCanvas && activeTab === 'visuals') {
-      console.log('🖼️ Immediately updating visual preview');
       updateVisualPreview(visualFunction);
-    } else if (visualCanvasRef.current && activeTab === 'visuals') {
-      console.log('🔧 Canvas ref exists but state not set, forcing update...');
-      // Force set the canvas state if ref exists but state doesn't
-      const canvas = visualCanvasRef.current;
-      setVisualPreviewCanvas(canvas);
-      // The useEffect will handle the update once state is set
-    } else {
-      console.log('❌ Cannot update preview - canvas not ready');
     }
   };
 
   const handleTabSwitch = (newTab: 'slides' | 'visuals') => {
-    console.log(`🔄 Switching to tab: ${newTab}`);
     setActiveTab(newTab);
-    setShowChat(false); // Close any open chat
-    setUpdateStatus(null); // Clear any status messages
+    setUpdateStatus(null);
     
-    // Clear the inactive canvas to prevent confusion
+    // Clear inactive canvas
     if (newTab === 'slides' && visualPreviewCanvas) {
-      console.log('🧹 Clearing visual preview canvas');
       const ctx = visualPreviewCanvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, 1000, 700);
@@ -969,7 +338,6 @@ export default function VideoScriptEditor({
         ctx.fillRect(0, 0, 1000, 700);
       }
     } else if (newTab === 'visuals' && previewCanvas) {
-      console.log('🧹 Clearing slide preview canvas');
       const ctx = previewCanvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, 1000, 700);
@@ -986,7 +354,7 @@ export default function VideoScriptEditor({
     setCurrentSlideIndex(index);
     const slideData = JSON.stringify(slides[index], null, 2);
     setEditingSlide(slideData);
-    setOriginalSlide(JSON.parse(JSON.stringify(slides[index]))); // Deep copy
+    setOriginalSlide(JSON.parse(JSON.stringify(slides[index])));
     setUpdateStatus(null);
   };
 
@@ -1022,7 +390,6 @@ export default function VideoScriptEditor({
         throw new Error('Authentication required');
       }
 
-      // Check if narration or speaker changed (requires audio regeneration)
       const needsAudioRegeneration = 
         originalSlide.narration !== updatedSlide.narration || 
         originalSlide.speaker !== updatedSlide.speaker;
@@ -1042,12 +409,9 @@ export default function VideoScriptEditor({
         throw new Error(result.error || 'Failed to update slide');
       }
 
-      // Update local state
       const updatedSlides = [...slides];
       updatedSlides[currentSlideIndex] = updatedSlide;
       onSlidesUpdate(updatedSlides);
-      
-      // Update original slide reference
       setOriginalSlide(JSON.parse(JSON.stringify(updatedSlide)));
 
       if (needsAudioRegeneration) {
@@ -1103,22 +467,18 @@ export default function VideoScriptEditor({
       }
 
       if (aiModifyType === 'visual' && result.updatedVisualFunction) {
-        // Visual function was updated
         setUpdateStatus({ 
           type: 'success', 
-          message: `AI updated the visual function "${result.updatedVisualFunction.name}"! The changes are saved and will appear in the preview.` 
+          message: `AI updated the visual function "${result.updatedVisualFunction.name}"!` 
         });
         
-        // Update the visual functions in project (if you're tracking them locally)
         if (project.visualFunctions) {
           project.visualFunctions[result.updatedVisualFunction.name] = eval(`(${result.updatedVisualFunction.code})`);
         }
         
-        // Refresh the preview to show the updated visual
         updateSlidePreview(JSON.parse(editingSlide), currentSlideIndex);
         
       } else if (result.modifiedSlide) {
-        // Slide content was updated
         setEditingSlide(JSON.stringify(result.modifiedSlide, null, 2));
         setUpdateStatus({ 
           type: 'success', 
@@ -1165,14 +525,12 @@ export default function VideoScriptEditor({
       }
 
       if (result.updatedCode) {
-        // Update the selected visual function
         const updatedFunction = {
           ...selectedVisualFunction,
           function_code: result.updatedCode
         };
         setSelectedVisualFunction(updatedFunction);
         
-        // Update the visual functions list
         setVisualFunctions(prev => 
           prev.map(vf => 
             vf.function_name === selectedVisualFunction.function_name 
@@ -1181,7 +539,6 @@ export default function VideoScriptEditor({
           )
         );
         
-        // Update preview
         updateVisualPreview(updatedFunction);
         
         setUpdateStatus({ 
@@ -1218,34 +575,24 @@ export default function VideoScriptEditor({
         throw new Error('Script export failed');
       }
 
-      // Get HTML content as text
       const htmlContent = await response.text();
-      
-      // Create a blob with HTML content
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = window.URL.createObjectURL(blob);
       
-      // Open in new window for printing
       const newWindow = window.open(url, '_blank');
       
       if (newWindow) {
-        // Optional: Auto-trigger print dialog after content loads
         newWindow.onload = () => {
           setTimeout(() => {
-            // Show a helpful message
             newWindow.focus();
-            
-            // Optionally auto-open print dialog (some browsers block this)
             newWindow.print();
           }, 500);
         };
         
-        // Clean up the blob URL after a delay
         setTimeout(() => {
           window.URL.revokeObjectURL(url);
         }, 5000);
       } else {
-        // Fallback: download as HTML file if popup blocked
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
@@ -1305,22 +652,18 @@ export default function VideoScriptEditor({
       if (!response.ok) throw new Error(result.error);
 
       setUpdateStatus({ type: 'success', message: 'Visual function updated successfully!' });
-      await loadVisualFunctions(); // Reload functions
-      setEditingVisualFunction(null);
+      await loadVisualFunctions();
       setOriginalVisualCode(functionCode);
 
-      // Update project visual functions locally
       if (project.visualFunctions) {
         try {
           project.visualFunctions[functionName] = eval(`(${functionCode})`);
-          // Refresh preview if current slide uses this visual (only for slides tab)
           if (activeTab === 'slides') {
             const currentSlide = slides[currentSlideIndex];
             if (currentSlide?.visual?.type === functionName) {
               updateSlidePreview(currentSlide, currentSlideIndex);
             }
           }
-          // Refresh visual preview if this is the selected visual function (only for visuals tab)
           if (activeTab === 'visuals' && selectedVisualFunction?.function_name === functionName) {
             const updatedFunction = { ...selectedVisualFunction, function_code: functionCode };
             setSelectedVisualFunction(updatedFunction);
@@ -1355,22 +698,26 @@ export default function VideoScriptEditor({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header with shimmer effect */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
             <span className="text-2xl">✏️</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Review & Edit Script
-          </h2>
+          <div className="relative">
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2 bg-[length:200%_100%] animate-shimmer">
+              Review & Edit Script
+            </h2>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer-slide opacity-30"></div>
+          </div>
           <p className="text-slate-600 max-w-2xl mx-auto">
             Fine-tune your lesson content and visual functions with AI assistance
           </p>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          {/* Left Panel with Tabs */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+          {/* Left Panel - Tabs (2/5 width) */}
+          <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
             {/* Tab Navigation */}
             <div className="flex border-b border-slate-200/60">
               <button
@@ -1413,57 +760,109 @@ export default function VideoScriptEditor({
             <div className="p-6">
               {activeTab === 'slides' ? (
                 /* Slides Tab Content */
-                <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-                  {isLoading ? (
-                    // Skeleton loading for slides
-                    Array.from({ length: 3 }).map((_, index) => (
-                      <SlideSkeleton key={index} />
-                    ))
-                  ) : (
-                    slides.map((slide, index) => (
-                      <div
-                        key={index}
-                        onClick={() => selectSlide(index)}
-                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02] ${
-                          currentSlideIndex === index
-                            ? 'border-blue-400 bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg'
-                            : 'border-slate-200 hover:border-blue-300 bg-white hover:shadow-md'
+                <div>
+                  <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar mb-6">
+                    {isLoading ? (
+                      Array.from({ length: 3 }).map((_, index) => (
+                        <SlideSkeleton key={index} />
+                      ))
+                    ) : (
+                      slides.map((slide, index) => (
+                        <div
+                          key={index}
+                          onClick={() => selectSlide(index)}
+                          className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02] ${
+                            currentSlideIndex === index
+                              ? 'border-blue-400 bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg'
+                              : 'border-slate-200 hover:border-blue-300 bg-white hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">
+                                {slide.visual?.type ? '🎨' : '📝'}
+                              </span>
+                              <span className="font-semibold text-slate-800">
+                                Slide {index + 1}
+                              </span>
+                              {hasSlideChanged() && currentSlideIndex === index && (
+                                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                              )}
+                            </div>
+                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+                              {slide.speaker}
+                            </span>
+                          </div>
+                          <div className="text-sm font-semibold text-slate-800 mb-2 line-clamp-1">
+                            {slide.title || 'Untitled Slide'}
+                          </div>
+                          <div className="text-xs text-slate-600 mb-2">
+                            Speaker: {project.speakers?.[slide.speaker]?.name || slide.speaker}
+                          </div>
+                          <div className="text-xs text-slate-600 line-clamp-2 mb-2">
+                            {(slide.content || '') + ' ' + (slide.content2 || '')}
+                          </div>
+                          {slide.visual?.type && (
+                            <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
+                              <span>🎨</span>
+                              Visual: {slide.visual.type}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Edit Content Section - Below slides list */}
+                  <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
+                    <h4 className="font-semibold mb-3 text-slate-800 flex items-center gap-2">
+                      <span className="text-lg">✏️</span>
+                      Edit Content
+                    </h4>
+                    <textarea
+                      value={editingSlide}
+                      onChange={(e) => setEditingSlide(e.target.value)}
+                      className="w-full h-32 p-3 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                      placeholder="Edit the content for this slide..."
+                    />
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                      <button
+                        onClick={saveSlideEdit}
+                        disabled={isUpdating || !hasSlideChanged()}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
+                          hasSlideChanged() && !isUpdating
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg'
+                            : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                         }`}
                       >
-                        <div className="flex justify-between items-start mb-3">
+                        {isUpdating ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {slide.visual?.type ? '🎨' : '📝'}
-                            </span>
-                            <span className="font-semibold text-slate-800">
-                              Slide {index + 1}
-                            </span>
-                            {hasSlideChanged() && currentSlideIndex === index && (
-                              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                            )}
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Saving...
                           </div>
-                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                            {slide.speaker}
-                          </span>
-                        </div>
-                        <div className="text-sm font-semibold text-slate-800 mb-2 line-clamp-1">
-                          {slide.title || 'Untitled Slide'}
-                        </div>
-                        <div className="text-xs text-slate-600 mb-2">
-                          Speaker: {project.speakers?.[slide.speaker]?.name || slide.speaker}
-                        </div>
-                        <div className="text-xs text-slate-600 line-clamp-2 mb-2">
-                          {(slide.content || '') + ' ' + (slide.content2 || '')}
-                        </div>
-                        {slide.visual?.type && (
-                          <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
-                            <span>🎨</span>
-                            Visual: {slide.visual.type}
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span>💾</span>
+                            Save
                           </div>
                         )}
-                      </div>
-                    ))
-                  )}
+                      </button>
+                      {hasSlideChanged() && (
+                        <button
+                          onClick={() => {
+                            selectSlide(currentSlideIndex);
+                            setUpdateStatus({ type: 'info', message: 'Changes discarded' });
+                          }}
+                          className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>↶</span>
+                            Discard
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 /* Visual Functions Tab Content */
@@ -1476,9 +875,8 @@ export default function VideoScriptEditor({
                   </div>
                   
                   {/* Visual Functions List */}
-                  <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
+                  <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar mb-6">
                     {isLoading ? (
-                      // Skeleton loading for visual functions
                       Array.from({ length: 2 }).map((_, index) => (
                         <VisualFunctionSkeleton key={index} />
                       ))
@@ -1508,15 +906,6 @@ export default function VideoScriptEditor({
                                 Updated: {new Date(vf.updated_at).toLocaleDateString()}
                               </p>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingVisualFunction({name: vf.function_name, code: vf.function_code});
-                              }}
-                              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-md"
-                            >
-                              ✏️ Edit
-                            </button>
                           </div>
                           
                           {/* Function Preview */}
@@ -1536,482 +925,262 @@ export default function VideoScriptEditor({
                       ))
                     )}
                   </div>
+
+                  {/* Visual Function Editor - Below functions list */}
+                  {selectedVisualFunction && (
+                    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-200">
+                      <h4 className="font-semibold mb-3 text-slate-800 flex items-center gap-2">
+                        <span className="text-lg">🎨</span>
+                        Edit Function
+                      </h4>
+                      <div className="mb-3">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Function Name</label>
+                        <input
+                          type="text"
+                          value={selectedVisualFunction.function_name}
+                          readOnly
+                          className="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-100 font-mono"
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Function Code</label>
+                        <textarea
+                          value={selectedVisualFunction.function_code}
+                          onChange={(e) => setSelectedVisualFunction({
+                            ...selectedVisualFunction,
+                            function_code: e.target.value
+                          })}
+                          className="w-full h-24 p-3 border border-slate-300 rounded-lg text-sm font-mono resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                          placeholder="Edit the visual function code..."
+                        />
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
+                          disabled={isUpdating || !hasVisualCodeChanged()}
+                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
+                            hasVisualCodeChanged() && !isUpdating
+                              ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg'
+                              : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {isUpdating ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Saving...
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span>💾</span>
+                              Save
+                            </div>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => updateVisualPreview(selectedVisualFunction)}
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>🔄</span>
+                            Refresh
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right Panel - Preview & Editor */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <h3 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
-                {activeTab === 'slides' ? (
-                  <>
-                    <span className="text-2xl">🖼️</span>
-                    <span>Slide Preview</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-2xl">🎨</span>
-                    <span>Visual Function Preview</span>
-                  </>
-                )}
-              </h3>
-              {activeTab === 'slides' && (
-                <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700">
-                  <span>📄</span>
-                  Slide {currentSlideIndex + 1} of {slides.length}
-                </div>
-              )}
-              {activeTab === 'visuals' && selectedVisualFunction && (
-                <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
-                  <span>⚙️</span>
-                  {selectedVisualFunction.function_name}
-                </div>
-              )}
-            </div>
-            
-            {/* Canvas Preview */}
-            <div className="mb-6">
-              {isLoading ? (
-                <CanvasSkeleton />
-              ) : (
-                <div className="border-2 border-slate-200 rounded-xl overflow-hidden shadow-inner bg-white">
+          {/* Right Panel - Preview & AI Chat (3/5 width) */}
+          <div className="xl:col-span-3 space-y-6">
+            {/* Preview Section */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h3 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
                   {activeTab === 'slides' ? (
-                    <canvas
-                      ref={canvasRef}
-                      style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
-                      className="block"
-                    />
+                    <>
+                      <span className="text-2xl">🖼️</span>
+                      <span>Slide Preview</span>
+                    </>
                   ) : (
-                    <canvas
-                      ref={visualCanvasRef}
-                      style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
-                      className="block"
-                    />
+                    <>
+                      <span className="text-2xl">🎨</span>
+                      <span>Visual Function Preview</span>
+                    </>
                   )}
-                </div>
-              )}
+                </h3>
+                {activeTab === 'slides' && (
+                  <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700">
+                    <span>📄</span>
+                    Slide {currentSlideIndex + 1} of {slides.length}
+                  </div>
+                )}
+                {activeTab === 'visuals' && selectedVisualFunction && (
+                  <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700">
+                    <span>⚙️</span>
+                    {selectedVisualFunction.function_name}
+                  </div>
+                )}
+              </div>
+              
+              {/* Canvas Preview */}
+              <div className="mb-6">
+                {isLoading ? (
+                  <CanvasSkeleton />
+                ) : (
+                  <div className="border-2 border-slate-200 rounded-xl overflow-hidden shadow-inner bg-white">
+                    {activeTab === 'slides' ? (
+                      <canvas
+                        ref={canvasRef}
+                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
+                        className="block"
+                      />
+                    ) : (
+                      <canvas
+                        ref={visualCanvasRef}
+                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
+                        className="block"
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Content Editor - For slides tab */}
-            {activeTab === 'slides' && (
-              <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-6 border border-slate-200">
-                <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
-                  <span className="text-lg">✏️</span>
-                  Edit Content
-                </h4>
-                <textarea
-                  value={editingSlide}
-                  onChange={(e) => setEditingSlide(e.target.value)}
-                  className="w-full h-32 p-4 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                  placeholder="Edit the content for this slide..."
-                />
-                <div className="flex gap-3 mt-4 flex-wrap">
-                  <button
-                    onClick={saveSlideEdit}
-                    disabled={isUpdating || !hasSlideChanged()}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
-                      hasSlideChanged() && !isUpdating
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg'
-                        : 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {isUpdating ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Updating...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span>💾</span>
-                        Save Changes
-                      </div>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowChat(!showChat)}
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>🤖</span>
-                      AI Chat
-                    </div>
-                  </button>
-                  {hasSlideChanged() && (
+            {/* AI Chat Section */}
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+              <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
+                <span className="text-lg">🤖</span>
+                AI Assistant
+              </h4>
+              
+              {activeTab === 'slides' && (
+                <>
+                  {/* AI Modification Type Selector */}
+                  <div className="flex gap-2 mb-4">
                     <button
-                      onClick={() => {
-                        selectSlide(currentSlideIndex);
-                        setUpdateStatus({ type: 'info', message: 'Changes discarded' });
-                      }}
-                      className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                      onClick={() => setAiModifyType('content')}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        aiModifyType === 'content'
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105'
+                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                      }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span>↶</span>
-                        Discard Changes
+                      <div className="flex items-center gap-1">
+                        <span>📝</span>
+                        Content
                       </div>
                     </button>
+                    <button
+                      onClick={() => setAiModifyType('visual')}
+                      disabled={!editingSlide || !JSON.parse(editingSlide || '{}').visual?.type}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        aiModifyType === 'visual' && editingSlide && JSON.parse(editingSlide || '{}').visual?.type
+                          ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg transform scale-105'
+                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>🎨</span>
+                        Visual
+                      </div>
+                    </button>
+                  </div>
+                  
+                  {/* Help Text */}
+                  <div className="text-xs text-slate-500 mb-3 p-3 rounded-lg bg-white/50">
+                    {aiModifyType === 'content' 
+                      ? '💡 Modify slide title, content, narration, or speaker...'
+                      : editingSlide && JSON.parse(editingSlide || '{}').visual?.type
+                        ? `💡 Modify the "${JSON.parse(editingSlide || '{}').visual.type}" visual function...`
+                        : '⚠️ No visual function in this slide'
+                    }
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'visuals' && (
+                <div className="text-xs text-slate-500 mb-3 p-3 rounded-lg bg-white/50">
+                  💡 e.g., "Add more colors", "Make it bigger", "Add animation", "Draw a bar chart instead"
+                </div>
+              )}
+              
+              {/* Chat Interface */}
+              <div className="space-y-3">
+                <textarea
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  className="w-full h-24 px-4 py-3 border border-slate-300 rounded-xl text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                  placeholder={
+                    activeTab === 'slides'
+                      ? aiModifyType === 'content' 
+                        ? "e.g., Make the explanation simpler, change speaker to teacher..."
+                        : "e.g., Add more colors, make the chart bigger, add animation..."
+                      : "Describe how you want to modify this visual function..."
+                  }
+                />
+                <button
+                  onClick={activeTab === 'slides' ? handleAIChat : handleVisualAIChat}
+                  disabled={
+                    !chatMessage.trim() || 
+                    (activeTab === 'slides' && aiModifyType === 'visual' && (!editingSlide || !JSON.parse(editingSlide || '{}').visual?.type)) ||
+                    (activeTab === 'visuals' && !selectedVisualFunction)
+                  }
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                >
+                  {activeTab === 'slides' ? (
+                    aiModifyType === 'content' ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <span>📝</span>
+                        Modify Content
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        <span>🎨</span>
+                        Edit Visual
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <span>🎨</span>
+                      Modify Function
+                    </div>
+                  )}
+                </button>
+              </div>
+              
+              {/* Visual Function Info */}
+              {activeTab === 'slides' && aiModifyType === 'visual' && editingSlide && JSON.parse(editingSlide || '{}').visual?.type && (
+                <div className="mt-4 text-xs bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-2 font-semibold text-purple-700 mb-1">
+                    <span>🎯</span>
+                    Current visual: {JSON.parse(editingSlide || '{}').visual.type}
+                  </div>
+                  {JSON.parse(editingSlide || '{}').visual.params && (
+                    <div className="text-purple-600">
+                      Parameters: {JSON.stringify(JSON.parse(editingSlide || '{}').visual.params)}
+                    </div>
                   )}
                 </div>
+              )}
 
-                {/* Enhanced AI Chat for Slides */}
-                {showChat && (
-                  <div className="mt-6 border border-slate-300 rounded-xl p-4 bg-white/80 backdrop-blur-sm shadow-inner">
-                    <div className="text-sm text-slate-600 mb-4 flex items-center gap-2">
-                      <span className="text-lg">💬</span>
-                      Ask AI to modify the content or visual function...
-                    </div>
-                    
-                    {/* AI Modification Type Selector */}
-                    <div className="flex gap-2 mb-4">
-                      <button
-                        onClick={() => setAiModifyType('content')}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                          aiModifyType === 'content'
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105'
-                            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <span>📝</span>
-                          Content
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => setAiModifyType('visual')}
-                        disabled={!JSON.parse(editingSlide).visual?.type}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                          aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type
-                            ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg transform scale-105'
-                            : 'bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <span>🎨</span>
-                          Visual
-                        </div>
-                      </button>
-                    </div>
-                    
-                    {/* Help Text */}
-                    <div className="text-xs text-slate-500 mb-3 p-2 rounded-lg bg-slate-50">
-                      {aiModifyType === 'content' 
-                        ? '💡 Modify slide title, content, narration, or speaker...'
-                        : JSON.parse(editingSlide).visual?.type
-                          ? `💡 Modify the "${JSON.parse(editingSlide).visual.type}" visual function...`
-                          : '⚠️ No visual function in this slide'
-                      }
-                    </div>
-                    
-                    {/* Chat Input */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={chatMessage}
-                        onChange={(e) => setChatMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAIChat()}
-                        className="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                        placeholder={
-                          aiModifyType === 'content' 
-                            ? "e.g., Make the explanation simpler, change speaker to teacher..."
-                            : "e.g., Add more colors, make the chart bigger, add animation..."
-                        }
-                      />
-                      <button
-                        onClick={handleAIChat}
-                        disabled={!chatMessage.trim() || (aiModifyType === 'visual' && !JSON.parse(editingSlide).visual?.type)}
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
-                      >
-                        {aiModifyType === 'content' ? (
-                          <div className="flex items-center gap-1">
-                            <span>📝</span>
-                            Modify
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <span>🎨</span>
-                            Edit Visual
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                    
-                    {/* Visual Function Info */}
-                    {aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type && (
-                      <div className="mt-3 text-xs bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
-                        <div className="flex items-center gap-2 font-semibold text-purple-700 mb-1">
-                          <span>🎯</span>
-                          Current visual: {JSON.parse(editingSlide).visual.type}
-                        </div>
-                        {JSON.parse(editingSlide).visual.params && (
-                          <div className="text-purple-600">
-                            Parameters: {JSON.stringify(JSON.parse(editingSlide).visual.params)}
-                          </div>
-                        )}
-                      </div>
-                    )}
+              {/* No Visual Function Selected Message */}
+              {activeTab === 'visuals' && !selectedVisualFunction && (
+                <div className="text-center py-8 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-xl">🎨</span>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Visual Function Editor - For visuals tab */}
-            {activeTab === 'visuals' && (
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
-                {selectedVisualFunction ? (
-                  <>
-                    <h4 className="font-semibold mb-4 text-slate-800 flex items-center gap-2">
-                      <span className="text-lg">🎨</span>
-                      Edit Visual Function
-                    </h4>
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Function Name</label>
-                      <input
-                        type="text"
-                        value={selectedVisualFunction.function_name}
-                        readOnly
-                        className="w-full p-3 border border-slate-300 rounded-xl text-sm bg-slate-100 font-mono"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Function Code</label>
-                      <textarea
-                        value={selectedVisualFunction.function_code}
-                        onChange={(e) => setSelectedVisualFunction({
-                          ...selectedVisualFunction,
-                          function_code: e.target.value
-                        })}
-                        className="w-full h-32 p-4 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                        placeholder="Edit the visual function code..."
-                      />
-                    </div>
-                    <div className="flex gap-3 mb-4 flex-wrap">
-                      <button
-                        onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
-                        disabled={isUpdating || !hasVisualCodeChanged()}
-                        className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
-                          hasVisualCodeChanged() && !isUpdating
-                            ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg'
-                            : 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                        }`}
-                      >
-                        {isUpdating ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Saving...
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span>💾</span>
-                            Save Function
-                          </div>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => setShowChat(!showChat)}
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>🤖</span>
-                          AI Chat
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => updateVisualPreview(selectedVisualFunction)}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>🔄</span>
-                          Refresh Preview
-                        </div>
-                      </button>
-                    </div>
-
-                    {/* AI Chat for Visual Functions */}
-                    {showChat && (
-                      <div className="mt-4 border border-purple-300 rounded-xl p-4 bg-white/80 backdrop-blur-sm shadow-inner">
-                        <div className="text-sm text-purple-600 mb-4 flex items-center gap-2">
-                          <span className="text-lg">💬</span>
-                          Ask AI to modify the visual function code...
-                        </div>
-                        <div className="text-xs text-slate-500 mb-3 p-2 rounded-lg bg-purple-50">
-                          💡 e.g., "Add more colors", "Make it bigger", "Add animation", "Draw a bar chart instead"
-                        </div>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={chatMessage}
-                            onChange={(e) => setChatMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleVisualAIChat()}
-                            className="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                            placeholder="Describe how you want to modify this visual function..."
-                          />
-                          <button
-                            onClick={handleVisualAIChat}
-                            disabled={!chatMessage.trim()}
-                            className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>🎨</span>
-                              Modify
-                            </div>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-12 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">🎨</span>
-                    </div>
-                    <h4 className="font-semibold text-slate-800 mb-2">Select a Visual Function</h4>
-                    <p className="text-sm text-slate-600">Choose a function from the left panel to preview and edit it here.</p>
-                  </div>
-                )}
-              </div>
-            )}
+                  <h4 className="font-semibold text-slate-800 mb-2">Select a Visual Function</h4>
+                  <p className="text-sm text-slate-600">Choose a function from the left to edit it with AI assistance.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Visual Function Editor Modal */}
-        {editingVisualFunction && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl border border-white/50">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-slate-800">
-                  {editingVisualFunction.name ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">🎨</span>
-                      Edit Function: <span className="text-purple-600">{editingVisualFunction.name}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">🎨</span>
-                      Create New Visual Function
-                    </div>
-                  )}
-                </h3>
-                <button
-                  onClick={() => setEditingVisualFunction(null)}
-                  className="text-slate-500 hover:text-slate-700 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-all duration-200"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              {/* Function Name Input - Only for new functions */}
-              {!editingVisualFunction.name && (
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Function Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., drawChart, createGraph, animateShape"
-                    value={editingVisualFunction.name}
-                    onChange={(e) => setEditingVisualFunction({...editingVisualFunction, name: e.target.value})}
-                    className="w-full p-4 border border-slate-300 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none text-sm transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                  />
-                  <p className="text-xs text-slate-500 mt-2 bg-blue-50 p-2 rounded-lg">
-                    💡 Choose a descriptive name for your visual function (letters, numbers, and underscores only)
-                  </p>
-                </div>
-              )}
-              
-              {/* Function Code Editor */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Function Code
-                </label>
-                <textarea
-                  value={editingVisualFunction.code}
-                  onChange={(e) => setEditingVisualFunction({...editingVisualFunction, code: e.target.value})}
-                  className="w-full h-96 p-4 border border-slate-300 rounded-xl text-sm font-mono resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none bg-slate-50/80 backdrop-blur-sm transition-all duration-200"
-                  placeholder="function myVisual(ctx, param1, param2, param3) {
-  // Your visual code here
-  // ctx is the canvas 2D context
-  // Use ctx.fillRect(), ctx.arc(), ctx.fillText(), etc.
-  
-  ctx.fillStyle = '#ff6b6b';
-  ctx.fillRect(250, 250, 200, 100);
-  
-  ctx.fillStyle = '#4ecdc4';
-  ctx.font = '20px Arial';
-  ctx.fillText('Hello World!', 300, 300);
-}"
-                />
-                <div className="mt-3 text-xs text-slate-600 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border-l-4 border-blue-400">
-                  <div className="flex items-center gap-2 font-semibold text-blue-700 mb-2">
-                    <span>💡</span>
-                    Development Tips:
-                  </div>
-                  <ul className="space-y-1 list-disc list-inside text-slate-600">
-                    <li>Use <code className="bg-white px-1 rounded">ctx</code> for canvas drawing operations</li>
-                    <li>Parameters <code className="bg-white px-1 rounded">param1, param2, param3</code> can be passed from slides</li>
-                    <li>Canvas size is 1000x700 pixels, drawing area is 200x200 to 800x600</li>
-                    <li>Use <code className="bg-white px-1 rounded">ctx.fillStyle</code>, <code className="bg-white px-1 rounded">ctx.strokeStyle</code> for colors</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Usage Information */}
-              {editingVisualFunction.name && (
-                <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-200">
-                  <div className="flex items-center gap-2 font-semibold text-purple-800 mb-2">
-                    <span>📊</span>
-                    Function Usage
-                  </div>
-                  <p className="text-sm text-purple-700">
-                    This function is currently used in{' '}
-                    <span className="font-semibold bg-white px-2 py-1 rounded-lg">
-                      {slides.filter(slide => slide.visual?.type === editingVisualFunction.name).length}
-                    </span>{' '}
-                    slide(s)
-                  </p>
-                  {slides.filter(slide => slide.visual?.type === editingVisualFunction.name).length > 0 && (
-                    <p className="text-xs text-purple-600 mt-2 bg-purple-100 p-2 rounded-lg">
-                      ⚠️ Changes will affect all slides using this function
-                    </p>
-                  )}
-                </div>
-              )}
-              
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setEditingVisualFunction(null)}
-                  className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => saveVisualFunction(selectedVisualFunction.function_name, selectedVisualFunction.function_code)}
-                  disabled={isUpdating || !hasVisualCodeChanged()}
-                  className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
-                    hasVisualCodeChanged() && !isUpdating
-                      ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg'
-                      : 'bg-slate-300 text-slate-500 cursor-not-allowed transform-none'
-                  }`}
-                >
-                  {isUpdating ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Saving...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span>💾</span>
-                      Save Function
-                    </div>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Status Message - Global */}
+        {/* Status Message */}
         {updateStatus && (
           <div className={`mt-8 p-4 rounded-xl max-w-2xl mx-auto border-l-4 shadow-lg ${
             updateStatus.type === 'success' 
