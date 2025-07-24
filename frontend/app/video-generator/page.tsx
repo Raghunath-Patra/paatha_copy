@@ -548,9 +548,12 @@ export default function VideoGeneratorPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">🎬 Video Generator</h1>
-          <div className="flex items-center space-x-4">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-2">
+            <span className="text-2xl">🎬</span>
+            <h1 className="hidden sm:block text-xl sm:text-2xl font-bold text-gray-800">Video Generator</h1>
+          </div>
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <CreditDisplay userBalance={userBalance} onClick={handleCreditsClick} />
             <Navigation />
           </div>
