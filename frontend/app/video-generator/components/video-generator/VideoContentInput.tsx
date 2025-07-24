@@ -230,6 +230,11 @@ export default function VideoContentInput({
           type: 'success', 
           message: `File "${file.name}" loaded successfully! ${(e.target?.result as string).length} characters loaded.` 
         });
+        
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          setStatus(null);
+        }, 3000);
       };
       reader.readAsText(file);
     }
@@ -304,6 +309,10 @@ export default function VideoContentInput({
           setTimeout(() => {
             onCompleteVideoGenerated(videoResult.projectId);
           }, 2000);
+          // Auto-hide success message after 3 seconds
+          setTimeout(() => {
+            setStatus(null);
+          }, 3000);
         } else {
           throw new Error(videoResult.error || 'Failed to generate video');
         }
@@ -353,6 +362,10 @@ export default function VideoContentInput({
           setTimeout(() => {
             onScriptGenerated(result.project, result.project.lessonSteps);
           }, 1500);
+          // Auto-hide success message after 3 seconds
+          setTimeout(() => {
+            setStatus(null);
+          }, 3000);
         } else {
           throw new Error(result.error || 'Failed to generate script');
         }
@@ -382,43 +395,15 @@ export default function VideoContentInput({
       <div className="max-w-4xl mx-auto">
       {/* Enhanced Header with Gradient Text */}
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-3">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3">
           <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
             📝 Create Your Educational Content
           </span>
         </h2>
-        <p className="text-gray-600 text-lg">
+        <p className="text-gray-600 text-lg md:text-xl lg:text-2xl">
           Transform your ideas into engaging video content with AI-powered generation
         </p>
       </div>
-
-      {/* Enhanced Quick Actions for Simple Workflow */}
-      {workflowMode === 'simple' && (
-        <div className="flex gap-4 justify-center mb-8 flex-wrap">
-          <button
-            onClick={generateCompleteVideo}
-            disabled={isGenerating || !content.trim()}
-            className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:animate-pulse-glow"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-700"></div>
-            <span className="relative flex items-center justify-center space-x-2">
-              <span>🎬</span>
-              <span>{isGenerating ? 'Generating...' : 'Complete Video'}</span>
-            </span>
-          </button>
-          <button
-            onClick={generateScriptOnly}
-            disabled={isGenerating || !content.trim()}
-            className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:animate-pulse-glow"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-700"></div>
-            <span className="relative flex items-center justify-center space-x-2">
-              <span>📝</span>
-              <span>{isGenerating ? 'Generating...' : 'Script Only'}</span>
-            </span>
-          </button>
-        </div>
-      )}
 
       {/* Enhanced File Upload */}
       <FileUploadArea 
@@ -433,7 +418,7 @@ export default function VideoContentInput({
           <div className="w-full border-t border-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
         </div>
         <div className="relative inline-block bg-gray-50 px-6 py-2 rounded-full border border-gray-200">
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold">
+          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold text-lg md:text-xl">
             OR
           </span>
         </div>
@@ -441,7 +426,7 @@ export default function VideoContentInput({
 
       {/* Enhanced Content Input */}
       <div className="mb-8">
-        <label htmlFor="contentInput" className="block text-xl font-bold mb-4">
+        <label htmlFor="contentInput" className="block text-xl md:text-2xl lg:text-3xl font-bold mb-4">
           <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             ✏️ Enter your educational content
           </span>
@@ -452,7 +437,7 @@ export default function VideoContentInput({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             disabled={isGenerating}
-            className="w-full h-80 p-6 border-2 border-gray-300 rounded-xl font-mono text-sm resize-vertical focus:border-blue-500 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-white shadow-inner"
+            className="w-full h-80 p-6 border-2 border-gray-300 rounded-xl font-mono text-sm md:text-base lg:text-lg resize-vertical focus:border-blue-500 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-white shadow-inner"
             placeholder="# Your Educational Content
 
 ## Activity 2.1: Understanding Chemical Reactions
@@ -472,13 +457,13 @@ Students will understand the properties of acids and bases through hands-on expe
 Start typing or paste your content here. Supports Markdown formatting for better structure!"
           />
           {/* Character Counter */}
-          <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-white/80 backdrop-blur-sm px-2 py-1 rounded">
+          <div className="absolute bottom-4 right-4 text-xs md:text-sm text-gray-500 bg-white/80 backdrop-blur-sm px-2 py-1 rounded">
             {content.length.toLocaleString()} characters
           </div>
         </div>
-        <div className="mt-3 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mt-3 text-sm md:text-base text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start space-x-2">
-            <span className="text-blue-500 mt-0.5">💡</span>
+            <span className="text-blue-500 mt-0.5 text-lg md:text-xl">💡</span>
             <div>
               <strong className="text-blue-800">Pro Tips:</strong>
               <ul className="mt-2 space-y-1 text-blue-700">
@@ -492,17 +477,45 @@ Start typing or paste your content here. Supports Markdown formatting for better
         </div>
       </div>
 
+      {/* Enhanced Quick Actions for Simple Workflow */}
+      {workflowMode === 'simple' && (
+        <div className="flex gap-4 justify-center mb-8 flex-wrap">
+          <button
+            onClick={generateCompleteVideo}
+            disabled={isGenerating || !content.trim()}
+            className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg md:text-xl lg:text-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:animate-pulse-glow"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-700"></div>
+            <span className="relative flex items-center justify-center space-x-2">
+              <span>🎬</span>
+              <span>{isGenerating ? 'Generating...' : 'Complete Video'}</span>
+            </span>
+          </button>
+          <button
+            onClick={generateScriptOnly}
+            disabled={isGenerating || !content.trim()}
+            className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-bold text-lg md:text-xl lg:text-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:animate-pulse-glow"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-700"></div>
+            <span className="relative flex items-center justify-center space-x-2">
+              <span>📝</span>
+              <span>{isGenerating ? 'Generating...' : 'Script Only'}</span>
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* Enhanced Advanced Workflow Action */}
       {workflowMode === 'advanced' && (
         <div className="text-center mb-8">
           <button
             onClick={generateScriptOnly}
             disabled={isGenerating || !content.trim()}
-            className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-800 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:-translate-y-2 hover:animate-pulse-glow"
+            className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-800 text-white px-12 py-5 rounded-xl font-bold text-xl md:text-2xl lg:text-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:-translate-y-2 hover:animate-pulse-glow"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-1000"></div>
             <span className="relative flex items-center justify-center space-x-3">
-              <span className="text-2xl">🚀</span>
+              <span className="text-2xl md:text-3xl lg:text-4xl">🚀</span>
               <span>{isGenerating ? 'Generating Magic...' : 'Generate Script & Visuals'}</span>
             </span>
           </button>
@@ -540,34 +553,6 @@ Start typing or paste your content here. Supports Markdown formatting for better
                 {status.type === 'info' && 'Information'}
               </div>
               <div>{status.message}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Enhanced Content Quality Indicators */}
-      {content.length > 0 && !isGenerating && (
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 mb-8">
-          <h4 className="font-bold text-gray-800 mb-4 flex items-center">
-            <span className="text-blue-500 mr-2">📊</span>
-            Content Analysis
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{content.length}</div>
-              <div className="text-xs text-gray-600">Characters</div>
-            </div>
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">{content.split(/\s+/).filter(w => w.length > 0).length}</div>
-              <div className="text-xs text-gray-600">Words</div>
-            </div>
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-indigo-600">{(content.match(/^#+\s/gm) || []).length}</div>
-              <div className="text-xs text-gray-600">Headers</div>
-            </div>
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-500">{Math.ceil(content.split(/\s+/).length / 150)}</div>
-              <div className="text-xs text-gray-600">Est. Minutes</div>
             </div>
           </div>
         </div>
