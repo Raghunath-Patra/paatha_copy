@@ -41,31 +41,31 @@ const ShimmerEffect = () => (
 );
 
 const ProjectCardSkeleton = () => (
-  <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative w-full">
+  <div className="bg-white rounded-xl p-5 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative w-full">
     <ShimmerEffect />
     
     {/* Header */}
     <div className="flex justify-between items-start mb-4">
       <div className="flex-1 pr-4">
-        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
-        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
+        <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
+        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
       </div>
-      <div className="h-6 w-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
+      <div className="h-7 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
     </div>
 
     {/* Stats */}
     <div className="flex justify-between items-center text-sm mb-5">
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-20"></div>
-      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
+      <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
+      <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
+      <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32"></div>
     </div>
 
     {/* Action Buttons Skeleton */}
-    <div className="grid grid-cols-4 gap-1 mt-4">
-      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+    <div className="grid grid-cols-4 gap-2 mt-4">
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
     </div>
   </div>
 );
@@ -274,7 +274,7 @@ export default function VideoProjectBrowser({
       a.href = url;
       a.download = `video-${projectId}.mp4`;
       document.body.appendChild(a);
-a.click();
+      a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -287,7 +287,7 @@ a.click();
     const statusMap = {
       'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-green-100 text-green-800 border-green-200' },
       'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+      'input_only': { text: 'Input Only', emoji: '�', color: 'bg-orange-100 text-orange-800 border-orange-200' },
       'empty': { text: 'Empty', emoji: '❓', color: 'bg-gray-100 text-gray-800 border-gray-200' }
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.empty;
@@ -301,8 +301,7 @@ a.click();
     return <EmptyProjectsState onCreateNew={onCreateNew} />;
   }
 
-  // Base class for all action buttons for consistent styling
-  const baseButtonClass = "w-full flex justify-center items-center px-2 py-2 rounded-lg text-white font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:bg-gray-400";
+  const baseButtonClass = "w-full flex justify-center items-center px-2 py-2.5 rounded-lg text-white font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:bg-gray-400";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
@@ -341,42 +340,45 @@ a.click();
             return (
               <div
                 key={project.projectId}
-                className="group bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-1 hover:bg-white w-full"
+                className="group bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-lg border border-white/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-1 hover:bg-white w-full flex flex-col"
               >
-                {/* Header */}
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1 pr-3">
-                    <h3 className="font-bold text-gray-800 mb-1.5 line-clamp-2 text-base group-hover:text-blue-700">
-                      {project.title}
-                    </h3>
-                    <p className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-0.5 rounded-md inline-block">
-                      ID: {project.projectId.substring(0, 8)}...
-                    </p>
+                <div className="flex-grow">
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 pr-3">
+                      <h3 className="font-bold text-gray-800 mb-1.5 line-clamp-2 text-lg group-hover:text-blue-700">
+                        {project.title}
+                      </h3>
+                      <p className="text-sm text-gray-500 font-mono bg-gray-50 px-2 py-0.5 rounded-md inline-block">
+                        ID: {project.projectId.substring(0, 8)}...
+                      </p>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-lg text-sm font-semibold ${statusInfo.color} shadow-sm whitespace-nowrap`}>
+                      {statusInfo.emoji} {statusInfo.text}
+                    </span>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${statusInfo.color} shadow-sm whitespace-nowrap`}>
-                    {statusInfo.emoji} {statusInfo.text}
-                  </span>
-                </div>
 
-                {/* Stats */}
-                <div className="flex justify-between items-center text-xs text-gray-600 mb-4 bg-gray-50/50 rounded-lg p-2.5">
-                  <div title="Creation Date">📅 {createdDate}</div>
-                  <div title="Lesson Steps">📋 {project.lessonStepsCount || 0} steps</div>
-                  {project.hasVideo && <div title="Video Files">🎬 {project.videoFiles?.length || 1} video(s)</div>}
+                  {/* Stats */}
+                  <div className="flex justify-between items-center text-sm text-gray-600 mb-4 bg-gray-50/50 rounded-lg p-3">
+                    <div title="Creation Date">📅 {createdDate}</div>
+                    <div title="Lesson Steps">📋 {project.lessonStepsCount || 0} steps</div>
+                    {project.hasVideo && <div title="Video Files">🎬 {project.videoFiles?.length || 1} video(s)</div>}
+                  </div>
                 </div>
 
                 {/* Action Buttons Grid */}
-                <div className="grid grid-cols-4 gap-1" onClick={(e) => e.stopPropagation()}>
+                <div className="grid grid-cols-4 gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
                   {/* Slot 1: Play Button */}
                   <div>
                     {project.status === 'completed' && (
                       <button
                         onClick={() => handlePlayVideo(project)}
                         disabled={isLoadingVideo}
-                        className={`${baseButtonClass} bg-green-500 hover:bg-green-600 hover:shadow-green-500/25`}
+                        className={`${baseButtonClass} bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600`}
                         title="Play Video"
                       >
                         {isLoadingVideo ? <LoadingIcon /> : <PlayIcon />}
+                        <span className="hidden md:inline ml-2">Play</span>
                       </button>
                     )}
                   </div>
@@ -386,19 +388,21 @@ a.click();
                     {(project.status === 'script_ready' || project.status === 'completed') && (
                       <button
                         onClick={() => onProjectAction(project.projectId, 'edit')}
-                        className={`${baseButtonClass} bg-orange-500 hover:bg-orange-600 hover:shadow-orange-500/25`}
+                        className={`${baseButtonClass} bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600`}
                         title="Edit Project"
                       >
                         <EditIcon />
+                        <span className="hidden md:inline ml-2">Edit</span>
                       </button>
                     )}
                     {project.status === 'input_only' && (
                       <button
                         onClick={() => onProjectAction(project.projectId, 'continue')}
-                        className={`${baseButtonClass} bg-blue-500 hover:bg-blue-600 hover:shadow-blue-500/25`}
+                        className={`${baseButtonClass} bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700`}
                         title="Continue Project"
                       >
                         <ContinueIcon />
+                        <span className="hidden md:inline ml-2">Continue</span>
                       </button>
                     )}
                   </div>
@@ -408,10 +412,11 @@ a.click();
                     {project.status === 'completed' && (
                       <button
                         onClick={() => handleDownloadVideo(project.projectId)}
-                        className={`${baseButtonClass} bg-indigo-500 hover:bg-indigo-600 hover:shadow-indigo-500/25`}
+                        className={`${baseButtonClass} bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600`}
                         title="Download Video"
                       >
                         <DownloadIcon />
+                         <span className="hidden md:inline ml-2">Download</span>
                       </button>
                     )}
                   </div>
@@ -423,10 +428,11 @@ a.click();
                         setProjectToDelete(project.projectId);
                         setShowDeleteModal(true);
                       }}
-                      className={`${baseButtonClass} bg-red-500 hover:bg-red-600 hover:shadow-red-500/25`}
+                      className={`${baseButtonClass} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600`}
                       title="Delete Project"
                     >
                       <DeleteIcon />
+                       <span className="hidden md:inline ml-2">Delete</span>
                     </button>
                   </div>
                 </div>
@@ -476,3 +482,4 @@ a.click();
     </div>
   );
 }
+�
