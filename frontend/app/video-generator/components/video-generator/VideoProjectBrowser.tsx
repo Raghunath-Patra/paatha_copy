@@ -1,4 +1,4 @@
-// VideoProjectBrowser.tsx - Refactored for flexible button layout and improved UI
+// VideoProjectBrowser.tsx - Refactored for two-row button layout and improved UI
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -41,31 +41,36 @@ const ShimmerEffect = () => (
 );
 
 const ProjectCardSkeleton = () => (
-  <div className="bg-white rounded-xl p-5 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative w-full">
+  <div className="bg-white rounded-xl p-5 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative w-full flex flex-col">
     <ShimmerEffect />
-    
-    {/* Header */}
-    <div className="flex justify-between items-start mb-4">
-      <div className="flex-1 pr-4">
-        <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
-        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
-      </div>
-      <div className="h-7 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
-    </div>
+    <div className="flex-grow">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex-1 pr-4">
+            <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
+            <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
+          </div>
+          <div className="h-7 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
+        </div>
 
-    {/* Stats */}
-    <div className="flex justify-between items-center text-sm mb-5">
-      <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
-      <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
-      <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32"></div>
+        {/* Stats */}
+        <div className="flex justify-between items-center text-sm mb-5">
+          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
+          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
+          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32"></div>
+        </div>
     </div>
 
     {/* Action Buttons Skeleton */}
-    <div className="flex gap-2 mt-4">
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
-      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+    <div className="flex flex-col gap-2 mt-auto">
+        <div className="flex gap-2">
+            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+        </div>
+        <div className="flex gap-2">
+            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+        </div>
     </div>
   </div>
 );
@@ -287,7 +292,7 @@ export default function VideoProjectBrowser({
     const statusMap = {
       'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-green-100 text-green-800 border-green-200' },
       'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-      'input_only': { text: 'Input Only', emoji: '�', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-orange-100 text-orange-800 border-orange-200' },
       'empty': { text: 'Empty', emoji: '❓', color: 'bg-gray-100 text-gray-800 border-gray-200' }
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.empty;
@@ -301,7 +306,7 @@ export default function VideoProjectBrowser({
     return <EmptyProjectsState onCreateNew={onCreateNew} />;
   }
 
-  const baseButtonClass = "flex-grow md:flex-grow-0 flex justify-center items-center px-3 py-2.5 rounded-lg text-white font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:bg-gray-400";
+  const baseButtonClass = "flex-1 flex justify-center items-center px-2 py-2.5 rounded-lg text-white font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:bg-gray-400";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
@@ -337,6 +342,8 @@ export default function VideoProjectBrowser({
             const createdDate = new Date(project.createdAt).toLocaleDateString();
             const isLoadingVideo = videoLoading === project.projectId;
 
+            const showFirstRow = project.status === 'completed';
+
             return (
               <div
                 key={project.projectId}
@@ -366,63 +373,65 @@ export default function VideoProjectBrowser({
                   </div>
                 </div>
 
-                {/* Action Buttons: Flex layout for responsive sizing */}
-                <div className="flex flex-wrap gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
-                  {project.status === 'completed' && (
-                    <button
-                      onClick={() => handlePlayVideo(project)}
-                      disabled={isLoadingVideo}
-                      className={`${baseButtonClass} bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600`}
-                      title="Play Video"
-                    >
-                      {isLoadingVideo ? <LoadingIcon /> : <PlayIcon />}
-                      <span className="hidden md:inline ml-2">Play</span>
-                    </button>
-                  )}
+                {/* Action Buttons: Two-row layout */}
+                <div className="flex flex-col gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
+                    {/* --- ROW 1: Play & Download --- */}
+                    {showFirstRow && (
+                        <div className="flex gap-2">
+                             <button
+                                onClick={() => handlePlayVideo(project)}
+                                disabled={isLoadingVideo}
+                                className={`${baseButtonClass} bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600`}
+                                title="Play Video"
+                            >
+                                {isLoadingVideo ? <LoadingIcon /> : <PlayIcon />}
+                                <span className="ml-2 text-xs sm:text-sm">Play</span>
+                            </button>
+                             <button
+                                onClick={() => handleDownloadVideo(project.projectId)}
+                                className={`${baseButtonClass} bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600`}
+                                title="Download Video"
+                            >
+                                <DownloadIcon />
+                               <span className="ml-2 text-xs sm:text-sm">Download</span>
+                            </button>
+                        </div>
+                    )}
 
-                  {(project.status === 'script_ready' || project.status === 'completed') && (
-                    <button
-                      onClick={() => onProjectAction(project.projectId, 'edit')}
-                      className={`${baseButtonClass} bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600`}
-                      title="Edit Project"
-                    >
-                      <EditIcon />
-                      <span className="hidden md:inline ml-2">Edit</span>
-                    </button>
-                  )}
-                  {project.status === 'input_only' && (
-                    <button
-                      onClick={() => onProjectAction(project.projectId, 'continue')}
-                      className={`${baseButtonClass} bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700`}
-                      title="Continue Project"
-                    >
-                      <ContinueIcon />
-                      <span className="hidden md:inline ml-2">Continue</span>
-                    </button>
-                  )}
-
-                  {project.status === 'completed' && (
-                    <button
-                      onClick={() => handleDownloadVideo(project.projectId)}
-                      className={`${baseButtonClass} bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600`}
-                      title="Download Video"
-                    >
-                      <DownloadIcon />
-                       <span className="hidden md:inline ml-2">Download</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      setProjectToDelete(project.projectId);
-                      setShowDeleteModal(true);
-                    }}
-                    className={`${baseButtonClass} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600`}
-                    title="Delete Project"
-                  >
-                    <DeleteIcon />
-                     <span className="hidden md:inline ml-2">Delete</span>
-                  </button>
+                    {/* --- ROW 2: Edit & Delete --- */}
+                    <div className="flex gap-2">
+                        {(project.status === 'script_ready' || project.status === 'completed') && (
+                            <button
+                              onClick={() => onProjectAction(project.projectId, 'edit')}
+                              className={`${baseButtonClass} bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600`}
+                              title="Edit Project"
+                            >
+                              <EditIcon />
+                              <span className="ml-2 text-xs sm:text-sm">Edit</span>
+                            </button>
+                        )}
+                        {project.status === 'input_only' && (
+                            <button
+                              onClick={() => onProjectAction(project.projectId, 'continue')}
+                              className={`${baseButtonClass} bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700`}
+                              title="Continue Project"
+                            >
+                              <ContinueIcon />
+                              <span className="ml-2 text-xs sm:text-sm">Continue</span>
+                            </button>
+                        )}
+                        <button
+                            onClick={() => {
+                              setProjectToDelete(project.projectId);
+                              setShowDeleteModal(true);
+                            }}
+                            className={`${baseButtonClass} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600`}
+                            title="Delete Project"
+                          >
+                            <DeleteIcon />
+                             <span className="ml-2 text-xs sm:text-sm">Delete</span>
+                        </button>
+                    </div>
                 </div>
               </div>
             );
