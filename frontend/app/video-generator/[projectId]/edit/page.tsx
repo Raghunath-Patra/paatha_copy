@@ -146,7 +146,7 @@ export default function EditProjectPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
-        <EnhancedSpinner size="lg" message="Loading project..." />
+        <EnhancedSpinner size="lg" message="Loading your project..." />
       </div>
     );
   }
