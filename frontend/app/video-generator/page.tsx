@@ -77,48 +77,48 @@ const BonusClaimPopup = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center relative overflow-hidden">
+      <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-md w-full text-center relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 opacity-50"></div>
         
         {!showSuccess ? (
           <>
-            {/* Floating Emojis */}
-            <div className="absolute top-4 left-4 text-2xl animate-bounce" style={{ animationDelay: '0s' }}>🎉</div>
-            <div className="absolute top-6 right-6 text-xl animate-bounce" style={{ animationDelay: '0.5s' }}>✨</div>
-            <div className="absolute bottom-6 left-6 text-xl animate-bounce" style={{ animationDelay: '1s' }}>🚀</div>
-            <div className="absolute bottom-4 right-4 text-2xl animate-bounce" style={{ animationDelay: '1.5s' }}>💫</div>
+            {/* Floating Emojis - Responsive positioning */}
+            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 text-lg sm:text-2xl animate-bounce" style={{ animationDelay: '0s' }}>🎉</div>
+            <div className="absolute top-3 right-3 sm:top-6 sm:right-6 text-base sm:text-xl animate-bounce" style={{ animationDelay: '0.5s' }}>✨</div>
+            <div className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6 text-base sm:text-xl animate-bounce" style={{ animationDelay: '1s' }}>🚀</div>
+            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 text-lg sm:text-2xl animate-bounce" style={{ animationDelay: '1.5s' }}>💫</div>
             
             {/* Content */}
             <div className="relative z-10">
               {/* Welcome Message */}
               <div className={`transition-all duration-500 ${animationPhase >= 1 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-                <div className="text-6xl mb-4 animate-pulse">🎁</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                <div className="text-4xl sm:text-5xl lg:text-6xl mb-3 sm:mb-4 animate-pulse">🎁</div>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2">
                   Welcome to Video Generator!
                 </h2>
               </div>
 
               {/* Bonus Announcement */}
               <div className={`transition-all duration-500 ${animationPhase >= 2 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-                <p className="text-gray-600 mb-4">
+                <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
                   As a new user, you're eligible for
                 </p>
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xl font-bold py-3 px-6 rounded-lg mb-4 animate-pulse">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-base sm:text-lg lg:text-xl font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg mb-3 sm:mb-4 animate-pulse">
                   FREE BONUS CREDITS!
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className={`transition-all duration-500 ${animationPhase >= 3 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
                   Get started with AI-powered video creation immediately!
                 </p>
                 
-                <div className="flex gap-3 justify-center">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                   <button
                     onClick={onClose}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="order-2 sm:order-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
                     disabled={loading}
                   >
                     Maybe Later
@@ -126,7 +126,7 @@ const BonusClaimPopup = ({
                   <button
                     onClick={onClaim}
                     disabled={loading}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2"
+                    className="order-1 sm:order-2 px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 text-sm sm:text-base"
                   >
                     {loading ? (
                       <>
@@ -147,12 +147,12 @@ const BonusClaimPopup = ({
         ) : (
           /* Success Animation */
           <div className="relative z-10">
-            {/* Confetti Rain */}
+            {/* Confetti Rain - Responsive */}
             <div className="absolute inset-0 pointer-events-none">
-              {[...Array(20)].map((_, i) => (
+              {[...Array(15)].map((_, i) => (
                 <div
                   key={i}
-                  className="absolute animate-bounce"
+                  className="absolute animate-bounce text-sm sm:text-base"
                   style={{
                     left: `${Math.random() * 100}%`,
                     top: `${Math.random() * 100}%`,
@@ -167,12 +167,12 @@ const BonusClaimPopup = ({
 
             {/* Gift Box Opening Animation */}
             <div className={`transition-all duration-1000 ${giftOpened ? 'scale-110' : 'scale-100'}`}>
-              <div className="text-8xl mb-4 relative">
+              <div className="text-5xl sm:text-6xl lg:text-8xl mb-3 sm:mb-4 relative">
                 {giftOpened ? (
                   <div className="animate-pulse">
                     <div className="relative">
                       📦
-                      <div className="absolute inset-0 text-6xl animate-bounce" style={{ animationDelay: '0.2s' }}>
+                      <div className="absolute inset-0 text-3xl sm:text-4xl lg:text-6xl animate-bounce" style={{ animationDelay: '0.2s' }}>
                         ✨
                       </div>
                     </div>
@@ -185,21 +185,21 @@ const BonusClaimPopup = ({
 
             {/* Success Message */}
             <div className={`transition-all duration-700 delay-300 ${giftOpened ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4 animate-pulse">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3 sm:mb-4 animate-pulse">
                 🎊 Congratulations! 🎊
               </h2>
               
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-2xl font-bold py-4 px-6 rounded-xl mb-4 animate-bounce shadow-lg">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-lg sm:text-xl lg:text-2xl font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-xl mb-3 sm:mb-4 animate-bounce shadow-lg">
                 + {successData?.credits_granted} FREE CREDITS!
               </div>
               
-              <p className="text-gray-600 mb-6 text-lg">
+              <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-4 sm:mb-6">
                 You're all set to create amazing videos! 🚀
               </p>
               
               <button
                 onClick={onClose}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl text-lg"
+                className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl text-base sm:text-lg"
               >
                 Start Creating! 🎬
               </button>
@@ -266,27 +266,27 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
           />
           
           {/* Popup Content */}
-          <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border z-50 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">💳 Credit Details</h3>
+          <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-lg sm:rounded-xl shadow-xl border z-50 p-4 sm:p-6">
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800">💳 Credit Details</h3>
               <button
                 onClick={() => setShowPopup(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Available Credits */}
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-blue-800">Available Credits</span>
+                  <span className="text-xs sm:text-sm font-medium text-blue-800">Available Credits</span>
                   <div className="flex items-center space-x-1">
-                    <span className="text-blue-600 font-bold">₹</span>
-                    <span className="text-lg font-bold text-blue-900">
+                    <span className="text-blue-600 font-bold text-sm sm:text-base">₹</span>
+                    <span className="text-base sm:text-lg font-bold text-blue-900">
                       {formatNumber(userBalance.available_credits)}
                     </span>
                   </div>
@@ -295,19 +295,19 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
 
               {/* Current Package */}
               {userBalance.current_package ? (
-                <div className="border-l-4 border-purple-400 pl-4">
+                <div className="border-l-4 border-purple-400 pl-3 sm:pl-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Current Package</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-xs sm:text-sm font-medium text-gray-700">Current Package</p>
+                      <p className="text-sm sm:text-lg font-semibold text-gray-900">
                         {userBalance.current_package.name}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-500">Total Credits</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Total Credits</p>
                       <div className="flex items-center space-x-1">
-                        <span className="text-purple-600">₹</span>
-                        <span className="font-semibold text-gray-900">
+                        <span className="text-purple-600 text-sm sm:text-base">₹</span>
+                        <span className="font-semibold text-gray-900 text-sm sm:text-base">
                           {formatNumber(userBalance.current_package.total_credits)}
                         </span>
                       </div>
@@ -315,14 +315,14 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
                   </div>
                 </div>
               ) : (
-                <div className="border-l-4 border-gray-300 pl-4">
-                  <p className="text-sm font-medium text-gray-700">Current Package</p>
-                  <p className="text-gray-500">No active package</p>
+                <div className="border-l-4 border-gray-300 pl-3 sm:pl-4">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700">Current Package</p>
+                  <p className="text-gray-500 text-sm">No active package</p>
                 </div>
               )}
 
               {/* Purchase Date */}
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between items-center text-xs sm:text-sm">
                 <span className="text-gray-600">Purchased On</span>
                 <span className="font-medium text-gray-900">
                   {formatDate(userBalance.purchased_at)}
@@ -331,15 +331,15 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
             </div>
 
             {/* Upgrade Button */}
-            <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200">
               <button
                 onClick={() => {
                   setShowPopup(false);
                   onClick(); // Navigate to video-credits page
                 }}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2 text-sm sm:text-base"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                 </svg>
                 <span>Upgrade Package</span>
