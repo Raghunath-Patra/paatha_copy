@@ -1,12 +1,20 @@
-// VideoProjectBrowser.tsx - Enhanced with better UI, shimmer effects, and blue-purple theme
-
+// VideoProjectBrowser.tsx - Refactored for compact UI, consistent layout, and improved actions
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 import VideoPlayerPopup from './VideoPlayerPopup';
 
-// Define proper TypeScript interfaces
+// region --- Icon Components ---
+const PlayIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>;
+const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>;
+const ContinueIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" /></svg>;
+const DownloadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" /></svg>;
+const DeleteIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>;
+const LoadingIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
+// endregion
+
+// region --- Type Definitions ---
 interface Project {
   projectId: string;
   title: string;
@@ -25,63 +33,57 @@ interface VideoProjectBrowserProps {
   onProjectAction: (projectId: string, action: string) => void;
   onCreateNew: () => void;
 }
+// endregion
 
-// Enhanced Skeleton Loading Components with Shimmer Effect
+// region --- Skeleton Loading Components ---
 const ShimmerEffect = () => (
   <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 );
 
 const ProjectCardSkeleton = () => (
-  <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative">
+  <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative w-full">
     <ShimmerEffect />
     
     {/* Header */}
     <div className="flex justify-between items-start mb-4">
       <div className="flex-1 pr-4">
-        <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
+        <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
         <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
       </div>
-      <div className="h-7 w-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
+      <div className="h-6 w-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
     </div>
 
     {/* Stats */}
-    <div className="flex justify-between items-center text-sm mb-6">
+    <div className="flex justify-between items-center text-sm mb-5">
       <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
       <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-20"></div>
       <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
     </div>
 
-    {/* Action Buttons */}
-    <div className="flex flex-wrap gap-2">
-      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-16"></div>
-      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-14"></div>
-      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-20"></div>
-      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-16"></div>
+    {/* Action Buttons Skeleton */}
+    <div className="grid grid-cols-4 gap-1 mt-4">
+      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+      <div className="h-9 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
     </div>
   </div>
 );
 
 const ProjectGridSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
-    <div className="w-full">
-      {/* Header - Always Visible */}
+    <div className="w-[90%] mx-auto">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
-          <span className="text-3xl">📁</span>
+        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">
           My Video Projects
         </h1>
         <div className="flex gap-3">
-          <button
-            disabled
-            className="bg-gray-300 text-gray-500 px-4 py-2 rounded-xl font-medium cursor-not-allowed transition-all"
-          >
-            🔄 Refresh
+          <button disabled className="bg-gray-300 text-gray-500 px-4 py-2 rounded-xl font-medium cursor-not-allowed">
+            Refresh
           </button>
-          <button
-            disabled
-            className="bg-gray-300 text-gray-500 px-6 py-2 rounded-xl font-medium cursor-not-allowed transition-all"
-          >
-            ➕ New Project
+          <button disabled className="bg-gray-300 text-gray-500 px-6 py-2 rounded-xl font-medium cursor-not-allowed">
+            New Project
           </button>
         </div>
       </div>
@@ -96,107 +98,50 @@ const ProjectGridSkeleton = () => (
 
     <style jsx>{`
       @keyframes shimmer {
-        100% {
-          transform: translateX(100%);
-        }
+        100% { transform: translateX(100%); }
       }
     `}</style>
   </div>
 );
+// endregion
 
-// Enhanced Empty State Component
+// region --- Empty State Component ---
 const EmptyProjectsState = ({ onCreateNew }: { onCreateNew: () => void }) => (
   <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
-    <div className="w-full">
+    <div className="w-[90%] mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
-        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
-          <span className="text-3xl">📁</span>
+        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">
           My Video Projects
         </h1>
-        <div className="flex gap-3">
-          <button
-            disabled
-            className="bg-gray-300 text-gray-500 px-4 py-2 rounded-xl font-medium cursor-not-allowed transition-all"
-          >
-            🔄 Refresh
-          </button>
-          <button
-            onClick={onCreateNew}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-medium transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
-          >
-            ➕ New Project
-          </button>
-        </div>
+        <button
+          onClick={onCreateNew}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-medium transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+        >
+          ➕ New Project
+        </button>
       </div>
 
       {/* Hero Section */}
       <div className="text-center py-16">
-        <div className="mb-8">
-          <div className="text-8xl mb-6 animate-bounce">📁</div>
-          <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent mb-4">
-            No Projects Found
-          </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-            You haven't created any video projects yet. Get started with AI-powered video creation and transform your ideas into professional videos!
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-          <button
-            onClick={onCreateNew}
-            className="group w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 flex items-center justify-center space-x-3"
-          >
-            <svg className="w-6 h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>Start Creating</span>
-          </button>
-          
-          <div className="flex items-center space-x-3 text-gray-500 text-lg">
-            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>No experience required</span>
-          </div>
-        </div>
-
-        {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-blue-100 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-4 text-gray-800">AI-Powered Creation</h3>
-            <p className="text-gray-600 leading-relaxed">Advanced AI transforms your ideas into professional videos automatically with intelligent scene generation and voice synthesis.</p>
-          </div>
-
-          <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-purple-100 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 transform hover:-translate-y-2">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-4 text-gray-800">Minutes, Not Hours</h3>
-            <p className="text-gray-600 leading-relaxed">Generate complete videos in minutes instead of spending days editing. From concept to final video in record time.</p>
-          </div>
-
-          <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-indigo-100 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 transform hover:-translate-y-2">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-4 text-gray-800">Professional Quality</h3>
-            <p className="text-gray-600 leading-relaxed">Studio-quality output ready for any platform or presentation. Export in multiple formats and resolutions.</p>
-          </div>
-        </div>
+        <div className="text-8xl mb-6 animate-bounce">📁</div>
+        <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent mb-4">
+          No Projects Found
+        </h2>
+        <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+          You haven't created any video projects yet. Let's change that!
+        </p>
+        <button
+          onClick={onCreateNew}
+          className="group w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1"
+        >
+          Start Creating
+        </button>
       </div>
     </div>
   </div>
 );
+// endregion
 
 export default function VideoProjectBrowser({
   projects,
@@ -209,7 +154,6 @@ export default function VideoProjectBrowser({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   
-  // Video player state
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
   const [currentVideoProject, setCurrentVideoProject] = useState<Project | null>(null);
@@ -221,54 +165,37 @@ export default function VideoProjectBrowser({
     loadProjects();
   }, []);
 
-  // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
       if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
-        console.log('🧹 Cleaning up blob URL on unmount');
         URL.revokeObjectURL(currentVideoUrl);
       }
     };
   }, [currentVideoUrl]);
 
-  // Transform project data for frontend
-  const transformProjectForFrontend = (project: any): Project => {
-    return {
-      projectId: project.id,
-      title: project.title,
-      createdAt: project.created_at,
-      status: project.status,
-      lessonStepsCount: project.lesson_steps?.length || 0,
-      speakers: project.speakers?.map((s: any) => s.name) || [],
-      visualFunctions: project.visualFunctions?.map((vf: any) => vf.function_name) || [],
-      hasVideo: project.videos && project.videos.length > 0,
-      videoFiles: project.videos?.map((v: any) => v.storage_path) || []
-    };
-  };
+  const transformProjectForFrontend = (project: any): Project => ({
+    projectId: project.id,
+    title: project.title,
+    createdAt: project.created_at,
+    status: project.status,
+    lessonStepsCount: project.lesson_steps?.length || 0,
+    speakers: project.speakers?.map((s: any) => s.name) || [],
+    visualFunctions: project.visualFunctions?.map((vf: any) => vf.function_name) || [],
+    hasVideo: project.videos && project.videos.length > 0,
+    videoFiles: project.videos?.map((v: any) => v.storage_path) || []
+  });
 
   const loadProjects = async () => {
     setLoading(true);
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
-      
       if (!isAuthorized) {
-        console.error('Not authenticated');
         setProjects([]);
         return;
       }
-
-      const response = await fetch(`${API_URL}/api/video-generator/projects`, {
-        headers
-      });
+      const response = await fetch(`${API_URL}/api/video-generator/projects`, { headers });
       const result = await response.json();
-      
-      if (result.success) {
-        const transformedProjects = result.projects.map(transformProjectForFrontend);
-        setProjects(transformedProjects);
-      } else {
-        console.error('Failed to load projects:', result.error);
-        setProjects([]);
-      }
+      setProjects(result.success ? result.projects.map(transformProjectForFrontend) : []);
     } catch (error) {
       console.error('Error loading projects:', error);
       setProjects([]);
@@ -280,11 +207,7 @@ export default function VideoProjectBrowser({
   const handleDeleteProject = async (projectId: string) => {
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
-      
-      if (!isAuthorized) {
-        console.error('Not authenticated');
-        return;
-      }
+      if (!isAuthorized) return;
 
       const response = await fetch(`${API_URL}/api/video-generator/project/${projectId}`, {
         method: 'DELETE',
@@ -301,75 +224,37 @@ export default function VideoProjectBrowser({
     }
   };
 
-  // Use signed URL approach for streaming
   const handlePlayVideo = async (project: Project) => {
+    setVideoLoading(project.projectId);
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
-      
-      if (!isAuthorized) {
-        alert('Please log in to play videos');
-        return;
-      }
+      if (!isAuthorized) throw new Error('Not authenticated');
 
-      setVideoLoading(project.projectId);
+      const response = await fetch(`${API_URL}/api/video-generator/stream/${project.projectId}`, { headers });
+      if (!response.ok) throw new Error(`Failed to get stream URL: ${response.statusText}`);
       
-      console.log('🎬 Getting video URL for project:', project.projectId);
+      const data = await response.json();
+      if (!data.success || !data.streamUrl) throw new Error('Invalid stream URL received');
       
-      // Get signed URL for streaming
-      const signedUrlResponse = await fetch(`${API_URL}/api/video-generator/stream/${project.projectId}`, {
-        method: 'GET',
-        headers
-      });
-      
-      if (!signedUrlResponse.ok) {
-        setVideoLoading(null);
-        console.error('Video URL fetch failed:', signedUrlResponse.status);
-        
-        if (signedUrlResponse.status === 401 || signedUrlResponse.status === 403) {
-          alert('Not authorized to access this video.');
-        } else if (signedUrlResponse.status === 404) {
-          alert('Video not found. It may still be processing.');
-        } else {
-          alert('Failed to get video URL. Please try again.');
-        }
-        return;
-      }
-      
-      const urlData = await signedUrlResponse.json();
-      console.log('✅ Video URL received:', urlData);
-      
-      if (!urlData.success || !urlData.streamUrl) {
-        setVideoLoading(null);
-        alert('Invalid video URL received.');
-        return;
-      }
-      
-      // Clean up any previous blob URL (just in case)
       if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
         URL.revokeObjectURL(currentVideoUrl);
       }
       
-      // Use signed URL for streaming
-      setCurrentVideoUrl(urlData.streamUrl);
+      setCurrentVideoUrl(data.streamUrl);
       setCurrentVideoProject(project);
       setShowVideoPlayer(true);
-      setVideoLoading(null);
-      
     } catch (error) {
-      console.error('❌ Error getting video URL:', error);
+      console.error('Error preparing video for playback:', error);
+      alert('Could not load video. It might still be processing or an error occurred.');
+    } finally {
       setVideoLoading(null);
-      alert('Error loading video. Please check your connection.');
     }
   };
 
-  // Close video player and cleanup
   const handleCloseVideoPlayer = () => {
-    // Clean up blob URL to free memory (only if it's a blob)
     if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
-      console.log('🧹 Cleaning up blob URL on close');
       URL.revokeObjectURL(currentVideoUrl);
     }
-    
     setShowVideoPlayer(false);
     setCurrentVideoUrl('');
     setCurrentVideoProject(null);
@@ -378,93 +263,76 @@ export default function VideoProjectBrowser({
   const handleDownloadVideo = async (projectId: string) => {
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) throw new Error('Not authenticated');
+
+      const response = await fetch(`${API_URL}/api/video-generator/download/${projectId}`, { headers });
+      if (!response.ok) throw new Error(`Failed to download: ${response.statusText}`);
       
-      if (!isAuthorized) {
-        console.error('Not authenticated');
-        alert('Please log in to download videos');
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/api/video-generator/download/${projectId}`, {
-        method: 'GET',
-        headers
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `video-${projectId}.mp4`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } else {
-        console.error('Failed to download video');
-        alert('Failed to download video. Please try again.');
-      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `video-${projectId}.mp4`;
+      document.body.appendChild(a);
+a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading video:', error);
-      alert('Error downloading video. Please try again.');
+      alert('Failed to download video.');
     }
   };
 
-  // Helper function to map status to display info
   const getStatusInfo = (status: string) => {
     const statusMap = {
-      'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' },
-      'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200' },
-      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-gradient-to-r from-orange-100 to-orange-100 text-orange-800 border border-orange-200' },
-      'empty': { text: 'Empty', emoji: '❓', color: 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200' }
+      'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-green-100 text-green-800 border-green-200' },
+      'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+      'empty': { text: 'Empty', emoji: '❓', color: 'bg-gray-100 text-gray-800 border-gray-200' }
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.empty;
   };
 
-  const handleProjectClick = (project: Project) => {
-    setSelectedProject(project);
-  };
-
-  // Show skeleton loading while loading
   if (loading) {
     return <ProjectGridSkeleton />;
   }
 
-  // Show empty state only when no projects and not loading
   if (projects.length === 0) {
     return <EmptyProjectsState onCreateNew={onCreateNew} />;
   }
 
+  // Base class for all action buttons for consistent styling
+  const baseButtonClass = "w-full flex justify-center items-center px-2 py-2 rounded-lg text-white font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:bg-gray-400";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Enhanced Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
+      <div className="w-[90%] mx-auto">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
-            <span className="text-3xl">📁</span>
             My Video Projects
-            <span className="text-sm font-normal bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full">
+            <span className="text-sm font-normal bg-blue-600 text-white px-3 py-1 rounded-full">
               {projects.length}
             </span>
           </h1>
           <div className="flex gap-3">
             <button
               onClick={loadProjects}
-              className="bg-white/80 backdrop-blur-sm hover:bg-white border border-gray-200 hover:border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md"
+              className="bg-white/80 backdrop-blur-sm hover:bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md"
             >
-              🔄 Refresh
+              Refresh
             </button>
             <button
               onClick={onCreateNew}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-medium transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
             >
-              ➕ New Project
+              New Project
             </button>
           </div>
         </div>
 
-        {/* Enhanced Project Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        {/* Project Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {projects.map((project) => {
             const statusInfo = getStatusInfo(project.status);
             const createdDate = new Date(project.createdAt).toLocaleDateString();
@@ -473,99 +341,94 @@ export default function VideoProjectBrowser({
             return (
               <div
                 key={project.projectId}
-                onClick={() => handleProjectClick(project)}
-                className="group bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:bg-white"
+                className="group bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-1 hover:bg-white w-full"
               >
                 {/* Header */}
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-start mb-3">
                   <div className="flex-1 pr-3">
-                    <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 text-lg group-hover:text-blue-700 transition-colors">
+                    <h3 className="font-bold text-gray-800 mb-1.5 line-clamp-2 text-base group-hover:text-blue-700">
                       {project.title}
                     </h3>
-                    <p className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded-md inline-block">
+                    <p className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-0.5 rounded-md inline-block">
                       ID: {project.projectId.substring(0, 8)}...
                     </p>
                   </div>
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${statusInfo.color} shadow-sm`}>
+                  <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${statusInfo.color} shadow-sm whitespace-nowrap`}>
                     {statusInfo.emoji} {statusInfo.text}
                   </span>
                 </div>
 
                 {/* Stats */}
-                <div className="flex justify-between items-center text-sm text-gray-600 mb-6 bg-gray-50/50 rounded-xl p-3">
-                  <div className="flex items-center gap-1">
-                    <span>📅</span>
-                    <span className="font-medium">{createdDate}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>📋</span>
-                    <span className="font-medium">{project.lessonStepsCount || 0} steps</span>
-                  </div>
-                  {project.hasVideo && (
-                    <div className="flex items-center gap-1">
-                      <span>🎬</span>
-                      <span className="font-medium">{project.videoFiles?.length || 1} video(s)</span>
-                    </div>
-                  )}
+                <div className="flex justify-between items-center text-xs text-gray-600 mb-4 bg-gray-50/50 rounded-lg p-2.5">
+                  <div title="Creation Date">📅 {createdDate}</div>
+                  <div title="Lesson Steps">📋 {project.lessonStepsCount || 0} steps</div>
+                  {project.hasVideo && <div title="Video Files">🎬 {project.videoFiles?.length || 1} video(s)</div>}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-                  {project.status === 'completed' && (
+                {/* Action Buttons Grid */}
+                <div className="grid grid-cols-4 gap-1" onClick={(e) => e.stopPropagation()}>
+                  {/* Slot 1: Play Button */}
+                  <div>
+                    {project.status === 'completed' && (
+                      <button
+                        onClick={() => handlePlayVideo(project)}
+                        disabled={isLoadingVideo}
+                        className={`${baseButtonClass} bg-green-500 hover:bg-green-600 hover:shadow-green-500/25`}
+                        title="Play Video"
+                      >
+                        {isLoadingVideo ? <LoadingIcon /> : <PlayIcon />}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Slot 2: Edit/Continue Button */}
+                  <div>
+                    {(project.status === 'script_ready' || project.status === 'completed') && (
+                      <button
+                        onClick={() => onProjectAction(project.projectId, 'edit')}
+                        className={`${baseButtonClass} bg-orange-500 hover:bg-orange-600 hover:shadow-orange-500/25`}
+                        title="Edit Project"
+                      >
+                        <EditIcon />
+                      </button>
+                    )}
+                    {project.status === 'input_only' && (
+                      <button
+                        onClick={() => onProjectAction(project.projectId, 'continue')}
+                        className={`${baseButtonClass} bg-blue-500 hover:bg-blue-600 hover:shadow-blue-500/25`}
+                        title="Continue Project"
+                      >
+                        <ContinueIcon />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Slot 3: Download Button */}
+                  <div>
+                    {project.status === 'completed' && (
+                      <button
+                        onClick={() => handleDownloadVideo(project.projectId)}
+                        className={`${baseButtonClass} bg-indigo-500 hover:bg-indigo-600 hover:shadow-indigo-500/25`}
+                        title="Download Video"
+                      >
+                        <DownloadIcon />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Slot 4: Delete Button */}
+                  <div>
                     <button
-                      onClick={() => handlePlayVideo(project)}
-                      disabled={isLoadingVideo}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm ${
-                        isLoadingVideo 
-                          ? 'bg-gray-300 cursor-not-allowed text-gray-500' 
-                          : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white transform hover:-translate-y-0.5 shadow-lg hover:shadow-green-500/25'
-                      }`}
-                      title="Stream video (recommended)"
+                      onClick={() => {
+                        setProjectToDelete(project.projectId);
+                        setShowDeleteModal(true);
+                      }}
+                      className={`${baseButtonClass} bg-red-500 hover:bg-red-600 hover:shadow-red-500/25`}
+                      title="Delete Project"
                     >
-                      {isLoadingVideo ? (
-                        <>
-                          <span className="animate-spin inline-block mr-1">⏳</span>
-                          Loading...
-                        </>
-                      ) : (
-                        '▶️ Play'
-                      )}
+                      <DeleteIcon />
                     </button>
-                  )}
-                  
-                  {(project.status === 'script_ready' || project.status === 'completed') && (
-                    <button
-                      onClick={() => onProjectAction(project.projectId, 'edit')}
-                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-orange-500/25"
-                    >
-                      ✏️ Edit
-                    </button>
-                  )}
-                  
-                  {project.status === 'input_only' && (
-                    <button
-                      onClick={() => onProjectAction(project.projectId, 'continue')}
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-blue-500/25"
-                    >
-                      ▶️ Continue
-                    </button>
-                  )}
-                  
-                  <button
-                    onClick={() => handleDownloadVideo(project.projectId)}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-indigo-500/25"
-                  >
-                    ⬇️ Download
-                  </button>
-                  <button
-                    onClick={() => {
-                      setProjectToDelete(project.projectId);
-                      setShowDeleteModal(true);
-                    }}
-                    className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-red-500/25"
-                  >
-                    🗑️ Delete
-                  </button>
+                  </div>
                 </div>
               </div>
             );
@@ -573,7 +436,7 @@ export default function VideoProjectBrowser({
         </div>
       </div>
 
-      {/* Video Player Popup */}
+      {/* --- Modals and Popups --- */}
       {showVideoPlayer && currentVideoProject && (
         <VideoPlayerPopup
           isOpen={showVideoPlayer}        
@@ -584,136 +447,27 @@ export default function VideoProjectBrowser({
         />
       )}
 
-      {/* Enhanced Project Details Modal */}
-      {selectedProject && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-white/20">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-2">
-                📁 Project Details
-              </h3>
-              <button
-                onClick={() => setSelectedProject(null)}
-                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl">
-                <strong className="text-gray-700 block mb-1">Title:</strong>
-                <p className="text-gray-900 font-medium">{selectedProject.title}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <strong className="text-gray-700 block mb-1">Status:</strong>
-                  <span className={`inline-flex px-3 py-1 rounded-lg text-sm font-medium ${getStatusInfo(selectedProject.status).color}`}>
-                    {getStatusInfo(selectedProject.status).emoji} {getStatusInfo(selectedProject.status).text}
-                  </span>
-                </div>
-                
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <strong className="text-gray-700 block mb-1">Steps:</strong>
-                  <p className="text-gray-900 font-medium">{selectedProject.lessonStepsCount || 0}</p>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <strong className="text-gray-700 block mb-1">Created:</strong>
-                <p className="text-gray-900 font-medium">{new Date(selectedProject.createdAt).toLocaleString()}</p>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <strong className="text-gray-700 block mb-1">Speakers:</strong>
-                <p className="text-gray-900 font-medium">{selectedProject.speakers?.join(', ') || 'None'}</p>
-              </div>
-              
-              {selectedProject.visualFunctions?.length > 0 && (
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <strong className="text-gray-700 block mb-1">Visual Functions:</strong>
-                  <p className="text-gray-900 font-medium">{selectedProject.visualFunctions.join(', ')}</p>
-                </div>
-              )}
-              
-              {selectedProject.hasVideo && (
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
-                  <strong className="text-gray-700 block mb-1">Videos:</strong>
-                  <p className="text-gray-900 font-medium flex items-center gap-2">
-                    🎬 {selectedProject.videoFiles?.length || 1} video(s) available
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-center gap-3 mt-8">
-              {selectedProject.status === 'completed' && (
-                <button
-                  onClick={() => {
-                    handlePlayVideo(selectedProject);
-                    setSelectedProject(null);
-                  }}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-green-500/25"
-                >
-                  ▶️ Play Video
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  onProjectAction(selectedProject.projectId, 'edit');
-                  setSelectedProject(null);
-                }}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-blue-500/25"
-              >
-                ✏️ Edit Project
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Enhanced Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-md w-full shadow-2xl border border-white/20">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-red-600 flex items-center gap-2">
-                🗑️ Confirm Delete
-              </h3>
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-red-600 flex items-center gap-2 mb-4">
+              <DeleteIcon /> Confirm Deletion
+            </h3>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete this project? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-              <p className="text-gray-700 mb-2">
-                Are you sure you want to delete this project?
-              </p>
-              <p className="text-red-600 font-semibold">
-                ⚠️ This action cannot be undone.
-              </p>
-            </div>
-
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all"
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-xl font-semibold transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={() => projectToDelete && handleDeleteProject(projectToDelete)}
-                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-red-500/25"
+                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl font-semibold transition-all"
               >
-                🗑️ Delete Project
+                Delete
               </button>
             </div>
           </div>
