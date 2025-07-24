@@ -38,17 +38,24 @@ const BonusClaimPopup = ({
   isOpen, 
   onClaim, 
   onClose, 
-  loading = false 
+  loading = false,
+  showSuccess = false,
+  successData = null
 }: { 
   isOpen: boolean; 
   onClaim: () => void; 
   onClose: () => void;
   loading?: boolean;
+  showSuccess?: boolean;
+  successData?: { credits_granted: number; message: string } | null;
 }) => {
   const [animationPhase, setAnimationPhase] = useState(0);
+  const [giftOpened, setGiftOpened] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !showSuccess) {
+      setAnimationPhase(0);
+      setGiftOpened(false);
       const timer1 = setTimeout(() => setAnimationPhase(1), 300);
       const timer2 = setTimeout(() => setAnimationPhase(2), 800);
       const timer3 = setTimeout(() => setAnimationPhase(3), 1300);
@@ -59,7 +66,12 @@ const BonusClaimPopup = ({
         clearTimeout(timer3);
       };
     }
-  }, [isOpen]);
+    
+    if (showSuccess) {
+      setAnimationPhase(0);
+      setTimeout(() => setGiftOpened(true), 500);
+    }
+  }, [isOpen, showSuccess]);
 
   if (!isOpen) return null;
 
@@ -69,66 +81,131 @@ const BonusClaimPopup = ({
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 opacity-50"></div>
         
-        {/* Floating Emojis */}
-        <div className="absolute top-4 left-4 text-2xl animate-bounce" style={{ animationDelay: '0s' }}>🎉</div>
-        <div className="absolute top-6 right-6 text-xl animate-bounce" style={{ animationDelay: '0.5s' }}>✨</div>
-        <div className="absolute bottom-6 left-6 text-xl animate-bounce" style={{ animationDelay: '1s' }}>🚀</div>
-        <div className="absolute bottom-4 right-4 text-2xl animate-bounce" style={{ animationDelay: '1.5s' }}>💫</div>
-        
-        {/* Content */}
-        <div className="relative z-10">
-          {/* Welcome Message */}
-          <div className={`transition-all duration-500 ${animationPhase >= 1 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-            <div className="text-6xl mb-4 animate-pulse">🎁</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Welcome to Video Generator!
-            </h2>
-          </div>
-
-          {/* Bonus Announcement */}
-          <div className={`transition-all duration-500 ${animationPhase >= 2 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-            <p className="text-gray-600 mb-4">
-              As a new user, you're eligible for
-            </p>
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xl font-bold py-3 px-6 rounded-lg mb-4 animate-pulse">
-              FREE BONUS CREDITS!
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className={`transition-all duration-500 ${animationPhase >= 3 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-            <p className="text-sm text-gray-500 mb-6">
-              Get started with AI-powered video creation immediately!
-            </p>
+        {!showSuccess ? (
+          <>
+            {/* Floating Emojis */}
+            <div className="absolute top-4 left-4 text-2xl animate-bounce" style={{ animationDelay: '0s' }}>🎉</div>
+            <div className="absolute top-6 right-6 text-xl animate-bounce" style={{ animationDelay: '0.5s' }}>✨</div>
+            <div className="absolute bottom-6 left-6 text-xl animate-bounce" style={{ animationDelay: '1s' }}>🚀</div>
+            <div className="absolute bottom-4 right-4 text-2xl animate-bounce" style={{ animationDelay: '1.5s' }}>💫</div>
             
-            <div className="flex gap-3 justify-center">
+            {/* Content */}
+            <div className="relative z-10">
+              {/* Welcome Message */}
+              <div className={`transition-all duration-500 ${animationPhase >= 1 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
+                <div className="text-6xl mb-4 animate-pulse">🎁</div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  Welcome to Video Generator!
+                </h2>
+              </div>
+
+              {/* Bonus Announcement */}
+              <div className={`transition-all duration-500 ${animationPhase >= 2 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
+                <p className="text-gray-600 mb-4">
+                  As a new user, you're eligible for
+                </p>
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xl font-bold py-3 px-6 rounded-lg mb-4 animate-pulse">
+                  FREE BONUS CREDITS!
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className={`transition-all duration-500 ${animationPhase >= 3 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
+                <p className="text-sm text-gray-500 mb-6">
+                  Get started with AI-powered video creation immediately!
+                </p>
+                
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={onClose}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={loading}
+                  >
+                    Maybe Later
+                  </button>
+                  <button
+                    onClick={onClaim}
+                    disabled={loading}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span>Claiming...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🎉</span>
+                        <span>Claim Free Credits</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Success Animation */
+          <div className="relative z-10">
+            {/* Confetti Rain */}
+            <div className="absolute inset-0 pointer-events-none">
+              {[...Array(20)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute animate-bounce"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${1 + Math.random()}s`
+                  }}
+                >
+                  {['🎉', '🎊', '✨', '🌟', '💫'][Math.floor(Math.random() * 5)]}
+                </div>
+              ))}
+            </div>
+
+            {/* Gift Box Opening Animation */}
+            <div className={`transition-all duration-1000 ${giftOpened ? 'scale-110' : 'scale-100'}`}>
+              <div className="text-8xl mb-4 relative">
+                {giftOpened ? (
+                  <div className="animate-pulse">
+                    <div className="relative">
+                      📦
+                      <div className="absolute inset-0 text-6xl animate-bounce" style={{ animationDelay: '0.2s' }}>
+                        ✨
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  '🎁'
+                )}
+              </div>
+            </div>
+
+            {/* Success Message */}
+            <div className={`transition-all duration-700 delay-300 ${giftOpened ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4 animate-pulse">
+                🎊 Congratulations! 🎊
+              </h2>
+              
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-2xl font-bold py-4 px-6 rounded-xl mb-4 animate-bounce shadow-lg">
+                + {successData?.credits_granted} FREE CREDITS!
+              </div>
+              
+              <p className="text-gray-600 mb-6 text-lg">
+                You're all set to create amazing videos! 🚀
+              </p>
+              
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={loading}
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl text-lg"
               >
-                Maybe Later
-              </button>
-              <button
-                onClick={onClaim}
-                disabled={loading}
-                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    <span>Claiming...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>🎉</span>
-                    <span>Claim Free Credits</span>
-                  </>
-                )}
+                Start Creating! 🎬
               </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -152,9 +229,9 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
   if (!userBalance) {
     return (
       <div className="animate-pulse">
-        <div className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg shadow-sm">
-          <div className="w-4 h-4 bg-gray-200 rounded-full"></div>
-          <div className="w-16 h-4 bg-gray-200 rounded"></div>
+        <div className="flex items-center space-x-3 bg-white px-4 py-3 rounded-lg shadow-sm">
+          <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+          <div className="w-24 h-5 bg-gray-200 rounded"></div>
         </div>
       </div>
     );
@@ -169,13 +246,15 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
     <div className="relative">
       <button
         onClick={handleCreditClick}
-        className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border hover:border-blue-300 group"
+        className="flex items-center space-x-3 bg-white px-4 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border hover:border-blue-300 group"
       >
-        <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
-          <span className="text-blue-600 text-xs font-bold">₹</span>
+        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+          <span className="text-blue-600 text-sm font-bold">₹</span>
         </div>
-        <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
-          {formatNumber(userBalance.available_credits)}
+        <div className="text-left">
+          <div className="text-base font-semibold text-gray-900 group-hover:text-blue-600">
+            {formatNumber(userBalance.available_credits)} credits left
+          </div>
         </div>
       </button>
 
@@ -338,6 +417,8 @@ export default function VideoGeneratorPage() {
   const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
   const [showBonusPopup, setShowBonusPopup] = useState(false);
   const [claimingBonus, setClaimingBonus] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successData, setSuccessData] = useState<{ credits_granted: number; message: string } | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -407,8 +488,8 @@ export default function VideoGeneratorPage() {
         } : null);
 
         // Show success message
-        alert(`🎉 ${result.message}`);
-        setShowBonusPopup(false);
+        setSuccessData(result);
+        setShowSuccessAnimation(true);
       } else {
         const errorData = await response.json();
         alert(`Error: ${errorData.detail || 'Failed to claim bonus credits'}`);
@@ -423,6 +504,8 @@ export default function VideoGeneratorPage() {
 
   const handleCloseBonusPopup = () => {
     setShowBonusPopup(false);
+    setShowSuccessAnimation(false);
+    setSuccessData(null);
   };
 
   const handleProjectAction = (projectId: string, action: string) => {
@@ -494,6 +577,8 @@ export default function VideoGeneratorPage() {
           onClaim={handleClaimBonus}
           onClose={handleCloseBonusPopup}
           loading={claimingBonus}
+          showSuccess={showSuccessAnimation}
+          successData={successData}
         />
       </div>
     </div>
