@@ -1,4 +1,4 @@
-// VideoProjectBrowser.tsx - FIXED VERSION with proper TypeScript types
+// VideoProjectBrowser.tsx - Updated with skeleton loading and color scheme
 
 'use client';
 
@@ -25,6 +25,57 @@ interface VideoProjectBrowserProps {
   onProjectAction: (projectId: string, action: string) => void;
   onCreateNew: () => void;
 }
+
+// Skeleton Loading Components
+const ProjectCardSkeleton = () => (
+  <div className="bg-white rounded-lg p-4 shadow-md border animate-pulse">
+    <div className="flex justify-between items-start mb-3">
+      <div className="flex-1">
+        <div className="h-5 bg-gray-200 rounded w-3/4 mb-1"></div>
+        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+      </div>
+      <div className="h-6 w-16 bg-gray-200 rounded-full"></div>
+    </div>
+
+    <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+      <div className="h-4 bg-gray-200 rounded w-20"></div>
+      <div className="h-4 bg-gray-200 rounded w-16"></div>
+      <div className="h-4 bg-gray-200 rounded w-24"></div>
+    </div>
+
+    <div className="flex gap-2 flex-wrap">
+      <div className="h-6 bg-gray-200 rounded w-12"></div>
+      <div className="h-6 bg-gray-200 rounded w-12"></div>
+      <div className="h-6 bg-gray-200 rounded w-16"></div>
+      <div className="h-6 bg-gray-200 rounded w-14"></div>
+    </div>
+  </div>
+);
+
+const ProjectGridSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+    {[...Array(6)].map((_, i) => (
+      <ProjectCardSkeleton key={i} />
+    ))}
+  </div>
+);
+
+// Empty State Component (moved from main page)
+const EmptyProjectsState = ({ onCreateNew }: { onCreateNew: () => void }) => (
+  <div className="p-8 text-center">
+    <div className="text-6xl mb-4">📁</div>
+    <h3 className="text-xl font-semibold mb-2">No Projects Found</h3>
+    <p className="text-gray-600 mb-4">
+      You haven't created any video projects yet. Click "Create New" to get started!
+    </p>
+    <button
+      onClick={onCreateNew}
+      className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+    >
+      ➕ Create Your First Project
+    </button>
+  </div>
+);
 
 export default function VideoProjectBrowser({
   projects,
@@ -243,7 +294,7 @@ export default function VideoProjectBrowser({
     const statusMap = {
       'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-green-100 text-green-800' },
       'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-yellow-100 text-yellow-800' },
-      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-blue-100 text-blue-800' },
+      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-orange-100 text-orange-800' },
       'empty': { text: 'Empty', emoji: '❓', color: 'bg-gray-100 text-gray-800' }
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.empty;
@@ -253,31 +304,14 @@ export default function VideoProjectBrowser({
     setSelectedProject(project);
   };
 
+  // Show skeleton loading while loading
   if (loading) {
-    return (
-      <div className="p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading projects...</p>
-      </div>
-    );
+    return <ProjectGridSkeleton />;
   }
 
+  // Show empty state only when no projects and not loading
   if (projects.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <div className="text-6xl mb-4">📁</div>
-        <h3 className="text-xl font-semibold mb-2">No Projects Found</h3>
-        <p className="text-gray-600 mb-4">
-          You haven't created any video projects yet. Click "Create New" to get started!
-        </p>
-        <button
-          onClick={onCreateNew}
-          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-        >
-          ➕ Create Your First Project
-        </button>
-      </div>
-    );
+    return <EmptyProjectsState onCreateNew={onCreateNew} />;
   }
 
   return (
@@ -293,7 +327,7 @@ export default function VideoProjectBrowser({
           </button>
           <button
             onClick={onCreateNew}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
           >
             ➕ New Project
           </button>
@@ -467,7 +501,7 @@ export default function VideoProjectBrowser({
               )}
               <button
                 onClick={() => onProjectAction(selectedProject.projectId, 'edit')}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
               >
                 ✏️ Edit Project
               </button>
