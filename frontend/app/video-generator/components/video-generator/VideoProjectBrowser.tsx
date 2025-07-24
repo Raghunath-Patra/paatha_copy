@@ -1,4 +1,4 @@
-// VideoProjectBrowser.tsx - Updated with skeleton loading and color scheme
+// VideoProjectBrowser.tsx - Enhanced with better UI, shimmer effects, and blue-purple theme
 
 'use client';
 
@@ -26,136 +26,159 @@ interface VideoProjectBrowserProps {
   onCreateNew: () => void;
 }
 
-// Skeleton Loading Components
+// Enhanced Skeleton Loading Components with Shimmer Effect
+const ShimmerEffect = () => (
+  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+);
+
 const ProjectCardSkeleton = () => (
-  <div className="bg-white rounded-lg p-4 shadow-md border animate-pulse">
-    <div className="flex justify-between items-start mb-3">
-      <div className="flex-1">
-        <div className="h-5 bg-gray-200 rounded w-3/4 mb-1"></div>
-        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+  <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative">
+    <ShimmerEffect />
+    
+    {/* Header */}
+    <div className="flex justify-between items-start mb-4">
+      <div className="flex-1 pr-4">
+        <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
+        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
       </div>
-      <div className="h-6 w-16 bg-gray-200 rounded-full"></div>
+      <div className="h-7 w-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
     </div>
 
-    <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
-      <div className="h-4 bg-gray-200 rounded w-20"></div>
-      <div className="h-4 bg-gray-200 rounded w-16"></div>
-      <div className="h-4 bg-gray-200 rounded w-24"></div>
+    {/* Stats */}
+    <div className="flex justify-between items-center text-sm mb-6">
+      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
+      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-20"></div>
+      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
     </div>
 
-    <div className="flex justify-between gap-2">
-      <div className="h-6 bg-gray-200 rounded w-12"></div>
-      <div className="h-6 bg-gray-200 rounded w-12"></div>
-      <div className="h-6 bg-gray-200 rounded w-16"></div>
-      <div className="h-6 bg-gray-200 rounded w-14"></div>
+    {/* Action Buttons */}
+    <div className="flex flex-wrap gap-2">
+      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-16"></div>
+      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-14"></div>
+      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-20"></div>
+      <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-16"></div>
     </div>
   </div>
 );
 
 const ProjectGridSkeleton = () => (
-  <div className="p-6">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-bold text-gray-800">📁 My Video Projects</h2>
-      <div className="flex gap-3">
-        <button
-          disabled
-          className="bg-gray-400 text-white px-4 py-2 rounded-lg font-medium cursor-not-allowed"
-        >
-          🔄 Refresh
-        </button>
-        <button
-          disabled
-          className="bg-gray-400 text-white px-4 py-2 rounded-lg font-medium cursor-not-allowed"
-        >
-          ➕ New Project
-        </button>
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-4 sm:p-6 lg:p-8">
+    <div className="max-w-7xl mx-auto">
+      {/* Header Skeleton */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-64 animate-pulse"></div>
+        <div className="flex gap-3">
+          <div className="h-10 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+          <div className="h-10 w-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+        </div>
+      </div>
+
+      {/* Grid Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        {[...Array(8)].map((_, i) => (
+          <ProjectCardSkeleton key={i} />
+        ))}
       </div>
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[...Array(6)].map((_, i) => (
-        <ProjectCardSkeleton key={i} />
-      ))}
-    </div>
+
+    <style jsx>{`
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+    `}</style>
   </div>
 );
 
-// Enhanced Empty State Component with Hero Section
+// Enhanced Empty State Component
 const EmptyProjectsState = ({ onCreateNew }: { onCreateNew: () => void }) => (
-  <div className="p-6">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-bold text-gray-800">📁 My Video Projects</h2>
-      <div className="flex gap-3">
-        <button
-          disabled
-          className="bg-gray-400 text-white px-4 py-2 rounded-lg font-medium cursor-not-allowed"
-        >
-          🔄 Refresh
-        </button>
-        <button
-          onClick={onCreateNew}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
-        >
-          ➕ New Project
-        </button>
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-4 sm:p-6 lg:p-8">
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
+        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
+          <span className="text-3xl">📁</span>
+          My Video Projects
+        </h1>
+        <div className="flex gap-3">
+          <button
+            disabled
+            className="bg-gray-300 text-gray-500 px-4 py-2 rounded-xl font-medium cursor-not-allowed transition-all"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            onClick={onCreateNew}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-medium transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+          >
+            ➕ New Project
+          </button>
+        </div>
       </div>
-    </div>
 
-    {/* Hero Section for Empty State */}
-    <div className="text-center py-8">
-      <div className="text-6xl mb-4">📁</div>
-      <h3 className="text-xl font-semibold mb-2">No Projects Found</h3>
-      <p className="text-gray-600 mb-4">
-        You haven't created any video projects yet. Get started with AI-powered video creation!
-      </p>
-      
-      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 sm:mb-12">
-        <button
-          onClick={onCreateNew}
-          className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2"
-        >
-          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Start Creating</span>
-        </button>
+      {/* Hero Section */}
+      <div className="text-center py-16">
+        <div className="mb-8">
+          <div className="text-8xl mb-6 animate-bounce">📁</div>
+          <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent mb-4">
+            No Projects Found
+          </h2>
+          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+            You haven't created any video projects yet. Get started with AI-powered video creation and transform your ideas into professional videos!
+          </p>
+        </div>
         
-        <div className="flex items-center space-x-2 text-gray-500 text-sm sm:text-base">
-          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span>No experience required</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 text-left max-w-4xl mx-auto">
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+          <button
+            onClick={onCreateNew}
+            className="group w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 flex items-center justify-center space-x-3"
+          >
+            <svg className="w-6 h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2">AI-Powered Creation</h3>
-          <p className="text-sm sm:text-base text-gray-600">Advanced AI transforms your ideas into professional videos automatically</p>
-        </div>
-
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <span>Start Creating</span>
+          </button>
+          
+          <div className="flex items-center space-x-3 text-gray-500 text-lg">
+            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
+            <span>No experience required</span>
           </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2">Minutes, Not Hours</h3>
-          <p className="text-sm sm:text-base text-gray-600">Generate complete videos in minutes instead of spending days editing</p>
         </div>
 
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-blue-100 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold mb-4 text-gray-800">AI-Powered Creation</h3>
+            <p className="text-gray-600 leading-relaxed">Advanced AI transforms your ideas into professional videos automatically with intelligent scene generation and voice synthesis.</p>
           </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2">Professional Quality</h3>
-          <p className="text-sm sm:text-base text-gray-600">Studio-quality output ready for any platform or presentation</p>
+
+          <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-purple-100 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 transform hover:-translate-y-2">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold mb-4 text-gray-800">Minutes, Not Hours</h3>
+            <p className="text-gray-600 leading-relaxed">Generate complete videos in minutes instead of spending days editing. From concept to final video in record time.</p>
+          </div>
+
+          <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-indigo-100 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 transform hover:-translate-y-2">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold mb-4 text-gray-800">Professional Quality</h3>
+            <p className="text-gray-600 leading-relaxed">Studio-quality output ready for any platform or presentation. Export in multiple formats and resolutions.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -377,10 +400,10 @@ export default function VideoProjectBrowser({
   // Helper function to map status to display info
   const getStatusInfo = (status: string) => {
     const statusMap = {
-      'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-green-100 text-green-800' },
-      'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-yellow-100 text-yellow-800' },
-      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-orange-100 text-orange-800' },
-      'empty': { text: 'Empty', emoji: '❓', color: 'bg-gray-100 text-gray-800' }
+      'completed': { text: 'Video Ready', emoji: '✅', color: 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' },
+      'script_ready': { text: 'Script Ready', emoji: '📝', color: 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200' },
+      'input_only': { text: 'Input Only', emoji: '📄', color: 'bg-gradient-to-r from-orange-100 to-orange-100 text-orange-800 border border-orange-200' },
+      'empty': { text: 'Empty', emoji: '❓', color: 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200' }
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.empty;
   };
@@ -400,69 +423,90 @@ export default function VideoProjectBrowser({
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">📁 My Video Projects</h2>
-        <div className="flex gap-3">
-          <button
-            onClick={loadProjects}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-          >
-            🔄 Refresh
-          </button>
-          <button
-            onClick={onCreateNew}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
-          >
-            ➕ New Project
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map((project) => {
-          const statusInfo = getStatusInfo(project.status);
-          const createdDate = new Date(project.createdAt).toLocaleDateString();
-          const isLoadingVideo = videoLoading === project.projectId;
-
-          return (
-            <div
-              key={project.projectId}
-              onClick={() => handleProjectClick(project)}
-              className="bg-white rounded-lg p-4 shadow-md border-2 border-transparent hover:border-blue-300 transition-all cursor-pointer hover:shadow-lg"
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Enhanced Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-3">
+            <span className="text-3xl">📁</span>
+            My Video Projects
+            <span className="text-sm font-normal bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full">
+              {projects.length}
+            </span>
+          </h1>
+          <div className="flex gap-3">
+            <button
+              onClick={loadProjects}
+              className="bg-white/80 backdrop-blur-sm hover:bg-white border border-gray-200 hover:border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-medium transition-all shadow-sm hover:shadow-md"
             >
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2">
-                    {project.title}
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    ID: {project.projectId.substring(0, 8)}...
-                  </p>
+              🔄 Refresh
+            </button>
+            <button
+              onClick={onCreateNew}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-medium transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+            >
+              ➕ New Project
+            </button>
+          </div>
+        </div>
+
+        {/* Enhanced Project Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+          {projects.map((project) => {
+            const statusInfo = getStatusInfo(project.status);
+            const createdDate = new Date(project.createdAt).toLocaleDateString();
+            const isLoadingVideo = videoLoading === project.projectId;
+
+            return (
+              <div
+                key={project.projectId}
+                onClick={() => handleProjectClick(project)}
+                className="group bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:bg-white"
+              >
+                {/* Header */}
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1 pr-3">
+                    <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 text-lg group-hover:text-blue-700 transition-colors">
+                      {project.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded-md inline-block">
+                      ID: {project.projectId.substring(0, 8)}...
+                    </p>
+                  </div>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${statusInfo.color} shadow-sm`}>
+                    {statusInfo.emoji} {statusInfo.text}
+                  </span>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                  {statusInfo.emoji} {statusInfo.text}
-                </span>
-              </div>
 
-              <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
-                <span>📅 {createdDate}</span>
-                <span>📋 {project.lessonStepsCount || 0} steps</span>
-                {project.hasVideo && (
-                  <span>🎬 {project.videoFiles?.length || 1} video(s)</span>
-                )}
-              </div>
+                {/* Stats */}
+                <div className="flex justify-between items-center text-sm text-gray-600 mb-6 bg-gray-50/50 rounded-xl p-3">
+                  <div className="flex items-center gap-1">
+                    <span>📅</span>
+                    <span className="font-medium">{createdDate}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>📋</span>
+                    <span className="font-medium">{project.lessonStepsCount || 0} steps</span>
+                  </div>
+                  {project.hasVideo && (
+                    <div className="flex items-center gap-1">
+                      <span>🎬</span>
+                      <span className="font-medium">{project.videoFiles?.length || 1} video(s)</span>
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                {project.status === 'completed' && (
-                  <button
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                  {project.status === 'completed' && (
+                    <button
                       onClick={() => handlePlayVideo(project)}
                       disabled={isLoadingVideo}
-                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm ${
                         isLoadingVideo 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-green-500 hover:bg-green-600'
-                      } text-white`}
+                          ? 'bg-gray-300 cursor-not-allowed text-gray-500' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white transform hover:-translate-y-0.5 shadow-lg hover:shadow-green-500/25'
+                      }`}
                       title="Stream video (recommended)"
                     >
                       {isLoadingVideo ? (
@@ -474,45 +518,46 @@ export default function VideoProjectBrowser({
                         '▶️ Play'
                       )}
                     </button>
-                )}
-                
-                {(project.status === 'script_ready' || project.status === 'completed') && (
+                  )}
+                  
+                  {(project.status === 'script_ready' || project.status === 'completed') && (
+                    <button
+                      onClick={() => onProjectAction(project.projectId, 'edit')}
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-orange-500/25"
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                  
+                  {project.status === 'input_only' && (
+                    <button
+                      onClick={() => onProjectAction(project.projectId, 'continue')}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-blue-500/25"
+                    >
+                      ▶️ Continue
+                    </button>
+                  )}
+                  
                   <button
-                    onClick={() => onProjectAction(project.projectId, 'edit')}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                    onClick={() => handleDownloadVideo(project.projectId)}
+                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-indigo-500/25"
                   >
-                    ✏️ Edit
+                    ⬇️ Download
                   </button>
-                )}
-                
-                {project.status === 'input_only' && (
                   <button
-                    onClick={() => onProjectAction(project.projectId, 'continue')}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                    onClick={() => {
+                      setProjectToDelete(project.projectId);
+                      setShowDeleteModal(true);
+                    }}
+                    className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-red-500/25"
                   >
-                    ▶️ Continue
+                    🗑️ Delete
                   </button>
-                )}
-                
-                <button
-                  onClick={() => handleDownloadVideo(project.projectId)}
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
-                >
-                  ⬇️ Download
-                </button>
-                <button
-                  onClick={() => {
-                    setProjectToDelete(project.projectId);
-                    setShowDeleteModal(true);
-                  }}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
-                >
-                  🗑️ Delete
-                </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Video Player Popup */}
@@ -526,67 +571,89 @@ export default function VideoProjectBrowser({
         />
       )}
 
-      {/* Project Details Modal */}
+      {/* Enhanced Project Details Modal */}
       {selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">📁 Project Details</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-white/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-2">
+                📁 Project Details
+              </h3>
               <button
                 onClick={() => setSelectedProject(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all"
               >
-                ✕
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             
-            <div className="space-y-3">
-              <div>
-                <strong className="text-gray-700">Title:</strong>
-                <p className="text-gray-900">{selectedProject.title}</p>
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl">
+                <strong className="text-gray-700 block mb-1">Title:</strong>
+                <p className="text-gray-900 font-medium">{selectedProject.title}</p>
               </div>
-              <div>
-                <strong className="text-gray-700">Status:</strong>
-                <p className="text-gray-900">{getStatusInfo(selectedProject.status).text}</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <strong className="text-gray-700 block mb-1">Status:</strong>
+                  <span className={`inline-flex px-3 py-1 rounded-lg text-sm font-medium ${getStatusInfo(selectedProject.status).color}`}>
+                    {getStatusInfo(selectedProject.status).emoji} {getStatusInfo(selectedProject.status).text}
+                  </span>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <strong className="text-gray-700 block mb-1">Steps:</strong>
+                  <p className="text-gray-900 font-medium">{selectedProject.lessonStepsCount || 0}</p>
+                </div>
               </div>
-              <div>
-                <strong className="text-gray-700">Created:</strong>
-                <p className="text-gray-900">{new Date(selectedProject.createdAt).toLocaleString()}</p>
+              
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <strong className="text-gray-700 block mb-1">Created:</strong>
+                <p className="text-gray-900 font-medium">{new Date(selectedProject.createdAt).toLocaleString()}</p>
               </div>
-              <div>
-                <strong className="text-gray-700">Lesson Steps:</strong>
-                <p className="text-gray-900">{selectedProject.lessonStepsCount || 0}</p>
+              
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <strong className="text-gray-700 block mb-1">Speakers:</strong>
+                <p className="text-gray-900 font-medium">{selectedProject.speakers?.join(', ') || 'None'}</p>
               </div>
-              <div>
-                <strong className="text-gray-700">Speakers:</strong>
-                <p className="text-gray-900">{selectedProject.speakers?.join(', ') || 'None'}</p>
-              </div>
+              
               {selectedProject.visualFunctions?.length > 0 && (
-                <div>
-                  <strong className="text-gray-700">Visual Functions:</strong>
-                  <p className="text-gray-900">{selectedProject.visualFunctions.join(', ')}</p>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <strong className="text-gray-700 block mb-1">Visual Functions:</strong>
+                  <p className="text-gray-900 font-medium">{selectedProject.visualFunctions.join(', ')}</p>
                 </div>
               )}
+              
               {selectedProject.hasVideo && (
-                <div>
-                  <strong className="text-gray-700">Videos:</strong>
-                  <p className="text-gray-900">{selectedProject.videoFiles?.join(', ') || 'Video available'}</p>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
+                  <strong className="text-gray-700 block mb-1">Videos:</strong>
+                  <p className="text-gray-900 font-medium flex items-center gap-2">
+                    🎬 {selectedProject.videoFiles?.length || 1} video(s) available
+                  </p>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-center gap-3 mt-6">
+            <div className="flex justify-center gap-3 mt-8">
               {selectedProject.status === 'completed' && (
                 <button
-                  onClick={() => onProjectAction(selectedProject.projectId, 'play')}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  onClick={() => {
+                    handlePlayVideo(selectedProject);
+                    setSelectedProject(null);
+                  }}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-green-500/25"
                 >
                   ▶️ Play Video
                 </button>
               )}
               <button
-                onClick={() => onProjectAction(selectedProject.projectId, 'edit')}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+                onClick={() => {
+                  onProjectAction(selectedProject.projectId, 'edit');
+                  setSelectedProject(null);
+                }}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-blue-500/25"
               >
                 ✏️ Edit Project
               </button>
@@ -595,37 +662,43 @@ export default function VideoProjectBrowser({
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Enhanced Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">🗑️ Confirm Delete</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-md w-full shadow-2xl border border-white/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-red-600 flex items-center gap-2">
+                🗑️ Confirm Delete
+              </h3>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all"
               >
-                ✕
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             
-            <p className="text-gray-700 mb-2">
-              Are you sure you want to delete this project?
-            </p>
-            <p className="text-red-600 font-medium mb-6">
-              This action cannot be undone.
-            </p>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <p className="text-gray-700 mb-2">
+                Are you sure you want to delete this project?
+              </p>
+              <p className="text-red-600 font-semibold">
+                ⚠️ This action cannot be undone.
+              </p>
+            </div>
 
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={() => projectToDelete && handleDeleteProject(projectToDelete)}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-red-500/25"
               >
                 🗑️ Delete Project
               </button>

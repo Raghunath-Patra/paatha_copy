@@ -286,9 +286,9 @@ export default function VideoContentInput({
           clearInterval(interval);
           return 90;
         }
-        return prev + Math.random() * 15;
+        return Math.min(prev + Math.random() * 3, 90);
       });
-    }, 800);
+    }, 900);
 
     // Call the actual API
     callback();
