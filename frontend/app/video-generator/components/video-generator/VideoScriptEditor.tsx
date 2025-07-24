@@ -201,62 +201,100 @@ export default function VideoScriptEditor({
   };
 
   const updateVisualPreview = (visualFunction: any) => {
-    if (!visualPreviewCanvas) return;
+    if (!visualPreviewCanvas) {
+      console.log('❌ Visual preview canvas not available');
+      return;
+    }
 
     const ctx = visualPreviewCanvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      console.log('❌ Could not get 2D context from visual preview canvas');
+      return;
+    }
 
-    // Clear canvas
+    console.log('🎨 Starting visual function preview for:', visualFunction.function_name);
+
+    // Completely clear the canvas with a solid color
     ctx.clearRect(0, 0, 1000, 700);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 1000, 700);
 
-    // Draw header
+    // Draw a simple header
     ctx.fillStyle = '#6b46c1';
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 500, 40);
 
-    // Create working area
-    const workingArea = { x: 100, y: 80, width: 800, height: 500 };
+    // Create a working area for the visual function
+    const workingArea = {
+      x: 100,
+      y: 80,
+      width: 800,
+      height: 500
+    };
+
+    // Draw working area background (light gray)
     ctx.fillStyle = '#f8f9fa';
     ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
+    
+    // Draw working area border
     ctx.strokeStyle = '#dee2e6';
     ctx.lineWidth = 2;
     ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
 
+    // Add instruction text
+    ctx.fillStyle = '#6c757d';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Visual function output will appear below:', 500, 70);
+
     try {
+      console.log('🔧 Executing visual function code...');
+      
+      // Save context state before executing user code
       ctx.save();
+      
+      // Reset text alignment for user code
       ctx.textAlign = 'left';
       
+      // Parse and execute the function code
       let functionCode = visualFunction.function_code.trim();
       let func;
       
       if (functionCode.startsWith('function')) {
+        // Complete function definition - extract function body
         const match = functionCode.match(/function\s+\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
         if (match) {
           const functionBody = match[1];
           func = new Function('ctx', 'param1', 'param2', 'param3', functionBody);
         } else {
-          throw new Error('Invalid function format');
+          throw new Error('Invalid function format - could not parse function definition');
         }
       } else {
+        // Just function body
         func = new Function('ctx', 'param1', 'param2', 'param3', functionCode);
       }
       
+      // Execute the function with sample parameters
+      console.log('✅ Function compiled successfully, executing...');
       func(ctx, 'param1_sample', 'param2_sample', 'param3_sample');
+      console.log('✅ Visual function executed successfully');
       
     } catch (error) {
-      console.error('Error executing visual function:', error);
+      console.error('❌ Error executing visual function:', error);
+      
+      // Restore context for error display
       ctx.restore();
       
-      // Show error
+      // Clear the working area and show error
       ctx.fillStyle = '#fff5f5';
       ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
+      
       ctx.strokeStyle = '#f56565';
       ctx.lineWidth = 2;
       ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
+      // Display error message
       ctx.fillStyle = '#e53e3e';
       ctx.font = 'bold 18px Arial';
       ctx.textAlign = 'center';
@@ -265,11 +303,41 @@ export default function VideoScriptEditor({
       ctx.fillStyle = '#c53030';
       ctx.font = '14px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      ctx.fillText(errorMessage.substring(0, 80), 500, 280);
-      return;
+      
+      // Word wrap the error message
+      const maxWidth = 600;
+      const words = errorMessage.split(' ');
+      let line = '';
+      let y = 280;
+      
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, 500, y);
+          line = words[n] + ' ';
+          y += 20;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) {
+        ctx.fillText(line, 500, y);
+      }
+      
+      ctx.fillStyle = '#718096';
+      ctx.font = '12px Arial';
+      ctx.fillText('Check the browser console for detailed error information', 500, y + 30);
+      
+      return; // Exit early for error case
     }
     
+    // Restore context state
     ctx.restore();
+    
+    console.log('✅ Visual function preview completed');
   };
 
   const getBackgroundColor = (speaker: string) => {
@@ -715,8 +783,8 @@ export default function VideoScriptEditor({
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-          {/* Left Panel - Tabs (2/5 width) */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Panel - Tabs (2/3 width) */}
           <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
             {/* Tab Navigation */}
             <div className="flex border-b border-slate-200/60">
@@ -950,7 +1018,7 @@ export default function VideoScriptEditor({
                             ...selectedVisualFunction,
                             function_code: e.target.value
                           })}
-                          className="w-full h-24 p-3 border border-slate-300 rounded-lg text-sm font-mono resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                          className="w-full h-32 p-3 border border-slate-300 rounded-lg text-sm font-mono resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
                           placeholder="Edit the visual function code..."
                         />
                       </div>
@@ -993,8 +1061,8 @@ export default function VideoScriptEditor({
             </div>
           </div>
 
-          {/* Right Panel - Preview & AI Chat (3/5 width) */}
-          <div className="xl:col-span-3 space-y-6">
+          {/* Right Panel - Preview & AI Chat (1/3 width) */}
+          <div className="xl:col-span-1 space-y-6">
             {/* Preview Section */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
