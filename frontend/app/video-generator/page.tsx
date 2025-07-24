@@ -376,8 +376,40 @@ const AnimatedText = ({ texts, className = "" }: { texts: string[], className?: 
   );
 };
 
-// Hero Section Component - Responsive and constrained width
+// Floating Orbs Component for background animation
+const FloatingOrbs = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Large floating orb */}
+      <div className="absolute -top-10 -left-10 w-32 sm:w-48 h-32 sm:h-48 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-full blur-xl animate-pulse"></div>
+      
+      {/* Medium floating orb */}
+      <div className="absolute top-1/4 -right-8 w-24 sm:w-36 h-24 sm:h-36 bg-gradient-to-br from-purple-400/15 to-indigo-500/15 rounded-full blur-lg animate-bounce" style={{ animationDuration: '3s' }}></div>
+      
+      {/* Small floating orb */}
+      <div className="absolute bottom-1/4 left-1/4 w-16 sm:w-24 h-16 sm:h-24 bg-gradient-to-br from-indigo-400/20 to-blue-500/20 rounded-full blur-md animate-pulse" style={{ animationDelay: '1s' }}></div>
+      
+      {/* Tiny accent orbs */}
+      <div className="absolute top-1/2 left-1/6 w-8 sm:w-12 h-8 sm:h-12 bg-gradient-to-br from-blue-300/25 to-purple-400/25 rounded-full blur-sm animate-bounce" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
+      <div className="absolute bottom-1/3 right-1/4 w-6 sm:w-10 h-6 sm:h-10 bg-gradient-to-br from-purple-300/30 to-indigo-400/30 rounded-full blur-sm animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+    </div>
+  );
+};
+
+// Shimmer Effect Component
+const ShimmerText = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => {
+  return (
+    <div className={`relative ${className}`}>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer bg-[length:200%_100%]"></div>
+      {children}
+    </div>
+  );
+};
+
+// Hero Section Component - Enhanced with animations
 const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  
   const encouragingTexts = [
     "Transform your ideas into stunning videos",
     "Create educational content in minutes",
@@ -386,23 +418,117 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
     "Generate engaging educational videos effortlessly"
   ];
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="w-full max-w-7xl mx-auto text-center py-12 lg:py-16 px-4 sm:px-6 lg:px-8 mb-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 sm:mb-6 leading-tight">
-          Create Amazing Videos with{' '}
-          <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            AI Magic
-          </span>
+    <div className="relative w-full max-w-7xl mx-auto text-center py-6 sm:py-8 lg:py-10 px-4 sm:px-6 lg:px-8 mb-4 sm:mb-6 overflow-hidden">
+      {/* Floating Background Orbs */}
+      <FloatingOrbs />
+      
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-purple-50/30 to-indigo-50/50 animate-gradient-x"></div>
+      
+      <div className={`relative z-10 max-w-4xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
+        {/* Main Heading with enhanced animations */}
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3 sm:mb-4 leading-tight">
+          <span className="inline-block animate-fade-in-up">Create Amazing Videos with</span>{' '}
+          <ShimmerText className="inline-block">
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent animate-gradient-text bg-[length:200%_auto]">
+              AI Magic
+            </span>
+          </ShimmerText>
         </h1>
         
-        <div className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed min-h-[2rem]">
+        {/* Subtitle with pulsing gradient accent */}
+        <div className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6 leading-relaxed min-h-[1.5rem] sm:min-h-[2rem]">
           <AnimatedText 
             texts={encouragingTexts}
-            className="font-medium text-blue-600"
+            className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse-glow"
           />
         </div>
+
+        {/* Call-to-action button with hover animations */}
+        <button
+          onClick={onCreateNew}
+          className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105"
+        >
+          {/* Button gradient overlay animation */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          {/* Button content */}
+          <span className="relative z-10 flex items-center space-x-2">
+            <span className="text-base sm:text-lg">✨ Start Creating Now</span>
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+          
+          {/* Sparkle effects on hover */}
+          <div className="absolute -inset-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="absolute top-0 left-1/4 w-2 h-2 bg-white rounded-full animate-ping" style={{ animationDelay: '0s' }}></div>
+            <div className="absolute top-1/4 right-1/4 w-1 h-1 bg-white rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+            <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+          </div>
+        </button>
       </div>
+
+      {/* CSS for custom animations */}
+      <style jsx>{`
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes gradient-text {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        
+        @keyframes fade-in-up {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse-glow {
+          0%, 100% { 
+            filter: brightness(1) saturate(1);
+            text-shadow: 0 0 10px rgba(147, 51, 234, 0.3);
+          }
+          50% { 
+            filter: brightness(1.1) saturate(1.2);
+            text-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+          }
+        }
+        
+        .animate-gradient-x {
+          animation: gradient-x 8s ease infinite;
+          background-size: 400% 400%;
+        }
+        
+        .animate-gradient-text {
+          animation: gradient-text 3s ease infinite;
+        }
+        
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+        
+        .animate-fade-in-up {
+          animation: fade-in-up 0.8s ease-out;
+        }
+        
+        .animate-pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
@@ -548,18 +674,30 @@ export default function VideoGeneratorPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col space-y-3 mb-6">
-          {/* Top row with title and navigation */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+        <div className="mb-4 sm:mb-6">
+          {/* Desktop: All in one row, Mobile: Title+Nav in first row */}
+          <div className="flex justify-between items-center mb-3 sm:mb-0">
+            {/* Left side - Title and icon */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
               <span className="text-2xl">🎬</span>
-              <h1 className="hidden sm:block text-xl sm:text-2xl font-bold text-gray-800">Video Generator</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                <span className="sm:hidden">Video Gen</span>
+                <span className="hidden sm:inline">Video Generator</span>
+              </h1>
             </div>
-            <Navigation />
+            
+            {/* Right side - Navigation and Credits (desktop), Navigation only (mobile) */}
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              {/* Credits - hidden on mobile, shown on desktop */}
+              <div className="hidden sm:block">
+                <CreditDisplay userBalance={userBalance} onClick={handleCreditsClick} />
+              </div>
+              <Navigation />
+            </div>
           </div>
           
-          {/* Credits row - full width on mobile, right-aligned on larger screens */}
-          <div className="flex justify-end">
+          {/* Mobile only: Credits on second row, right-aligned */}
+          <div className="flex justify-end sm:hidden">
             <CreditDisplay userBalance={userBalance} onClick={handleCreditsClick} />
           </div>
         </div>
