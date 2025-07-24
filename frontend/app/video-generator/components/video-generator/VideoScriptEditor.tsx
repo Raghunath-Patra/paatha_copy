@@ -121,14 +121,50 @@ export default function VideoScriptEditor({
     }
   }, []);
 
-  // Handle canvas updates based on active tab
+  // Separate effect for initial slide preview (only after both canvas and slides are ready)
+  useEffect(() => {
+    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
+      console.log('🖼️ Initial slide preview update');
+      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+    }
+  }, [previewCanvas, slides, currentSlideIndex, activeTab]);
+
+  // Separate effect for when visual canvas becomes available
+  useEffect(() => {
+    if (visualPreviewCanvas && activeTab === 'visuals' && selectedVisualFunction) {
+      console.log('🎨 Visual canvas became available, updating preview');
+      updateVisualPreview(selectedVisualFunction);
+    }
+  }, [visualPreviewCanvas, activeTab, selectedVisualFunction]);
+
+  // Handle canvas updates based on active tab and selection
+  useEffect(() => {
+    console.log(`🔄 Tab/selection change effect: activeTab=${activeTab}, hasPreviewCanvas=${!!previewCanvas}, hasVisualCanvas=${!!visualPreviewCanvas}`);
+    
+    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
+      console.log(`🖼️ Updating slide preview for slide ${currentSlideIndex}`);
+      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+    } else if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
+      console.log(`🎨 Updating visual preview for function: ${selectedVisualFunction.function_name}`);
+      updateVisualPreview(selectedVisualFunction);
+    } else {
+      console.log('⏸️ No update needed - missing requirements');
+    }
+  }, [activeTab, selectedVisualFunction, currentSlideIndex, visualPreviewCanvas, previewCanvas]);
+
+  // Update preview when slide changes (only for slides tab)
   useEffect(() => {
     if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
       updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-    } else if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
+    }
+  }, [currentSlideIndex, slides, previewCanvas, activeTab]);
+
+  // Update visual preview when visual function changes (only for visuals tab)
+  useEffect(() => {
+    if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
       updateVisualPreview(selectedVisualFunction);
     }
-  }, [activeTab, selectedVisualFunction, currentSlideIndex, visualPreviewCanvas, previewCanvas]);
+  }, [selectedVisualFunction, visualPreviewCanvas, activeTab]);
 
   const updateSlidePreview = (slide: any, index: number) => {
     if (!previewCanvas) return;
@@ -381,21 +417,40 @@ export default function VideoScriptEditor({
   };
 
   const handleVisualFunctionSelect = (visualFunction: any) => {
+    console.log('🎨 Selecting visual function:', visualFunction.function_name);
+    console.log('🎨 Canvas state:', { 
+      hasVisualCanvas: !!visualPreviewCanvas,
+      activeTab,
+      canvasRef: !!visualCanvasRef.current 
+    });
+    
     setSelectedVisualFunction(visualFunction);
     setOriginalVisualCode(visualFunction.function_code);
     setUpdateStatus(null);
     
+    // Immediately update the preview if canvas is ready
     if (visualPreviewCanvas && activeTab === 'visuals') {
+      console.log('🖼️ Immediately updating visual preview');
       updateVisualPreview(visualFunction);
+    } else if (visualCanvasRef.current && activeTab === 'visuals') {
+      console.log('🔧 Canvas ref exists but state not set, forcing update...');
+      // Force set the canvas state if ref exists but state doesn't
+      const canvas = visualCanvasRef.current;
+      setVisualPreviewCanvas(canvas);
+      // The useEffect will handle the update once state is set
+    } else {
+      console.log('❌ Cannot update preview - canvas not ready');
     }
   };
 
   const handleTabSwitch = (newTab: 'slides' | 'visuals') => {
+    console.log(`🔄 Switching to tab: ${newTab}`);
     setActiveTab(newTab);
-    setUpdateStatus(null);
+    setUpdateStatus(null); // Clear any status messages
     
-    // Clear inactive canvas
+    // Clear the inactive canvas to prevent confusion
     if (newTab === 'slides' && visualPreviewCanvas) {
+      console.log('🧹 Clearing visual preview canvas');
       const ctx = visualPreviewCanvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, 1000, 700);
@@ -406,6 +461,7 @@ export default function VideoScriptEditor({
         ctx.fillRect(0, 0, 1000, 700);
       }
     } else if (newTab === 'visuals' && previewCanvas) {
+      console.log('🧹 Clearing slide preview canvas');
       const ctx = previewCanvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, 1000, 700);
@@ -765,7 +821,7 @@ export default function VideoScriptEditor({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-full mx-auto px-2 sm:px-4 py-8">
         {/* Header with shimmer effect */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
@@ -783,9 +839,9 @@ export default function VideoScriptEditor({
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Panel - Tabs (2/3 width) */}
-          <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Left Panel - Tabs (1/2 width) */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
             {/* Tab Navigation */}
             <div className="flex border-b border-slate-200/60">
               <button
@@ -1061,8 +1117,8 @@ export default function VideoScriptEditor({
             </div>
           </div>
 
-          {/* Right Panel - Preview & AI Chat (1/3 width) */}
-          <div className="xl:col-span-1 space-y-6">
+          {/* Right Panel - Preview & AI Chat (1/2 width) */}
+          <div className="space-y-6">
             {/* Preview Section */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
