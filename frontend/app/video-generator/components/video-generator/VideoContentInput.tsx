@@ -89,7 +89,7 @@ const FileUploadArea = ({
   isGenerating 
 }: { 
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   isGenerating: boolean;
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
