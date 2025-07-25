@@ -152,14 +152,14 @@ export default function VideoScriptEditor({
     }
   }, []);
 
-  // Update preview when conditions are met - with more robust checks
+  // Update preview when conditions are met - with automatic rendering
   useEffect(() => {
     if (!canvasInitialized) return;
 
     // Add a small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       if (activeTab === 'slides' && slides[currentSlideIndex] && canvasRef.current) {
-        console.log('🖼️ Updating slide preview for slide', currentSlideIndex);
+        console.log('🖼️ Auto-updating slide preview for slide', currentSlideIndex);
         try {
           updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
         } catch (error) {
@@ -167,7 +167,7 @@ export default function VideoScriptEditor({
           drawErrorMessage(canvasRef.current, 'Failed to render slide preview');
         }
       } else if (activeTab === 'visuals' && selectedVisualFunction && visualCanvasRef.current) {
-        console.log('🎨 Updating visual preview for:', selectedVisualFunction.function_name);
+        console.log('🎨 Auto-updating visual preview for:', selectedVisualFunction.function_name);
         try {
           updateVisualPreview(selectedVisualFunction);
         } catch (error) {
@@ -179,6 +179,32 @@ export default function VideoScriptEditor({
 
     return () => clearTimeout(timer);
   }, [activeTab, currentSlideIndex, selectedVisualFunction, canvasInitialized, slides]);
+
+  // Auto-render when slides data becomes available
+  useEffect(() => {
+    if (canvasInitialized && slides.length > 0 && activeTab === 'slides' && !isLoading) {
+      console.log('🔄 Slides data available, auto-rendering...');
+      const timer = setTimeout(() => {
+        updateSlidePreview(slides[currentSlideIndex] || slides[0], currentSlideIndex);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [slides, canvasInitialized, isLoading]);
+
+  // Auto-render when tab switches
+  useEffect(() => {
+    if (!canvasInitialized) return;
+    
+    const timer = setTimeout(() => {
+      if (activeTab === 'slides' && slides[currentSlideIndex]) {
+        updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+      } else if (activeTab === 'visuals' && selectedVisualFunction) {
+        updateVisualPreview(selectedVisualFunction);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [activeTab]);
 
   // Helper function to draw error messages
   const drawErrorMessage = (canvas: HTMLCanvasElement, message: string) => {
@@ -229,44 +255,44 @@ export default function VideoScriptEditor({
 
       // Draw title
       ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 20px Arial';
+      ctx.font = 'bold 18px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(slide.title || 'Untitled Slide', 400, 40);
+      ctx.fillText(slide.title || 'Untitled Slide', 400, 35);
 
       // Draw slide number
       ctx.fillStyle = '#64748b';
-      ctx.font = '12px Arial';
+      ctx.font = '11px Arial';
       ctx.textAlign = 'right';
-      ctx.fillText(`Slide ${index + 1}`, 780, 25);
+      ctx.fillText(`Slide ${index + 1}`, 780, 20);
 
       // Draw speaker info
       ctx.fillStyle = '#475569';
-      ctx.font = 'bold 14px Arial';
+      ctx.font = 'bold 12px Arial';
       ctx.textAlign = 'left';
       const speakerName = project.speakers?.[slide.speaker]?.name || slide.speaker;
-      ctx.fillText(`Speaker: ${speakerName}`, 20, 25);
+      ctx.fillText(`Speaker: ${speakerName}`, 20, 20);
 
       // Draw content area (limited space)
       ctx.fillStyle = '#334155';
-      ctx.font = '14px Arial';
+      ctx.font = '12px Arial';
       ctx.textAlign = 'left';
       
-      let yPos = 65;
+      let yPos = 55;
       if (slide.content) {
-        wrapText(ctx, slide.content, 20, yPos, 760, 18);
-        yPos += 25;
+        wrapText(ctx, slide.content, 20, yPos, 760, 16);
+        yPos += 20;
       }
       if (slide.content2) {
-        wrapText(ctx, slide.content2, 20, yPos, 760, 18);
-        yPos += 25;
+        wrapText(ctx, slide.content2, 20, yPos, 760, 16);
+        yPos += 20;
       }
 
-      // Calculate visual area - ensure it fits within canvas
+      // Calculate visual area - ensure it fits within canvas and is responsive
       const visualArea = {
-        x: 20,
-        y: Math.min(yPos + 10, 110),
-        width: 760,
-        height: Math.min(350, 520 - Math.min(yPos + 10, 110))
+        x: 30,
+        y: Math.min(yPos + 10, 90),
+        width: 740,
+        height: Math.min(380, 480 - Math.min(yPos + 10, 90))
       };
 
       // Visual area background
@@ -285,11 +311,25 @@ export default function VideoScriptEditor({
           const visualFunction = project.visualFunctions[slide.visual.type];
           if (visualFunction) {
             ctx.save();
-            // Create proper clipping area with padding
-            ctx.translate(visualArea.x + 10, visualArea.y + 10);
+            
+            // Create proper clipping area with padding - ensure visual fits within bounds
+            const padding = 15;
+            const drawingWidth = visualArea.width - (padding * 2);
+            const drawingHeight = visualArea.height - (padding * 2);
+            
+            ctx.translate(visualArea.x + padding, visualArea.y + padding);
             ctx.beginPath();
-            ctx.rect(0, 0, visualArea.width - 20, visualArea.height - 20);
+            ctx.rect(0, 0, drawingWidth, drawingHeight);
             ctx.clip();
+
+            // Scale context to ensure visual functions fit within the available space
+            const scaleX = drawingWidth / 400; // Assume visual functions are designed for ~400px width
+            const scaleY = drawingHeight / 300; // Assume visual functions are designed for ~300px height
+            const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down if needed
+            
+            if (scale < 1) {
+              ctx.scale(scale, scale);
+            }
 
             let func;
             if (typeof visualFunction === 'string') {
@@ -322,7 +362,7 @@ export default function VideoScriptEditor({
           console.error('Error executing visual function:', error);
           ctx.save();
           ctx.fillStyle = '#ef4444';
-          ctx.font = '14px Arial';
+          ctx.font = '12px Arial';
           ctx.textAlign = 'center';
           const errorMsg = error instanceof Error ? error.message : 'Visual function error';
           ctx.fillText(`Error: ${errorMsg}`, visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
@@ -332,25 +372,25 @@ export default function VideoScriptEditor({
         // No visual placeholder
         ctx.save();
         ctx.fillStyle = '#94a3b8';
-        ctx.font = '14px Arial';
+        ctx.font = '12px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('No visual function assigned', visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
         ctx.restore();
       }
 
       // Draw narration area only if there's space
-      const narrationY = visualArea.y + visualArea.height + 15;
+      const narrationY = visualArea.y + visualArea.height + 10;
       if (slide.narration && narrationY < 540) {
         ctx.fillStyle = '#1e293b';
-        ctx.font = 'bold 12px Arial';
+        ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText('Narration:', 20, narrationY);
+        ctx.fillText('Narration:', 30, narrationY);
         
         ctx.fillStyle = '#475569';
-        ctx.font = '11px Arial';
+        ctx.font = '9px Arial';
         const remainingHeight = 560 - narrationY - 10;
-        if (remainingHeight > 15) {
-          wrapText(ctx, slide.narration, 20, narrationY + 15, 760, 14);
+        if (remainingHeight > 12) {
+          wrapText(ctx, slide.narration, 30, narrationY + 12, 740, 12);
         }
       }
 
@@ -376,47 +416,61 @@ export default function VideoScriptEditor({
 
     console.log('🎨 Rendering visual function preview for:', visualFunction.function_name);
 
-    // Clear canvas with white background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 800, 560);
-
-    // Draw border
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, 798, 558);
-
-    // Draw header
-    ctx.fillStyle = '#7c3aed';
-    ctx.font = 'bold 18px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 400, 30);
-
-    // Working area - ensure it fits properly within canvas
-    const workingArea = {
-      x: 20,
-      y: 50,
-      width: 760,
-      height: 480
-    };
-
-    // Working area background
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
-    
-    // Working area border
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
-
     try {
+      // Clear canvas with white background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 800, 560);
+
+      // Draw border
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, 798, 558);
+
+      // Draw header
+      ctx.fillStyle = '#7c3aed';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 400, 25);
+
+      // Working area - ensure it fits properly within canvas and is responsive
+      const workingArea = {
+        x: 30,
+        y: 45,
+        width: 740,
+        height: 480
+      };
+
+      // Working area background
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
+      
+      // Working area border
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
+
       console.log('🔧 Executing visual function code...');
       
       ctx.save();
+      
       // Create proper clipping area with padding - ensure visual stays within bounds
-      ctx.translate(workingArea.x + 15, workingArea.y + 15);
+      const padding = 20;
+      const drawingWidth = workingArea.width - (padding * 2);
+      const drawingHeight = workingArea.height - (padding * 2);
+      
+      ctx.translate(workingArea.x + padding, workingArea.y + padding);
       ctx.beginPath();
-      ctx.rect(0, 0, workingArea.width - 30, workingArea.height - 30);
+      ctx.rect(0, 0, drawingWidth, drawingHeight);
       ctx.clip();
+      
+      // Scale context to ensure visual functions fit within the available space
+      const scaleX = drawingWidth / 600; // Assume visual functions are designed for ~600px width
+      const scaleY = drawingHeight / 400; // Assume visual functions are designed for ~400px height
+      const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down if needed
+      
+      if (scale < 1) {
+        ctx.scale(scale, scale);
+      }
       
       let functionCode = visualFunction.function_code.trim();
       let func;
@@ -452,14 +506,18 @@ export default function VideoScriptEditor({
       ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
       ctx.fillStyle = '#dc2626';
-      ctx.font = 'bold 16px Arial';
+      ctx.font = 'bold 14px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('⚠️ Error in Visual Function', 400, 250);
       
       ctx.fillStyle = '#b91c1c';
-      ctx.font = '12px Arial';
+      ctx.font = '11px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      wrapText(ctx, errorMessage, 50, 280, 700, 16);
+      wrapText(ctx, errorMessage, 50, 280, 700, 14);
+    }
+
+    console.log('✅ Visual function preview completed');
+  };);
     }
 
     console.log('✅ Visual function preview completed');
@@ -503,12 +561,28 @@ export default function VideoScriptEditor({
     setSelectedVisualFunction(visualFunction);
     setOriginalVisualCode(visualFunction.function_code);
     setUpdateStatus(null);
+    
+    // Force render when selecting visual function
+    if (activeTab === 'visuals') {
+      setTimeout(() => {
+        updateVisualPreview(visualFunction);
+      }, 100);
+    }
   };
 
   const handleTabSwitch = (newTab: 'slides' | 'visuals') => {
     console.log(`🔄 Switching to tab: ${newTab}`);
     setActiveTab(newTab);
     setUpdateStatus(null);
+    
+    // Force render when switching tabs
+    setTimeout(() => {
+      if (newTab === 'slides' && slides[currentSlideIndex]) {
+        updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+      } else if (newTab === 'visuals' && selectedVisualFunction) {
+        updateVisualPreview(selectedVisualFunction);
+      }
+    }, 100);
   };
 
   // Force render button for debugging
@@ -1212,24 +1286,17 @@ export default function VideoScriptEditor({
                       <canvas
                         ref={canvasRef}
                         className="block w-full h-auto max-w-full"
-                        style={{ aspectRatio: '800/560' }}
+                        style={{ aspectRatio: '800/560', maxHeight: '400px' }}
                       />
                     ) : (
                       <canvas
                         ref={visualCanvasRef}
                         className="block w-full h-auto max-w-full"
-                        style={{ aspectRatio: '800/560' }}
+                        style={{ aspectRatio: '800/560', maxHeight: '400px' }}
                       />
                     )}
                   </div>
                 )}
-                {/* Debug button - can remove in production */}
-                <button
-                  onClick={forceRender}
-                  className="mt-2 px-3 py-1 bg-gray-500 text-white rounded text-xs"
-                >
-                  Force Refresh Preview
-                </button>
               </div>
             </div>
 
