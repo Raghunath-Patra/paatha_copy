@@ -212,12 +212,12 @@ export default function VideoScriptEditor({
     if (!ctx) return;
     
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 800, 560);
+    ctx.fillRect(0, 0, 400, 280);
     
     ctx.fillStyle = '#ef4444';
-    ctx.font = 'bold 16px Arial';
+    ctx.font = 'bold 12px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('⚠️ ' + (message || 'Rendering error'), 400, 280);
+    ctx.fillText('⚠️ ' + (message || 'Rendering error'), 200, 140);
   };
 
   const updateSlidePreview = (slide: any, index: number) => {
@@ -236,63 +236,67 @@ export default function VideoScriptEditor({
     console.log('🖼️ Rendering slide preview for slide', index, slide);
 
     try {
+      // Use smaller canvas dimensions for better responsiveness
+      const canvasWidth = 400;
+      const canvasHeight = 280;
+      
       // Clear canvas with background
       ctx.fillStyle = '#f8f9fa';
-      ctx.fillRect(0, 0, 800, 560);
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
       // Draw background gradient based on speaker
       const backgroundColor = getBackgroundColor(slide.speaker);
-      const gradient = ctx.createLinearGradient(0, 0, 800, 560);
+      const gradient = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
       gradient.addColorStop(0, backgroundColor);
       gradient.addColorStop(1, '#ffffff');
       ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 800, 560);
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
       // Draw border
       ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(1, 1, 798, 558);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
 
       // Draw title
       ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 18px Arial';
+      ctx.font = 'bold 14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(slide.title || 'Untitled Slide', 400, 35);
+      ctx.fillText(slide.title || 'Untitled Slide', canvasWidth / 2, 20);
 
       // Draw slide number
       ctx.fillStyle = '#64748b';
-      ctx.font = '11px Arial';
+      ctx.font = '10px Arial';
       ctx.textAlign = 'right';
-      ctx.fillText(`Slide ${index + 1}`, 780, 20);
+      ctx.fillText(`Slide ${index + 1}`, canvasWidth - 10, 15);
 
       // Draw speaker info
       ctx.fillStyle = '#475569';
-      ctx.font = 'bold 12px Arial';
+      ctx.font = 'bold 10px Arial';
       ctx.textAlign = 'left';
       const speakerName = project.speakers?.[slide.speaker]?.name || slide.speaker;
-      ctx.fillText(`Speaker: ${speakerName}`, 20, 20);
+      ctx.fillText(`Speaker: ${speakerName}`, 10, 15);
 
       // Draw content area (limited space)
       ctx.fillStyle = '#334155';
-      ctx.font = '12px Arial';
+      ctx.font = '10px Arial';
       ctx.textAlign = 'left';
       
-      let yPos = 55;
+      let yPos = 35;
       if (slide.content) {
-        wrapText(ctx, slide.content, 20, yPos, 760, 16);
-        yPos += 20;
+        wrapText(ctx, slide.content, 10, yPos, canvasWidth - 20, 12);
+        yPos += 15;
       }
       if (slide.content2) {
-        wrapText(ctx, slide.content2, 20, yPos, 760, 16);
-        yPos += 20;
+        wrapText(ctx, slide.content2, 10, yPos, canvasWidth - 20, 12);
+        yPos += 15;
       }
 
-      // Calculate visual area - ensure it fits within canvas and is responsive
+      // Calculate visual area - ensure it fits within canvas
       const visualArea = {
-        x: 30,
-        y: Math.min(yPos + 10, 90),
-        width: 740,
-        height: Math.min(380, 480 - Math.min(yPos + 10, 90))
+        x: 15,
+        y: Math.min(yPos + 5, 55),
+        width: canvasWidth - 30,
+        height: Math.min(180, canvasHeight - 60 - Math.min(yPos + 5, 55))
       };
 
       // Visual area background
@@ -312,8 +316,8 @@ export default function VideoScriptEditor({
           if (visualFunction) {
             ctx.save();
             
-            // Create proper clipping area with padding - ensure visual fits within bounds
-            const padding = 15;
+            // Create proper clipping area with padding
+            const padding = 8;
             const drawingWidth = visualArea.width - (padding * 2);
             const drawingHeight = visualArea.height - (padding * 2);
             
@@ -323,13 +327,11 @@ export default function VideoScriptEditor({
             ctx.clip();
 
             // Scale context to ensure visual functions fit within the available space
-            const scaleX = drawingWidth / 400; // Assume visual functions are designed for ~400px width
-            const scaleY = drawingHeight / 300; // Assume visual functions are designed for ~300px height
-            const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down if needed
+            const scaleX = drawingWidth / 300; // Assume visual functions are designed for ~300px width
+            const scaleY = drawingHeight / 200; // Assume visual functions are designed for ~200px height
+            const scale = Math.min(scaleX, scaleY, 0.8); // Scale down more aggressively
             
-            if (scale < 1) {
-              ctx.scale(scale, scale);
-            }
+            ctx.scale(scale, scale);
 
             let func;
             if (typeof visualFunction === 'string') {
@@ -362,7 +364,7 @@ export default function VideoScriptEditor({
           console.error('Error executing visual function:', error);
           ctx.save();
           ctx.fillStyle = '#ef4444';
-          ctx.font = '12px Arial';
+          ctx.font = '10px Arial';
           ctx.textAlign = 'center';
           const errorMsg = error instanceof Error ? error.message : 'Visual function error';
           ctx.fillText(`Error: ${errorMsg}`, visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
@@ -372,25 +374,25 @@ export default function VideoScriptEditor({
         // No visual placeholder
         ctx.save();
         ctx.fillStyle = '#94a3b8';
-        ctx.font = '12px Arial';
+        ctx.font = '10px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('No visual function assigned', visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
         ctx.restore();
       }
 
       // Draw narration area only if there's space
-      const narrationY = visualArea.y + visualArea.height + 10;
-      if (slide.narration && narrationY < 540) {
+      const narrationY = visualArea.y + visualArea.height + 8;
+      if (slide.narration && narrationY < canvasHeight - 20) {
         ctx.fillStyle = '#1e293b';
-        ctx.font = 'bold 10px Arial';
+        ctx.font = 'bold 8px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText('Narration:', 30, narrationY);
+        ctx.fillText('Narration:', 15, narrationY);
         
         ctx.fillStyle = '#475569';
-        ctx.font = '9px Arial';
-        const remainingHeight = 560 - narrationY - 10;
-        if (remainingHeight > 12) {
-          wrapText(ctx, slide.narration, 30, narrationY + 12, 740, 12);
+        ctx.font = '8px Arial';
+        const remainingHeight = canvasHeight - narrationY - 10;
+        if (remainingHeight > 10) {
+          wrapText(ctx, slide.narration, 15, narrationY + 10, canvasWidth - 30, 10);
         }
       }
 
@@ -416,28 +418,35 @@ export default function VideoScriptEditor({
 
     console.log('🎨 Rendering visual function preview for:', visualFunction.function_name);
 
-    // Working area - ensure it fits properly within canvas and is responsive
+    // Use smaller canvas dimensions for better responsiveness
+    const canvasWidth = 400;
+    const canvasHeight = 280;
+    // Working area - ensure it fits properly within canvas
     const workingArea = {
-      x: 30,
-      y: 45,
-      width: 740,
-      height: 480
+      x: 15,
+      y: 30,
+      width: canvasWidth - 30,
+      height: canvasHeight - 45
     };
     try {
+      
+      
       // Clear canvas with white background
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 800, 560);
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
       // Draw border
       ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(1, 1, 798, 558);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
 
       // Draw header
       ctx.fillStyle = '#7c3aed';
-      ctx.font = 'bold 16px Arial';
+      ctx.font = 'bold 12px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 400, 25);
+      ctx.fillText(`Visual Function: ${visualFunction.function_name}`, canvasWidth / 2, 18);
+
+      
 
       // Working area background
       ctx.fillStyle = '#f8fafc';
@@ -452,8 +461,8 @@ export default function VideoScriptEditor({
       
       ctx.save();
       
-      // Create proper clipping area with padding - ensure visual stays within bounds
-      const padding = 20;
+      // Create proper clipping area with padding
+      const padding = 10;
       const drawingWidth = workingArea.width - (padding * 2);
       const drawingHeight = workingArea.height - (padding * 2);
       
@@ -463,13 +472,11 @@ export default function VideoScriptEditor({
       ctx.clip();
       
       // Scale context to ensure visual functions fit within the available space
-      const scaleX = drawingWidth / 600; // Assume visual functions are designed for ~600px width
-      const scaleY = drawingHeight / 400; // Assume visual functions are designed for ~400px height
-      const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down if needed
+      const scaleX = drawingWidth / 350; // Assume visual functions are designed for ~350px width
+      const scaleY = drawingHeight / 225; // Assume visual functions are designed for ~225px height
+      const scale = Math.min(scaleX, scaleY, 0.7); // Scale down more aggressively
       
-      if (scale < 1) {
-        ctx.scale(scale, scale);
-      }
+      ctx.scale(scale, scale);
       
       let functionCode = visualFunction.function_code.trim();
       let func;
@@ -501,18 +508,18 @@ export default function VideoScriptEditor({
       ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
       ctx.strokeStyle = '#f87171';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
       ctx.fillStyle = '#dc2626';
-      ctx.font = 'bold 14px Arial';
+      ctx.font = 'bold 11px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('⚠️ Error in Visual Function', 400, 250);
+      ctx.fillText('⚠️ Error in Visual Function', canvasWidth / 2, canvasHeight / 2 - 10);
       
       ctx.fillStyle = '#b91c1c';
-      ctx.font = '11px Arial';
+      ctx.font = '9px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      wrapText(ctx, errorMessage, 50, 280, 700, 14);
+      wrapText(ctx, errorMessage, 25, canvasHeight / 2 + 5, canvasWidth - 50, 11);
     }
 
     console.log('✅ Visual function preview completed');
@@ -1280,14 +1287,22 @@ export default function VideoScriptEditor({
                     {activeTab === 'slides' ? (
                       <canvas
                         ref={canvasRef}
-                        className="block w-full h-auto max-w-full"
-                        style={{ aspectRatio: '800/560', maxHeight: '400px' }}
+                        className="block w-full h-auto"
+                        style={{ 
+                          aspectRatio: '400/280',
+                          maxWidth: '100%',
+                          height: 'auto'
+                        }}
                       />
                     ) : (
                       <canvas
                         ref={visualCanvasRef}
-                        className="block w-full h-auto max-w-full"
-                        style={{ aspectRatio: '800/560', maxHeight: '400px' }}
+                        className="block w-full h-auto"
+                        style={{ 
+                          aspectRatio: '400/280',
+                          maxWidth: '100%',
+                          height: 'auto'
+                        }}
                       />
                     )}
                   </div>
