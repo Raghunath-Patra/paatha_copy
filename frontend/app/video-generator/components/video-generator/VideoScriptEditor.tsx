@@ -191,7 +191,7 @@ export default function VideoScriptEditor({
     ctx.fillStyle = '#ef4444';
     ctx.font = 'bold 16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('⚠️ ' + message, 400, 280);
+    ctx.fillText('⚠️ ' + (message || 'Rendering error'), 400, 280);
   };
 
   const updateSlidePreview = (slide: any, index: number) => {
@@ -324,7 +324,8 @@ export default function VideoScriptEditor({
           ctx.fillStyle = '#ef4444';
           ctx.font = '14px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText(`Error: ${error.message}`, visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
+          const errorMsg = error instanceof Error ? error.message : 'Visual function error';
+          ctx.fillText(`Error: ${errorMsg}`, visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
           ctx.restore();
         }
       } else {
@@ -457,7 +458,7 @@ export default function VideoScriptEditor({
       
       ctx.fillStyle = '#b91c1c';
       ctx.font = '12px Arial';
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       wrapText(ctx, errorMessage, 50, 280, 700, 16);
     }
 
