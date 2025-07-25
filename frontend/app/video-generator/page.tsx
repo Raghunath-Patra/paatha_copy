@@ -212,6 +212,7 @@ const BonusClaimPopup = ({
 };
 const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | null, onClick: () => void }) => {
   const [showPopup, setShowPopup] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false); // Add loading state
   
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-IN').format(num);
@@ -242,11 +243,23 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
     setShowPopup(!showPopup);
   };
 
+  // Enhanced upgrade handler with loading state
+  const handleUpgradeClick = async () => {
+    setIsNavigating(true); // Start loading animation
+    setShowPopup(false);
+    
+    // Small delay to show the loading animation before navigation
+    setTimeout(() => {
+      onClick(); // Navigate to video-credits page
+    }, 300);
+  };
+
   return (
     <div className="relative">
       <button
         onClick={handleCreditClick}
         className="flex items-center space-x-2 sm:space-x-3 bg-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border hover:border-blue-300 group"
+        disabled={isNavigating} // Disable during navigation
       >
         <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
           <span className="text-blue-600 text-xs sm:text-sm font-bold">₹</span>
@@ -330,23 +343,47 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
               </div>
             </div>
 
-            {/* Upgrade Button */}
+            {/* Enhanced Upgrade Button with Loading Animation */}
             <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200">
               <button
-                onClick={() => {
-                  setShowPopup(false);
-                  onClick(); // Navigate to video-credits page
-                }}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2 text-sm sm:text-base"
+                onClick={handleUpgradeClick}
+                disabled={isNavigating}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2 text-sm sm:text-base disabled:opacity-75 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-lg"
               >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-                <span>Upgrade Package</span>
+                {isNavigating ? (
+                  <>
+                    {/* Loading spinner */}
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    {/* Up arrow icon with bounce animation */}
+                    <svg 
+                      className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:animate-bounce" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    </svg>
+                    <span>Upgrade Package</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
         </>
+      )}
+
+      {/* Loading overlay for the entire credit display during navigation */}
+      {isNavigating && (
+        <div className="absolute inset-0 bg-white bg-opacity-75 rounded-lg flex items-center justify-center z-60">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+            <span className="text-sm text-gray-600">Loading...</span>
+          </div>
+        </div>
       )}
     </div>
   );
