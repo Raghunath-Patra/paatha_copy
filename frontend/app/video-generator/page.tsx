@@ -246,12 +246,13 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
   // Enhanced upgrade handler with loading state
   const handleUpgradeClick = async () => {
     setIsNavigating(true); // Start loading animation
-    setShowPopup(false);
+    
     
     // Small delay to show the loading animation before navigation
     setTimeout(() => {
+      setShowPopup(false);
       onClick(); // Navigate to video-credits page
-    }, 300);
+    }, 800);
   };
 
   return (
