@@ -72,7 +72,6 @@ export default function VideoScriptEditor({
   onBackToInput
 }: VideoScriptEditorProps) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [previewCanvas, setPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const [editingSlide, setEditingSlide] = useState<string>('');
   const [originalSlide, setOriginalSlide] = useState<any>(null);
   const [chatMessage, setChatMessage] = useState('');
@@ -88,9 +87,11 @@ export default function VideoScriptEditor({
 
   // Visual functions tab state
   const [selectedVisualFunction, setSelectedVisualFunction] = useState<any>(null);
-  const [visualPreviewCanvas, setVisualPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const visualCanvasRef = useRef<HTMLCanvasElement>(null);
   const [originalVisualCode, setOriginalVisualCode] = useState<string>('');
+
+  // Canvas initialization flag
+  const [canvasInitialized, setCanvasInitialized] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -100,114 +101,150 @@ export default function VideoScriptEditor({
     return () => clearTimeout(timer);
   }, []);
 
-  // Initialize canvas for preview
+  // Initialize canvases
   useEffect(() => {
     console.log('🔧 Initializing canvases...');
     
+    const initCanvas = (canvas: HTMLCanvasElement) => {
+      canvas.width = 800;
+      canvas.height = 560;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Clear and set default background
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, 800, 560);
+      }
+      return ctx;
+    };
+
+    let slideCanvasReady = false;
+    let visualCanvasReady = false;
+
     if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      canvas.width = 1000;
-      canvas.height = 700;
-      setPreviewCanvas(canvas);
-      console.log('✅ Slide preview canvas initialized');
+      initCanvas(canvasRef.current);
+      slideCanvasReady = true;
+      console.log('✅ Slide canvas initialized');
     }
     
     if (visualCanvasRef.current) {
-      const canvas = visualCanvasRef.current;
-      canvas.width = 1000;
-      canvas.height = 700;
-      setVisualPreviewCanvas(canvas);
-      console.log('✅ Visual preview canvas initialized');
+      initCanvas(visualCanvasRef.current);
+      visualCanvasReady = true;
+      console.log('✅ Visual canvas initialized');
+    }
+
+    if (slideCanvasReady && visualCanvasReady) {
+      setCanvasInitialized(true);
+      console.log('✅ All canvases ready');
     }
   }, []);
 
-  // Separate effect for initial slide preview (only after both canvas and slides are ready)
+  // Update preview when conditions are met
   useEffect(() => {
-    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
-      console.log('🖼️ Initial slide preview update');
-      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-    }
-  }, [previewCanvas, slides, currentSlideIndex, activeTab]);
+    if (!canvasInitialized || isLoading) return;
 
-  // Separate effect for when visual canvas becomes available
-  useEffect(() => {
-    if (visualPreviewCanvas && activeTab === 'visuals' && selectedVisualFunction) {
-      console.log('🎨 Visual canvas became available, updating preview');
+    if (activeTab === 'slides' && slides[currentSlideIndex] && canvasRef.current) {
+      console.log('🖼️ Updating slide preview');
+      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
+    } else if (activeTab === 'visuals' && selectedVisualFunction && visualCanvasRef.current) {
+      console.log('🎨 Updating visual preview');
       updateVisualPreview(selectedVisualFunction);
     }
-  }, [visualPreviewCanvas, activeTab, selectedVisualFunction]);
-
-  // Handle canvas updates based on active tab and selection
-  useEffect(() => {
-    console.log(`🔄 Tab/selection change effect: activeTab=${activeTab}, hasPreviewCanvas=${!!previewCanvas}, hasVisualCanvas=${!!visualPreviewCanvas}`);
-    
-    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
-      console.log(`🖼️ Updating slide preview for slide ${currentSlideIndex}`);
-      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-    } else if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
-      console.log(`🎨 Updating visual preview for function: ${selectedVisualFunction.function_name}`);
-      updateVisualPreview(selectedVisualFunction);
-    } else {
-      console.log('⏸️ No update needed - missing requirements');
-    }
-  }, [activeTab, selectedVisualFunction, currentSlideIndex, visualPreviewCanvas, previewCanvas]);
-
-  // Update preview when slide changes (only for slides tab)
-  useEffect(() => {
-    if (activeTab === 'slides' && previewCanvas && slides[currentSlideIndex]) {
-      updateSlidePreview(slides[currentSlideIndex], currentSlideIndex);
-    }
-  }, [currentSlideIndex, slides, previewCanvas, activeTab]);
-
-  // Update visual preview when visual function changes (only for visuals tab)
-  useEffect(() => {
-    if (activeTab === 'visuals' && visualPreviewCanvas && selectedVisualFunction) {
-      updateVisualPreview(selectedVisualFunction);
-    }
-  }, [selectedVisualFunction, visualPreviewCanvas, activeTab]);
+  }, [activeTab, currentSlideIndex, selectedVisualFunction, canvasInitialized, isLoading]);
 
   const updateSlidePreview = (slide: any, index: number) => {
-    if (!previewCanvas) return;
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      console.log('❌ Slide canvas not available');
+      return;
+    }
 
-    const ctx = previewCanvas.getContext('2d');
-    if (!ctx) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.log('❌ Could not get 2D context from slide canvas');
+      return;
+    }
 
-    // Clear canvas
+    console.log('🖼️ Rendering slide preview for slide', index);
+
+    // Clear canvas with background
     ctx.fillStyle = '#f8f9fa';
-    ctx.fillRect(0, 0, 1000, 700);
+    ctx.fillRect(0, 0, 800, 560);
 
-    // Draw background
+    // Draw background gradient based on speaker
     const backgroundColor = getBackgroundColor(slide.speaker);
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, 1000, 700);
+    const gradient = ctx.createLinearGradient(0, 0, 800, 560);
+    gradient.addColorStop(0, backgroundColor);
+    gradient.addColorStop(1, '#ffffff');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 560);
+
+    // Draw border
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, 798, 558);
 
     // Draw title
-    ctx.fillStyle = '#1a5276';
-    ctx.font = 'bold 32px Arial';
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(slide.title || 'Untitled Slide', 500, 75);
+    ctx.fillText(slide.title || 'Untitled Slide', 400, 50);
 
-    // Draw content
-    ctx.fillStyle = '#2c3e50';
-    ctx.font = '22px Arial';
-    ctx.textAlign = 'center';
+    // Draw slide number
+    ctx.fillStyle = '#64748b';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Slide ${index + 1}`, 780, 30);
+
+    // Draw speaker info
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'left';
+    const speakerName = project.speakers?.[slide.speaker]?.name || slide.speaker;
+    ctx.fillText(`Speaker: ${speakerName}`, 20, 30);
+
+    // Draw content area
+    ctx.fillStyle = '#334155';
+    ctx.font = '18px Arial';
+    ctx.textAlign = 'left';
+    
+    let yPos = 90;
     if (slide.content) {
-      ctx.fillText(slide.content, 500, 120);
+      wrapText(ctx, slide.content, 50, yPos, 700, 22);
+      yPos += 50;
     }
     if (slide.content2) {
-      ctx.fillText(slide.content2, 500, 150);
+      wrapText(ctx, slide.content2, 50, yPos, 700, 22);
+      yPos += 50;
     }
 
-    // Draw media area border
-    ctx.strokeStyle = '#e0e0e0';
+    // Draw visual area
+    const visualArea = {
+      x: 50,
+      y: yPos + 20,
+      width: 700,
+      height: 300
+    };
+
+    // Visual area background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
+    
+    // Visual area border
+    ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 2;
-    ctx.strokeRect(200, 200, 600, 400);
+    ctx.strokeRect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
 
     // Draw visual if available
     if (slide.visual && slide.visual.type && project.visualFunctions) {
       try {
         const visualFunction = project.visualFunctions[slide.visual.type];
         if (visualFunction) {
+          ctx.save();
+          ctx.translate(visualArea.x + 20, visualArea.y + 20);
+          ctx.beginPath();
+          ctx.rect(0, 0, visualArea.width - 40, visualArea.height - 40);
+          ctx.clip();
+
           let func;
           if (typeof visualFunction === 'string') {
             func = new Function('ctx', 'param1', 'param2', 'param3', 
@@ -222,256 +259,186 @@ export default function VideoScriptEditor({
           } else {
             func(ctx);
           }
+          ctx.restore();
         }
       } catch (error) {
         console.error('Error executing visual function:', error);
-        ctx.fillStyle = '#ff6b6b';
+        ctx.fillStyle = '#ef4444';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Error in visual function', 500, 400);
+        ctx.fillText('Error in visual function', visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
       }
+    } else {
+      // No visual placeholder
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('No visual function assigned', visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
     }
 
-    // Draw avatars
-    drawAvatars(ctx, slide.speaker);
+    // Draw narration area
+    if (slide.narration) {
+      const narrationY = visualArea.y + visualArea.height + 30;
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('Narration:', 50, narrationY);
+      
+      ctx.fillStyle = '#475569';
+      ctx.font = '14px Arial';
+      wrapText(ctx, slide.narration, 50, narrationY + 20, 700, 18);
+    }
+
+    console.log('✅ Slide preview rendered successfully');
   };
 
   const updateVisualPreview = (visualFunction: any) => {
-    if (!visualPreviewCanvas) {
-      console.log('❌ Visual preview canvas not available');
+    const canvas = visualCanvasRef.current;
+    if (!canvas) {
+      console.log('❌ Visual canvas not available');
       return;
     }
 
-    const ctx = visualPreviewCanvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
-      console.log('❌ Could not get 2D context from visual preview canvas');
+      console.log('❌ Could not get 2D context from visual canvas');
       return;
     }
 
-    console.log('🎨 Starting visual function preview for:', visualFunction.function_name);
+    console.log('🎨 Rendering visual function preview for:', visualFunction.function_name);
 
-    // Completely clear the canvas with a solid color
-    ctx.clearRect(0, 0, 1000, 700);
+    // Clear canvas with white background
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 1000, 700);
+    ctx.fillRect(0, 0, 800, 560);
 
-    // Draw a simple header
-    ctx.fillStyle = '#6b46c1';
-    ctx.font = 'bold 24px Arial';
+    // Draw border
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, 798, 558);
+
+    // Draw header
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 500, 40);
+    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 400, 40);
 
-    // Create a working area for the visual function
+    // Working area
     const workingArea = {
-      x: 100,
+      x: 50,
       y: 80,
-      width: 800,
-      height: 500
+      width: 700,
+      height: 400
     };
 
-    // Draw working area background (light gray)
-    ctx.fillStyle = '#f8f9fa';
+    // Working area background
+    ctx.fillStyle = '#f8fafc';
     ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
     
-    // Draw working area border
-    ctx.strokeStyle = '#dee2e6';
-    ctx.lineWidth = 2;
+    // Working area border
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
     ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
-
-    // Add instruction text
-    ctx.fillStyle = '#6c757d';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Visual function output will appear below:', 500, 70);
 
     try {
       console.log('🔧 Executing visual function code...');
       
-      // Save context state before executing user code
       ctx.save();
+      ctx.translate(workingArea.x + 20, workingArea.y + 20);
+      ctx.beginPath();
+      ctx.rect(0, 0, workingArea.width - 40, workingArea.height - 40);
+      ctx.clip();
       
-      // Reset text alignment for user code
-      ctx.textAlign = 'left';
-      
-      // Parse and execute the function code
       let functionCode = visualFunction.function_code.trim();
       let func;
       
       if (functionCode.startsWith('function')) {
-        // Complete function definition - extract function body
         const match = functionCode.match(/function\s+\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
         if (match) {
           const functionBody = match[1];
           func = new Function('ctx', 'param1', 'param2', 'param3', functionBody);
         } else {
-          throw new Error('Invalid function format - could not parse function definition');
+          throw new Error('Invalid function format');
         }
       } else {
-        // Just function body
         func = new Function('ctx', 'param1', 'param2', 'param3', functionCode);
       }
       
-      // Execute the function with sample parameters
-      console.log('✅ Function compiled successfully, executing...');
-      func(ctx, 'param1_sample', 'param2_sample', 'param3_sample');
+      func(ctx, 'sample1', 'sample2', 'sample3');
+      ctx.restore();
+      
       console.log('✅ Visual function executed successfully');
       
     } catch (error) {
       console.error('❌ Error executing visual function:', error);
       
-      // Restore context for error display
       ctx.restore();
       
-      // Clear the working area and show error
-      ctx.fillStyle = '#fff5f5';
+      // Show error
+      ctx.fillStyle = '#fef2f2';
       ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
-      ctx.strokeStyle = '#f56565';
+      ctx.strokeStyle = '#f87171';
       ctx.lineWidth = 2;
       ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
-      // Display error message
-      ctx.fillStyle = '#e53e3e';
+      ctx.fillStyle = '#dc2626';
       ctx.font = 'bold 18px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('⚠️ Error in Visual Function', 500, 250);
+      ctx.fillText('⚠️ Error in Visual Function', 400, 250);
       
-      ctx.fillStyle = '#c53030';
+      ctx.fillStyle = '#b91c1c';
       ctx.font = '14px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      // Word wrap the error message
-      const maxWidth = 600;
-      const words = errorMessage.split(' ');
-      let line = '';
-      let y = 280;
-      
-      for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
-        const metrics = ctx.measureText(testLine);
-        const testWidth = metrics.width;
-        
-        if (testWidth > maxWidth && n > 0) {
-          ctx.fillText(line, 500, y);
-          line = words[n] + ' ';
-          y += 20;
-        } else {
-          line = testLine;
-        }
-      }
-      if (line) {
-        ctx.fillText(line, 500, y);
-      }
-      
-      ctx.fillStyle = '#718096';
-      ctx.font = '12px Arial';
-      ctx.fillText('Check the browser console for detailed error information', 500, y + 30);
-      
-      return; // Exit early for error case
+      wrapText(ctx, errorMessage, 100, 280, 600, 20);
     }
-    
-    // Restore context state
-    ctx.restore();
-    
+
     console.log('✅ Visual function preview completed');
+  };
+
+  // Helper function for text wrapping
+  const wrapText = (ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+    const words = text.split(' ');
+    let line = '';
+    let currentY = y;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+      
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(line, x, currentY);
+        line = words[n] + ' ';
+        currentY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) {
+      ctx.fillText(line, x, currentY);
+    }
   };
 
   const getBackgroundColor = (speaker: string) => {
     const colors = {
-      teacher: '#f8fafe',
-      student1: '#f3e8ff',
-      student2: '#fefaf8'
+      teacher: '#f0f9ff',
+      student1: '#fdf4ff',
+      student2: '#fffbeb'
     };
-    return colors[speaker as keyof typeof colors] || '#e9f0f4';
-  };
-
-  const drawAvatars = (ctx: CanvasRenderingContext2D, activeSpeaker: string) => {
-    if (!project.speakers) return;
-
-    const speakerKeys = Object.keys(project.speakers);
-    const avatarSize = 30;
-    const startY = 250;
-    const spacing = 70;
-
-    speakerKeys.forEach((speaker, index) => {
-      const config = project.speakers[speaker];
-      const isActive = speaker === activeSpeaker;
-      const x = 30 + avatarSize / 2;
-      const y = startY + (index * spacing) + avatarSize / 2;
-
-      // Draw avatar circle
-      ctx.beginPath();
-      ctx.arc(x, y, 15, 0, Math.PI * 2);
-      ctx.fillStyle = isActive ? '#fdbcb4' : '#e0e0e0';
-      ctx.fill();
-      ctx.strokeStyle = isActive ? config.color : '#ccc';
-      ctx.lineWidth = isActive ? 3 : 1;
-      ctx.stroke();
-
-      // Draw speaker name
-      ctx.fillStyle = isActive ? '#2c3e50' : '#666';
-      ctx.font = `${isActive ? 'bold ' : ''}12px Arial`;
-      ctx.textAlign = 'center';
-      ctx.fillText(config.name, x, y + 25);
-    });
+    return colors[speaker as keyof typeof colors] || '#f8fafc';
   };
 
   const handleVisualFunctionSelect = (visualFunction: any) => {
     console.log('🎨 Selecting visual function:', visualFunction.function_name);
-    console.log('🎨 Canvas state:', { 
-      hasVisualCanvas: !!visualPreviewCanvas,
-      activeTab,
-      canvasRef: !!visualCanvasRef.current 
-    });
-    
     setSelectedVisualFunction(visualFunction);
     setOriginalVisualCode(visualFunction.function_code);
     setUpdateStatus(null);
-    
-    // Immediately update the preview if canvas is ready
-    if (visualPreviewCanvas && activeTab === 'visuals') {
-      console.log('🖼️ Immediately updating visual preview');
-      updateVisualPreview(visualFunction);
-    } else if (visualCanvasRef.current && activeTab === 'visuals') {
-      console.log('🔧 Canvas ref exists but state not set, forcing update...');
-      // Force set the canvas state if ref exists but state doesn't
-      const canvas = visualCanvasRef.current;
-      setVisualPreviewCanvas(canvas);
-      // The useEffect will handle the update once state is set
-    } else {
-      console.log('❌ Cannot update preview - canvas not ready');
-    }
   };
 
   const handleTabSwitch = (newTab: 'slides' | 'visuals') => {
     console.log(`🔄 Switching to tab: ${newTab}`);
     setActiveTab(newTab);
-    setUpdateStatus(null); // Clear any status messages
-    
-    // Clear the inactive canvas to prevent confusion
-    if (newTab === 'slides' && visualPreviewCanvas) {
-      console.log('🧹 Clearing visual preview canvas');
-      const ctx = visualPreviewCanvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, 1000, 700);
-        const gradient = ctx.createLinearGradient(0, 0, 1000, 700);
-        gradient.addColorStop(0, '#f8fafc');
-        gradient.addColorStop(1, '#f1f5f9');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 1000, 700);
-      }
-    } else if (newTab === 'visuals' && previewCanvas) {
-      console.log('🧹 Clearing slide preview canvas');
-      const ctx = previewCanvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, 1000, 700);
-        const gradient = ctx.createLinearGradient(0, 0, 1000, 700);
-        gradient.addColorStop(0, '#f8fafc');
-        gradient.addColorStop(1, '#f1f5f9');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 1000, 700);
-      }
-    }
+    setUpdateStatus(null);
   };
 
   const selectSlide = (index: number) => {
@@ -838,8 +805,8 @@ export default function VideoScriptEditor({
           </p>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Main Content Grid - Changed breakpoint from xl to lg */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Panel - Tabs (1/2 width) */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
             {/* Tab Navigation */}
@@ -1158,14 +1125,14 @@ export default function VideoScriptEditor({
                     {activeTab === 'slides' ? (
                       <canvas
                         ref={canvasRef}
-                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
-                        className="block"
+                        className="block w-full h-auto max-w-full"
+                        style={{ aspectRatio: '800/560' }}
                       />
                     ) : (
                       <canvas
                         ref={visualCanvasRef}
-                        style={{ width: '100%', height: 'auto', maxHeight: '400px' }}
-                        className="block"
+                        className="block w-full h-auto max-w-full"
+                        style={{ aspectRatio: '800/560' }}
                       />
                     )}
                   </div>
