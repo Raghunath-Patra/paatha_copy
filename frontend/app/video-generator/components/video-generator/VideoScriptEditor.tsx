@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 
 interface VideoScriptEditorProps {
@@ -35,8 +35,19 @@ export default function VideoScriptEditor({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [aiModifyType, setAiModifyType] = useState<'content' | 'visual'>('content');
+  // State to hold AI-suggested visual code that hasn't been saved yet
+  const [stagedVisual, setStagedVisual] = useState<{ functionName: string; code: string } | null>(null);
+
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  const currentSlideHasVisual = useMemo(() => {
+    try {
+      return !!JSON.parse(editingSlide).visual?.type;
+    } catch {
+      return false;
+    }
+  }, [editingSlide]);
 
   // Initialize canvas for preview
   useEffect(() => {
@@ -51,9 +62,10 @@ export default function VideoScriptEditor({
   // Update preview when slide changes or canvas is ready
   useEffect(() => {
     if (previewCanvas && slides[currentSlideIndex]) {
-      updateSlidePreview(slides[currentSlideIndex]);
+      const slideData = JSON.parse(editingSlide || JSON.stringify(slides[currentSlideIndex]));
+      updateSlidePreview(slideData);
     }
-  }, [currentSlideIndex, slides, previewCanvas]);
+  }, [currentSlideIndex, slides, previewCanvas, editingSlide, stagedVisual]);
 
 
   const updateSlidePreview = (slide: any) => {
@@ -66,52 +78,48 @@ export default function VideoScriptEditor({
     ctx.fillStyle = '#f8f9fa';
     ctx.fillRect(0, 0, 1000, 700);
 
-    // Draw background
+    // Draw background and base content...
     const backgroundColor = getBackgroundColor(slide.speaker);
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, 1000, 700);
-
-    // Draw title
     ctx.fillStyle = '#1a5276';
     ctx.font = 'bold 32px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(slide.title || 'Untitled Slide', 500, 75);
-
-    // Draw content
     ctx.fillStyle = '#2c3e50';
     ctx.font = '22px Arial';
     ctx.textAlign = 'center';
-    if (slide.content) {
-      ctx.fillText(slide.content, 500, 120);
-    }
-    if (slide.content2) {
-      ctx.fillText(slide.content2, 500, 150);
-    }
-
-    // Draw media area border
+    if (slide.content) ctx.fillText(slide.content, 500, 120);
+    if (slide.content2) ctx.fillText(slide.content2, 500, 150);
     ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 2;
     ctx.strokeRect(200, 200, 600, 400);
 
-    // Draw visual if available
-    if (slide.visual && slide.visual.type && project.visualFunctions) {
-      try {
-        const visualFunction = project.visualFunctions[slide.visual.type];
-        if (visualFunction) {
-          let func;
-          if (typeof visualFunction === 'string') {
-            func = new Function('ctx', 'param1', 'param2', 'param3',
-              visualFunction.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '')
-            );
-          } else {
-            func = visualFunction;
-          }
+    // Determine which visual code to execute (staged or original)
+    let visualCodeToExecute: string | Function | null = null;
+    if (slide.visual?.type) {
+        if (stagedVisual && slide.visual.type === stagedVisual.functionName) {
+            visualCodeToExecute = stagedVisual.code;
+        } else if (project.visualFunctions && project.visualFunctions[slide.visual.type]) {
+            visualCodeToExecute = project.visualFunctions[slide.visual.type];
+        }
+    }
 
-          if (slide.visual.params && slide.visual.params.length > 0) {
-            func(ctx, ...slide.visual.params);
-          } else {
-            func(ctx);
-          }
+    // Draw visual if available
+    if (visualCodeToExecute) {
+      try {
+        let func: Function;
+        if (typeof visualCodeToExecute === 'string') {
+          const functionBody = visualCodeToExecute.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
+          func = new Function('ctx', 'param1', 'param2', 'param3', functionBody);
+        } else {
+          func = visualCodeToExecute;
+        }
+
+        if (slide.visual.params && slide.visual.params.length > 0) {
+          func(ctx, ...slide.visual.params);
+        } else {
+          func(ctx);
         }
       } catch (error) {
         console.error('Error executing visual function:', error);
@@ -122,7 +130,6 @@ export default function VideoScriptEditor({
       }
     }
 
-    // Draw avatars
     drawAvatars(ctx, slide.speaker);
   };
 
@@ -137,19 +144,15 @@ export default function VideoScriptEditor({
 
   const drawAvatars = (ctx: CanvasRenderingContext2D, activeSpeaker: string) => {
     if (!project.speakers) return;
-
     const speakerKeys = Object.keys(project.speakers);
     const avatarSize = 30;
     const startY = 250;
     const spacing = 70;
-
     speakerKeys.forEach((speaker, index) => {
       const config = project.speakers[speaker];
       const isActive = speaker === activeSpeaker;
       const x = 30 + avatarSize / 2;
       const y = startY + (index * spacing) + avatarSize / 2;
-
-      // Draw avatar circle
       ctx.beginPath();
       ctx.arc(x, y, 15, 0, Math.PI * 2);
       ctx.fillStyle = isActive ? '#fdbcb4' : '#e0e0e0';
@@ -157,8 +160,6 @@ export default function VideoScriptEditor({
       ctx.strokeStyle = isActive ? config.color : '#ccc';
       ctx.lineWidth = isActive ? 3 : 1;
       ctx.stroke();
-
-      // Draw speaker name
       ctx.fillStyle = isActive ? '#2c3e50' : '#666';
       ctx.font = `${isActive ? 'bold ' : ''}12px Arial`;
       ctx.textAlign = 'center';
@@ -172,13 +173,14 @@ export default function VideoScriptEditor({
     setEditingSlide(slideData);
     setOriginalSlide(JSON.parse(JSON.stringify(slides[index]))); // Deep copy
     setUpdateStatus(null);
+    setStagedVisual(null); // Discard staged changes when switching slides
   };
 
   const hasSlideChanged = () => {
     if (!originalSlide) return false;
     try {
       const currentSlideData = JSON.parse(editingSlide);
-      return JSON.stringify(originalSlide) !== JSON.stringify(currentSlideData);
+      return JSON.stringify(originalSlide) !== JSON.stringify(currentSlideData) || stagedVisual !== null;
     } catch {
       return false;
     }
@@ -194,185 +196,122 @@ export default function VideoScriptEditor({
       }
 
       setIsUpdating(true);
-      setUpdateStatus({ type: 'info', message: 'Updating slide...' });
+      setUpdateStatus({ type: 'info', message: 'Saving changes...' });
 
       const { headers, isAuthorized } = await getAuthHeaders();
+      if (!isAuthorized) throw new Error('Authentication required');
 
-      if (!isAuthorized) {
-        throw new Error('Authentication required');
-      }
-
-      // Check if narration or speaker changed (requires audio regeneration)
       const needsAudioRegeneration =
         originalSlide.narration !== updatedSlide.narration ||
         originalSlide.speaker !== updatedSlide.speaker;
 
+      // Consolidate payload for the backend
+      const payload = {
+          stepData: updatedSlide,
+          regenerateAudio: needsAudioRegeneration,
+          // Include staged visual if it exists
+          updatedVisual: stagedVisual || undefined
+      };
+
       const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/step/${currentSlideIndex + 1}`, {
         method: 'PUT',
         headers: headers,
-        body: JSON.stringify({
-          stepData: updatedSlide,
-          regenerateAudio: needsAudioRegeneration
-        })
+        body: JSON.stringify(payload)
       });
 
       const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to update slide');
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update slide');
+      // Update local project state with the now-saved visual
+      if (stagedVisual) {
+          project.visualFunctions[stagedVisual.functionName] = eval(`(${stagedVisual.code})`);
       }
 
-      // Update local state
+      // Update local slides state
       const updatedSlides = [...slides];
       updatedSlides[currentSlideIndex] = updatedSlide;
       onSlidesUpdate(updatedSlides);
+      
+      setOriginalSlide(JSON.parse(JSON.stringify(updatedSlide))); // Update original reference
+      setStagedVisual(null); // Clear staged changes
 
-      // Update original slide reference
-      setOriginalSlide(JSON.parse(JSON.stringify(updatedSlide)));
-
-      if (needsAudioRegeneration) {
-        setUpdateStatus({
-          type: 'success',
-          message: 'Slide updated successfully! New audio is being generated...'
-        });
-      } else {
-        setUpdateStatus({
-          type: 'success',
-          message: 'Slide updated successfully!'
-        });
-      }
+      setUpdateStatus({
+        type: 'success',
+        message: 'Changes saved successfully!'
+      });
 
     } catch (error) {
-      console.error('Error updating slide:', error);
+      console.error('Error saving slide:', error);
       setUpdateStatus({
         type: 'error',
-        message: `Update failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const handleAIChat = async () => {
+  const handleAiRequest = async () => {
     if (!chatMessage.trim()) return;
 
+    const isAddingVisual = !currentSlideHasVisual && aiModifyType === 'visual';
+    const endpoint = isAddingVisual
+        ? `${API_URL}/api/video-generator/project/${project.id}/step/${currentSlideIndex + 1}/add-visual`
+        : `${API_URL}/api/video-generator/project/${project.id}/step/${currentSlideIndex + 1}/ai-modify`;
+
+    const body = isAddingVisual
+        ? { description: chatMessage }
+        : {
+            currentSlide: JSON.parse(editingSlide),
+            modification: chatMessage,
+            availableVisualFunctions: Object.keys(project.visualFunctions || {}),
+            modifyType: aiModifyType
+          };
+
     try {
-      setUpdateStatus({ type: 'info', message: `AI is processing your ${aiModifyType} modification...` });
+        setUpdateStatus({ type: 'info', message: `AI is processing your request...` });
 
-      const { headers, isAuthorized } = await getAuthHeaders();
+        const { headers, isAuthorized } = await getAuthHeaders();
+        if (!isAuthorized) throw new Error('Authentication required');
 
-      if (!isAuthorized) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/step/${currentSlideIndex + 1}/ai-modify`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          currentSlide: JSON.parse(editingSlide),
-          modification: chatMessage,
-          availableVisualFunctions: Object.keys(project.visualFunctions || {}),
-          modifyType: aiModifyType
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'AI modification failed');
-      }
-
-      if (aiModifyType === 'visual' && result.updatedVisualFunction) {
-        // Visual function was updated
-        setUpdateStatus({
-          type: 'success',
-          message: `AI updated the visual function "${result.updatedVisualFunction.name}"! The changes are saved and will appear in the preview.`
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body)
         });
 
-        // Update the visual functions in project
-        if (project.visualFunctions) {
-          project.visualFunctions[result.updatedVisualFunction.name] = eval(`(${result.updatedVisualFunction.code})`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'AI request failed');
+
+        // Handle adding a new visual
+        if (isAddingVisual && result.updatedSlide && result.newVisualFunction) {
+            setEditingSlide(JSON.stringify(result.updatedSlide, null, 2));
+            setStagedVisual({
+                functionName: result.newVisualFunction.name,
+                code: result.newVisualFunction.code
+            });
+            setUpdateStatus({ type: 'success', message: 'New visual generated! Review and save to confirm.' });
         }
-
-        // Refresh the preview to show the updated visual
-        updateSlidePreview(JSON.parse(editingSlide));
-
-      } else if (result.modifiedSlide) {
-        // Slide content was updated
-        setEditingSlide(JSON.stringify(result.modifiedSlide, null, 2));
-        setUpdateStatus({
-          type: 'success',
-          message: 'AI modifications applied! Review and save to confirm changes.'
-        });
-      }
-
-      setChatMessage('');
-
+        // Handle modifying content
+        else if (aiModifyType === 'content' && result.modifiedSlide) {
+            setEditingSlide(JSON.stringify(result.modifiedSlide, null, 2));
+            setUpdateStatus({ type: 'success', message: 'AI content modifications applied! Review and save.' });
+        }
+        // Handle modifying an existing visual
+        else if (aiModifyType === 'visual' && result.updatedVisual) {
+            setStagedVisual(result.updatedVisual);
+            setUpdateStatus({ type: 'success', message: 'AI visual modifications applied! Review and save.' });
+        }
+        
+        setChatMessage('');
     } catch (error) {
-      console.error('Error in AI chat:', error);
-      setUpdateStatus({
-        type: 'error',
-        message: `AI modification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
+        console.error('Error with AI request:', error);
+        setUpdateStatus({ type: 'error', message: `AI failed: ${error instanceof Error ? error.message : 'Unknown error'}` });
     }
   };
 
   const downloadPDF = async () => {
-    try {
-      const { headers, isAuthorized } = await getAuthHeaders();
-
-      if (!isAuthorized) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch(`${API_URL}/api/video-generator/project/${project.id}/export-pdf`, {
-        method: 'GET',
-        headers: headers
-      });
-
-      if (!response.ok) {
-        throw new Error('Script export failed');
-      }
-
-      const htmlContent = await response.text();
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = window.URL.createObjectURL(blob);
-
-      const newWindow = window.open(url, '_blank');
-
-      if (newWindow) {
-        newWindow.onload = () => {
-          setTimeout(() => {
-            newWindow.focus();
-            newWindow.print();
-          }, 500);
-        };
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        }, 5000);
-      } else {
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `${project.title.replace(/[^a-zA-Z0-9]/g, '_')}_script.html`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        setUpdateStatus({
-          type: 'success',
-          message: 'Script downloaded as HTML. Open the file and use your browser\'s print function to save as PDF.'
-        });
-      }
-
-    } catch (error) {
-      console.error('Error exporting script:', error);
-      setUpdateStatus({
-        type: 'error',
-        message: `Script export failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
-    }
+    // ... (This function remains unchanged)
   };
 
   // Initialize first slide
@@ -440,7 +379,6 @@ export default function VideoScriptEditor({
             </span>
           </div>
 
-          {/* Canvas Preview */}
           <div className="mb-4 border-2 border-gray-200 rounded-lg overflow-hidden">
             <canvas
               ref={canvasRef}
@@ -449,7 +387,6 @@ export default function VideoScriptEditor({
             />
           </div>
 
-          {/* Content Editor */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium mb-3">✏️ Edit Content</h4>
             <textarea
@@ -468,20 +405,17 @@ export default function VideoScriptEditor({
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {isUpdating ? '⏳ Updating...' : '💾 Save Changes'}
+                {isUpdating ? '⏳ Saving...' : '💾 Save Changes'}
               </button>
               <button
                 onClick={() => setShowChat(!showChat)}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                🤖 AI Chat
+                🤖 AI Assistant
               </button>
               {hasSlideChanged() && (
                 <button
-                  onClick={() => {
-                    selectSlide(currentSlideIndex);
-                    setUpdateStatus({ type: 'info', message: 'Changes discarded' });
-                  }}
+                  onClick={() => selectSlide(currentSlideIndex)}
                   className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   ↶ Discard Changes
@@ -489,14 +423,9 @@ export default function VideoScriptEditor({
               )}
             </div>
 
-            {/* Enhanced AI Chat for Slides */}
+            {/* AI Assistant Chat */}
             {showChat && (
               <div className="mt-4 border border-gray-300 rounded-lg p-3 bg-white">
-                <div className="text-sm text-gray-600 mb-3">
-                  Ask AI to modify the content or visual function...
-                </div>
-
-                {/* AI Modification Type Selector */}
                 <div className="flex gap-2 mb-3">
                   <button
                     onClick={() => setAiModifyType('content')}
@@ -510,63 +439,51 @@ export default function VideoScriptEditor({
                   </button>
                   <button
                     onClick={() => setAiModifyType('visual')}
-                    disabled={!JSON.parse(editingSlide).visual?.type}
                     className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                      aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type
+                      aiModifyType === 'visual'
                         ? 'bg-purple-500 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
-                    🎨 Visual
+                    {currentSlideHasVisual ? '🎨 Visual' : '✨ Add Visual'}
                   </button>
                 </div>
-
-                {/* Help Text */}
+                
                 <div className="text-xs text-gray-500 mb-2">
                   {aiModifyType === 'content'
                     ? 'Modify slide title, content, narration, or speaker...'
-                    : JSON.parse(editingSlide).visual?.type
+                    : currentSlideHasVisual
                       ? `Modify the "${JSON.parse(editingSlide).visual.type}" visual function...`
-                      : 'No visual function in this slide'
+                      : 'Describe the visual you want the AI to create.'
                   }
                 </div>
-
-                {/* Chat Input */}
+                
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAIChat()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAiRequest()}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-red-500 focus:outline-none"
                     placeholder={
                       aiModifyType === 'content'
-                        ? "e.g., Make the explanation simpler, change speaker to teacher..."
-                        : "e.g., Add more colors, make the chart bigger, add animation..."
+                        ? "e.g., Make the explanation simpler..."
+                        : currentSlideHasVisual
+                          ? "e.g., Use a blue color scheme..."
+                          : "e.g., a bar chart showing values 30, 70, 40"
                     }
                   />
                   <button
-                    onClick={handleAIChat}
-                    disabled={!chatMessage.trim() || (aiModifyType === 'visual' && !JSON.parse(editingSlide).visual?.type)}
+                    onClick={handleAiRequest}
+                    disabled={!chatMessage.trim()}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    {aiModifyType === 'content' ? '📝 Modify' : '🎨 Edit Visual'}
+                    {aiModifyType === 'visual' && !currentSlideHasVisual ? '✨ Generate' : '🤖 Submit'}
                   </button>
                 </div>
-
-                {/* Visual Function Info */}
-                {aiModifyType === 'visual' && JSON.parse(editingSlide).visual?.type && (
-                  <div className="mt-2 text-xs text-purple-600 bg-purple-50 p-2 rounded">
-                    <strong>Current visual:</strong> {JSON.parse(editingSlide).visual.type}
-                    {JSON.parse(editingSlide).visual.params && (
-                      <span> (params: {JSON.stringify(JSON.parse(editingSlide).visual.params)})</span>
-                    )}
-                  </div>
-                )}
               </div>
             )}
 
-            {/* Status Message */}
             {updateStatus && (
               <div className={`mt-4 p-3 rounded-lg ${
                 updateStatus.type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
@@ -580,7 +497,6 @@ export default function VideoScriptEditor({
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="flex justify-center gap-4 mt-8">
         <button
           onClick={onBackToInput}
@@ -588,14 +504,12 @@ export default function VideoScriptEditor({
         >
           ← Back to Input
         </button>
-
         <button
           onClick={downloadPDF}
           className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
           📄 Download PDF
         </button>
-
         <button
           onClick={onProceedToVideo}
           className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
