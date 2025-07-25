@@ -416,6 +416,13 @@ export default function VideoScriptEditor({
 
     console.log('🎨 Rendering visual function preview for:', visualFunction.function_name);
 
+    // Working area - ensure it fits properly within canvas and is responsive
+    const workingArea = {
+      x: 30,
+      y: 45,
+      width: 740,
+      height: 480
+    };
     try {
       // Clear canvas with white background
       ctx.fillStyle = '#ffffff';
@@ -431,14 +438,6 @@ export default function VideoScriptEditor({
       ctx.font = 'bold 16px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 400, 25);
-
-      // Working area - ensure it fits properly within canvas and is responsive
-      const workingArea = {
-        x: 30,
-        y: 45,
-        width: 740,
-        height: 480
-      };
 
       // Working area background
       ctx.fillStyle = '#f8fafc';
@@ -514,10 +513,6 @@ export default function VideoScriptEditor({
       ctx.font = '11px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       wrapText(ctx, errorMessage, 50, 280, 700, 14);
-    }
-
-    console.log('✅ Visual function preview completed');
-  };);
     }
 
     console.log('✅ Visual function preview completed');
