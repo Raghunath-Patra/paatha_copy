@@ -444,7 +444,7 @@ const ShimmerText = ({ children, className = "" }: { children: React.ReactNode, 
   );
 };
 
-// Hero Section Component - Enhanced with animations
+// Hero Section Component - Fixed text overlapping issues
 const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
   const [isVisible, setIsVisible] = useState(false);
   
@@ -470,8 +470,8 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-purple-50/30 to-indigo-50/50 animate-gradient-x"></div>
       
       <div className={`relative z-10 max-w-4xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-8'}`}>
-        {/* Main Heading with enhanced animations */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3 sm:mb-4 leading-tight">
+        {/* Main Heading with enhanced animations and fixed spacing */}
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 sm:mb-8 leading-tight sm:leading-relaxed lg:leading-relaxed pb-2">
           <ShimmerText className="inline-block">
             <span className="inline-block animate-fade-in-up bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent animate-shimmer-text bg-[length:200%_100%]">
               Create Amazing Videos 
@@ -485,37 +485,39 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
           </ShimmerText>
         </h1>
         
-        {/* Subtitle with pulsing gradient accent */}
-        <div className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6 leading-relaxed min-h-[1.5rem] sm:min-h-[2rem]">
+        {/* Subtitle with pulsing gradient accent and proper spacing */}
+        <div className="text-base sm:text-lg text-gray-600 mb-8 sm:mb-10 leading-relaxed min-h-[3rem] sm:min-h-[4rem] flex items-center justify-center">
           <AnimatedText 
             texts={encouragingTexts}
-            className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse-glow"
+            className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse-glow py-2"
           />
         </div>
 
-        {/* Call-to-action button with hover animations */}
-        <button
-          onClick={onCreateNew}
-          className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105"
-        >
-          {/* Button gradient overlay animation */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          
-          {/* Button content */}
-          <span className="relative z-10 flex items-center space-x-2">
-            <span className="text-base sm:text-lg">✨ Start Creating Now</span>
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
-          
-          {/* Sparkle effects on hover */}
-          <div className="absolute -inset-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute top-0 left-1/4 w-2 h-2 bg-white rounded-full animate-ping" style={{ animationDelay: '0s' }}></div>
-            <div className="absolute top-1/4 right-1/4 w-1 h-1 bg-white rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
-            <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
-          </div>
-        </button>
+        {/* Call-to-action button with hover animations and proper spacing */}
+        <div className="pt-4">
+          <button
+            onClick={onCreateNew}
+            className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105"
+          >
+            {/* Button gradient overlay animation */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            {/* Button content */}
+            <span className="relative z-10 flex items-center space-x-2">
+              <span className="text-base sm:text-lg">✨ Start Creating Now</span>
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </span>
+            
+            {/* Sparkle effects on hover */}
+            <div className="absolute -inset-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute top-0 left-1/4 w-2 h-2 bg-white rounded-full animate-ping" style={{ animationDelay: '0s' }}></div>
+              <div className="absolute top-1/4 right-1/4 w-1 h-1 bg-white rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+              <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* CSS for custom animations */}
