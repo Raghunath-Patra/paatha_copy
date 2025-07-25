@@ -185,44 +185,44 @@ export default function VideoScriptEditor({
 
     // Draw title
     ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 24px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(slide.title || 'Untitled Slide', 400, 50);
+    ctx.fillText(slide.title || 'Untitled Slide', 400, 40);
 
     // Draw slide number
     ctx.fillStyle = '#64748b';
-    ctx.font = '14px Arial';
+    ctx.font = '12px Arial';
     ctx.textAlign = 'right';
-    ctx.fillText(`Slide ${index + 1}`, 780, 30);
+    ctx.fillText(`Slide ${index + 1}`, 780, 25);
 
     // Draw speaker info
     ctx.fillStyle = '#475569';
-    ctx.font = 'bold 16px Arial';
+    ctx.font = 'bold 14px Arial';
     ctx.textAlign = 'left';
     const speakerName = project.speakers?.[slide.speaker]?.name || slide.speaker;
-    ctx.fillText(`Speaker: ${speakerName}`, 20, 30);
+    ctx.fillText(`Speaker: ${speakerName}`, 20, 25);
 
-    // Draw content area
+    // Draw content area (limited space)
     ctx.fillStyle = '#334155';
-    ctx.font = '18px Arial';
+    ctx.font = '14px Arial';
     ctx.textAlign = 'left';
     
-    let yPos = 90;
+    let yPos = 65;
     if (slide.content) {
-      wrapText(ctx, slide.content, 50, yPos, 700, 22);
-      yPos += 50;
+      wrapText(ctx, slide.content, 20, yPos, 760, 18);
+      yPos += 25;
     }
     if (slide.content2) {
-      wrapText(ctx, slide.content2, 50, yPos, 700, 22);
-      yPos += 50;
+      wrapText(ctx, slide.content2, 20, yPos, 760, 18);
+      yPos += 25;
     }
 
-    // Draw visual area
+    // Calculate visual area - ensure it fits within canvas
     const visualArea = {
-      x: 50,
-      y: yPos + 20,
-      width: 700,
-      height: 300
+      x: 20,
+      y: Math.min(yPos + 10, 110),
+      width: 760,
+      height: Math.min(350, 520 - Math.min(yPos + 10, 110))
     };
 
     // Visual area background
@@ -231,7 +231,7 @@ export default function VideoScriptEditor({
     
     // Visual area border
     ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.strokeRect(visualArea.x, visualArea.y, visualArea.width, visualArea.height);
 
     // Draw visual if available
@@ -240,9 +240,10 @@ export default function VideoScriptEditor({
         const visualFunction = project.visualFunctions[slide.visual.type];
         if (visualFunction) {
           ctx.save();
-          ctx.translate(visualArea.x + 20, visualArea.y + 20);
+          // Create proper clipping area with padding
+          ctx.translate(visualArea.x + 10, visualArea.y + 10);
           ctx.beginPath();
-          ctx.rect(0, 0, visualArea.width - 40, visualArea.height - 40);
+          ctx.rect(0, 0, visualArea.width - 20, visualArea.height - 20);
           ctx.clip();
 
           let func;
@@ -263,30 +264,37 @@ export default function VideoScriptEditor({
         }
       } catch (error) {
         console.error('Error executing visual function:', error);
+        ctx.save();
         ctx.fillStyle = '#ef4444';
-        ctx.font = '16px Arial';
+        ctx.font = '14px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Error in visual function', visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
+        ctx.restore();
       }
     } else {
       // No visual placeholder
+      ctx.save();
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '16px Arial';
+      ctx.font = '14px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('No visual function assigned', visualArea.x + visualArea.width/2, visualArea.y + visualArea.height/2);
+      ctx.restore();
     }
 
-    // Draw narration area
-    if (slide.narration) {
-      const narrationY = visualArea.y + visualArea.height + 30;
+    // Draw narration area only if there's space
+    const narrationY = visualArea.y + visualArea.height + 15;
+    if (slide.narration && narrationY < 540) {
       ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 14px Arial';
+      ctx.font = 'bold 12px Arial';
       ctx.textAlign = 'left';
-      ctx.fillText('Narration:', 50, narrationY);
+      ctx.fillText('Narration:', 20, narrationY);
       
       ctx.fillStyle = '#475569';
-      ctx.font = '14px Arial';
-      wrapText(ctx, slide.narration, 50, narrationY + 20, 700, 18);
+      ctx.font = '11px Arial';
+      const remainingHeight = 560 - narrationY - 10;
+      if (remainingHeight > 15) {
+        wrapText(ctx, slide.narration, 20, narrationY + 15, 760, 14);
+      }
     }
 
     console.log('✅ Slide preview rendered successfully');
@@ -318,16 +326,16 @@ export default function VideoScriptEditor({
 
     // Draw header
     ctx.fillStyle = '#7c3aed';
-    ctx.font = 'bold 20px Arial';
+    ctx.font = 'bold 18px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 400, 40);
+    ctx.fillText(`Visual Function: ${visualFunction.function_name}`, 400, 30);
 
-    // Working area
+    // Working area - ensure it fits properly within canvas
     const workingArea = {
-      x: 50,
-      y: 80,
-      width: 700,
-      height: 400
+      x: 20,
+      y: 50,
+      width: 760,
+      height: 480
     };
 
     // Working area background
@@ -343,9 +351,10 @@ export default function VideoScriptEditor({
       console.log('🔧 Executing visual function code...');
       
       ctx.save();
-      ctx.translate(workingArea.x + 20, workingArea.y + 20);
+      // Create proper clipping area with padding - ensure visual stays within bounds
+      ctx.translate(workingArea.x + 15, workingArea.y + 15);
       ctx.beginPath();
-      ctx.rect(0, 0, workingArea.width - 40, workingArea.height - 40);
+      ctx.rect(0, 0, workingArea.width - 30, workingArea.height - 30);
       ctx.clip();
       
       let functionCode = visualFunction.function_code.trim();
@@ -373,7 +382,7 @@ export default function VideoScriptEditor({
       
       ctx.restore();
       
-      // Show error
+      // Show error - ensure error message fits
       ctx.fillStyle = '#fef2f2';
       ctx.fillRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
@@ -382,14 +391,14 @@ export default function VideoScriptEditor({
       ctx.strokeRect(workingArea.x, workingArea.y, workingArea.width, workingArea.height);
       
       ctx.fillStyle = '#dc2626';
-      ctx.font = 'bold 18px Arial';
+      ctx.font = 'bold 16px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('⚠️ Error in Visual Function', 400, 250);
       
       ctx.fillStyle = '#b91c1c';
-      ctx.font = '14px Arial';
+      ctx.font = '12px Arial';
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      wrapText(ctx, errorMessage, 100, 280, 600, 20);
+      wrapText(ctx, errorMessage, 50, 280, 700, 16);
     }
 
     console.log('✅ Visual function preview completed');
@@ -1219,7 +1228,13 @@ export default function VideoScriptEditor({
                     (activeTab === 'slides' && aiModifyType === 'visual' && (!editingSlide || !JSON.parse(editingSlide || '{}').visual?.type)) ||
                     (activeTab === 'visuals' && !selectedVisualFunction)
                   }
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                  className={`w-full px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform shadow-lg ${
+                    (!chatMessage.trim() || 
+                     (activeTab === 'slides' && aiModifyType === 'visual' && (!editingSlide || !JSON.parse(editingSlide || '{}').visual?.type)) ||
+                     (activeTab === 'visuals' && !selectedVisualFunction))
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed transform-none'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white hover:scale-105'
+                  }`}
                 >
                   {activeTab === 'slides' ? (
                     aiModifyType === 'content' ? (
