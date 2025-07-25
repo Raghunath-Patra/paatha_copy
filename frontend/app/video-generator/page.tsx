@@ -485,16 +485,16 @@ const HeroSection = ({ onCreateNew }: { onCreateNew: () => void }) => {
           </ShimmerText>
         </h1>
         
-        {/* Subtitle with pulsing gradient accent and proper spacing */}
-        <div className="text-base sm:text-lg text-gray-600 mb-8 sm:mb-10 leading-relaxed min-h-[3rem] sm:min-h-[4rem] flex items-center justify-center">
+        {/* Subtitle with pulsing gradient accent and reduced spacing */}
+        <div className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-7 leading-relaxed min-h-[2rem] sm:min-h-[2.5rem] flex items-center justify-center">
           <AnimatedText 
             texts={encouragingTexts}
-            className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse-glow py-2"
+            className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse-glow py-1"
           />
         </div>
 
-        {/* Call-to-action button with hover animations and proper spacing */}
-        <div className="pt-4">
+        {/* Call-to-action button with hover animations and reduced spacing */}
+        <div className="pt-2">
           <button
             onClick={onCreateNew}
             className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105"
