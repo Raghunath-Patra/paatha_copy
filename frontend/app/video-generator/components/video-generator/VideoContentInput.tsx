@@ -69,6 +69,73 @@ const styles = `
   .animate-slide-out {
     animation: slideOutToTop 0.3s ease-in;
   }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes bounce-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+  }
+
+  @keyframes scale-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-bounce-gentle {
+    animation: bounce-gentle 2s ease-in-out infinite;
+  }
+
+  .animate-wiggle {
+    animation: wiggle 1s ease-in-out infinite;
+  }
+
+  .animate-scale-pulse {
+    animation: scale-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-out-down {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out;
+  }
+
+  .animate-fade-out-down {
+    animation: fade-out-down 0.3s ease-in;
+  }
 `;
 
 interface VideoContentInputProps {
@@ -76,6 +143,119 @@ interface VideoContentInputProps {
   onScriptGenerated: (project: any, slides: any[]) => void;
   onCompleteVideoGenerated: (projectId: string) => void;
 }
+
+// Project Title Popup Component
+const ProjectTitlePopup = ({ 
+  isVisible, 
+  onSubmit, 
+  onSkip, 
+  isSubmitting 
+}: {
+  isVisible: boolean;
+  onSubmit: (title: string) => void;
+  onSkip: () => void;
+  isSubmitting: boolean;
+}) => {
+  const [title, setTitle] = useState('');
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleSubmit = () => {
+    if (title.trim()) {
+      onSubmit(title.trim());
+    }
+  };
+
+  const handleSkip = () => {
+    setIsExiting(true);
+    setTimeout(onSkip, 300);
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className={`bg-white rounded-2xl shadow-2xl max-w-md w-full ${
+        isExiting ? 'animate-fade-out-down' : 'animate-fade-in-up'
+      }`}>
+        <div className="p-8">
+          {/* Cute Header with Animation */}
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-4 animate-bounce-gentle">🎬</div>
+            <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              While AI works its magic...
+            </h3>
+            <p className="text-gray-600">
+              Give your awesome project a catchy title! ✨
+            </p>
+          </div>
+
+          {/* Animated Characters */}
+          <div className="flex justify-center space-x-4 mb-6">
+            <div className="text-3xl animate-wiggle">🤖</div>
+            <div className="text-3xl animate-scale-pulse">💡</div>
+            <div className="text-3xl animate-float">🎨</div>
+          </div>
+
+          {/* Input Field */}
+          <div className="mb-6">
+            <label htmlFor="projectTitle" className="block text-sm font-semibold text-gray-700 mb-2">
+              Project Title
+            </label>
+            <input
+              id="projectTitle"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Chemical Reactions Explained, Math Made Easy..."
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none transition-all duration-300 text-lg"
+              maxLength={100}
+              disabled={isSubmitting}
+              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+            />
+            <div className="text-xs text-right text-gray-500 mt-1">
+              {title.length}/100 characters
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-3">
+            <button
+              onClick={handleSubmit}
+              disabled={!title.trim() || isSubmitting}
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                '✨ Set Title'
+              )}
+            </button>
+            <button
+              onClick={handleSkip}
+              disabled={isSubmitting}
+              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold transition-all duration-300 disabled:opacity-50"
+            >
+              Skip for now
+            </button>
+          </div>
+
+          {/* Fun Loading Message */}
+          <div className="mt-4 text-center">
+            <div className="inline-flex items-center space-x-2 text-sm text-gray-500">
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              <span className="ml-2">AI is creating something amazing!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Skeleton Loading Component
 const ContentInputSkeleton = () => (
@@ -86,7 +266,6 @@ const ContentInputSkeleton = () => (
     {/* Quick Actions Skeleton */}
     <div className="flex gap-4 justify-center mb-6 flex-wrap">
       <div className="h-12 w-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-shimmer rounded-lg"></div>
-      <div className="h-12 w-40 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-shimmer rounded-lg"></div>
     </div>
 
     {/* File Upload Skeleton */}
@@ -248,6 +427,9 @@ export default function VideoContentInput({
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [fileUploadNotification, setFileUploadNotification] = useState<{ message: string; isVisible: boolean; isExiting: boolean } | null>(null);
+  const [showTitlePopup, setShowTitlePopup] = useState(false);
+  const [isSubmittingTitle, setIsSubmittingTitle] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -296,14 +478,58 @@ export default function VideoContentInput({
     return interval;
   };
 
-  const generateCompleteVideo = async () => {
+  const handleTitleSubmit = async (title: string) => {
+    if (!currentProjectId) return;
+    
+    setIsSubmittingTitle(true);
+    try {
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${API_URL}/api/video-generator/update-project-title`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ 
+          projectId: currentProjectId, 
+          title: title 
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowTitlePopup(false);
+      } else {
+        console.error('Failed to update project title:', result.error);
+      }
+    } catch (error) {
+      console.error('Error updating project title:', error);
+    } finally {
+      setIsSubmittingTitle(false);
+    }
+  };
+
+  const handleTitleSkip = () => {
+    setShowTitlePopup(false);
+  };
+
+  const generateVideo = async () => {
     if (!content.trim()) {
       setStatus({ type: 'error', message: 'Please enter some content or upload a file first.' });
       return;
     }
 
     setIsGenerating(true);
-    setStatus({ type: 'info', message: 'Generating your complete video... This may take 5-15 minutes.' });
+    
+    // Determine the workflow and set appropriate status message
+    if (workflowMode === 'simple') {
+      setStatus({ type: 'info', message: 'Generating your complete video... This may take 5-15 minutes.' });
+    } else {
+      setStatus({ type: 'info', message: 'Generating script and visual elements...' });
+    }
 
     const progressInterval = simulateProgress(async () => {
       try {
@@ -327,85 +553,51 @@ export default function VideoContentInput({
           throw new Error(scriptResult.error || 'Failed to generate script');
         }
 
-        setGenerationProgress(50);
-        setStatus({ type: 'info', message: 'Script created! Now generating video with AI narration...' });
+        // Store project ID and show title popup
+        setCurrentProjectId(scriptResult.project.id);
+        setShowTitlePopup(true);
 
-        // Then generate video
-        const videoResponse = await fetch(`${API_URL}/api/video-generator/generate-video`, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({ projectId: scriptResult.project.id }),
-        });
+        // For simple workflow, continue with video generation
+        if (workflowMode === 'simple') {
+          setGenerationProgress(50);
+          setStatus({ type: 'info', message: 'Script created! Now generating video with AI narration...' });
 
-        const videoResult = await videoResponse.json();
+          const videoResponse = await fetch(`${API_URL}/api/video-generator/generate-video`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ projectId: scriptResult.project.id }),
+          });
 
-        clearInterval(progressInterval);
-        setGenerationProgress(100);
+          const videoResult = await videoResponse.json();
 
-        if (videoResult.success) {
-          setStatus({ type: 'success', message: '🎉 Complete video generated successfully!' });
-          setTimeout(() => {
-            onCompleteVideoGenerated(videoResult.projectId);
-          }, 2000);
-          // Auto-hide success message after 3 seconds
-          setTimeout(() => {
-            setStatus(null);
-          }, 3000);
+          clearInterval(progressInterval);
+          setGenerationProgress(100);
+
+          if (videoResult.success) {
+            setStatus({ type: 'success', message: '🎉 Complete video generated successfully!' });
+            setTimeout(() => {
+              onCompleteVideoGenerated(videoResult.projectId);
+            }, 2000);
+            // Auto-hide success message after 3 seconds
+            setTimeout(() => {
+              setStatus(null);
+            }, 3000);
+          } else {
+            throw new Error(videoResult.error || 'Failed to generate video');
+          }
         } else {
-          throw new Error(videoResult.error || 'Failed to generate video');
-        }
-      } catch (error) {
-        clearInterval(progressInterval);
-        setGenerationProgress(0);
-        setStatus({ 
-          type: 'error', 
-          message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` 
-        });
-      } finally {
-        setIsGenerating(false);
-      }
-    });
-  };
-
-  const generateScriptOnly = async () => {
-    if (!content.trim()) {
-      setStatus({ type: 'error', message: 'Please enter some content or upload a file first.' });
-      return;
-    }
-
-    setIsGenerating(true);
-    setStatus({ type: 'info', message: 'Generating script and visual elements...' });
-
-    const progressInterval = simulateProgress(async () => {
-      try {
-        const { headers, isAuthorized } = await getAuthHeaders();
-              
-        if (!isAuthorized) {
-          throw new Error('Authentication required');
-        }
-
-        const response = await fetch(`${API_URL}/api/video-generator/generate-script`, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({ content }),
-        });
-
-        const result = await response.json();
-
-        clearInterval(progressInterval);
-        setGenerationProgress(100);
-
-        if (result.success) {
+          // For advanced workflow, just finish with script
+          clearInterval(progressInterval);
+          setGenerationProgress(100);
+          
           setStatus({ type: 'success', message: '✅ Script generated successfully!' });
           setTimeout(() => {
-            onScriptGenerated(result.project, result.project.lessonSteps);
+            onScriptGenerated(scriptResult.project, scriptResult.project.lessonSteps);
           }, 1500);
           // Auto-hide success message after 3 seconds
           setTimeout(() => {
             setStatus(null);
           }, 3000);
-        } else {
-          throw new Error(result.error || 'Failed to generate script');
         }
       } catch (error) {
         clearInterval(progressInterval);
@@ -429,6 +621,14 @@ export default function VideoContentInput({
     <>
       {/* Inject custom CSS styles */}
       <style dangerouslySetInnerHTML={{ __html: styles }} />
+      
+      {/* Project Title Popup */}
+      <ProjectTitlePopup
+        isVisible={showTitlePopup}
+        onSubmit={handleTitleSubmit}
+        onSkip={handleTitleSkip}
+        isSubmitting={isSubmittingTitle}
+      />
       
       {/* File Upload Notification */}
       {fileUploadNotification && (
@@ -534,50 +734,29 @@ Start typing or paste your content here. Supports Markdown formatting for better
         </div>
       </div>
 
-      {/* Enhanced Quick Actions for Simple Workflow */}
-      {workflowMode === 'simple' && (
-        <div className="flex gap-4 justify-center mb-8 flex-wrap">
-          <button
-            onClick={generateCompleteVideo}
-            disabled={isGenerating || !content.trim()}
-            className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg md:text-xl lg:text-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:animate-pulse-glow"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-700"></div>
-            <span className="relative flex items-center justify-center space-x-2">
-              <span>🎬</span>
-              <span>{isGenerating ? 'Generating...' : 'Complete Video'}</span>
+      {/* Single Generate Button */}
+      <div className="text-center mb-8">
+        <button
+          onClick={generateVideo}
+          disabled={isGenerating || !content.trim()}
+          className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white px-12 py-5 rounded-xl font-bold text-xl md:text-2xl lg:text-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:-translate-y-2 hover:animate-pulse-glow"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-1000"></div>
+          <span className="relative flex items-center justify-center space-x-3">
+            <span className="text-2xl md:text-3xl lg:text-4xl">
+              {workflowMode === 'simple' ? '🎬' : '📝'}
             </span>
-          </button>
-          <button
-            onClick={generateScriptOnly}
-            disabled={isGenerating || !content.trim()}
-            className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-bold text-lg md:text-xl lg:text-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:animate-pulse-glow"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-700"></div>
-            <span className="relative flex items-center justify-center space-x-2">
-              <span>📝</span>
-              <span>{isGenerating ? 'Generating...' : 'Script Only'}</span>
+            <span>
+              {isGenerating 
+                ? 'Generating Magic...' 
+                : workflowMode === 'simple' 
+                  ? 'Generate Complete Video' 
+                  : 'Generate Script & Visuals'
+              }
             </span>
-          </button>
-        </div>
-      )}
-
-      {/* Enhanced Advanced Workflow Action */}
-      {workflowMode === 'advanced' && (
-        <div className="text-center mb-8">
-          <button
-            onClick={generateScriptOnly}
-            disabled={isGenerating || !content.trim()}
-            className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-800 text-white px-12 py-5 rounded-xl font-bold text-xl md:text-2xl lg:text-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:-translate-y-2 hover:animate-pulse-glow"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-gradient-x transition-transform duration-1000"></div>
-            <span className="relative flex items-center justify-center space-x-3">
-              <span className="text-2xl md:text-3xl lg:text-4xl">🚀</span>
-              <span>{isGenerating ? 'Generating Magic...' : 'Generate Script & Visuals'}</span>
-            </span>
-          </button>
-        </div>
-      )}
+          </span>
+        </button>
+      </div>
 
       {/* Enhanced Progress Bar */}
       <ProgressBar 
