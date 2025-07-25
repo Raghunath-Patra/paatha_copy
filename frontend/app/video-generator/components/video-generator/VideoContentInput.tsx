@@ -149,12 +149,16 @@ const ProjectTitlePopup = ({
   isVisible, 
   onSubmit, 
   onSkip, 
-  isSubmitting 
+  isSubmitting,
+  titleUpdateSuccess,
+  titleUpdateError
 }: {
   isVisible: boolean;
   onSubmit: (title: string) => void;
   onSkip: () => void;
   isSubmitting: boolean;
+  titleUpdateSuccess: boolean;
+  titleUpdateError: string | null;
 }) => {
   const [title, setTitle] = useState('');
   const [isExiting, setIsExiting] = useState(false);
@@ -170,6 +174,17 @@ const ProjectTitlePopup = ({
     setTimeout(onSkip, 300);
   };
 
+  // Auto-close after successful title update
+  React.useEffect(() => {
+    if (titleUpdateSuccess) {
+      const timer = setTimeout(() => {
+        setIsExiting(true);
+        setTimeout(onSkip, 300);
+      }, 2000); // Close after 2 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [titleUpdateSuccess, onSkip]);
+
   if (!isVisible) return null;
 
   return (
@@ -180,13 +195,37 @@ const ProjectTitlePopup = ({
         <div className="p-8">
           {/* Cute Header with Animation */}
           <div className="text-center mb-6">
-            <div className="text-6xl mb-4 animate-bounce-gentle">🎬</div>
-            <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              While AI works its magic...
-            </h3>
-            <p className="text-gray-600">
-              Give your awesome project a catchy title! ✨
-            </p>
+            {titleUpdateSuccess ? (
+              <>
+                <div className="text-6xl mb-4 animate-bounce-gentle">🎉</div>
+                <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Title Updated Successfully!
+                </h3>
+                <p className="text-green-600 font-medium">
+                  Your project now has an awesome title! ✨
+                </p>
+              </>
+            ) : titleUpdateError ? (
+              <>
+                <div className="text-6xl mb-4 animate-wiggle">😅</div>
+                <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                  Oops! Something went wrong
+                </h3>
+                <p className="text-red-600">
+                  {titleUpdateError}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-4 animate-bounce-gentle">🎬</div>
+                <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  While AI works its magic...
+                </h3>
+                <p className="text-gray-600">
+                  Give your awesome project a catchy title! ✨
+                </p>
+              </>
+            )}
           </div>
 
           {/* Animated Characters */}
@@ -196,51 +235,66 @@ const ProjectTitlePopup = ({
             <div className="text-3xl animate-float">🎨</div>
           </div>
 
-          {/* Input Field */}
-          <div className="mb-6">
-            <label htmlFor="projectTitle" className="block text-sm font-semibold text-gray-700 mb-2">
-              Project Title
-            </label>
-            <input
-              id="projectTitle"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Chemical Reactions Explained, Math Made Easy..."
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none transition-all duration-300 text-lg"
-              maxLength={100}
-              disabled={isSubmitting}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-            />
-            <div className="text-xs text-right text-gray-500 mt-1">
-              {title.length}/100 characters
+          {/* Input Field - Hide when success/error */}
+          {!titleUpdateSuccess && !titleUpdateError && (
+            <div className="mb-6">
+              <label htmlFor="projectTitle" className="block text-sm font-semibold text-gray-700 mb-2">
+                Project Title
+              </label>
+              <input
+                id="projectTitle"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g., Chemical Reactions Explained, Math Made Easy..."
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none transition-all duration-300 text-lg"
+                maxLength={100}
+                disabled={isSubmitting}
+                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              />
+              <div className="text-xs text-right text-gray-500 mt-1">
+                {title.length}/100 characters
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3">
-            <button
-              onClick={handleSubmit}
-              disabled={!title.trim() || isSubmitting}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Saving...</span>
-                </div>
+          {/* Action Buttons - Hide when success */}
+          {!titleUpdateSuccess && (
+            <div className="flex space-x-3">
+              {!titleUpdateError ? (
+                <>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!title.trim() || isSubmitting}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Saving...</span>
+                      </div>
+                    ) : (
+                      '✨ Set Title'
+                    )}
+                  </button>
+                  <button
+                    onClick={handleSkip}
+                    disabled={isSubmitting}
+                    className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold transition-all duration-300 disabled:opacity-50"
+                  >
+                    Skip for now
+                  </button>
+                </>
               ) : (
-                '✨ Set Title'
+                <button
+                  onClick={handleSkip}
+                  className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Close
+                </button>
               )}
-            </button>
-            <button
-              onClick={handleSkip}
-              disabled={isSubmitting}
-              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold transition-all duration-300 disabled:opacity-50"
-            >
-              Skip for now
-            </button>
-          </div>
+            </div>
+          )}
 
           {/* Fun Loading Message */}
           <div className="mt-4 text-center">
@@ -429,6 +483,8 @@ export default function VideoContentInput({
   const [fileUploadNotification, setFileUploadNotification] = useState<{ message: string; isVisible: boolean; isExiting: boolean } | null>(null);
   const [showTitlePopup, setShowTitlePopup] = useState(false);
   const [isSubmittingTitle, setIsSubmittingTitle] = useState(false);
+  const [titleUpdateSuccess, setTitleUpdateSuccess] = useState(false);
+  const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -482,6 +538,8 @@ export default function VideoContentInput({
     if (!currentProjectId) return;
     
     setIsSubmittingTitle(true);
+    setTitleUpdateError(null);
+    
     try {
       const { headers, isAuthorized } = await getAuthHeaders();
       
@@ -501,12 +559,14 @@ export default function VideoContentInput({
       const result = await response.json();
 
       if (result.success) {
-        setShowTitlePopup(false);
+        setTitleUpdateSuccess(true);
+        // Auto-close handled by useEffect in popup component
       } else {
-        console.error('Failed to update project title:', result.error);
+        setTitleUpdateError(result.error || 'Failed to update project title');
       }
     } catch (error) {
       console.error('Error updating project title:', error);
+      setTitleUpdateError(error instanceof Error ? error.message : 'Network error occurred');
     } finally {
       setIsSubmittingTitle(false);
     }
@@ -514,6 +574,8 @@ export default function VideoContentInput({
 
   const handleTitleSkip = () => {
     setShowTitlePopup(false);
+    setTitleUpdateSuccess(false);
+    setTitleUpdateError(null);
   };
 
   const generateVideo = async () => {
@@ -553,9 +615,11 @@ export default function VideoContentInput({
           throw new Error(scriptResult.error || 'Failed to generate script');
         }
 
-        // Store project ID and show title popup
+        // Store project ID and show title popup after 2 seconds
         setCurrentProjectId(scriptResult.project.id);
-        setShowTitlePopup(true);
+        setTimeout(() => {
+          setShowTitlePopup(true);
+        }, 2000);
 
         // For simple workflow, continue with video generation
         if (workflowMode === 'simple') {
@@ -628,6 +692,8 @@ export default function VideoContentInput({
         onSubmit={handleTitleSubmit}
         onSkip={handleTitleSkip}
         isSubmitting={isSubmittingTitle}
+        titleUpdateSuccess={titleUpdateSuccess}
+        titleUpdateError={titleUpdateError}
       />
       
       {/* File Upload Notification */}
