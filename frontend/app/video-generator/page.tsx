@@ -252,7 +252,7 @@ const CreditDisplay = ({ userBalance, onClick }: { userBalance: UserBalance | nu
     setTimeout(() => {
       setShowPopup(false);
       onClick(); // Navigate to video-credits page
-    }, 800);
+    }, 300);
   };
 
   return (

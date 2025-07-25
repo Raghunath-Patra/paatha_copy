@@ -310,9 +310,7 @@ export default function VideoCreditsPage() {
                   </div>
                   <div className="flex-shrink-0">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-indigo-600">₹</span>
                     </div>
                   </div>
                 </div>
