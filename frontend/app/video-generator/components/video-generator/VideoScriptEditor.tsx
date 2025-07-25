@@ -72,8 +72,10 @@ export default function VideoScriptEditor({
   onBackToInput
 }: VideoScriptEditorProps) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [previewCanvas, setPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const [editingSlide, setEditingSlide] = useState<string>('');
   const [originalSlide, setOriginalSlide] = useState<any>(null);
+  const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,16 +84,16 @@ export default function VideoScriptEditor({
 
   // Tab management
   const [activeTab, setActiveTab] = useState<'slides' | 'visuals'>('slides');
+  const [editingVisualFunction, setEditingVisualFunction] = useState<{name: string, code: string} | null>(null);
   const [visualFunctions, setVisualFunctions] = useState<any[]>([]);
   const [aiModifyType, setAiModifyType] = useState<'content' | 'visual'>('content');
 
-  // Visual functions tab state
+  // Add these new state variables for visual functions tab
   const [selectedVisualFunction, setSelectedVisualFunction] = useState<any>(null);
+  const [visualPreviewCanvas, setVisualPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
   const visualCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [originalVisualCode, setOriginalVisualCode] = useState<string>('');
 
-  // Canvas initialization flag
-  const [canvasInitialized, setCanvasInitialized] = useState(false);
+  const [originalVisualCode, setOriginalVisualCode] = useState<string>('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
