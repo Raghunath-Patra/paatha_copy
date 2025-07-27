@@ -62,10 +62,6 @@ export default function VideoScriptEditor({
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const currentSlideHasVisual = useMemo(() => {
-    return !!getCurrentSlideData().visual?.type;
-  }, [formData, currentSlideIndex, slides, stagedChanges]);
-
   // Get current slide data (either from form or staged changes)
   const getCurrentSlideData = () => {
     if (stagedChanges?.slideData) {
@@ -82,6 +78,10 @@ export default function VideoScriptEditor({
       speaker: formData.speaker || baseSlide?.speaker || ''
     };
   };
+  
+  const currentSlideHasVisual = useMemo(() => {
+    return !!getCurrentSlideData().visual?.type;
+  }, [formData, currentSlideIndex, slides, stagedChanges]);
 
   // Initialize canvas for preview
   useEffect(() => {
@@ -609,18 +609,24 @@ export default function VideoScriptEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Speaker</label>
-                  <select
-                    value={formData.speaker}
-                    onChange={(e) => setFormData(prev => ({ ...prev, speaker: e.target.value }))}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Speaker Name
+                    <span className="text-xs text-gray-500 ml-1">({formData.speaker})</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={project.speakers?.[formData.speaker]?.name || formData.speaker}
+                    onChange={(e) => {
+                      // Update the speaker name in the project speakers object
+                      if (project.speakers && project.speakers[formData.speaker]) {
+                        project.speakers[formData.speaker].name = e.target.value;
+                      }
+                      // Trigger a re-render by updating formData (even though speaker key doesn't change)
+                      setFormData(prev => ({ ...prev, speaker: prev.speaker }));
+                    }}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                  >
-                    {project.speakers && Object.entries(project.speakers).map(([key, speaker]: [string, any]) => (
-                      <option key={key} value={key}>
-                        {speaker.name} ({key})
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Enter speaker name..."
+                  />
                 </div>
               </div>
 
