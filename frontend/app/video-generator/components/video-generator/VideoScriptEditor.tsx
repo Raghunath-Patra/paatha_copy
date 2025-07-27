@@ -62,6 +62,10 @@ export default function VideoScriptEditor({
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+  const currentSlideHasVisual = useMemo(() => {
+    return !!getCurrentSlideData().visual?.type;
+  }, [formData, currentSlideIndex, slides, stagedChanges]);
+
   // Get current slide data (either from form or staged changes)
   const getCurrentSlideData = () => {
     if (stagedChanges?.slideData) {
@@ -78,10 +82,6 @@ export default function VideoScriptEditor({
       speaker: formData.speaker || baseSlide?.speaker || ''
     };
   };
-
-  const currentSlideHasVisual = useMemo(() => {
-    return !!getCurrentSlideData().visual?.type;
-  }, [formData, currentSlideIndex, slides, stagedChanges]);
 
   // Initialize canvas for preview
   useEffect(() => {
@@ -610,10 +610,17 @@ export default function VideoScriptEditor({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Speaker</label>
-                  <div className="w-full p-3 border border-gray-200 bg-gray-50 rounded-lg text-gray-600">
-                    {project.speakers?.[formData.speaker]?.name || formData.speaker} ({formData.speaker})
-                    <span className="text-xs text-gray-500 ml-2">(Read-only)</span>
-                  </div>
+                  <select
+                    value={formData.speaker}
+                    onChange={(e) => setFormData(prev => ({ ...prev, speaker: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                  >
+                    {project.speakers && Object.entries(project.speakers).map(([key, speaker]: [string, any]) => (
+                      <option key={key} value={key}>
+                        {speaker.name} ({key})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
