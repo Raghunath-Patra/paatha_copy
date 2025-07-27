@@ -164,6 +164,7 @@ export default function VideoProjectBrowser({
 
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
+  const [deleteConfirmationTitle, setDeleteConfirmationTitle] = useState('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -483,6 +484,7 @@ export default function VideoProjectBrowser({
                             onClick={() => {
                               setProjectToDelete(project.projectId);
                               setShowDeleteModal(true);
+                              setDeleteConfirmationTitle('');
                             }}
                             className={`${baseButtonClass} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600`}
                             title="Delete Project"
@@ -509,32 +511,59 @@ export default function VideoProjectBrowser({
         />
       )}
 
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-red-600 flex items-center gap-2 mb-4">
-              <DeleteIcon /> Confirm Deletion
-            </h3>
-            <p className="text-gray-700 mb-6">
-              Are you sure you want to delete this project? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-xl font-semibold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => projectToDelete && handleDeleteProject(projectToDelete)}
-                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl font-semibold transition-all"
-              >
-                Delete
-              </button>
+      {showDeleteModal && (() => {
+        const projectToConfirmDelete = projects.find(p => p.projectId === projectToDelete);
+        
+        return (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-md w-full shadow-2xl transition-all">
+              <h3 className="text-xl font-bold text-red-600 flex items-center gap-2 mb-4">
+                <DeleteIcon /> Confirm Deletion
+              </h3>
+              <p className="text-gray-700 mb-4">
+                This action is permanent and cannot be undone.
+              </p>
+
+              {projectToConfirmDelete && (
+                <div className="my-6">
+                  <label htmlFor="delete-confirm" className="text-sm font-medium text-gray-800 block mb-2">
+                    To confirm, please type the project title below:
+                    <br />
+                    <strong className="text-red-700 font-mono text-base">{projectToConfirmDelete.title}</strong>
+                  </label>
+                  <input
+                    id="delete-confirm"
+                    type="text"
+                    value={deleteConfirmationTitle}
+                    onChange={(e) => setDeleteConfirmationTitle(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl transition-all focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="Enter project title to confirm"
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmationTitle('');
+                  }}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-xl font-semibold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => projectToDelete && handleDeleteProject(projectToDelete)}
+                  disabled={!projectToConfirmDelete || deleteConfirmationTitle !== projectToConfirmDelete.title}
+                  className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl font-semibold transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
