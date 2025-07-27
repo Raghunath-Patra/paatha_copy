@@ -275,22 +275,40 @@ export default function VideoScriptEditor({
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'AI request failed');
 
-        // Handle different types of AI responses
-        if (result.updatedSlide) {
-            // Content was modified
+        // Handle different types of AI responses based on backend response structure
+        
+        // Case 1: New visual was added (has both updatedSlide and newVisualFunction)
+        if (result.newVisualAdded && result.newVisualFunction && result.updatedSlide) {
             setEditingSlide(JSON.stringify(result.updatedSlide, null, 2));
+            setStagedChanges({
+                slideData: result.updatedSlide,
+                visualFunction: {
+                    functionName: result.newVisualFunction.name,
+                    code: result.newVisualFunction.code
+                }
+            });
         }
-
-        if (result.updatedVisual) {
-            // Visual function was modified or created
+        // Case 2: Existing visual was modified (has updatedVisual)
+        else if (result.updatedVisual) {
             setStagedChanges(prev => ({
-                ...prev,
-                visualFunction: result.updatedVisual
+                slideData: prev?.slideData,
+                visualFunction: {
+                    functionName: result.updatedVisual.functionName,
+                    code: result.updatedVisual.code
+                }
             }));
+            
+            // Also update slide content if provided (combined case)
+            if (result.updatedSlide) {
+                setEditingSlide(JSON.stringify(result.updatedSlide, null, 2));
+                setStagedChanges(prev => ({
+                    slideData: result.updatedSlide,
+                    visualFunction: prev?.visualFunction
+                }));
+            }
         }
-
-        if (result.newVisualAdded && result.updatedSlide) {
-            // New visual was added to the slide
+        // Case 3: Only content was modified (has updatedSlide but no visual changes)
+        else if (result.updatedSlide) {
             setEditingSlide(JSON.stringify(result.updatedSlide, null, 2));
             setStagedChanges(prev => ({
                 ...prev,
