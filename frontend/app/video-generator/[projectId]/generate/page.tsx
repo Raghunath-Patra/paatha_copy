@@ -48,15 +48,19 @@ export default function GenerateVideoPage() {
           <div className="flex items-center space-x-4">
             <button
               onClick={handleBackToEditor}
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
             >
-              ← Back to Editor
+              <svg 
+                className="w-5 h-5 transition-transform group-hover:-translate-x-1" 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              </svg>
+              <span>Back to Editor</span>
             </button>
             <h1 className="text-2xl font-bold text-gray-800">
               Generate Video
-              <span className="text-sm text-gray-500 ml-2">
-                (ID: {projectId.substring(0, 8)}...)
-              </span>
             </h1>
           </div>
           <Navigation />

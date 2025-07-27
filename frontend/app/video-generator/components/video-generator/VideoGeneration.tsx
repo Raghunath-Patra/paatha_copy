@@ -543,13 +543,8 @@ export default function VideoGeneration({
     try {
       setStatus({ type: 'info', message: 'Preparing download...' });
       
-      const { headers, isAuthorized } = await getAuthHeaders();
-      if (!isAuthorized) throw new Error('Authentication required');
-      
-      // Use the download endpoint like in VideoPlayerPopup
-      const downloadUrl = `${API_URL}/api/video-generator/download/${projectId}`;
-      
-      const response = await fetch(downloadUrl, { headers });
+      // Download directly from the videoUrl like in VideoPlayerPopup
+      const response = await fetch(videoUrl);
       
       if (!response.ok) {
         throw new Error(`Download failed: ${response.status}`);
@@ -559,7 +554,7 @@ export default function VideoGeneration({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `educational_video_${Date.now().toLocaleString()}.mp4`;
+      a.download = `educational_video_${projectId.substring(0, 8)}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
