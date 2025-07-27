@@ -62,10 +62,6 @@ export default function VideoScriptEditor({
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const currentSlideHasVisual = useMemo(() => {
-    return !!getCurrentSlideData().visual?.type;
-  }, [formData, currentSlideIndex, slides, stagedChanges]);
-
   // Get current slide data (either from form or staged changes)
   const getCurrentSlideData = () => {
     if (stagedChanges?.slideData) {
@@ -82,6 +78,11 @@ export default function VideoScriptEditor({
       speaker: formData.speaker || baseSlide?.speaker || ''
     };
   };
+
+  const currentSlideHasVisual = useMemo(() => {
+    return !!getCurrentSlideData().visual?.type;
+  }, [formData, currentSlideIndex, slides, stagedChanges]);
+
 
   // Initialize canvas for preview
   useEffect(() => {
