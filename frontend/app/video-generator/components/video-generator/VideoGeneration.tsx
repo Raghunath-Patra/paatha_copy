@@ -37,6 +37,48 @@ const ShimmerProgress = ({ progress }: { progress: number }) => (
   </div>
 );
 
+// Enhanced Skeleton Loading Components
+const GenerationSkeleton = () => (
+  <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
+    <div className="text-center animate-pulse">
+      {/* Icon skeleton */}
+      <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-6"></div>
+      
+      {/* Title skeleton */}
+      <div className="h-8 bg-gray-300 rounded-lg max-w-md mx-auto mb-4"></div>
+      
+      {/* Description skeleton */}
+      <div className="space-y-2 mb-8">
+        <div className="h-4 bg-gray-200 rounded max-w-2xl mx-auto"></div>
+        <div className="h-4 bg-gray-200 rounded max-w-xl mx-auto"></div>
+      </div>
+      
+      {/* Button skeleton */}
+      <div className="h-12 bg-gray-300 rounded-xl max-w-xs mx-auto mb-8"></div>
+    </div>
+    
+    {/* Project info skeleton */}
+    <div className="mt-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="animate-pulse">
+          <div className="h-5 bg-gray-300 rounded max-w-48 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded max-w-36"></div>
+        </div>
+        <div className="flex items-center gap-2 animate-pulse">
+          <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-24"></div>
+        </div>
+      </div>
+    </div>
+    
+    {/* Navigation skeleton */}
+    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+      <div className="h-12 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
+      <div className="h-12 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
+    </div>
+  </div>
+);
+
 const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -48,8 +90,6 @@ const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
     <div className={`${sizeClasses[size]} border-2 border-white border-t-transparent rounded-full animate-spin`}></div>
   );
 };
-
-// Video Player Component
 const VideoPlayerModal = ({ 
   videoUrl, 
   projectId, 
@@ -666,22 +706,9 @@ export default function VideoGeneration({
         🎬 Generate Your Video
       </h2>
 
-      {/* Show loading while checking for existing video */}
+      {/* Show skeleton loading while checking for existing video */}
       {isCheckingExistingVideo ? (
-        <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
-          <div className="text-center">
-            <div className="text-6xl mb-6">🔍</div>
-            <h3 className="text-xl font-semibold mb-4 text-gray-800">
-              Checking Video Status...
-            </h3>
-            <div className="flex justify-center mb-4">
-              <LoadingSpinner size="lg" />
-            </div>
-            <p className="text-gray-600">
-              We're checking if your video already exists.
-            </p>
-          </div>
-        </div>
+        <GenerationSkeleton />
       ) : (
         <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
         {!videoUrl ? (
@@ -862,7 +889,7 @@ export default function VideoGeneration({
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h4 className="font-semibold text-gray-800 mb-1">
-                {projectTitle ? `Project: ${projectTitle}` : `Project ID: ${projectId.substring(0, 8)}...`}
+                {projectTitle || `Project ID: ${projectId.substring(0, 8)}...`}
               </h4>
               <p className="text-sm text-gray-600">
                 Educational Video Generation
