@@ -48,7 +48,6 @@ const ProjectCardSkeleton = () => (
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1 pr-4">
               <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
-              <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
             </div>
             <div className="h-7 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
           </div>
@@ -212,7 +211,14 @@ export default function VideoProjectBrowser({
   };
 
   const handleUpdateTitle = async (projectId: string, title: string) => {
-    if (!title.trim()) return; // Avoid empty titles
+    const originalProject = projects.find(p => p.projectId === projectId);
+    const trimmedTitle = title.trim();
+
+    // Exit if title is empty or unchanged
+    if (!trimmedTitle || (originalProject && originalProject.title === trimmedTitle)) {
+        setEditingProjectId(null);
+        return;
+    }
 
     const { headers, isAuthorized } = await getAuthHeaders();
     if (!isAuthorized) return;
@@ -226,15 +232,15 @@ export default function VideoProjectBrowser({
         },
         body: JSON.stringify({
           projectId: projectId,
-          title: title
+          title: trimmedTitle
         }),
       });
 
       if (response.ok) {
-        setProjects(projects.map(p => p.projectId === projectId ? { ...p, title } : p));
+        setProjects(projects.map(p => p.projectId === projectId ? { ...p, title: trimmedTitle } : p));
       } else {
         console.error('Failed to update title');
-        // Optionally, show an error to the user
+        // Optionally, revert or show an error to the user
       }
     } catch (error) {
       console.error('Error updating project title:', error);
