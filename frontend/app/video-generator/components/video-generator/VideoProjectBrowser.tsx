@@ -41,39 +41,39 @@ const ShimmerEffect = () => (
 );
 
 const ProjectCardSkeleton = () => (
-  <div className="bg-white rounded-xl p-5 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative w-full flex flex-col">
-    <ShimmerEffect />
-    <div className="flex-grow">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1 pr-4">
-            <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
-            <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
+    <div className="bg-white rounded-xl p-5 shadow-lg border border-gray-100 animate-pulse overflow-hidden relative w-full flex flex-col">
+      <ShimmerEffect />
+      <div className="flex-grow">
+          {/* Header */}
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1 pr-4">
+              <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 mb-2"></div>
+              <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
+            </div>
+            <div className="h-7 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
           </div>
-          <div className="h-7 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full"></div>
-        </div>
-
-        {/* Stats */}
-        <div className="flex justify-between items-center text-sm mb-5">
-          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
-          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
-          <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32"></div>
-        </div>
+  
+          {/* Stats */}
+          <div className="flex justify-between items-center text-sm mb-5">
+            <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28"></div>
+            <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24"></div>
+            <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32"></div>
+          </div>
+      </div>
+  
+      {/* Action Buttons Skeleton */}
+      <div className="flex flex-col gap-2 mt-auto">
+          <div className="flex gap-2">
+              <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+              <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+          </div>
+          <div className="flex gap-2">
+              <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+              <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
+          </div>
+      </div>
     </div>
-
-    {/* Action Buttons Skeleton */}
-    <div className="flex flex-col gap-2 mt-auto">
-        <div className="flex gap-2">
-            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
-            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
-        </div>
-        <div className="flex gap-2">
-            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
-            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg flex-1"></div>
-        </div>
-    </div>
-  </div>
-);
+  );
 
 const ProjectGridSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-2 sm:p-3">
@@ -155,7 +155,6 @@ export default function VideoProjectBrowser({
   onCreateNew
 }: VideoProjectBrowserProps) {
   const [loading, setLoading] = useState(true);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   
@@ -163,6 +162,9 @@ export default function VideoProjectBrowser({
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
   const [currentVideoProject, setCurrentVideoProject] = useState<Project | null>(null);
   const [videoLoading, setVideoLoading] = useState<string | null>(null);
+
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -206,6 +208,38 @@ export default function VideoProjectBrowser({
       setProjects([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateTitle = async (projectId: string, title: string) => {
+    if (!title.trim()) return; // Avoid empty titles
+
+    const { headers, isAuthorized } = await getAuthHeaders();
+    if (!isAuthorized) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/video-generator/update-project-title`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          projectId: projectId,
+          title: title
+        }),
+      });
+
+      if (response.ok) {
+        setProjects(projects.map(p => p.projectId === projectId ? { ...p, title } : p));
+      } else {
+        console.error('Failed to update title');
+        // Optionally, show an error to the user
+      }
+    } catch (error) {
+      console.error('Error updating project title:', error);
+    } finally {
+      setEditingProjectId(null);
     }
   };
 
@@ -343,6 +377,7 @@ export default function VideoProjectBrowser({
             const isLoadingVideo = videoLoading === project.projectId;
 
             const showFirstRow = project.status === 'completed';
+            const isEditing = editingProjectId === project.projectId;
 
             return (
               <div
@@ -352,13 +387,31 @@ export default function VideoProjectBrowser({
                 <div className="flex-grow">
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1 pr-3">
-                      <h3 className="font-bold text-gray-800 mb-1.5 line-clamp-2 text-lg group-hover:text-blue-700">
-                        {project.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 font-mono bg-gray-50 px-2 py-0.5 rounded-md inline-block">
-                        ID: {project.projectId.substring(0, 8)}...
-                      </p>
+                  <div className="flex-1 pr-3">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          onBlur={() => handleUpdateTitle(project.projectId, newTitle)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleUpdateTitle(project.projectId, newTitle);
+                            if (e.key === 'Escape') setEditingProjectId(null);
+                          }}
+                          className="w-full p-1 rounded-md border-2 border-blue-500"
+                          autoFocus
+                        />
+                      ) : (
+                        <h3
+                          className="font-bold text-gray-800 mb-1.5 line-clamp-2 text-lg group-hover:text-blue-700 cursor-pointer"
+                          onClick={() => {
+                            setEditingProjectId(project.projectId);
+                            setNewTitle(project.title);
+                          }}
+                        >
+                          {project.title}
+                        </h3>
+                      )}
                     </div>
                     <span className={`px-2.5 py-1 rounded-lg text-sm font-semibold ${statusInfo.color} shadow-sm whitespace-nowrap`}>
                       {statusInfo.emoji} {statusInfo.text}
