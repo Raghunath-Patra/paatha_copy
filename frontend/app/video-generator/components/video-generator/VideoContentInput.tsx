@@ -615,11 +615,9 @@ export default function VideoContentInput({
           throw new Error(scriptResult.error || 'Failed to generate script');
         }
 
-        // Store project ID and show title popup after 2 seconds
+        // Store project ID and show title popup immediately while generation continues
         setCurrentProjectId(scriptResult.project.id);
-        setTimeout(() => {
-          setShowTitlePopup(true);
-        }, 2000);
+        setShowTitlePopup(true);
 
         // For simple workflow, continue with video generation
         if (workflowMode === 'simple') {
