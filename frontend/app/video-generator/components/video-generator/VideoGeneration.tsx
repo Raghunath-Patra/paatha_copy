@@ -3,38 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 
-// Define proper TypeScript interfaces matching the edit page
-interface Slide {
-  speaker: string;
-  title: string;
-  content: string;
-  content2?: string;
-  narration: string;
-  visualDuration: number;
-  isComplex: boolean;
-  visual?: {
-    type: string;
-    params: any[];
-  } | null;
-}
-
-interface Speaker {
-  voice: string;
-  model: string;
-  name: string;
-  color: string;
-  gender: string;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  lessonSteps: Slide[];
-  speakers: Record<string, Speaker>;
-  visualFunctions: Record<string, Function>;
-  status: string;
-}
-
 interface VideoGenerationProps {
   projectId: string;
   onBackToEditor: () => void;
@@ -85,10 +53,12 @@ const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
 const VideoPlayerModal = ({ 
   videoUrl, 
   projectId, 
+  projectTitle,
   onClose 
 }: { 
   videoUrl: string; 
   projectId: string; 
+  projectTitle?: string;
   onClose: () => void; 
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -191,7 +161,7 @@ const VideoPlayerModal = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `educational_video_${projectId.substring(0, 8)}.mp4`;
+      a.download = `${(projectTitle || 'educational_video').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${projectId.substring(0, 8)}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -214,7 +184,9 @@ const VideoPlayerModal = ({
         <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent z-10 p-4">
           <div className="flex justify-between items-center text-white">
             <div>
-              <h3 className="font-semibold text-lg">Generated Educational Video</h3>
+              <h3 className="font-semibold text-lg">
+                {projectTitle || 'Generated Educational Video'}
+              </h3>
               <p className="text-sm text-gray-300">Project ID: {projectId.substring(0, 8)}...</p>
             </div>
             <div className="flex gap-2">
@@ -406,12 +378,19 @@ export default function VideoGeneration({
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [projectTitle, setProjectTitle] = useState<string>('');
+  const [isCheckingExistingVideo, setIsCheckingExistingVideo] = useState(true);
   
   // Use ref to track intervals for cleanup
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const videoLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // Check for existing video on component mount
+  useEffect(() => {
+    checkExistingVideo();
+  }, [projectId]);
 
   // Cleanup intervals on unmount
   useEffect(() => {
@@ -424,6 +403,49 @@ export default function VideoGeneration({
       }
     };
   }, []);
+
+  const checkExistingVideo = async () => {
+    try {
+      setIsCheckingExistingVideo(true);
+      const { headers, isAuthorized } = await getAuthHeaders();
+      
+      if (!isAuthorized) {
+        console.error('Not authenticated');
+        setStatus({ type: 'error', message: 'Authentication required' });
+        return;
+      }
+
+      // Call new endpoint to check if video exists and get project title
+      const response = await fetch(`${API_URL}/api/video-generator/project/${projectId}/video-status`, {
+        headers
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Set project title from API response
+        setProjectTitle(result.projectTitle || '');
+        
+        if (result.videoExists && result.videoUrl) {
+          // Video already exists, show it directly
+          setVideoUrl(result.videoUrl);
+          setStatus({ 
+            type: 'success', 
+            message: 'Video is ready! 🎉' 
+          });
+        }
+        // If video doesn't exist, component will show the generation interface
+      } else {
+        console.error('Failed to check video status:', result.error);
+        // Don't show error for this, just proceed with generation interface
+      }
+    } catch (error) {
+      console.error('Error checking existing video:', error);
+      // Don't show error for this, just proceed with generation interface
+    } finally {
+      setIsCheckingExistingVideo(false);
+    }
+  };
 
   const generateVideo = async () => {
     setIsGenerating(true);
@@ -554,7 +576,7 @@ export default function VideoGeneration({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `educational_video_${projectId.substring(0, 8)}.mp4`;
+      a.download = `${(projectTitle || 'educational_video').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${projectId.substring(0, 8)}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -587,7 +609,7 @@ export default function VideoGeneration({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `project_${projectId.substring(0, 8)}_script.pdf`;
+      a.download = `${(projectTitle || 'project').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_script.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -644,7 +666,24 @@ export default function VideoGeneration({
         🎬 Generate Your Video
       </h2>
 
-      <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
+      {/* Show loading while checking for existing video */}
+      {isCheckingExistingVideo ? (
+        <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
+          <div className="text-center">
+            <div className="text-6xl mb-6">🔍</div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              Checking Video Status...
+            </h3>
+            <div className="flex justify-center mb-4">
+              <LoadingSpinner size="lg" />
+            </div>
+            <p className="text-gray-600">
+              We're checking if your video already exists.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
         {!videoUrl ? (
           <div className="text-center">
             <div className="mb-8">
@@ -823,7 +862,7 @@ export default function VideoGeneration({
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h4 className="font-semibold text-gray-800 mb-1">
-                Project ID: {projectId.substring(0, 8)}...
+                {projectTitle ? `Project: ${projectTitle}` : `Project ID: ${projectId.substring(0, 8)}...`}
               </h4>
               <p className="text-sm text-gray-600">
                 Educational Video Generation
@@ -872,12 +911,14 @@ export default function VideoGeneration({
           </button>
         </div>
       </div>
+      )}
 
       {/* Video Player Modal */}
       {showVideoPlayer && videoUrl && (
         <VideoPlayerModal
           videoUrl={videoUrl}
           projectId={projectId}
+          projectTitle={projectTitle}
           onClose={() => setShowVideoPlayer(false)}
         />
       )}
