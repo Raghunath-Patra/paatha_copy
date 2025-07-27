@@ -83,7 +83,6 @@ export default function VideoScriptEditor({
     return !!getCurrentSlideData().visual?.type;
   }, [formData, currentSlideIndex, slides, stagedChanges]);
 
-
   // Initialize canvas for preview
   useEffect(() => {
     if (canvasRef.current) {
@@ -454,11 +453,30 @@ export default function VideoScriptEditor({
         .animate-pulse-glow {
           animation: pulse-glow 2s infinite;
         }
+        @keyframes text-shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        .animate-text-shimmer {
+          background: linear-gradient(
+            90deg,
+            #2563eb 0%,
+            #7c3aed 25%,
+            #c084fc 50%,
+            #7c3aed 75%,
+            #2563eb 100%
+          );
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: text-shimmer 3s linear infinite;
+        }
       `}</style>
       
       <div className="max-w-7xl mx-auto p-6">
         <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+          <h2 className="text-4xl font-bold animate-text-shimmer mb-2">
             ✏️ Review & Edit Script
           </h2>
           <p className="text-gray-600">Fine-tune your educational video content with AI assistance</p>
@@ -478,7 +496,7 @@ export default function VideoScriptEditor({
                     onClick={() => selectSlide(index)}
                     className={`cursor-pointer p-5 rounded-xl border-2 transition-all duration-300 ${
                       currentSlideIndex === index
-                        ? 'border-purple-400 bg-gradient-to-r from-purple-50 to-blue-50 shadow-lg transform scale-[1.02]'
+                        ? 'border-purple-400 bg-gradient-to-r from-purple-50 to-blue-50 shadow-lg'
                         : 'border-gray-200 hover:border-purple-300 bg-white/50 hover:bg-white/80'
                     }`}
                   >
