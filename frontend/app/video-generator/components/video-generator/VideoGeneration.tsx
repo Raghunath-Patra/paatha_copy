@@ -465,7 +465,7 @@ export default function VideoGeneration({
       if (response.ok && result.success) {
         // Set project title from API response
         setProjectTitle(result.projectTitle || '');
-        
+        console.log('Project title:', result.projectTitle);
         if (result.videoExists && result.videoUrl) {
           // Video already exists, show it directly
           setVideoUrl(result.videoUrl);
@@ -596,6 +596,23 @@ export default function VideoGeneration({
     }
   };
 
+  function getIndianDateString(): string {
+    // Create a new date object
+    const date = new Date();
+
+    // Convert the date to IST (Indian Standard Time) by setting the timezone offset
+    const indiaTime = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
+    // Extract day, month, and year
+    const day = indiaTime.getDate().toString().padStart(2, '0');
+    const month = (indiaTime.getMonth() + 1).toString().padStart(2, '0');
+    const year = indiaTime.getFullYear();
+
+    // Return date in "DD-MM-YYYY" format
+    return `${day}-${month}-${year}`;
+  }
+
+
   const downloadVideo = async () => {
     if (!videoUrl || !projectId) {
       setStatus({ type: 'error', message: 'Video not available for download' });
@@ -616,7 +633,7 @@ export default function VideoGeneration({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${(projectTitle || 'educational_video').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${projectId.substring(0, 8)}.mp4`;
+      a.download = `${(projectTitle || 'educational_video').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${getIndianDateString()}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
