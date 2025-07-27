@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 
 interface VideoGenerationProps {
@@ -61,8 +61,24 @@ export default function VideoGeneration({
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
+  
+  // Use ref to track intervals for cleanup
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const videoLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+      if (videoLoadingTimeoutRef.current) {
+        clearTimeout(videoLoadingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const generateVideo = async () => {
     setIsGenerating(true);
@@ -89,14 +105,17 @@ export default function VideoGeneration({
       ];
 
       let currentStage = 0;
-      const progressInterval = setInterval(() => {
+      progressIntervalRef.current = setInterval(() => {
         if (currentStage < stages.length) {
           const stage = stages[currentStage];
           setGenerationProgress(stage.progress);
           setStatus({ type: 'info', message: stage.message });
           currentStage++;
         } else {
-          clearInterval(progressInterval);
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+          }
         }
       }, 800);
 
@@ -108,25 +127,36 @@ export default function VideoGeneration({
         })
       });
 
-      clearInterval(progressInterval);
+      // Clear interval when API call completes
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      
       setGenerationProgress(100);
 
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
 
       if (result.success) {
         setStatus({ type: 'success', message: 'Video generated successfully! 🎉' });
         setVideoUrl(`${API_URL}/api/video-generator/video/${result.projectId}`);
         setIsVideoLoading(true);
         
-        // Simulate video loading time
-        setTimeout(() => {
+        // Simulate video loading time with proper cleanup
+        videoLoadingTimeoutRef.current = setTimeout(() => {
           setIsVideoLoading(false);
           onVideoGenerated();
+          videoLoadingTimeoutRef.current = null;
         }, 2000);
       } else {
         throw new Error(result.error || 'Failed to generate video');
       }
     } catch (error) {
+      console.error('Video generation error:', error);
       setStatus({ 
         type: 'error', 
         message: `Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
@@ -134,22 +164,94 @@ export default function VideoGeneration({
       setGenerationProgress(0);
     } finally {
       setIsGenerating(false);
+      // Ensure cleanup
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
     }
   };
 
-  const downloadVideo = () => {
-    if (videoUrl) {
+  const downloadVideo = async () => {
+    if (!videoUrl || !project?.id) {
+      setStatus({ type: 'error', message: 'Video not available for download' });
+      return;
+    }
+
+    try {
+      setStatus({ type: 'info', message: 'Preparing download...' });
+      
       const downloadUrl = `${API_URL}/api/video-generator/download/${project.id}`;
-      window.open(downloadUrl, '_blank');
+      
+      // Create a temporary link element for download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${project.title || 'video'}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setStatus({ type: 'success', message: 'Download started successfully!' });
+      
+      // Clear status after 3 seconds
+      setTimeout(() => setStatus(null), 3000);
+    } catch (error) {
+      console.error('Download error:', error);
+      setStatus({ type: 'error', message: 'Download failed. Please try again.' });
     }
   };
 
-  const downloadPDF = () => {
-    // Mock PDF download with better UX
-    setStatus({ type: 'info', message: 'Preparing PDF download...' });
-    setTimeout(() => {
-      setStatus({ type: 'success', message: 'PDF downloaded successfully!' });
-    }, 1000);
+  const downloadPDF = async () => {
+    try {
+      setStatus({ type: 'info', message: 'Preparing PDF download...' });
+      
+      // Create PDF content from slides
+      const pdfContent = slides.map((slide, index) => 
+        `Slide ${index + 1}: ${slide.title}\n${slide.content}\n\n`
+      ).join('');
+      
+      const blob = new Blob([pdfContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${project.title || 'script'}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      
+      setStatus({ type: 'success', message: 'Script downloaded successfully!' });
+      
+      // Clear status after 3 seconds
+      setTimeout(() => setStatus(null), 3000);
+    } catch (error) {
+      console.error('PDF download error:', error);
+      setStatus({ type: 'error', message: 'Script download failed. Please try again.' });
+    }
+  };
+
+  const createNewVideo = () => {
+    // Clear all state before navigation
+    setIsGenerating(false);
+    setGenerationProgress(0);
+    setStatus(null);
+    setVideoUrl(null);
+    setIsVideoLoading(false);
+    
+    // Clear any active timeouts/intervals
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    if (videoLoadingTimeoutRef.current) {
+      clearTimeout(videoLoadingTimeoutRef.current);
+      videoLoadingTimeoutRef.current = null;
+    }
+    
+    // Navigate to create page
+    window.location.href = '/video-generator/create';
   };
 
   return (
@@ -239,6 +341,10 @@ export default function VideoGeneration({
                   src={videoUrl}
                   style={{ maxHeight: '500px' }}
                   poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='24' fill='%236b7280'%3E🎬 Your Educational Video%3C/text%3E%3C/svg%3E"
+                  onError={() => {
+                    console.error('Video failed to load');
+                    setStatus({ type: 'error', message: 'Failed to load video. Please try regenerating.' });
+                  }}
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -262,11 +368,11 @@ export default function VideoGeneration({
                 >
                   <span>📄</span>
                   Download Script
-                  <span className="text-sm opacity-75">(PDF)</span>
+                  <span className="text-sm opacity-75">(TXT)</span>
                 </button>
                 
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={createNewVideo}
                   className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
                 >
                   <span>🆕</span>
@@ -334,14 +440,20 @@ export default function VideoGeneration({
         <div className="mt-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h4 className="font-semibold text-gray-800 mb-1">Project: {project.title}</h4>
+              <h4 className="font-semibold text-gray-800 mb-1">
+                Project: {project?.title || 'Untitled Project'}
+              </h4>
               <p className="text-sm text-gray-600">
-                {slides.length} slides • {project.speakers ? Object.keys(project.speakers).length : 0} speakers
+                {slides?.length || 0} slides • {project?.speakers ? Object.keys(project.speakers).length : 0} speakers
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              Ready for generation
+              <span className={`w-2 h-2 rounded-full ${
+                isGenerating ? 'bg-yellow-500 animate-pulse' : 
+                videoUrl ? 'bg-blue-500' : 'bg-green-500'
+              }`}></span>
+              {isGenerating ? 'Generating...' : 
+               videoUrl ? 'Video ready' : 'Ready for generation'}
             </div>
           </div>
         </div>
