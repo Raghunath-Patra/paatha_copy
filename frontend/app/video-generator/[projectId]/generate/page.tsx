@@ -136,7 +136,7 @@ export default function GenerateVideoPage() {
 
   const handleVideoGenerated = () => {
     // Redirect to play page with video URL
-    router.push(`/video-generator/${projectId}/play`);
+    //router.push(`/video-generator/${projectId}/play`);
   };
 
   const handleBackToEditor = () => {
