@@ -3,11 +3,44 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 
+// Define proper TypeScript interfaces matching the edit page
+interface Slide {
+  speaker: string;
+  title: string;
+  content: string;
+  content2?: string;
+  narration: string;
+  visualDuration: number;
+  isComplex: boolean;
+  visual?: {
+    type: string;
+    params: any[];
+  } | null;
+}
+
+interface Speaker {
+  voice: string;
+  model: string;
+  name: string;
+  color: string;
+  gender: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  lessonSteps: Slide[];
+  speakers: Record<string, Speaker>;
+  visualFunctions: Record<string, Function>;
+  status: string;
+}
+
 interface VideoGenerationProps {
-  project: any;
-  slides: any[];
+  project: Project;
+  slides: Slide[];
   onVideoGenerated: () => void;
   onBackToEditor: () => void;
+  onBackToProjects: () => void;
 }
 
 // Loading Components
@@ -54,7 +87,8 @@ export default function VideoGeneration({
   project,
   slides,
   onVideoGenerated,
-  onBackToEditor
+  onBackToEditor,
+  onBackToProjects
 }: VideoGenerationProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -201,21 +235,39 @@ export default function VideoGeneration({
     }
   };
 
-  const downloadPDF = async () => {
+  const downloadScript = async () => {
     try {
-      setStatus({ type: 'info', message: 'Preparing PDF download...' });
+      setStatus({ type: 'info', message: 'Preparing script download...' });
       
-      // Create PDF content from slides
-      const pdfContent = slides.map((slide, index) => 
-        `Slide ${index + 1}: ${slide.title}\n${slide.content}\n\n`
-      ).join('');
+      // Create script content from slides with proper formatting
+      const scriptContent = slides.map((slide, index) => {
+        return `=== Slide ${index + 1}: ${slide.title} ===
+Speaker: ${slide.speaker}
+Content: ${slide.content}
+${slide.content2 ? `Additional Content: ${slide.content2}` : ''}
+Narration: ${slide.narration}
+Visual Duration: ${slide.visualDuration}s
+${slide.visual ? `Visual Type: ${slide.visual.type}` : 'No custom visual'}
+Complex Slide: ${slide.isComplex ? 'Yes' : 'No'}
+
+`;
+      }).join('');
       
-      const blob = new Blob([pdfContent], { type: 'text/plain' });
+      const fullScript = `PROJECT: ${project.title}
+Generated on: ${new Date().toLocaleDateString()}
+Total Slides: ${slides.length}
+Speakers: ${Object.keys(project.speakers).join(', ')}
+
+${'='.repeat(50)}
+
+${scriptContent}`;
+      
+      const blob = new Blob([fullScript], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${project.title || 'script'}.txt`;
+      link.download = `${project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_script.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -227,7 +279,7 @@ export default function VideoGeneration({
       // Clear status after 3 seconds
       setTimeout(() => setStatus(null), 3000);
     } catch (error) {
-      console.error('PDF download error:', error);
+      console.error('Script download error:', error);
       setStatus({ type: 'error', message: 'Script download failed. Please try again.' });
     }
   };
@@ -363,7 +415,7 @@ export default function VideoGeneration({
                 </button>
                 
                 <button
-                  onClick={downloadPDF}
+                  onClick={downloadScript}
                   className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
                 >
                   <span>📄</span>
@@ -441,10 +493,10 @@ export default function VideoGeneration({
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h4 className="font-semibold text-gray-800 mb-1">
-                Project: {project?.title || 'Untitled Project'}
+                Project: {project.title}
               </h4>
               <p className="text-sm text-gray-600">
-                {slides?.length || 0} slides • {project?.speakers ? Object.keys(project.speakers).length : 0} speakers
+                {slides.length} slides • {Object.keys(project.speakers).length} speakers
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -458,19 +510,35 @@ export default function VideoGeneration({
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-center mt-8">
+        {/* Enhanced Navigation */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={onBackToEditor}
             disabled={isGenerating}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 ${
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center ${
               isGenerating 
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white transform hover:scale-105 shadow-md'
+                : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white transform hover:scale-105 shadow-md hover:shadow-lg'
             }`}
           >
-            <span>←</span>
+            <span className="text-lg">✏️</span>
             Back to Editor
+          </button>
+
+          <div className="hidden sm:block w-px h-8 bg-gray-300"></div>
+          <span className="text-gray-400 text-sm sm:hidden">or</span>
+
+          <button
+            onClick={onBackToProjects}
+            disabled={isGenerating}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center ${
+              isGenerating 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white transform hover:scale-105 shadow-md hover:shadow-lg'
+            }`}
+          >
+            <span className="text-lg">📁</span>
+            Back to Projects
           </button>
         </div>
       </div>
