@@ -187,6 +187,8 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     }
 
                     if (typeof func === 'function') {
+                        // ** THE DEFINITIVE FIX **
+                        // Use a save/restore block to completely isolate the visual drawing.
                         ctx.save();
                         
                         const visualRectX = contentAreaX + contentPadding;
@@ -194,22 +196,25 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                         const visualRectWidth = contentInnerWidth;
                         const visualRectHeight = visualAreaHeight;
 
-                        // ** THE FIX **
-                        // First, directly and explicitly clear the rectangle where the visual will be drawn.
-                        // This guarantees a blank slate, preventing any previously drawn content from showing through.
+                        // 1. Clear the rectangle to ensure no old content is left.
                         ctx.clearRect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
 
-                        // Now, clip the area so the visual function can't draw outside its designated bounds.
+                        // 2. Fill the rectangle with the background color to prevent black boxes.
+                        ctx.fillStyle = getBackgroundColor(slide.speaker);
+                        ctx.fillRect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
+
+                        // 3. Create a clipping path to constrain the drawing area.
                         ctx.beginPath();
                         ctx.rect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
                         ctx.clip();
                         
-                        // Translate the origin to the top-left of the visual area for easier drawing within the visual function.
+                        // 4. Translate the origin for the visual function.
                         ctx.translate(visualRectX, visualRectY);
                         
-                        // Call the actual function to draw the visual.
+                        // 5. Call the function to draw the visual.
                         func(ctx, slide.visual.params || []);
                         
+                        // 6. Restore the context to its original state, removing clip and translation.
                         ctx.restore();
                     }
                 } catch (error) {
