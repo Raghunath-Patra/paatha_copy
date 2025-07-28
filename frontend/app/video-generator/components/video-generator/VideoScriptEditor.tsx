@@ -782,20 +782,6 @@ export default function VideoScriptEditor({
               project={project}
               slides={slides}
               filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
-              buttonText="📄 Generate & Download PDF"
-              onExportComplete={(filename: string) => {
-                setUpdateStatus({ 
-                  type: 'success', 
-                  message: `PDF exported: ${filename}` 
-                });
-                setShowPdfExport(false);
-              }}
-              onExportError={(error: any) => {
-                setUpdateStatus({ 
-                  type: 'error', 
-                  message: `Export failed: ${error.message}` 
-                });
-              }}
             />
             
             <button
