@@ -85,13 +85,13 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     ctx.fillStyle = getBackgroundColor(slide.speaker);
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Main title - always "Introduction to Agentic AI"
+    // Main title - always "Introduction to Agentic AI" (outside content area)
     ctx.fillStyle = '#1e40af';
     ctx.font = `bold ${Math.floor(canvasWidth * 0.04)}px Arial`;
     ctx.textAlign = 'center';
     ctx.fillText('Introduction to Agentic AI', canvasWidth / 2, canvasHeight * 0.12);
 
-    // Subtitle
+    // Subtitle (outside content area)
     ctx.fillStyle = '#6b7280';
     ctx.font = `${Math.floor(canvasWidth * 0.025)}px Arial`;
     ctx.fillText('Autonomous Intelligence Systems', canvasWidth / 2, canvasHeight * 0.18);
@@ -108,12 +108,37 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     ctx.lineWidth = 2;
     ctx.strokeRect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight);
 
-    // Slide-specific title (larger, blue)
-    if (slide.title) {
+    // Only show slide-specific title if it's different from main title and not empty
+    const slideTitle = slide.title?.trim();
+    const showSlideTitle = slideTitle && 
+                          slideTitle !== 'Introduction to Agentic AI' && 
+                          slideTitle !== '';
+
+    if (showSlideTitle) {
       ctx.fillStyle = '#1e40af';
       ctx.font = `bold ${Math.floor(canvasWidth * 0.035)}px Arial`;
       ctx.textAlign = 'center';
-      ctx.fillText(slide.title, contentAreaX + contentAreaWidth / 2, contentAreaY + contentAreaHeight * 0.2);
+      
+      // Handle long titles by wrapping text
+      const maxWidth = contentAreaWidth * 0.9;
+      const words = slideTitle.split(' ');
+      let line = '';
+      let y = contentAreaY + contentAreaHeight * 0.15;
+      
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, contentAreaX + contentAreaWidth / 2, y);
+          line = words[n] + ' ';
+          y += Math.floor(canvasWidth * 0.04);
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, contentAreaX + contentAreaWidth / 2, y);
     }
 
     // Content lines
@@ -121,11 +146,13 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     ctx.font = `${Math.floor(canvasWidth * 0.022)}px Arial`;
     ctx.textAlign = 'center';
     
-    if (slide.content) {
-      ctx.fillText(slide.content, contentAreaX + contentAreaWidth / 2, contentAreaY + contentAreaHeight * 0.35);
+    const contentStartY = showSlideTitle ? contentAreaY + contentAreaHeight * 0.35 : contentAreaY + contentAreaHeight * 0.25;
+    
+    if (slide.content?.trim()) {
+      ctx.fillText(slide.content.trim(), contentAreaX + contentAreaWidth / 2, contentStartY);
     }
-    if (slide.content2) {
-      ctx.fillText(slide.content2, contentAreaX + contentAreaWidth / 2, contentAreaY + contentAreaHeight * 0.45);
+    if (slide.content2?.trim()) {
+      ctx.fillText(slide.content2.trim(), contentAreaX + contentAreaWidth / 2, contentStartY + canvasHeight * 0.08);
     }
 
     // Draw visual if available
@@ -206,6 +233,12 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         // Add new page for each slide except the first
         if (i > 0) {
           pdf.addPage();
+        }
+
+        // Clear canvas completely before rendering
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
         // Render slide to canvas
