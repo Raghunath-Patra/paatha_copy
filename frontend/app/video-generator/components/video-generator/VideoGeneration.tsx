@@ -663,29 +663,19 @@ export default function VideoGeneration({
     }
   };
 
-  // Script Changes Animation Component
+  // Script Changes Animation Component (Static version for detection)
   const ScriptChangesAnimation = () => (
     <div className="text-center mb-8">
       <div className="relative">
         {/* Main AI Robot */}
-        <div className="text-8xl mb-6 animate-bounce">🤖</div>
+        <div className="text-8xl mb-6">🤖</div>
         
-        {/* Floating Elements */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4">
-          <div className="flex gap-2 animate-pulse">
-            <span className="text-2xl animate-bounce" style={{ animationDelay: '0ms' }}>📝</span>
-            <span className="text-2xl animate-bounce" style={{ animationDelay: '200ms' }}>✨</span>
-            <span className="text-2xl animate-bounce" style={{ animationDelay: '400ms' }}>🔄</span>
-          </div>
-        </div>
-        
-        {/* Progress Dots */}
+        {/* Static Progress Dots */}
         <div className="flex justify-center gap-2 mb-4">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"
-              style={{ animationDelay: `${i * 300}ms` }}
+              className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
             />
           ))}
         </div>
@@ -695,21 +685,102 @@ export default function VideoGeneration({
         🔄 Script Changes Detected!
       </h3>
       <div className="max-w-md mx-auto space-y-3 text-gray-600">
-        <p className="flex items-center justify-center gap-2">
-          <span className="text-green-500">✓</span>
-          AI is analyzing your modifications...
-        </p>
-        <p className="flex items-center justify-center gap-2">
-          <span className="text-blue-500 animate-spin">⚙️</span>
-          Preparing to incorporate changes...
-        </p>
-        <p className="flex items-center justify-center gap-2">
-          <span className="text-purple-500">✨</span>
-          Enhanced video generation ready!
+        <p className="text-center">
+          Your script has been modified. Click below to generate an updated video with your latest changes.
         </p>
       </div>
     </div>
   );
+
+  // Dynamic Processing Animation Component (for when generation is active)
+  const ProcessingAnimation = () => {
+    const [currentStep, setCurrentStep] = useState(0);
+    const [visibleSteps, setVisibleSteps] = useState<number[]>([]);
+
+    const steps = [
+      { icon: '✓', text: 'AI is analyzing your modifications...', color: 'text-green-500' },
+      { icon: '⚙️', text: 'Preparing to incorporate changes...', color: 'text-blue-500 animate-spin' },
+      { icon: '✨', text: 'Enhanced video generation ready!', color: 'text-purple-500' }
+    ];
+
+    useEffect(() => {
+      if (isGenerating && isVideoOutdated) {
+        const interval = setInterval(() => {
+          setCurrentStep(prevStep => {
+            const nextStep = prevStep + 1;
+            if (nextStep <= steps.length) {
+              setVisibleSteps(prev => [...prev, prevStep]);
+              return nextStep;
+            }
+            return prevStep;
+          });
+        }, 1200); // Show each step every 1.2 seconds
+
+        return () => clearInterval(interval);
+      }
+    }, [isGenerating, isVideoOutdated]);
+
+    // Reset when generation stops
+    useEffect(() => {
+      if (!isGenerating) {
+        setCurrentStep(0);
+        setVisibleSteps([]);
+      }
+    }, [isGenerating]);
+
+    if (!isGenerating || !isVideoOutdated) return null;
+
+    return (
+      <div className="text-center mb-8">
+        <div className="relative">
+          {/* Main AI Robot */}
+          <div className="text-8xl mb-6 animate-bounce">🤖</div>
+          
+          {/* Floating Processing Elements */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4">
+            <div className="flex gap-2">
+              <span className="text-2xl animate-bounce" style={{ animationDelay: '0ms' }}>📝</span>
+              <span className="text-2xl animate-bounce" style={{ animationDelay: '200ms' }}>✨</span>
+              <span className="text-2xl animate-bounce" style={{ animationDelay: '400ms' }}>🔄</span>
+            </div>
+          </div>
+          
+          {/* Animated Progress Dots */}
+          <div className="flex justify-center gap-2 mb-4">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"
+                style={{ animationDelay: `${i * 300}ms` }}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
+          🔄 Processing Your Changes...
+        </h3>
+        
+        <div className="max-w-md mx-auto space-y-3 text-gray-600">
+          {visibleSteps.map((stepIndex) => (
+            <div 
+              key={stepIndex}
+              className="flex items-center justify-center gap-2 animate-fade-in"
+              style={{ 
+                animation: 'fadeInUp 0.5s ease-out forwards',
+                opacity: 0,
+                transform: 'translateY(10px)',
+                animationDelay: `${stepIndex * 100}ms`
+              }}
+            >
+              <span className={steps[stepIndex].color}>{steps[stepIndex].icon}</span>
+              <span>{steps[stepIndex].text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const createNewVideo = () => {
     // Clear all state before navigation
@@ -778,7 +849,7 @@ export default function VideoGeneration({
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Add shimmer animation styles */}
+      {/* Add shimmer animation styles and fade-in animation */}
       <style jsx>{`
         @keyframes shimmer {
           0% { background-position: -200% 0; }
@@ -788,6 +859,17 @@ export default function VideoGeneration({
         @keyframes pulse-glow {
           0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
           50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); }
+        }
+
+        @keyframes fadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
 
@@ -802,8 +884,10 @@ export default function VideoGeneration({
         <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
           {!videoUrl ? (
             <div className="text-center">
-              {/* Show special animation for outdated video */}
-              {isVideoOutdated ? (
+              {/* Show different animations based on state */}
+              {isVideoOutdated && isGenerating ? (
+                <ProcessingAnimation />
+              ) : isVideoOutdated ? (
                 <ScriptChangesAnimation />
               ) : (
                 <div className="mb-8">
@@ -860,12 +944,12 @@ export default function VideoGeneration({
                     </span>
                   </button>
                   
-                  {/* Enhanced progress message for script changes */}
-                  {isVideoOutdated && (
+                  {/* Enhanced progress message for script changes - only show for non-outdated videos during generation */}
+                  {!isVideoOutdated && (
                     <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200 mb-4">
                       <div className="flex items-center justify-center gap-2 text-blue-700">
                         <span className="animate-spin">🔄</span>
-                        <span className="font-medium">Incorporating your latest script changes...</span>
+                        <span className="font-medium">Processing your presentation...</span>
                       </div>
                     </div>
                   )}
