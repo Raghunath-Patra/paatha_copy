@@ -200,7 +200,7 @@ class VideoScriptPDFExporter {
   }
 
   addSpeakersSection(yPos: number) {
-    if (!this.pdf) return;
+    if (!this.pdf) return; // This guard clause is effective for a for...of loop.
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Speakers', this.margin, yPos);
@@ -210,14 +210,15 @@ class VideoScriptPDFExporter {
     this.pdf.setFont('helvetica', 'normal');
 
     if (this.currentProject?.speakers && Object.keys(this.currentProject.speakers).length > 0) {
-      Object.entries(this.currentProject.speakers).forEach(([key, speaker]) => {
+      // Replaced forEach with a for...of loop to resolve the type error.
+      for (const [key, speaker] of Object.entries(this.currentProject.speakers)) {
         this.pdf.text(
           `• ${speaker.name || key} (Voice: ${speaker.voice || 'default'}, Gender: ${speaker.gender || 'unknown'})`,
           this.margin + 5,
           yPos
         );
         yPos += 7;
-      });
+      }
     } else {
       this.pdf.text('• No speaker information available', this.margin + 5, yPos);
     }
