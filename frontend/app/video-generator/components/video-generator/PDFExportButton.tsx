@@ -88,7 +88,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
         yPos += 10;
         pdf.setFontSize(11);
-        pdf.setFontStyle('bold');
+        pdf.setFont('bold');
         pdf.setTextColor(0, 0, 0);
 
         const projectInfo = [
@@ -107,12 +107,12 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
       
       const addSpeakersSection = (yPos: number) => {
         pdf.setFontSize(14);
-        pdf.setFontStyle('bold');
+        pdf.setFont('bold');
         pdf.text('Speakers', margin, yPos);
         yPos += 10;
         
         pdf.setFontSize(11);
-        pdf.setFontStyle('bold');
+        pdf.setFont('bold');
 
         if (project?.speakers && Object.keys(project.speakers).length > 0) {
           Object.entries(project.speakers).forEach(([key, speaker]) => {
@@ -129,12 +129,12 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         const centerX = pageWidth / 2;
 
         pdf.setFontSize(24);
-        pdf.setFontStyle('bold');
+        pdf.setFont('bold');
         pdf.text(getProjectTitle(), centerX, yPos, { align: 'center' });
         yPos += 20;
 
         pdf.setFontSize(16);
-        pdf.setFontStyle('normal');
+        pdf.setFont('normal');
         pdf.text('Educational Video Script', centerX, yPos, { align: 'center' });
         yPos += 30;
 
@@ -159,7 +159,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
         let newY = yPos;
         pdf.setFontSize(12);
-        pdf.setFontStyle('bold');
+        pdf.setFont('bold');
         pdf.text(title, margin, newY);
         newY += 7;
 
