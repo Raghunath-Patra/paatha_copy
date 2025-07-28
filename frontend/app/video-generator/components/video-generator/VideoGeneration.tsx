@@ -37,48 +37,6 @@ const ShimmerProgress = ({ progress }: { progress: number }) => (
   </div>
 );
 
-// Enhanced Skeleton Loading Components
-const GenerationSkeleton = () => (
-  <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
-    <div className="text-center animate-pulse">
-      {/* Icon skeleton */}
-      <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-6"></div>
-      
-      {/* Title skeleton */}
-      <div className="h-8 bg-gray-300 rounded-lg max-w-md mx-auto mb-4"></div>
-      
-      {/* Description skeleton */}
-      <div className="space-y-2 mb-8">
-        <div className="h-4 bg-gray-200 rounded max-w-2xl mx-auto"></div>
-        <div className="h-4 bg-gray-200 rounded max-w-xl mx-auto"></div>
-      </div>
-      
-      {/* Button skeleton */}
-      <div className="h-12 bg-gray-300 rounded-xl max-w-xs mx-auto mb-8"></div>
-    </div>
-    
-    {/* Project info skeleton */}
-    <div className="mt-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div className="animate-pulse">
-          <div className="h-5 bg-gray-300 rounded max-w-48 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded max-w-36"></div>
-        </div>
-        <div className="flex items-center gap-2 animate-pulse">
-          <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-24"></div>
-        </div>
-      </div>
-    </div>
-    
-    {/* Navigation skeleton */}
-    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200">
-      <div className="h-12 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
-      <div className="h-12 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
-    </div>
-  </div>
-);
-
 const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -90,6 +48,7 @@ const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
     <div className={`${sizeClasses[size]} border-2 border-white border-t-transparent rounded-full animate-spin`}></div>
   );
 };
+
 const VideoPlayerModal = ({ 
   videoUrl, 
   projectId, 
@@ -414,12 +373,12 @@ export default function VideoGeneration({
 }: VideoGenerationProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
-  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | 'existing'; message: string } | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [projectTitle, setProjectTitle] = useState<string>('');
-  const [isCheckingExistingVideo, setIsCheckingExistingVideo] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   
   // Use ref to track intervals for cleanup
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -446,7 +405,7 @@ export default function VideoGeneration({
 
   const checkExistingVideo = async () => {
     try {
-      setIsCheckingExistingVideo(true);
+      setIsInitialLoading(true);
       const { headers, isAuthorized } = await getAuthHeaders();
       
       if (!isAuthorized) {
@@ -455,7 +414,7 @@ export default function VideoGeneration({
         return;
       }
 
-      // Call new endpoint to check if video exists and get project title
+      // Check if video exists and get project title
       const response = await fetch(`${API_URL}/api/video-generator/project/${projectId}/video-status`, {
         headers
       });
@@ -465,13 +424,13 @@ export default function VideoGeneration({
       if (response.ok && result.success) {
         // Set project title from API response
         setProjectTitle(result.projectTitle || '');
-        console.log('Project title:', result.projectTitle);
+        
         if (result.videoExists && result.videoUrl) {
           // Video already exists, show it directly
           setVideoUrl(result.videoUrl);
           setStatus({ 
-            type: 'success', 
-            message: 'Video is ready! 🎉' 
+            type: 'existing', 
+            message: 'Video already exists! You can watch it, regenerate, or download it.' 
           });
         }
         // If video doesn't exist, component will show the generation interface
@@ -483,7 +442,7 @@ export default function VideoGeneration({
       console.error('Error checking existing video:', error);
       // Don't show error for this, just proceed with generation interface
     } finally {
-      setIsCheckingExistingVideo(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -549,9 +508,22 @@ export default function VideoGeneration({
       }
 
       if (result.success) {
-        setStatus({ type: 'success', message: 'Video generated successfully! 🎉' });
+        // Handle different backend responses
+        if (result.useExisting) {
+          // Video already existed and was up to date
+          setStatus({ 
+            type: 'existing', 
+            message: `🎉 Video was already up to date! ${result.audioFilesReused ? `(Reused ${result.audioFilesReused} audio files)` : ''}` 
+          });
+        } else {
+          // New video was generated
+          setStatus({ 
+            type: 'success', 
+            message: `🎉 Video generated successfully! ${result.audioFilesReused ? `(Reused ${result.audioFilesReused} audio files for faster generation)` : ''}` 
+          });
+        }
         
-        // Get the proper streaming URL like in VideoPlayerPopup
+        // Get the proper streaming URL
         const streamResponse = await fetch(`${API_URL}/api/video-generator/stream/${projectId}`, { 
           headers 
         });
@@ -562,11 +534,11 @@ export default function VideoGeneration({
             setVideoUrl(streamResult.streamUrl);
           } else {
             // Fallback to the old endpoint if stream fails
-            setVideoUrl(`${API_URL}/api/video-generator/video/${result.projectId}`);
+            setVideoUrl(`${API_URL}/api/video-generator/video/${result.projectId || projectId}`);
           }
         } else {
           // Fallback to the old endpoint if stream fails
-          setVideoUrl(`${API_URL}/api/video-generator/video/${result.projectId}`);
+          setVideoUrl(`${API_URL}/api/video-generator/video/${result.projectId || projectId}`);
         }
         
         setIsVideoLoading(true);
@@ -612,7 +584,6 @@ export default function VideoGeneration({
     return `${day}-${month}-${year}`;
   }
 
-
   const downloadVideo = async () => {
     if (!videoUrl || !projectId) {
       setStatus({ type: 'error', message: 'Video not available for download' });
@@ -622,7 +593,7 @@ export default function VideoGeneration({
     try {
       setStatus({ type: 'info', message: 'Preparing download...' });
       
-      // Download directly from the videoUrl like in VideoPlayerPopup
+      // Download directly from the videoUrl
       const response = await fetch(videoUrl);
       
       if (!response.ok) {
@@ -704,6 +675,48 @@ export default function VideoGeneration({
     window.location.href = '/video-generator/create';
   };
 
+  // Enhanced skeleton loading component
+  const GenerationSkeleton = () => (
+    <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
+      <div className="text-center animate-pulse">
+        {/* Icon skeleton */}
+        <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-6"></div>
+        
+        {/* Title skeleton */}
+        <div className="h-8 bg-gray-300 rounded-lg max-w-md mx-auto mb-4"></div>
+        
+        {/* Description skeleton */}
+        <div className="space-y-2 mb-8">
+          <div className="h-4 bg-gray-200 rounded max-w-2xl mx-auto"></div>
+          <div className="h-4 bg-gray-200 rounded max-w-xl mx-auto"></div>
+        </div>
+        
+        {/* Button skeleton */}
+        <div className="h-12 bg-gray-300 rounded-xl max-w-xs mx-auto mb-8"></div>
+      </div>
+      
+      {/* Project info skeleton */}
+      <div className="mt-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="animate-pulse">
+            <div className="h-5 bg-gray-300 rounded max-w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded max-w-36"></div>
+          </div>
+          <div className="flex items-center gap-2 animate-pulse">
+            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-24"></div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Navigation skeleton */}
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+        <div className="h-12 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
+        <div className="h-12 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Add shimmer animation styles */}
@@ -724,237 +737,252 @@ export default function VideoGeneration({
       </h2>
 
       {/* Show skeleton loading while checking for existing video */}
-      {isCheckingExistingVideo ? (
+      {isInitialLoading ? (
         <GenerationSkeleton />
       ) : (
         <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
-        {!videoUrl ? (
-          <div className="text-center">
-            <div className="mb-8">
-              <div className={`text-6xl sm:text-7xl mb-6 transition-all duration-500 ${
-                isGenerating ? 'animate-bounce' : 'hover:scale-110'
-              }`}>
-                {isGenerating ? '🔄' : '🎥'}
+          {!videoUrl ? (
+            <div className="text-center">
+              <div className="mb-8">
+                <div className={`text-6xl sm:text-7xl mb-6 transition-all duration-500 ${
+                  isGenerating ? 'animate-bounce' : 'hover:scale-110'
+                }`}>
+                  {isGenerating ? '🔄' : '🎥'}
+                </div>
+                <h3 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">
+                  {isGenerating ? 'Creating Your Video...' : 'Ready to Create Your Educational Video?'}
+                </h3>
+                <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                  {isGenerating 
+                    ? 'We\'re processing your slides and generating high-quality audio narration. This may take a few minutes.'
+                    : 'This process will generate professional audio narration and combine it with your custom visuals to create an engaging educational video.'
+                  }
+                </p>
               </div>
-              <h3 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">
-                {isGenerating ? 'Creating Your Video...' : 'Ready to Create Your Educational Video?'}
-              </h3>
-              <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-                {isGenerating 
-                  ? 'We\'re processing your slides and generating high-quality audio narration. This may take a few minutes.'
-                  : 'This process will generate professional audio narration and combine it with your custom visuals to create an engaging educational video.'
-                }
-              </p>
-            </div>
 
-            {!isGenerating ? (
-              <button
-                onClick={generateVideo}
-                className="bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 hover:from-blue-600 hover:via-purple-600 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}
-              >
-                <span className="flex items-center gap-3">
-                  🎥 Generate Final Video
-                  <span className="text-sm opacity-75">(~2-3 minutes)</span>
-                </span>
-              </button>
-            ) : (
-              <div className="max-w-md mx-auto">
+              {!isGenerating ? (
                 <button
-                  disabled
-                  className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg cursor-not-allowed opacity-75 mb-6"
+                  onClick={generateVideo}
+                  className="bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 hover:from-blue-600 hover:via-purple-600 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}
                 >
                   <span className="flex items-center gap-3">
-                    <LoadingSpinner size="md" />
-                    Generating Video...
+                    🎥 Generate Video
+                    <span className="text-sm opacity-75">(~2-3 minutes)</span>
                   </span>
                 </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          // Video Result
-          <div className="text-center">
-            <div className="mb-8">
-              <div className="text-6xl sm:text-7xl mb-6 animate-bounce">🎉</div>
-              <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
-                Video Generated Successfully!
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Your educational video is ready! You can watch it below or download it for later use.
-              </p>
-            </div>
-
-            {isVideoLoading ? (
-              <VideoSkeleton />
-            ) : (
-              <div className="bg-gray-900 rounded-xl p-4 mb-8 max-w-3xl mx-auto shadow-2xl">
-                <video
-                  controls
-                  className="w-full rounded-lg shadow-lg"
-                  src={videoUrl}
-                  style={{ maxHeight: '500px' }}
-                  poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='24' fill='%236b7280'%3E🎬 Your Educational Video%3C/text%3E%3C/svg%3E"
-                  onError={() => {
-                    console.error('Video failed to load');
-                    setStatus({ type: 'error', message: 'Failed to load video. Please try regenerating.' });
-                  }}
-                >
-                  Your browser does not support the video tag.
-                </video>
-                
-                {/* Play in Modal Button */}
-                <div className="mt-4">
+              ) : (
+                <div className="max-w-md mx-auto">
                   <button
-                    onClick={() => setShowVideoPlayer(true)}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 mx-auto"
+                    disabled
+                    className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg cursor-not-allowed opacity-75 mb-6"
                   >
-                    <span>🎬</span>
-                    Open in Full Player
+                    <span className="flex items-center gap-3">
+                      <LoadingSpinner size="md" />
+                      Generating Video...
+                    </span>
                   </button>
                 </div>
-              </div>
-            )}
-
-            {!isVideoLoading && (
-              <div className="flex flex-col sm:flex-row justify-center gap-4 flex-wrap">
-                <button
-                  onClick={downloadVideo}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
-                >
-                  <span>⬇️</span>
-                  Download Video
-                  <span className="text-sm opacity-75">(MP4)</span>
-                </button>
-                
-                <button
-                  onClick={downloadPDF}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
-                >
-                  <span>📄</span>
-                  Download Script
-                  <span className="text-sm opacity-75">(PDF)</span>
-                </button>
-                
-                <button
-                  onClick={createNewVideo}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
-                >
-                  <span>🆕</span>
-                  Create New Video
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Enhanced Progress Bar */}
-        {isGenerating && (
-          <div className="mt-8 max-w-md mx-auto">
-            <ShimmerProgress progress={generationProgress} />
-            <div className="flex justify-between text-sm text-gray-600 mb-4">
-              <span>Progress</span>
-              <span className="font-medium">{generationProgress.toFixed(0)}%</span>
+              )}
             </div>
-            
-            {/* Progress Steps Visualization */}
-            <div className="flex justify-between items-center mt-4">
-              {[
-                { step: 1, label: 'Content', progress: 15 },
-                { step: 2, label: 'Audio', progress: 30 },
-                { step: 3, label: 'Visuals', progress: 50 },
-                { step: 4, label: 'Sync', progress: 70 },
-                { step: 5, label: 'Final', progress: 95 }
-              ].map(({ step, label, progress: stepProgress }) => (
-                <div key={step} className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${
-                    generationProgress >= stepProgress 
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
-                      : generationProgress >= stepProgress - 10
-                        ? 'bg-gradient-to-r from-blue-200 to-purple-200 text-blue-700 animate-pulse'
-                        : 'bg-gray-200 text-gray-500'
-                  }`}>
-                    {generationProgress >= stepProgress ? '✓' : step}
+          ) : (
+            // Video Result
+            <div className="text-center">
+              <div className="mb-8">
+                <div className="text-6xl sm:text-7xl mb-6 animate-bounce">🎉</div>
+                <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
+                  Video Ready!
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Your educational video is ready! You can watch it below, regenerate if needed, or download it for later use.
+                </p>
+              </div>
+
+              {isVideoLoading ? (
+                <VideoSkeleton />
+              ) : (
+                <div className="bg-gray-900 rounded-xl p-4 mb-8 max-w-3xl mx-auto shadow-2xl">
+                  <video
+                    controls
+                    className="w-full rounded-lg shadow-lg"
+                    src={videoUrl}
+                    style={{ maxHeight: '500px' }}
+                    poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='24' fill='%236b7280'%3E🎬 Your Educational Video%3C/text%3E%3C/svg%3E"
+                    onError={() => {
+                      console.error('Video failed to load');
+                      setStatus({ type: 'error', message: 'Failed to load video. Please try regenerating.' });
+                    }}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {/* Play in Modal Button */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setShowVideoPlayer(true)}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 mx-auto"
+                    >
+                      <span>🎬</span>
+                      Open in Full Player
+                    </button>
                   </div>
-                  <span className="text-xs text-gray-500 mt-1">{label}</span>
                 </div>
-              ))}
+              )}
+
+              {!isVideoLoading && (
+                <div className="flex flex-col sm:flex-row justify-center gap-4 flex-wrap mb-6">
+                  <button
+                    onClick={downloadVideo}
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
+                  >
+                    <span>⬇️</span>
+                    Download Video
+                    <span className="text-sm opacity-75">(MP4)</span>
+                  </button>
+                  
+                  <button
+                    onClick={downloadPDF}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
+                  >
+                    <span>📄</span>
+                    Download Script
+                    <span className="text-sm opacity-75">(PDF)</span>
+                  </button>
+                  
+                  <button
+                    onClick={generateVideo}
+                    disabled={isGenerating}
+                    className={`${
+                      isGenerating 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 transform hover:scale-105'
+                    } text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md flex items-center gap-2 justify-center`}
+                  >
+                    <span>{isGenerating ? '🔄' : '🔄'}</span>
+                    {isGenerating ? 'Regenerating...' : 'Regenerate Video'}
+                  </button>
+                  
+                  <button
+                    onClick={createNewVideo}
+                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
+                  >
+                    <span>🆕</span>
+                    Create New Video
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enhanced Progress Bar */}
+          {isGenerating && (
+            <div className="mt-8 max-w-md mx-auto">
+              <ShimmerProgress progress={generationProgress} />
+              <div className="flex justify-between text-sm text-gray-600 mb-4">
+                <span>Progress</span>
+                <span className="font-medium">{generationProgress.toFixed(0)}%</span>
+              </div>
+              
+              {/* Progress Steps Visualization */}
+              <div className="flex justify-between items-center mt-4">
+                {[
+                  { step: 1, label: 'Content', progress: 15 },
+                  { step: 2, label: 'Audio', progress: 30 },
+                  { step: 3, label: 'Visuals', progress: 50 },
+                  { step: 4, label: 'Sync', progress: 70 },
+                  { step: 5, label: 'Final', progress: 95 }
+                ].map(({ step, label, progress: stepProgress }) => (
+                  <div key={step} className="flex flex-col items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${
+                      generationProgress >= stepProgress 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+                        : generationProgress >= stepProgress - 10
+                          ? 'bg-gradient-to-r from-blue-200 to-purple-200 text-blue-700 animate-pulse'
+                          : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {generationProgress >= stepProgress ? '✓' : step}
+                    </div>
+                    <span className="text-xs text-gray-500 mt-1">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Status Message */}
+          {status && (
+            <div className={`mt-6 p-4 rounded-lg shadow-md transition-all duration-500 transform ${
+              status.type === 'success' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-300' :
+              status.type === 'error' ? 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border border-red-300' :
+              status.type === 'existing' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-300' :
+              'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border border-blue-300'
+            }`}>
+              <div className="flex items-center justify-center">
+                <span className="mr-3 text-lg">
+                  {status.type === 'success' ? '✅' : 
+                   status.type === 'error' ? '❌' : 
+                   status.type === 'existing' ? '📹' :
+                   isGenerating ? <LoadingSpinner size="sm" /> : 'ℹ️'}
+                </span>
+                <span className="font-medium">{status.message}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Project Info Card */}
+          <div className="mt-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-1">
+                  {projectTitle || `Project ID: ${projectId.substring(0, 8)}...`}
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Educational Video Generation
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span className={`w-2 h-2 rounded-full ${
+                  isGenerating ? 'bg-yellow-500 animate-pulse' : 
+                  videoUrl ? 'bg-blue-500' : 'bg-green-500'
+                }`}></span>
+                {isGenerating ? 'Generating...' : 
+                 videoUrl ? 'Video ready' : 'Ready for generation'}
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Enhanced Status Message */}
-        {status && (
-          <div className={`mt-6 p-4 rounded-lg shadow-md transition-all duration-500 transform ${
-            status.type === 'success' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-300' :
-            status.type === 'error' ? 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border border-red-300' :
-            'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border border-blue-300'
-          }`}>
-            <div className="flex items-center justify-center">
-              <span className="mr-3 text-lg">
-                {status.type === 'success' ? '✅' : 
-                 status.type === 'error' ? '❌' : 
-                 isGenerating ? <LoadingSpinner size="sm" /> : 'ℹ️'}
-              </span>
-              <span className="font-medium">{status.message}</span>
-            </div>
-          </div>
-        )}
+          {/* Enhanced Navigation */}
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+            <button
+              onClick={onBackToEditor}
+              disabled={isGenerating}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center ${
+                isGenerating 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white transform hover:scale-105 shadow-md hover:shadow-lg'
+              }`}
+            >
+              <span className="text-lg">✏️</span>
+              Back to Editor
+            </button>
 
-        {/* Project Info Card */}
-        <div className="mt-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div>
-              <h4 className="font-semibold text-gray-800 mb-1">
-                {projectTitle || `Project ID: ${projectId.substring(0, 8)}...`}
-              </h4>
-              <p className="text-sm text-gray-600">
-                Educational Video Generation
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span className={`w-2 h-2 rounded-full ${
-                isGenerating ? 'bg-yellow-500 animate-pulse' : 
-                videoUrl ? 'bg-blue-500' : 'bg-green-500'
-              }`}></span>
-              {isGenerating ? 'Generating...' : 
-               videoUrl ? 'Video ready' : 'Ready for generation'}
-            </div>
+            <div className="hidden sm:block w-px h-8 bg-gray-300"></div>
+            <span className="text-gray-400 text-sm sm:hidden">or</span>
+
+            <button
+              onClick={onBackToProjects}
+              disabled={isGenerating}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center ${
+                isGenerating 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white transform hover:scale-105 shadow-md hover:shadow-lg'
+              }`}
+            >
+              <span className="text-lg">📁</span>
+              Back to Projects
+            </button>
           </div>
         </div>
-
-        {/* Enhanced Navigation */}
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200">
-          <button
-            onClick={onBackToEditor}
-            disabled={isGenerating}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center ${
-              isGenerating 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white transform hover:scale-105 shadow-md hover:shadow-lg'
-            }`}
-          >
-            <span className="text-lg">✏️</span>
-            Back to Editor
-          </button>
-
-          <div className="hidden sm:block w-px h-8 bg-gray-300"></div>
-          <span className="text-gray-400 text-sm sm:hidden">or</span>
-
-          <button
-            onClick={onBackToProjects}
-            disabled={isGenerating}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center ${
-              isGenerating 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white transform hover:scale-105 shadow-md hover:shadow-lg'
-            }`}
-          >
-            <span className="text-lg">📁</span>
-            Back to Projects
-          </button>
-        </div>
-      </div>
       )}
 
       {/* Video Player Modal */}
