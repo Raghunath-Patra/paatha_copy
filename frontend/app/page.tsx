@@ -185,7 +185,7 @@ const AppGrid = () => {
       title: 'AI Tutor',
       description: 'Get personalized help from your AI tutor. Ask questions and receive detailed explanations.',
       gradient: 'bg-gradient-to-br from-green-500 to-teal-600',
-      //onClick: () => router.push('/chat'),
+      onClick: () => router.push('/chat'),
       comingSoon: true
     },
     {
@@ -193,7 +193,7 @@ const AppGrid = () => {
       title: 'Analytics Hub',
       description: 'Detailed insights into your learning patterns, strengths, and areas for improvement.',
       gradient: 'bg-gradient-to-br from-yellow-500 to-orange-600',
-      //onClick: () => router.push('/analytics'),
+      onClick: () => router.push('/analytics'),
       comingSoon: true
     },
     {
@@ -201,7 +201,7 @@ const AppGrid = () => {
       title: 'Certification',
       description: 'Earn certificates for completed courses and showcase your achievements.',
       gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600',
-      //onClick: () => router.push('/certificates'),
+      onClick: () => router.push('/certificates'),
       comingSoon: true
     }
   ];
