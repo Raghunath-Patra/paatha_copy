@@ -1,8 +1,45 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+// Define interfaces for props and data structures for type safety
+interface SpeakerConfig {
+    name: string;
+    color?: string;
+}
+
+interface Project {
+    id: string;
+    title: string;
+    speakers: Record<string, SpeakerConfig>;
+    visualFunctions: Record<string, ((ctx: CanvasRenderingContext2D, params: any[]) => void) | string>;
+}
+
+interface Slide {
+    speaker: string;
+    title?: string;
+    content?: string;
+    content2?: string;
+    visual?: {
+        type: string;
+        params?: any[];
+    };
+}
+
+interface PDFExportButtonProps {
+    project: Project;
+    slides: Slide[];
+    filename: string;
+}
+
 // Helper function to wrap text on a canvas
 // It handles splitting text into multiple lines based on a max width.
-const wrapText = (ctx, text, x, y, maxWidth, lineHeight) => {
+const wrapText = (
+    ctx: CanvasRenderingContext2D, 
+    text: string, 
+    x: number, 
+    y: number, 
+    maxWidth: number, 
+    lineHeight: number
+): number => {
     if (!text) return y;
     const words = text.trim().split(' ');
     let line = '';
@@ -26,10 +63,10 @@ const wrapText = (ctx, text, x, y, maxWidth, lineHeight) => {
 };
 
 
-const PDFExportButton = ({ project, slides, filename }) => {
+const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, filename }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [progress, setProgress] = useState(0);
-    const canvasRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     // PDF dimensions (A4 landscape in mm)
     const pageWidth = 297;
@@ -49,8 +86,8 @@ const PDFExportButton = ({ project, slides, filename }) => {
         }
     }, []);
 
-    const getBackgroundColor = (speaker) => {
-        const colors = {
+    const getBackgroundColor = (speaker: string): string => {
+        const colors: Record<string, string> = {
             teacher: '#f0f9ff',
             student1: '#faf5ff',
             student2: '#fefbff'
@@ -58,7 +95,7 @@ const PDFExportButton = ({ project, slides, filename }) => {
         return colors[speaker] || '#f8fafc';
     };
 
-    const drawAvatars = (ctx, activeSpeaker, canvasWidth, canvasHeight) => {
+    const drawAvatars = (ctx: CanvasRenderingContext2D, activeSpeaker: string, canvasWidth: number, canvasHeight: number) => {
         if (!project.speakers) return;
 
         const speakerKeys = Object.keys(project.speakers);
@@ -90,7 +127,7 @@ const PDFExportButton = ({ project, slides, filename }) => {
         });
     };
 
-    const renderSlideToCanvas = (slide, canvas) => {
+    const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement): string | null => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
 
@@ -167,11 +204,11 @@ const PDFExportButton = ({ project, slides, filename }) => {
             if (visualAreaHeight > canvasHeight * 0.1) { // Only draw if there's enough space
                 try {
                     let visualFunc = project.visualFunctions[slide.visual.type];
-                    let func;
+                    let func: (ctx: CanvasRenderingContext2D, params: any[]) => void;
 
                     if (typeof visualFunc === 'string') {
                         const functionBody = visualFunc.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
-                        func = new Function('ctx', 'params', functionBody);
+                        func = new Function('ctx', 'params', functionBody) as (ctx: CanvasRenderingContext2D, params: any[]) => void;
                     } else {
                         func = visualFunc;
                     }
@@ -206,7 +243,8 @@ const PDFExportButton = ({ project, slides, filename }) => {
 
     const generatePDF = async () => {
         if (!slides || slides.length === 0) {
-            alert('No slides to export');
+            // Using a custom modal/alert is better than window.alert
+            console.warn('No slides to export');
             return;
         }
 
@@ -266,7 +304,7 @@ const PDFExportButton = ({ project, slides, filename }) => {
 
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('Error generating PDF. Please check the console for details.');
+            // Consider a more user-friendly error display
         } finally {
             setIsGenerating(false);
             setProgress(0);
