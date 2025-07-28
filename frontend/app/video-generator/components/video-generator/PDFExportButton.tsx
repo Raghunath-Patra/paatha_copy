@@ -120,58 +120,49 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         });
     };
 
-    // The render function now accepts a flag to determine if it's the title slide
-    const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement, isTitleSlide: boolean): string | null => {
+    // This function now renders a single slide's content from a clean slate.
+    const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement): string | null => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
 
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
 
-        // 1. Clear canvas with the slide's background color
+        // 1. GUARANTEE a blank slate by clearing the entire canvas first.
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        
+        // 2. Set the background for the current slide.
         ctx.fillStyle = getBackgroundColor(slide.speaker);
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         
-        // Draw speaker avatars on the left side for all slides
+        // 3. Draw speaker avatars on the left side, reflecting the current slide's speaker.
         drawAvatars(ctx, slide.speaker, canvasWidth, canvasHeight);
 
-        // 2. Conditionally draw the main presentation title ONLY on the first slide
-        if (isTitleSlide) {
-            ctx.fillStyle = '#1e40af';
-            ctx.font = `bold ${Math.floor(canvasWidth * 0.04)}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.fillText('Introduction to Agentic AI', canvasWidth / 2, canvasHeight * 0.10);
-
-            ctx.fillStyle = '#6b7280';
-            ctx.font = `${Math.floor(canvasWidth * 0.025)}px Arial`;
-            ctx.fillText('Autonomous Intelligence Systems', canvasWidth / 2, canvasHeight * 0.16);
-            ctx.fillText('Beyond Traditional AI Automation', canvasWidth / 2, canvasHeight * 0.21);
-        }
-
-        // 3. Define and draw the main content area for the slide's specific content
+        // 4. Define and draw the main content area for the slide's specific content.
         const contentAreaX = canvasWidth * 0.22;
-        const contentAreaY = canvasHeight * 0.30;
+        const contentAreaY = canvasHeight * 0.15; // Positioned higher for more content space
         const contentAreaWidth = canvasWidth * 0.75;
-        const contentAreaHeight = canvasHeight * 0.65;
+        const contentAreaHeight = canvasHeight * 0.80;
         
         const contentPadding = contentAreaWidth * 0.05;
         const contentInnerWidth = contentAreaWidth - (contentPadding * 2);
         
-        let currentY = contentAreaY + contentPadding * 1.5;
+        let currentY = contentAreaY + contentPadding;
 
+        // Draw content area border for visual structure
         ctx.strokeStyle = '#e5e7eb';
         ctx.lineWidth = 1;
         ctx.strokeRect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight);
 
         const contentCenterX = contentAreaX + contentAreaWidth / 2;
 
-        // 4. Draw the slide's OWN title and content
+        // 5. Draw the slide's OWN title and content.
         if (slide.title?.trim()) {
             ctx.fillStyle = '#1e40af';
             ctx.font = `bold ${Math.floor(canvasWidth * 0.03)}px Arial`;
             ctx.textAlign = 'center';
             currentY = wrapText(ctx, slide.title, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.05);
-            currentY += canvasHeight * 0.03;
+            currentY += canvasHeight * 0.03; // Space after title
         }
 
         ctx.fillStyle = '#374151';
@@ -182,16 +173,16 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             currentY = wrapText(ctx, slide.content, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.04);
         }
         if (slide.content2?.trim()) {
-            currentY += canvasHeight * 0.01;
+            currentY += canvasHeight * 0.01; // Space between content blocks
             currentY = wrapText(ctx, slide.content2, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.04);
         }
         
-        // 5. Draw visual if available
+        // 6. Draw visual if available.
         if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
             const visualAreaY = currentY + canvasHeight * 0.02;
             const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
 
-            if (visualAreaHeight > canvasHeight * 0.1) {
+            if (visualAreaHeight > canvasHeight * 0.1) { // Check for sufficient space
                 try {
                     let visualFunc = project.visualFunctions[slide.visual.type];
                     let func: (ctx: CanvasRenderingContext2D, params: any[]) => void;
@@ -254,8 +245,8 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     pdf.addPage();
                 }
 
-                // Pass the flag to the render function. It's true only for the first slide (i === 0).
-                const slideImage = renderSlideToCanvas(slide, canvas, i === 0);
+                // Render the current slide to the canvas. The function is now stateless.
+                const slideImage = renderSlideToCanvas(slide, canvas);
 
                 if (slideImage) {
                     pdf.addImage(slideImage, 'JPEG', margin, margin, contentWidth, contentHeight);
@@ -298,7 +289,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                             📄 Export to PDF
                         </h3>
                         <p className="text-sm text-orange-600 mt-1">
-                            Generate a PDF matching your slide layout exactly
+                            Generate a PDF of all slides in the presentation.
                         </p>
                     </div>
                     <div className="text-right">
@@ -312,9 +303,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                 </div>
 
                 <div className="bg-orange-100 rounded-lg p-3 mb-4 text-xs text-orange-700">
-                    <strong>Layout:</strong> A4 landscape (297×210mm) with 20mm margins<br />
-                    <strong>Content:</strong> Main title on first slide, then individual slide content, visuals, and speaker avatars<br />
-                    <strong>Position:</strong> Avatars on left, content area on right with proper spacing
+                    <strong>Layout:</strong> Each slide is rendered independently with its own title, content, visuals, and active speaker avatar.
                 </div>
 
                 {isGenerating && (
