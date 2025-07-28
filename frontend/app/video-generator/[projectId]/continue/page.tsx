@@ -75,10 +75,10 @@ export default function ContinueProjectPage() {
   const [progress, setProgress] = useState(0);
   const [dots, setDots] = useState('');
   
-  const pollIntervalRef = useRef<NodeJS.Timeout>();
-  const stepTimeoutRef = useRef<NodeJS.Timeout>();
-  const messageIntervalRef = useRef<NodeJS.Timeout>();
-  const dotIntervalRef = useRef<NodeJS.Timeout>();
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const stepTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dotIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const projectId = params.projectId as string;
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -104,7 +104,10 @@ export default function ContinueProjectPage() {
     }
 
     return () => {
-      if (dotIntervalRef.current) clearInterval(dotIntervalRef.current);
+      if (dotIntervalRef.current) {
+        clearInterval(dotIntervalRef.current);
+        dotIntervalRef.current = null;
+      }
     };
   }, [isGenerating]);
 
@@ -280,9 +283,18 @@ export default function ContinueProjectPage() {
             setIsGenerating(false);
             
             // Clear all intervals and timeouts
-            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-            if (stepTimeoutRef.current) clearTimeout(stepTimeoutRef.current);
-            if (messageIntervalRef.current) clearInterval(messageIntervalRef.current);
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
+            if (stepTimeoutRef.current) {
+              clearTimeout(stepTimeoutRef.current);
+              stepTimeoutRef.current = null;
+            }
+            if (messageIntervalRef.current) {
+              clearInterval(messageIntervalRef.current);
+              messageIntervalRef.current = null;
+            }
           }
         }
       } catch (error) {
@@ -294,10 +306,22 @@ export default function ContinueProjectPage() {
   useEffect(() => {
     return () => {
       // Cleanup on unmount
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-      if (stepTimeoutRef.current) clearTimeout(stepTimeoutRef.current);
-      if (messageIntervalRef.current) clearInterval(messageIntervalRef.current);
-      if (dotIntervalRef.current) clearInterval(dotIntervalRef.current);
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (stepTimeoutRef.current) {
+        clearTimeout(stepTimeoutRef.current);
+        stepTimeoutRef.current = null;
+      }
+      if (messageIntervalRef.current) {
+        clearInterval(messageIntervalRef.current);
+        messageIntervalRef.current = null;
+      }
+      if (dotIntervalRef.current) {
+        clearInterval(dotIntervalRef.current);
+        dotIntervalRef.current = null;
+      }
     };
   }, []);
 
@@ -309,9 +333,9 @@ export default function ContinueProjectPage() {
     router.push('/video-generator');
   };
 
-  // const handleEditInput = () => {
-  //   router.push(`/video-generator/create?edit=${projectId}`);
-  // };
+  const handleEditInput = () => {
+    router.push(`/video-generator/create?edit=${projectId}`);
+  };
 
   if (loading) {
     return (
@@ -377,6 +401,24 @@ export default function ContinueProjectPage() {
                     <div><strong>Status:</strong> {project.status}</div>
                   </div>
                 </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button
+                  onClick={startScriptGeneration}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 flex items-center space-x-2"
+                >
+                  <span>🚀</span>
+                  <span>Generate Script</span>
+                </button>
+
+                <button
+                  onClick={handleEditInput}
+                  className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-3 rounded-lg font-semibold transition-all transform hover:-translate-y-0.5 flex items-center space-x-2"
+                >
+                  <span>✏️</span>
+                  <span>Edit Input</span>
+                </button>
               </div>
             </div>
           )}
