@@ -195,18 +195,16 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                         const visualRectHeight = visualAreaHeight;
 
                         // ** THE FIX **
-                        // Define the path for the visual area.
+                        // First, directly and explicitly clear the rectangle where the visual will be drawn.
+                        // This guarantees a blank slate, preventing any previously drawn content from showing through.
+                        ctx.clearRect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
+
+                        // Now, clip the area so the visual function can't draw outside its designated bounds.
                         ctx.beginPath();
                         ctx.rect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
-                        
-                        // First, fill this area with the background color to erase anything underneath.
-                        ctx.fillStyle = getBackgroundColor(slide.speaker);
-                        ctx.fill();
-                        
-                        // Now, use the same path to clip the area, so the visual function can't draw outside it.
                         ctx.clip();
                         
-                        // Translate the origin to the top-left of the visual area for easier drawing.
+                        // Translate the origin to the top-left of the visual area for easier drawing within the visual function.
                         ctx.translate(visualRectX, visualRectY);
                         
                         // Call the actual function to draw the visual.
