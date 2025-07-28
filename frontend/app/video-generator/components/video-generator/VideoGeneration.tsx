@@ -521,13 +521,13 @@ export default function VideoGeneration({
           // Video already existed and was up to date
           setStatus({ 
             type: 'existing', 
-            message: `🎉 Video was already up to date! ${result.audioFilesReused ? `(Reused ${result.audioFilesReused} audio files)` : ''}` 
+            message: `🎉 Video was already up to date!` 
           });
         } else {
           // New video was generated
           setStatus({ 
             type: 'success', 
-            message: `🎉 Video generated successfully! ${result.audioFilesReused ? `(Reused ${result.audioFilesReused} audio files for faster generation)` : ''}` 
+            message: `🎉 Video generated successfully!` 
           });
         }
         
@@ -1033,13 +1033,6 @@ export default function VideoGeneration({
                     {isGenerating ? 'Regenerating...' : 'Regenerate Video'}
                   </button>
                   
-                  <button
-                    onClick={createNewVideo}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center"
-                  >
-                    <span>🆕</span>
-                    Create New Video
-                  </button>
                 </div>
               )}
             </div>
@@ -1154,6 +1147,20 @@ export default function VideoGeneration({
               <span className="text-lg">📁</span>
               Back to Projects
             </button>
+
+            <button
+              onClick={createNewVideo}
+              disabled={isGenerating}
+              className={`bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2 justify-center ${
+                isGenerating 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white transform hover:scale-105 shadow-md hover:shadow-lg'
+              }`}
+            >
+              <span>🆕</span>
+              Create New Video
+            </button>
+            
           </div>
         </div>
       )}
