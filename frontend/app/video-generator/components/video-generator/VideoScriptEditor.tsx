@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
+import VideoScriptPDFExport from './VideoScriptPDFExporter';
 
 interface VideoScriptEditorProps {
   project: {
@@ -745,12 +746,24 @@ export default function VideoScriptEditor({
             ← Back to Input
           </button>
           
-          <button
-            onClick={downloadPDF}
-            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105"
-          >
-            📄 Download PDF
-          </button>
+          <VideoScriptPDFExport
+            project={project}
+            slides={slides}
+            filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
+            buttonText="📄 Download PDF"
+            onExportComplete={(filename: string) => {
+              setUpdateStatus({ 
+                type: 'success', 
+                message: `PDF exported: ${filename}` 
+              });
+            }}
+            onExportError={(error: any) => {
+              setUpdateStatus({ 
+                type: 'error', 
+                message: `Export failed: ${error.message}` 
+              });
+            }}
+          />
           
           <button
             onClick={onProceedToVideo}
