@@ -120,10 +120,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         });
     };
 
-    // This function now renders a single slide's content from a clean slate.
     const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement): string | null => {
-        // 1. Force a complete reset of the canvas state and content.
-        // This is the most reliable way to ensure a clean slate for each slide.
         canvas.width = canvas.width;
 
         const ctx = canvas.getContext('2d');
@@ -132,16 +129,13 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         
-        // 2. Set the background for the current slide.
         ctx.fillStyle = getBackgroundColor(slide.speaker);
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         
-        // 3. Draw speaker avatars on the left side, reflecting the current slide's speaker.
         drawAvatars(ctx, slide.speaker, canvasWidth, canvasHeight);
 
-        // 4. Define and draw the main content area for the slide's specific content.
         const contentAreaX = canvasWidth * 0.22;
-        const contentAreaY = canvasHeight * 0.15; // Positioned higher for more content space
+        const contentAreaY = canvasHeight * 0.15;
         const contentAreaWidth = canvasWidth * 0.75;
         const contentAreaHeight = canvasHeight * 0.80;
         
@@ -150,20 +144,18 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         
         let currentY = contentAreaY + contentPadding;
 
-        // Draw content area border for visual structure
         ctx.strokeStyle = '#e5e7eb';
         ctx.lineWidth = 1;
         ctx.strokeRect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight);
 
         const contentCenterX = contentAreaX + contentAreaWidth / 2;
 
-        // 5. Draw the slide's OWN title and content.
         if (slide.title?.trim()) {
             ctx.fillStyle = '#1e40af';
             ctx.font = `bold ${Math.floor(canvasWidth * 0.03)}px Arial`;
             ctx.textAlign = 'center';
             currentY = wrapText(ctx, slide.title, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.05);
-            currentY += canvasHeight * 0.03; // Space after title
+            currentY += canvasHeight * 0.03;
         }
 
         ctx.fillStyle = '#374151';
@@ -174,16 +166,15 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             currentY = wrapText(ctx, slide.content, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.04);
         }
         if (slide.content2?.trim()) {
-            currentY += canvasHeight * 0.01; // Space between content blocks
+            currentY += canvasHeight * 0.01;
             currentY = wrapText(ctx, slide.content2, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.04);
         }
         
-        // 6. Draw visual if available.
         if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
             const visualAreaY = currentY + canvasHeight * 0.02;
             const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
 
-            if (visualAreaHeight > canvasHeight * 0.1) { // Check for sufficient space
+            if (visualAreaHeight > canvasHeight * 0.1) {
                 try {
                     let visualFunc = project.visualFunctions[slide.visual.type];
                     let func: (ctx: CanvasRenderingContext2D, params: any[]) => void;
@@ -197,11 +188,30 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
                     if (typeof func === 'function') {
                         ctx.save();
+                        
+                        const visualRectX = contentAreaX + contentPadding;
+                        const visualRectY = visualAreaY;
+                        const visualRectWidth = contentInnerWidth;
+                        const visualRectHeight = visualAreaHeight;
+
+                        // ** THE FIX **
+                        // Define the path for the visual area.
                         ctx.beginPath();
-                        ctx.rect(contentAreaX + contentPadding, visualAreaY, contentInnerWidth, visualAreaHeight);
+                        ctx.rect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
+                        
+                        // First, fill this area with the background color to erase anything underneath.
+                        ctx.fillStyle = getBackgroundColor(slide.speaker);
+                        ctx.fill();
+                        
+                        // Now, use the same path to clip the area, so the visual function can't draw outside it.
                         ctx.clip();
-                        ctx.translate(contentAreaX + contentPadding, visualAreaY);
+                        
+                        // Translate the origin to the top-left of the visual area for easier drawing.
+                        ctx.translate(visualRectX, visualRectY);
+                        
+                        // Call the actual function to draw the visual.
                         func(ctx, slide.visual.params || []);
+                        
                         ctx.restore();
                     }
                 } catch (error) {
@@ -246,7 +256,6 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     pdf.addPage();
                 }
 
-                // Render the current slide to the canvas. The function is now stateless.
                 const slideImage = renderSlideToCanvas(slide, canvas);
 
                 if (slideImage) {
