@@ -104,7 +104,7 @@ class VideoScriptPDFExporter {
     
     // Main title with enhanced styling
     this.pdf.setFontSize(32);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     const title = this.getProjectTitle();
     this.pdf.text(title, centerX, yPos, { align: 'center' });
@@ -113,7 +113,7 @@ class VideoScriptPDFExporter {
     
     // Subtitle
     this.pdf.setFontSize(18);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(120, 120, 120);
     this.pdf.text('Educational Video Script', centerX, yPos, { align: 'center' });
     
