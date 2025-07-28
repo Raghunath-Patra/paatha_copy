@@ -1131,7 +1131,7 @@ class VideoScriptPDFExporter {
       `Generator: Enhanced Video Script PDF Exporter`,
       `Project ID: ${this.currentProject?.id || 'Unknown'}`,
       `File Format: PDF/A-1b`,
-      `Page Count: ${this.pdf?.internal?.getNumberOfPages() || 'Calculating...'}`,
+      `Page Count: ${this.pdf?.getNumberOfPages() || 'Calculating...'}`,
       `Document Security: Open Access`
     ];
     
