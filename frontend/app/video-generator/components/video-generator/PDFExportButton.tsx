@@ -108,20 +108,15 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     ctx.lineWidth = 2;
     ctx.strokeRect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight);
 
-    // Only show slide-specific title if it's different from main title and not empty
-    const slideTitle = slide.title?.trim();
-    const showSlideTitle = slideTitle && 
-                          slideTitle !== 'Introduction to Agentic AI' && 
-                          slideTitle !== '';
-
-    if (showSlideTitle) {
+    // Slide title (always show if present)
+    if (slide.title?.trim()) {
       ctx.fillStyle = '#1e40af';
       ctx.font = `bold ${Math.floor(canvasWidth * 0.035)}px Arial`;
       ctx.textAlign = 'center';
       
       // Handle long titles by wrapping text
       const maxWidth = contentAreaWidth * 0.9;
-      const words = slideTitle.split(' ');
+      const words = slide.title.trim().split(' ');
       let line = '';
       let y = contentAreaY + contentAreaHeight * 0.15;
       
@@ -146,7 +141,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     ctx.font = `${Math.floor(canvasWidth * 0.022)}px Arial`;
     ctx.textAlign = 'center';
     
-    const contentStartY = showSlideTitle ? contentAreaY + contentAreaHeight * 0.35 : contentAreaY + contentAreaHeight * 0.25;
+    const contentStartY = contentAreaY + contentAreaHeight * 0.35;
     
     if (slide.content?.trim()) {
       ctx.fillText(slide.content.trim(), contentAreaX + contentAreaWidth / 2, contentStartY);
@@ -155,7 +150,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
       ctx.fillText(slide.content2.trim(), contentAreaX + contentAreaWidth / 2, contentStartY + canvasHeight * 0.08);
     }
 
-    // Draw visual if available
+    // Draw visual if available - in the lower portion of content area
     if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
       try {
         let visualFunc = project.visualFunctions[slide.visual.type];
@@ -170,8 +165,8 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
         // Save context and clip to visual area (lower portion of content area)
         ctx.save();
-        const visualY = contentAreaY + contentAreaHeight * 0.6;
-        const visualHeight = contentAreaHeight * 0.35;
+        const visualY = contentAreaY + contentAreaHeight * 0.55;
+        const visualHeight = contentAreaHeight * 0.4;
         
         ctx.translate(contentAreaX, visualY);
         ctx.beginPath();
@@ -194,7 +189,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
       }
     }
 
-    // Draw speaker avatars on the left
+    // Draw speaker avatars on the left side
     drawAvatars(ctx, slide.speaker, canvasWidth, canvasHeight);
     
     return canvas.toDataURL('image/jpeg', 0.95);
