@@ -16,10 +16,20 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
   const [progress, setProgress] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // PDF dimensions (A4 landscape in mm)
+  const pageWidth = 297;
+  const pageHeight = 210;
+  const margin = 20;
+  const contentWidth = pageWidth - (margin * 2); // 257mm
+  const contentHeight = pageHeight - (margin * 2); // 170mm
+
   useEffect(() => {
     if (canvasRef.current) {
-      canvasRef.current.width = 1000;
-      canvasRef.current.height = 700;
+      // Set canvas size to match PDF content area (convert mm to pixels at 72 DPI)
+      const dpi = 72;
+      const mmToPx = dpi / 25.4;
+      canvasRef.current.width = contentWidth * mmToPx;
+      canvasRef.current.height = contentHeight * mmToPx;
     }
   }, []);
 
@@ -32,32 +42,35 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     return colors[speaker] || '#f8fafc';
   };
 
-  const drawAvatars = (ctx: CanvasRenderingContext2D, activeSpeaker: string) => {
+  const drawAvatars = (ctx: CanvasRenderingContext2D, activeSpeaker: string, canvasWidth: number, canvasHeight: number) => {
     if (!project.speakers) return;
     
     const speakerKeys = Object.keys(project.speakers);
-    const avatarSize = 30;
-    const startY = 250;
-    const spacing = 70;
+    const avatarSize = canvasWidth * 0.03; // 3% of canvas width
+    const startX = canvasWidth * 0.05; // 5% from left
+    const startY = canvasHeight * 0.4; // 40% from top
+    const spacing = canvasHeight * 0.12; // 12% spacing
     
     speakerKeys.forEach((speaker, index) => {
       const config = project.speakers[speaker];
       const isActive = speaker === activeSpeaker;
-      const x = 30 + avatarSize / 2;
-      const y = startY + (index * spacing) + avatarSize / 2;
+      const x = startX;
+      const y = startY + (index * spacing);
       
+      // Draw avatar circle
       ctx.beginPath();
-      ctx.arc(x, y, 15, 0, Math.PI * 2);
+      ctx.arc(x, y, avatarSize / 2, 0, Math.PI * 2);
       ctx.fillStyle = isActive ? '#a78bfa' : '#e5e7eb';
       ctx.fill();
-      ctx.strokeStyle = isActive ? config.color : '#d1d5db';
+      ctx.strokeStyle = isActive ? (config.color || '#7c3aed') : '#d1d5db';
       ctx.lineWidth = isActive ? 3 : 1;
       ctx.stroke();
       
+      // Draw speaker name
       ctx.fillStyle = isActive ? '#374151' : '#6b7280';
-      ctx.font = `${isActive ? 'bold ' : ''}12px Arial`;
+      ctx.font = `${isActive ? 'bold ' : ''}${Math.floor(canvasWidth * 0.015)}px Arial`;
       ctx.textAlign = 'center';
-      ctx.fillText(config.name, x, y + 25);
+      ctx.fillText(config.name || speaker, x, y + avatarSize);
     });
   };
 
@@ -65,32 +78,55 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Clear canvas
-    ctx.fillStyle = '#f8f9fa';
-    ctx.fillRect(0, 0, 1000, 700);
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
 
-    // Draw background
-    const backgroundColor = getBackgroundColor(slide.speaker);
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, 1000, 700);
-    
-    // Draw title
+    // Clear canvas with background
+    ctx.fillStyle = getBackgroundColor(slide.speaker);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Main title - always "Introduction to Agentic AI"
     ctx.fillStyle = '#1e40af';
-    ctx.font = 'bold 32px Arial';
+    ctx.font = `bold ${Math.floor(canvasWidth * 0.04)}px Arial`;
     ctx.textAlign = 'center';
-    ctx.fillText(slide.title || 'Untitled Slide', 500, 75);
-    
-    // Draw content
-    ctx.fillStyle = '#374151';
-    ctx.font = '22px Arial';
-    ctx.textAlign = 'center';
-    if (slide.content) ctx.fillText(slide.content, 500, 120);
-    if (slide.content2) ctx.fillText(slide.content2, 500, 150);
-    
-    // Draw visual area border
+    ctx.fillText('Introduction to Agentic AI', canvasWidth / 2, canvasHeight * 0.12);
+
+    // Subtitle
+    ctx.fillStyle = '#6b7280';
+    ctx.font = `${Math.floor(canvasWidth * 0.025)}px Arial`;
+    ctx.fillText('Autonomous Intelligence Systems', canvasWidth / 2, canvasHeight * 0.18);
+    ctx.fillText('Beyond Traditional AI Automation', canvasWidth / 2, canvasHeight * 0.23);
+
+    // Content area - positioned in the right side
+    const contentAreaX = canvasWidth * 0.25;
+    const contentAreaY = canvasHeight * 0.35;
+    const contentAreaWidth = canvasWidth * 0.65;
+    const contentAreaHeight = canvasHeight * 0.5;
+
+    // Draw content area border
     ctx.strokeStyle = '#e5e7eb';
     ctx.lineWidth = 2;
-    ctx.strokeRect(200, 200, 600, 400);
+    ctx.strokeRect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight);
+
+    // Slide-specific title (larger, blue)
+    if (slide.title) {
+      ctx.fillStyle = '#1e40af';
+      ctx.font = `bold ${Math.floor(canvasWidth * 0.035)}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.fillText(slide.title, contentAreaX + contentAreaWidth / 2, contentAreaY + contentAreaHeight * 0.2);
+    }
+
+    // Content lines
+    ctx.fillStyle = '#6b7280';
+    ctx.font = `${Math.floor(canvasWidth * 0.022)}px Arial`;
+    ctx.textAlign = 'center';
+    
+    if (slide.content) {
+      ctx.fillText(slide.content, contentAreaX + contentAreaWidth / 2, contentAreaY + contentAreaHeight * 0.35);
+    }
+    if (slide.content2) {
+      ctx.fillText(slide.content2, contentAreaX + contentAreaWidth / 2, contentAreaY + contentAreaHeight * 0.45);
+    }
 
     // Draw visual if available
     if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
@@ -105,11 +141,14 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
           func = visualFunc;
         }
 
-        // Save context and clip to visual area
+        // Save context and clip to visual area (lower portion of content area)
         ctx.save();
-        ctx.translate(200, 200);
+        const visualY = contentAreaY + contentAreaHeight * 0.6;
+        const visualHeight = contentAreaHeight * 0.35;
+        
+        ctx.translate(contentAreaX, visualY);
         ctx.beginPath();
-        ctx.rect(0, 0, 600, 400);
+        ctx.rect(0, 0, contentAreaWidth, visualHeight);
         ctx.clip();
 
         if (slide.visual.params && slide.visual.params.length > 0) {
@@ -122,13 +161,14 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
       } catch (error) {
         console.error('Error executing visual function:', error);
         ctx.fillStyle = '#ef4444';
-        ctx.font = '16px Arial';
+        ctx.font = `${Math.floor(canvasWidth * 0.02)}px Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('Error in visual function', 500, 400);
+        ctx.fillText('Error in visual function', contentAreaX + contentAreaWidth / 2, contentAreaY + contentAreaHeight * 0.7);
       }
     }
 
-    drawAvatars(ctx, slide.speaker);
+    // Draw speaker avatars on the left
+    drawAvatars(ctx, slide.speaker, canvasWidth, canvasHeight);
     
     return canvas.toDataURL('image/jpeg', 0.95);
   };
@@ -163,7 +203,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         // Update progress
         setProgress(Math.round(((i + 1) / slides.length) * 100));
 
-        // Add new page (except for first slide)
+        // Add new page for each slide except the first
         if (i > 0) {
           pdf.addPage();
         }
@@ -172,17 +212,17 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         const slideImage = renderSlideToCanvas(slide, canvas);
         
         if (slideImage) {
-          // Add slide image to PDF (landscape A4: 297x210mm)
-          pdf.addImage(slideImage, 'JPEG', 10, 10, 277, 190);
+          // Add slide image to PDF (fits within margins)
+          pdf.addImage(slideImage, 'JPEG', margin, margin, contentWidth, contentHeight);
           
-          // Add slide number
-          pdf.setFontSize(8);
+          // Add slide number (bottom left)
+          pdf.setFontSize(10);
           pdf.setTextColor(100, 100, 100);
-          pdf.text(`Slide ${i + 1} of ${slides.length}`, 15, 205);
+          pdf.text(`Slide ${i + 1} of ${slides.length}`, margin, pageHeight - 10);
           
-          // Add speaker info
+          // Add speaker info (bottom right)
           const speakerName = project.speakers?.[slide.speaker]?.name || slide.speaker;
-          pdf.text(`Speaker: ${speakerName}`, 200, 205);
+          pdf.text(`Speaker: ${speakerName}`, pageWidth - margin - 50, pageHeight - 10);
         }
 
         // Small delay to prevent UI blocking
@@ -217,7 +257,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
               📄 Export to PDF
             </h3>
             <p className="text-sm text-orange-600 mt-1">
-              Generate a PDF with all slides and visuals
+              Generate a PDF matching your slide layout exactly
             </p>
           </div>
           <div className="text-right">
@@ -225,9 +265,16 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
               {slides?.length || 0} slides
             </div>
             <div className="text-xs text-orange-500">
-              {filename}
+              A4 Landscape • {filename}
             </div>
           </div>
+        </div>
+
+        {/* Preview Info */}
+        <div className="bg-orange-100 rounded-lg p-3 mb-4 text-xs text-orange-700">
+          <strong>Layout:</strong> A4 landscape (297×210mm) with 20mm margins<br/>
+          <strong>Content:</strong> Main title, slide title, content lines, visuals, and speaker avatars<br/>
+          <strong>Position:</strong> Avatars on left, content area on right with proper spacing
         </div>
 
         {/* Progress Bar */}
@@ -272,7 +319,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         </button>
 
         <div className="mt-3 text-xs text-orange-600">
-          <strong>Note:</strong> Make sure to install jsPDF: <code className="bg-white px-1 rounded">npm install jspdf</code>
+          <strong>Installation required:</strong> <code className="bg-white px-1 rounded">npm install jspdf</code>
         </div>
       </div>
     </div>
