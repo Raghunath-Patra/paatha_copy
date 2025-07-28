@@ -122,14 +122,15 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
     // This function now renders a single slide's content from a clean slate.
     const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement): string | null => {
+        // 1. Force a complete reset of the canvas state and content.
+        // This is the most reliable way to ensure a clean slate for each slide.
+        canvas.width = canvas.width;
+
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
 
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
-
-        // 1. GUARANTEE a blank slate by clearing the entire canvas first.
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         
         // 2. Set the background for the current slide.
         ctx.fillStyle = getBackgroundColor(slide.speaker);
