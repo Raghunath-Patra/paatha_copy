@@ -242,7 +242,7 @@ const UserProfileCard = () => {
 
   if (!profile) return null;
 
-  const getRoleIcon = (role: string) => {
+  const getRoleIcon = (role: string | undefined) => {
     switch (role) {
       case 'teacher': return '👨‍🏫';
       case 'student': return '🎓';
@@ -250,7 +250,7 @@ const UserProfileCard = () => {
     }
   };
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string | undefined) => {
     switch (role) {
       case 'teacher': return 'from-blue-500 to-indigo-600';
       case 'student': return 'from-green-500 to-teal-600';
@@ -267,10 +267,10 @@ const UserProfileCard = () => {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 text-lg">
-              Welcome back, {profile.full_name}!
+              Welcome back, {profile.full_name || 'User'}!
             </h3>
             <p className="text-gray-600 text-sm capitalize">
-              {profile.role} Account
+              {profile.role || 'User'} Account
             </p>
           </div>
           <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
