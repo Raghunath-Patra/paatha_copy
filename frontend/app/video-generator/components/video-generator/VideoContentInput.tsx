@@ -487,7 +487,6 @@ export default function VideoContentInput({
   const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const titlePopupTimerRef = useRef<NodeJS.Timeout | null>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -577,11 +576,6 @@ export default function VideoContentInput({
     setShowTitlePopup(false);
     setTitleUpdateSuccess(false);
     setTitleUpdateError(null);
-    // Clear the timer if popup is closed manually
-    if (titlePopupTimerRef.current) {
-      clearTimeout(titlePopupTimerRef.current);
-      titlePopupTimerRef.current = null;
-    }
   };
 
   const generateVideo = async () => {
@@ -591,11 +585,6 @@ export default function VideoContentInput({
     }
 
     setIsGenerating(true);
-    
-    // Show title popup after 2 seconds regardless of workflow mode
-    titlePopupTimerRef.current = setTimeout(() => {
-      setShowTitlePopup(true);
-    }, 2000);
     
     // Determine the workflow and set appropriate status message
     if (workflowMode === 'simple') {
@@ -626,8 +615,9 @@ export default function VideoContentInput({
           throw new Error(scriptResult.error || 'Failed to generate script');
         }
 
-        // Store project ID for title update (but don't show popup here anymore)
+        // Store project ID and show title popup immediately while generation continues
         setCurrentProjectId(scriptResult.project.id);
+        setShowTitlePopup(true);
 
         // For simple workflow, continue with video generation
         if (workflowMode === 'simple') {
@@ -683,15 +673,6 @@ export default function VideoContentInput({
       }
     });
   };
-
-  // Cleanup timer on unmount
-  React.useEffect(() => {
-    return () => {
-      if (titlePopupTimerRef.current) {
-        clearTimeout(titlePopupTimerRef.current);
-      }
-    };
-  }, []);
 
   // Show skeleton loading during initial load if needed
   if (isInitialLoading) {

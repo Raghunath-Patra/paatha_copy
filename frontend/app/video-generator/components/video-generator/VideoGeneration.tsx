@@ -379,6 +379,7 @@ export default function VideoGeneration({
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [projectTitle, setProjectTitle] = useState<string>('');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isVideoOutdated, setIsVideoOutdated] = useState(false);
   
   // Use ref to track intervals for cleanup
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -425,12 +426,19 @@ export default function VideoGeneration({
         // Set project title from API response
         setProjectTitle(result.projectTitle || '');
         
-        if (result.videoExists && result.videoUrl) {
-          // Video already exists, show it directly
+        if (result.videoExists && result.videoUrl && !result.isVideoOutdated) {
+          // Video already exists and is up to date, show it directly
           setVideoUrl(result.videoUrl);
           setStatus({ 
             type: 'existing', 
             message: 'Video already exists! You can watch it, regenerate, or download it.' 
+          });
+        } else if (result.videoExists && result.isVideoOutdated) {
+          // Video exists but is outdated
+          setIsVideoOutdated(true);
+          setStatus({ 
+            type: 'info', 
+            message: '🔄 Script changes detected! Your video needs to be regenerated to include the latest modifications.' 
           });
         }
         // If video doesn't exist, component will show the generation interface
@@ -541,6 +549,8 @@ export default function VideoGeneration({
           setVideoUrl(`${API_URL}/api/video-generator/video/${result.projectId || projectId}`);
         }
         
+        // Reset outdated flag since we just generated a new video
+        setIsVideoOutdated(false);
         setIsVideoLoading(true);
         
         // Simulate video loading time with proper cleanup
@@ -653,6 +663,54 @@ export default function VideoGeneration({
     }
   };
 
+  // Script Changes Animation Component
+  const ScriptChangesAnimation = () => (
+    <div className="text-center mb-8">
+      <div className="relative">
+        {/* Main AI Robot */}
+        <div className="text-8xl mb-6 animate-bounce">🤖</div>
+        
+        {/* Floating Elements */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4">
+          <div className="flex gap-2 animate-pulse">
+            <span className="text-2xl animate-bounce" style={{ animationDelay: '0ms' }}>📝</span>
+            <span className="text-2xl animate-bounce" style={{ animationDelay: '200ms' }}>✨</span>
+            <span className="text-2xl animate-bounce" style={{ animationDelay: '400ms' }}>🔄</span>
+          </div>
+        </div>
+        
+        {/* Progress Dots */}
+        <div className="flex justify-center gap-2 mb-4">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"
+              style={{ animationDelay: `${i * 300}ms` }}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
+        🔄 Script Changes Detected!
+      </h3>
+      <div className="max-w-md mx-auto space-y-3 text-gray-600">
+        <p className="flex items-center justify-center gap-2">
+          <span className="text-green-500">✓</span>
+          AI is analyzing your modifications...
+        </p>
+        <p className="flex items-center justify-center gap-2">
+          <span className="text-blue-500 animate-spin">⚙️</span>
+          Preparing to incorporate changes...
+        </p>
+        <p className="flex items-center justify-center gap-2">
+          <span className="text-purple-500">✨</span>
+          Enhanced video generation ready!
+        </p>
+      </div>
+    </div>
+  );
+
   const createNewVideo = () => {
     // Clear all state before navigation
     setIsGenerating(false);
@@ -660,6 +718,7 @@ export default function VideoGeneration({
     setStatus(null);
     setVideoUrl(null);
     setIsVideoLoading(false);
+    setIsVideoOutdated(false);
     
     // Clear any active timeouts/intervals
     if (progressIntervalRef.current) {
@@ -743,32 +802,50 @@ export default function VideoGeneration({
         <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-gray-100">
           {!videoUrl ? (
             <div className="text-center">
-              <div className="mb-8">
-                <div className={`text-6xl sm:text-7xl mb-6 transition-all duration-500 ${
-                  isGenerating ? 'animate-bounce' : 'hover:scale-110'
-                }`}>
-                  {isGenerating ? '🔄' : '🎥'}
+              {/* Show special animation for outdated video */}
+              {isVideoOutdated ? (
+                <ScriptChangesAnimation />
+              ) : (
+                <div className="mb-8">
+                  <div className={`text-6xl sm:text-7xl mb-6 transition-all duration-500 ${
+                    isGenerating ? 'animate-bounce' : 'hover:scale-110'
+                  }`}>
+                    {isGenerating ? '🔄' : '🎥'}
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">
+                    {isGenerating ? 'Creating Your Video...' : 'Ready to Create Your Educational Video?'}
+                  </h3>
+                  <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                    {isGenerating 
+                      ? 'We\'re processing your slides and generating high-quality audio narration. This may take a few minutes.'
+                      : 'This process will generate professional audio narration and combine it with your custom visuals to create an engaging educational video.'
+                    }
+                  </p>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">
-                  {isGenerating ? 'Creating Your Video...' : 'Ready to Create Your Educational Video?'}
-                </h3>
-                <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-                  {isGenerating 
-                    ? 'We\'re processing your slides and generating high-quality audio narration. This may take a few minutes.'
-                    : 'This process will generate professional audio narration and combine it with your custom visuals to create an engaging educational video.'
-                  }
-                </p>
-              </div>
+              )}
 
               {!isGenerating ? (
                 <button
                   onClick={generateVideo}
-                  className="bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 hover:from-blue-600 hover:via-purple-600 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className={`${
+                    isVideoOutdated 
+                      ? 'bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 hover:from-orange-600 hover:via-red-600 hover:to-orange-600' 
+                      : 'bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 hover:from-blue-600 hover:via-purple-600 hover:to-blue-600'
+                  } text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                   style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}
                 >
                   <span className="flex items-center gap-3">
-                    🎥 Generate Video
-                    <span className="text-sm opacity-75">(~2-3 minutes)</span>
+                    {isVideoOutdated ? (
+                      <>
+                        🔄 Generate Updated Video
+                        <span className="text-sm opacity-75">(~2-3 minutes)</span>
+                      </>
+                    ) : (
+                      <>
+                        🎥 Generate Video
+                        <span className="text-sm opacity-75">(~2-3 minutes)</span>
+                      </>
+                    )}
                   </span>
                 </button>
               ) : (
@@ -779,9 +856,19 @@ export default function VideoGeneration({
                   >
                     <span className="flex items-center gap-3">
                       <LoadingSpinner size="md" />
-                      Generating Video...
+                      {isVideoOutdated ? 'Applying Changes...' : 'Generating Video...'}
                     </span>
                   </button>
+                  
+                  {/* Enhanced progress message for script changes */}
+                  {isVideoOutdated && (
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200 mb-4">
+                      <div className="flex items-center justify-center gap-2 text-blue-700">
+                        <span className="animate-spin">🔄</span>
+                        <span className="font-medium">Incorporating your latest script changes...</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -943,10 +1030,12 @@ export default function VideoGeneration({
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span className={`w-2 h-2 rounded-full ${
                   isGenerating ? 'bg-yellow-500 animate-pulse' : 
-                  videoUrl ? 'bg-blue-500' : 'bg-green-500'
+                  videoUrl ? 'bg-green-500' : 
+                  isVideoOutdated ? 'bg-orange-500 animate-pulse' : 'bg-blue-500'
                 }`}></span>
                 {isGenerating ? 'Generating...' : 
-                 videoUrl ? 'Video ready' : 'Ready for generation'}
+                 videoUrl ? 'Video ready' : 
+                 isVideoOutdated ? 'Script updated - regenerate needed' : 'Ready for generation'}
               </div>
             </div>
           </div>
