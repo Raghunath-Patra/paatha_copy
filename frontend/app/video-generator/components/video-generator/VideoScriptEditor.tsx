@@ -61,6 +61,8 @@ export default function VideoScriptEditor({
     visualFunction?: { functionName: string; code: string };
   } | null>(null);
 
+  const [showPdfExport, setShowPdfExport] = useState(false);
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Get current slide data (either from form or staged changes)
@@ -746,24 +748,12 @@ export default function VideoScriptEditor({
             ← Back to Input
           </button>
           
-          <VideoScriptPDFExport
-            project={project}
-            slides={slides}
-            filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
-            buttonText="📄 Download PDF"
-            onExportComplete={(filename: string) => {
-              setUpdateStatus({ 
-                type: 'success', 
-                message: `PDF exported: ${filename}` 
-              });
-            }}
-            onExportError={(error: any) => {
-              setUpdateStatus({ 
-                type: 'error', 
-                message: `Export failed: ${error.message}` 
-              });
-            }}
-          />
+          <button
+            onClick={() => setShowPdfExport(true)}
+            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg transform hover:scale-105"
+          >
+            📄 Download PDF
+          </button>
           
           <button
             onClick={onProceedToVideo}
@@ -773,6 +763,50 @@ export default function VideoScriptEditor({
           </button>
         </div>
       </div>
+
+      {/* PDF Export Modal */}
+      {showPdfExport && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">📄 Export PDF</h3>
+              <button
+                onClick={() => setShowPdfExport(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <VideoScriptPDFExport
+              project={project}
+              slides={slides}
+              filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
+              buttonText="📄 Generate & Download PDF"
+              onExportComplete={(filename: string) => {
+                setUpdateStatus({ 
+                  type: 'success', 
+                  message: `PDF exported: ${filename}` 
+                });
+                setShowPdfExport(false);
+              }}
+              onExportError={(error: any) => {
+                setUpdateStatus({ 
+                  type: 'error', 
+                  message: `Export failed: ${error.message}` 
+                });
+              }}
+            />
+            
+            <button
+              onClick={() => setShowPdfExport(false)}
+              className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
