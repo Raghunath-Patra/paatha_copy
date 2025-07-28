@@ -63,14 +63,14 @@ const AppCard = ({
       onClick={!comingSoon ? onClick : undefined}
     >
       {/* Background card */}
-      <div className={`relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 overflow-hidden border border-gray-100 ${
+      <div className={`relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 overflow-hidden border border-gray-100 min-h-[200px] ${
         comingSoon ? '' : 'hover:border-gray-200'
       }`}>
         {/* Gradient overlay */}
         <div className={`absolute inset-0 ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
         
         {/* Content */}
-        <div className="relative z-10">
+        <div className="relative z-10 h-full flex flex-col">
           {/* Icon and badges container */}
           <div className="flex items-start justify-between mb-4">
             <div className={`text-4xl transition-transform duration-300 ${
@@ -98,12 +98,12 @@ const AppCard = ({
           </h3>
 
           {/* Description */}
-          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          <p className="text-gray-600 text-sm leading-relaxed mb-4 flex-grow">
             {description}
           </p>
 
           {/* Action indicator */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center space-x-2 text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors duration-300">
               <span>{comingSoon ? 'Coming Soon' : 'Get Started'}</span>
               {!comingSoon && (
@@ -144,10 +144,15 @@ const AppGrid = () => {
   const router = useRouter();
   const { profile } = useSupabaseAuth();
   const [isVisible, setIsVisible] = useState(false);
+  const [cardsVisible, setCardsVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 300);
-    return () => clearTimeout(timer);
+    const timer1 = setTimeout(() => setIsVisible(true), 100);
+    const timer2 = setTimeout(() => setCardsVisible(true), 200);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, []);
 
   const apps = [
@@ -202,7 +207,7 @@ const AppGrid = () => {
   ];
 
   return (
-    <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+    <div className={`transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <div className="text-center mb-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
           Choose Your Learning Experience
@@ -216,10 +221,9 @@ const AppGrid = () => {
         {apps.map((app, index) => (
           <div
             key={app.title}
-            className="opacity-0 animate-fade-in-up"
+            className={`transition-all duration-500 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             style={{
-              animationDelay: `${index * 0.1}s`,
-              animationFillMode: 'forwards'
+              transitionDelay: `${index * 100}ms`
             }}
           >
             <AppCard {...app} />
