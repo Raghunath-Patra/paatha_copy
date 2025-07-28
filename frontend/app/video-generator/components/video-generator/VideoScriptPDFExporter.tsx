@@ -327,14 +327,14 @@ class VideoScriptPDFExporter {
     
     // Header text
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont( 'bold');
     this.pdf.setTextColor(255, 255, 255);
     this.pdf.text('PROJECT INFORMATION', this.margin + 5, yPos + 10);
     
     // Content
     yPos += 25;
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const projectInfo = [
@@ -371,7 +371,7 @@ class VideoScriptPDFExporter {
     ];
     
     this.pdf.setFontSize(14);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('Quick Overview', this.pageWidth / 2, yPos, { align: 'center' });
     
@@ -386,13 +386,13 @@ class VideoScriptPDFExporter {
       
       // Value
       this.pdf!.setFontSize(18);
-      this.pdf!.setFont(undefined, 'bold');
+      this.pdf!.setFont('bold');
       this.pdf!.setTextColor(26, 82, 118);
       this.pdf!.text(stat.value.toString(), x, yPos + 15, { align: 'center' });
       
       // Label
       this.pdf!.setFontSize(10);
-      this.pdf!.setFont(undefined, 'normal');
+      this.pdf!.setFont('normal');
       this.pdf!.setTextColor(100, 100, 100);
       this.pdf!.text(stat.label, x, yPos + 25, { align: 'center' });
     });
@@ -402,7 +402,7 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return;
     
     this.pdf.setFontSize(20);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text(title, this.margin, yPos);
     
@@ -426,7 +426,7 @@ class VideoScriptPDFExporter {
     
     // Slide number with icon
     this.pdf.setFontSize(16);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     const slideIcon = slide.visual?.type ? '🎨' : '📝';
     this.pdf.text(`${slideIcon} Slide ${slideNumber}`, this.margin + 5, yPos + 7);
@@ -435,7 +435,7 @@ class VideoScriptPDFExporter {
     const speakerName = this.currentProject?.speakers?.[slide.speaker]?.name || slide.speaker;
     const duration = slide.visualDuration || 4;
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(100, 100, 100);
     this.pdf.text(`👤 ${speakerName} | ⏱️ ${duration}s`, this.pageWidth - this.margin - 5, yPos + 7, { align: 'right' });
     
@@ -446,7 +446,7 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(16);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(50, 50, 50);
     
     const title = slide.title || 'Untitled Slide';
@@ -462,12 +462,12 @@ class VideoScriptPDFExporter {
     this.pdf.setFontSize(12);
     
     if (slide.content) {
-      this.pdf.setFont(undefined, 'bold');
+      this.pdf.setFont('bold');
       this.pdf.setTextColor(26, 82, 118);
       this.pdf.text('📝 Primary Content:', this.margin, yPos);
       yPos += 8;
       
-      this.pdf.setFont(undefined, 'normal');
+      this.pdf.setFont('normal');
       this.pdf.setTextColor(0, 0, 0);
       const contentLines = this.pdf.splitTextToSize(slide.content, this.contentWidth - 10);
       this.pdf.text(contentLines, this.margin + 5, yPos);
@@ -475,12 +475,12 @@ class VideoScriptPDFExporter {
     }
     
     if (slide.content2) {
-      this.pdf.setFont(undefined, 'bold');
+      this.pdf.setFont('bold');
       this.pdf.setTextColor(26, 82, 118);
       this.pdf.text('📝 Secondary Content:', this.margin, yPos);
       yPos += 8;
       
-      this.pdf.setFont(undefined, 'normal');
+      this.pdf.setFont('normal');
       this.pdf.setTextColor(0, 0, 0);
       const content2Lines = this.pdf.splitTextToSize(slide.content2, this.contentWidth - 10);
       this.pdf.text(content2Lines, this.margin + 5, yPos);
@@ -508,7 +508,7 @@ class VideoScriptPDFExporter {
     
     // Header
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('🎤 Narration Script:', this.margin + 10, yPos + 7);
     
@@ -516,7 +516,7 @@ class VideoScriptPDFExporter {
     
     // Content
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(60, 60, 60);
     this.pdf.text(narrationLines, this.margin + 10, yPos);
     
@@ -556,13 +556,13 @@ class VideoScriptPDFExporter {
     
     // Header
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(255, 140, 0);
     this.pdf.text('🎨 Visual Function Details:', this.margin + 10, yPos + 12);
     
     // Function info
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const funcInfo = `Function: ${slide.visual.type}`;
@@ -599,12 +599,12 @@ class VideoScriptPDFExporter {
     
     // Speaker info
     this.pdf.setFontSize(14);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text(`👤 ${speaker.name || speakerKey}`, this.margin + 10, yPos + 15);
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(100, 100, 100);
     
     const speakerDetails = [
@@ -623,13 +623,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(14);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('📈 Content Metrics', this.margin, yPos);
     yPos += 15;
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const stats = [
@@ -813,13 +813,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('📖 Project Description', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const description = this.currentProject?.description || 
@@ -834,13 +834,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('🏗️ Content Structure', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const structure = [
@@ -863,13 +863,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('⚙️ Technical Specifications', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const specs = [
@@ -894,13 +894,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('📊 Speaker Distribution', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const speakerCounts: Record<string, number> = {};
@@ -936,13 +936,13 @@ class VideoScriptPDFExporter {
     }
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont( 'bold');
     this.pdf.setTextColor(255, 140, 0);
     this.pdf.text(`🎨 ${funcName}`, this.margin, yPos);
     yPos += 10;
     
     this.pdf.setFontSize(10);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const usage = this.slides.filter(s => s.visual?.type === funcName);
@@ -966,13 +966,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(14);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('🎬 Production Metrics', this.margin, yPos);
     yPos += 15;
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const stats = [
@@ -996,13 +996,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(14);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('✅ Quality Assessment', this.margin, yPos);
     yPos += 15;
     
     this.pdf.setFontSize(11);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const metrics = [
@@ -1026,13 +1026,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('📹 Filming Guidelines', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(10);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const guidelines = [
@@ -1056,13 +1056,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('🎵 Audio Production Guidelines', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(10);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const guidelines = [
@@ -1086,13 +1086,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('✂️ Post-Production Notes', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(10);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const notes = [
@@ -1116,13 +1116,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('📋 Export Metadata', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(10);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const metadata = [
@@ -1147,13 +1147,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont('bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('📚 Version History', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(10);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const versions = [
@@ -1174,13 +1174,13 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return yPos;
     
     this.pdf.setFontSize(12);
-    this.pdf.setFont(undefined, 'bold');
+    this.pdf.setFont( 'bold');
     this.pdf.setTextColor(26, 82, 118);
     this.pdf.text('📞 Support Information', this.margin, yPos);
     yPos += 12;
     
     this.pdf.setFontSize(10);
-    this.pdf.setFont(undefined, 'normal');
+    this.pdf.setFont('normal');
     this.pdf.setTextColor(0, 0, 0);
     
     const contact = [
@@ -1219,13 +1219,13 @@ class VideoScriptPDFExporter {
     
     if (notes.length > 0) {
       this.pdf.setFontSize(10);
-      this.pdf.setFont(undefined, 'bold');
+      this.pdf.setFont('bold');
       this.pdf.setTextColor(100, 100, 100);
       this.pdf.text('🎬 Production Notes:', this.margin, yPos);
       yPos += 8;
       
       this.pdf.setFontSize(9);
-      this.pdf.setFont(undefined, 'normal');
+      this.pdf.setFont('normal');
       notes.forEach(note => {
         this.pdf!.text(`• ${note}`, this.margin + 5, yPos);
         yPos += 6;
