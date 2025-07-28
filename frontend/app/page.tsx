@@ -1,4 +1,4 @@
-// app/page.tsx - FIXED Role-based routing to prevent redirect loops
+// app/page.tsx - Enhanced with Google-style navigation system
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -21,7 +21,7 @@ const BOARD_STRUCTURE = {
       xii: { display_name: "Class XII" }
     }
   },
-  karnataka: {
+  karnateka: {
     display_name: "Karnataka State Board", 
     classes: {
       "8th": { display_name: "8th Class" },
@@ -32,6 +32,253 @@ const BOARD_STRUCTURE = {
     }
   }
 } as const;
+
+// Google-style App Card Component
+const AppCard = ({ 
+  icon, 
+  title, 
+  description, 
+  gradient, 
+  onClick, 
+  isNew = false,
+  comingSoon = false
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  gradient: string;
+  onClick: () => void;
+  isNew?: boolean;
+  comingSoon?: boolean;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      className={`relative group cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+        comingSoon ? 'opacity-75 cursor-not-allowed' : ''
+      }`}
+      onMouseEnter={() => !comingSoon && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={!comingSoon ? onClick : undefined}
+    >
+      {/* Background card */}
+      <div className={`relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 overflow-hidden border border-gray-100 ${
+        comingSoon ? '' : 'hover:border-gray-200'
+      }`}>
+        {/* Gradient overlay */}
+        <div className={`absolute inset-0 ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+        
+        {/* Content */}
+        <div className="relative z-10">
+          {/* Icon and badges container */}
+          <div className="flex items-start justify-between mb-4">
+            <div className={`text-4xl transition-transform duration-300 ${
+              isHovered && !comingSoon ? 'scale-110' : ''
+            }`}>
+              {icon}
+            </div>
+            <div className="flex flex-col space-y-1">
+              {isNew && (
+                <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                  NEW
+                </span>
+              )}
+              {comingSoon && (
+                <span className="bg-gradient-to-r from-gray-400 to-gray-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  SOON
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Title */}
+          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+            {title}
+          </h3>
+
+          {/* Description */}
+          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+            {description}
+          </p>
+
+          {/* Action indicator */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors duration-300">
+              <span>{comingSoon ? 'Coming Soon' : 'Get Started'}</span>
+              {!comingSoon && (
+                <svg className={`w-4 h-4 transition-transform duration-300 ${
+                  isHovered ? 'translate-x-1' : ''
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Hover effect particles */}
+        {isHovered && !comingSoon && (
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-blue-400 rounded-full animate-ping opacity-60"
+                style={{
+                  left: `${20 + i * 15}%`,
+                  top: `${30 + (i % 2) * 40}%`,
+                  animationDelay: `${i * 0.2}s`,
+                  animationDuration: '1.5s'
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Google-style App Grid Component
+const AppGrid = () => {
+  const router = useRouter();
+  const { profile } = useSupabaseAuth();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const apps = [
+    {
+      icon: '📚',
+      title: profile?.role === 'teacher' ? 'Teacher Dashboard' : 'Student Dashboard',
+      description: profile?.role === 'teacher' 
+        ? 'Manage courses, create quizzes, and track student progress with powerful analytics.'
+        : 'Access your courses, take quizzes, and track your learning progress with AI insights.',
+      gradient: 'bg-gradient-to-br from-blue-500 to-indigo-600',
+      onClick: () => router.push(profile?.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard')
+    },
+    {
+      icon: '🎬',
+      title: 'Video Generator',
+      description: 'Create stunning educational videos with AI. Transform your ideas into engaging visual content.',
+      gradient: 'bg-gradient-to-br from-purple-500 to-pink-600',
+      onClick: () => router.push('/video-generator'),
+      isNew: true
+    },
+    {
+      icon: '🎯',
+      title: 'Quick Practice',
+      description: 'Test your knowledge with AI-generated questions. Daily challenges and adaptive learning.',
+      gradient: 'bg-gradient-to-br from-red-500 to-orange-600',
+      onClick: () => router.push('/try')
+    },
+    {
+      icon: '🧠',
+      title: 'AI Tutor',
+      description: 'Get personalized help from your AI tutor. Ask questions and receive detailed explanations.',
+      gradient: 'bg-gradient-to-br from-green-500 to-teal-600',
+      onClick: () => router.push('/chat'),
+      comingSoon: true
+    },
+    {
+      icon: '📊',
+      title: 'Analytics Hub',
+      description: 'Detailed insights into your learning patterns, strengths, and areas for improvement.',
+      gradient: 'bg-gradient-to-br from-yellow-500 to-orange-600',
+      onClick: () => router.push('/analytics'),
+      comingSoon: true
+    },
+    {
+      icon: '🎓',
+      title: 'Certification',
+      description: 'Earn certificates for completed courses and showcase your achievements.',
+      gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+      onClick: () => router.push('/certificates'),
+      comingSoon: true
+    }
+  ];
+
+  return (
+    <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <div className="text-center mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
+          Choose Your Learning Experience
+        </h2>
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Access all your learning tools in one place. Pick where you'd like to start your journey today.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {apps.map((app, index) => (
+          <div
+            key={app.title}
+            className="opacity-0 animate-fade-in-up"
+            style={{
+              animationDelay: `${index * 0.1}s`,
+              animationFillMode: 'forwards'
+            }}
+          >
+            <AppCard {...app} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// User Profile Card Component
+const UserProfileCard = () => {
+  const { profile } = useSupabaseAuth();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!profile) return null;
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'teacher': return '👨‍🏫';
+      case 'student': return '🎓';
+      default: return '👤';
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'teacher': return 'from-blue-500 to-indigo-600';
+      case 'student': return 'from-green-500 to-teal-600';
+      default: return 'from-gray-500 to-gray-600';
+    }
+  };
+
+  return (
+    <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-200 max-w-md mx-auto">
+        <div className="flex items-center space-x-4">
+          <div className={`w-12 h-12 bg-gradient-to-br ${getRoleColor(profile.role)} rounded-full flex items-center justify-center text-white text-xl`}>
+            {getRoleIcon(profile.role)}
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 text-lg">
+              Welcome back, {profile.full_name}!
+            </h3>
+            <p className="text-gray-600 text-sm capitalize">
+              {profile.role} Account
+            </p>
+          </div>
+          <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Skeleton loader component
 const BoardCardSkeleton = () => (
@@ -78,7 +325,7 @@ const DailyChallengeButton = ({ isVisible }: { isVisible: boolean }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleChallengeClick = () => {
-      router.push('/try');
+    router.push('/try');
   };
 
   return (
@@ -159,54 +406,6 @@ const DailyChallengeButton = ({ isVisible }: { isVisible: boolean }) => {
   );
 };
 
-// Features component
-const Features = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 800);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  const features = [
-    { icon: "🎯", title: "Personalized Learning", desc: "AI adapts to your learning style" },
-    { icon: "⚡", title: "Instant Feedback", desc: "Get detailed explanations immediately" },
-    { icon: "📊", title: "Track Progress", desc: "Monitor your learning journey" }
-  ];
-
-  return (
-    <div className={`mt-12 sm:mt-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-      <h3 className="text-lg sm:text-xl font-semibold text-center text-gray-800 mb-6 sm:mb-8">
-        Why Choose Paaṭha AI?
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
-        {features.map((feature, i) => (
-          <div 
-            key={i}
-            className="bg-white/60 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-all duration-200 hover:scale-105 group"
-            style={{
-              animationDelay: `${i * 100}ms`
-            }}
-          >
-            <div className="text-2xl sm:text-3xl mb-3 group-hover:scale-110 transition-transform duration-200">
-              {feature.icon}
-            </div>
-            <h4 className="font-semibold text-gray-800 text-sm sm:text-base mb-2">
-              {feature.title}
-            </h4>
-            <p className="text-xs sm:text-sm text-gray-600">
-              {feature.desc}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // Auth Button Component
 const AuthButton = () => {
   const { user } = useSupabaseAuth();
@@ -223,14 +422,7 @@ const AuthButton = () => {
 
   // Don't show auth buttons if user is already logged in
   if (user) {
-    return (
-      <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        <div className="inline-flex items-center px-4 py-3 bg-green-50 border border-green-200 rounded-full text-green-700 text-sm font-medium shadow-sm">
-          <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-          Welcome back! Ready to learn?
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -312,46 +504,6 @@ const AuthButton = () => {
   );
 };
 
-// Call to action section
-const CallToAction = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 1200);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className={`mt-12 sm:mt-16 text-center transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg sm:rounded-xl p-6 sm:p-8 border border-red-100">
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">
-          Ready to Transform Your Learning?
-        </h3>
-        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto">
-          Join thousands of students who are already experiencing the power of AI-driven personalized education.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-            <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-            Free to start
-          </div>
-          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-            <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-            No credit card required
-          </div>
-          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-            <span className="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
-            Instant access
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function HomePage() {
   const router = useRouter();
   const { profile, user, loading: authLoading } = useSupabaseAuth();
@@ -360,48 +512,8 @@ export default function HomePage() {
   const [showStats, setShowStats] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
   
-  // FIXED: Enhanced role-based redirect with better timing and conflict prevention
-  useEffect(() => {
-    // Don't redirect if auth is still loading
-    if (authLoading || isLoading) {
-      console.log('Auth or page still loading, skipping redirect check');
-      return;
-    }
-
-    // FIXED: Check for Google One-tap in progress to prevent conflicts
-    const isGoogleOneTapActive = document.querySelector('iframe[src*="accounts.google.com"]');
-    if (isGoogleOneTapActive) {
-      console.log('Google One-tap active, skipping redirect to prevent conflicts');
-      return;
-    }
-
-    // Don't redirect immediately after login - check for login flag
-    const isInitialLogin = sessionStorage.getItem('isInitialLogin');
-    if (isInitialLogin) {
-      sessionStorage.removeItem('isInitialLogin');
-      return;
-    }
-
-    // FIXED: Add a longer delay before redirect to ensure auth state is fully settled
-    if (user && profile && !authLoading && !isLoading) {
-      console.log('Checking role-based redirect:', { role: profile.role });
-      
-      const redirectTimer = setTimeout(() => {
-        // Double-check conditions before redirecting
-        if (!authLoading && !isLoading && profile.role) {
-          if (profile.role === 'teacher') {
-            router.push('/teacher/dashboard');
-            return;
-          } else if (profile.role === 'student') {
-            router.push('/student/dashboard');
-            return;
-          }
-        }
-      }, 100); 
-
-      return () => clearTimeout(redirectTimer);
-    }
-  }, [user, profile, router, authLoading, isLoading]); // Include all relevant dependencies
+  // Remove automatic redirect - let users choose their path
+  // Instead of redirecting, we'll show the app grid for logged-in users
   
   // Memoized class selection handler
   const handleClassSelect = React.useCallback((board: string, classLevel: string) => {
@@ -432,7 +544,6 @@ export default function HomePage() {
     };
   }, []);
   
-  // FIXED: Better loading condition - consider both auth and page loading
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 px-4">
@@ -463,11 +574,6 @@ export default function HomePage() {
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
         }
         
         .animate-fade-in-up {
@@ -509,14 +615,14 @@ export default function HomePage() {
         
         <div className="container-fluid px-4 sm:px-8 py-4 sm:py-6 relative z-10">
           <div className="max-w-[1600px] mx-auto w-full">
-            {/* Navigation - Highest z-index to prevent blocking */}
+            {/* Navigation */}
             <div className="flex justify-end mb-4 sm:mb-6 opacity-0 animate-fade-in stagger-1 relative z-[100]">
               <Navigation />
             </div>
             
-            <div className="max-w-4xl mx-auto relative z-0">
-              {/* Enhanced Logo Section - responsive */}
-              <div className="text-center mb-12 sm:mb-16 opacity-0 animate-fade-in-up stagger-2">
+            <div className="max-w-6xl mx-auto relative z-0">
+              {/* Enhanced Logo Section */}
+              <div className="text-center mb-8 sm:mb-12 opacity-0 animate-fade-in-up stagger-2">
                 <EnhancedLogo 
                   className="h-12 w-12 sm:h-16 sm:w-16" 
                   showText={true}
@@ -526,16 +632,21 @@ export default function HomePage() {
                 </p>
               </div>
               
-              {/* Quick Stats */}
-              <QuickStats isVisible={showStats} />
+              {/* User Profile Card - Show for logged-in users */}
+              {user && profile && <UserProfileCard />}
               
-              {/* Daily Challenge Button */}
-              <DailyChallengeButton isVisible={showChallenge} />
-              
-              {/* Show board selection only if user is not logged in or doesn't have a role */}
-              {(!user || !profile?.role) && (
+              {/* Show App Grid for logged-in users, or continue with existing flow for guests */}
+              {user && profile ? (
+                <AppGrid />
+              ) : (
                 <>
-                  {/* Board Selection */}
+                  {/* Quick Stats */}
+                  <QuickStats isVisible={showStats} />
+                  
+                  {/* Daily Challenge Button */}
+                  <DailyChallengeButton isVisible={showChallenge} />
+                  
+                  {/* Board Selection for non-logged in users */}
                   <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800 mb-6 sm:mb-8 opacity-0 animate-fade-in stagger-4 px-4 sm:px-0">
                     Choose Your Learning Path
                   </h2>
@@ -564,14 +675,71 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Features Section for guests */}
+                  <div className="mt-12 sm:mt-16">
+                    <div className="text-center mb-8">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
+                        Why Choose Paaṭha AI?
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
+                        {[
+                          { icon: "🎯", title: "Personalized Learning", desc: "AI adapts to your learning style" },
+                          { icon: "⚡", title: "Instant Feedback", desc: "Get detailed explanations immediately" },
+                          { icon: "📊", title: "Track Progress", desc: "Monitor your learning journey" }
+                        ].map((feature, i) => (
+                          <div 
+                            key={i}
+                            className="bg-white/60 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-all duration-200 hover:scale-105 group opacity-0 animate-fade-in-up"
+                            style={{ animationDelay: `${0.8 + i * 0.1}s`, animationFillMode: 'forwards' }}
+                          >
+                            <div className="text-2xl sm:text-3xl mb-3 group-hover:scale-110 transition-transform duration-200">
+                              {feature.icon}
+                            </div>
+                            <h4 className="font-semibold text-gray-800 text-sm sm:text-base mb-2">
+                              {feature.title}
+                            </h4>
+                            <p className="text-xs sm:text-sm text-gray-600">
+                              {feature.desc}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Auth Section for guests */}
+                  <div className="text-center mt-12 sm:mt-16">
+                    <AuthButton />
+                  </div>
+                  
+                  {/* Call to Action for guests */}
+                  <div className="mt-12 sm:mt-16 text-center">
+                    <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg sm:rounded-xl p-6 sm:p-8 border border-red-100 opacity-0 animate-fade-in-up" style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">
+                        Ready to Transform Your Learning?
+                      </h3>
+                      <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto">
+                        Join thousands of students who are already experiencing the power of AI-driven personalized education.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                          Free to start
+                        </div>
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                          No credit card required
+                        </div>
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <span className="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
+                          Instant access
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
-              
-              {/* Features Section */}
-              <Features />
-              
-              {/* Call to Action */}
-              <CallToAction />
               
               {/* Bottom spacing for mobile */}
               <div className="h-8 sm:h-16"></div>
