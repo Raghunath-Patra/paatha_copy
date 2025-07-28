@@ -1,321 +1,280 @@
-import React, { useState, useCallback } from 'react';
-import { jsPDF } from 'jspdf';
-
-// Define the interfaces for the props
-interface Speaker {
-  name: string;
-  voice: string;
-  gender: string;
-}
-
-interface Slide {
-  title: string;
-  speaker: string;
-  content?: string;
-  content2?: string;
-  narration?: string;
-  visualDuration?: number;
-  isComplex: boolean;
-  visual?: {
-    type: string;
-    params?: string[];
-  };
-}
-
-interface Project {
-  title: string;
-  projectId: string;
-  speakers: Record<string, Speaker>;
-}
+import React, { useState, useRef, useEffect } from 'react';
 
 interface PDFExportButtonProps {
-  project: Project;
-  slides: Slide[];
+  project: {
+    id: string;
+    title: string;
+    speakers: any;
+    visualFunctions: any;
+  };
+  slides: any[];
   filename: string;
 }
 
 const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, filename }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const generateAndDownloadPDF = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasRef.current.width = 1000;
+      canvasRef.current.height = 700;
+    }
+  }, []);
+
+  const getBackgroundColor = (speaker: string) => {
+    const colors: Record<string, string> = {
+      teacher: '#f0f9ff',
+      student1: '#faf5ff',
+      student2: '#fefbff'
+    };
+    return colors[speaker] || '#f8fafc';
+  };
+
+  const drawAvatars = (ctx: CanvasRenderingContext2D, activeSpeaker: string) => {
+    if (!project.speakers) return;
+    
+    const speakerKeys = Object.keys(project.speakers);
+    const avatarSize = 30;
+    const startY = 250;
+    const spacing = 70;
+    
+    speakerKeys.forEach((speaker, index) => {
+      const config = project.speakers[speaker];
+      const isActive = speaker === activeSpeaker;
+      const x = 30 + avatarSize / 2;
+      const y = startY + (index * spacing) + avatarSize / 2;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, 15, 0, Math.PI * 2);
+      ctx.fillStyle = isActive ? '#a78bfa' : '#e5e7eb';
+      ctx.fill();
+      ctx.strokeStyle = isActive ? config.color : '#d1d5db';
+      ctx.lineWidth = isActive ? 3 : 1;
+      ctx.stroke();
+      
+      ctx.fillStyle = isActive ? '#374151' : '#6b7280';
+      ctx.font = `${isActive ? 'bold ' : ''}12px Arial`;
+      ctx.textAlign = 'center';
+      ctx.fillText(config.name, x, y + 25);
+    });
+  };
+
+  const renderSlideToCanvas = (slide: any, canvas: HTMLCanvasElement): string | null => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Clear canvas
+    ctx.fillStyle = '#f8f9fa';
+    ctx.fillRect(0, 0, 1000, 700);
+
+    // Draw background
+    const backgroundColor = getBackgroundColor(slide.speaker);
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, 1000, 700);
+    
+    // Draw title
+    ctx.fillStyle = '#1e40af';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(slide.title || 'Untitled Slide', 500, 75);
+    
+    // Draw content
+    ctx.fillStyle = '#374151';
+    ctx.font = '22px Arial';
+    ctx.textAlign = 'center';
+    if (slide.content) ctx.fillText(slide.content, 500, 120);
+    if (slide.content2) ctx.fillText(slide.content2, 500, 150);
+    
+    // Draw visual area border
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(200, 200, 600, 400);
+
+    // Draw visual if available
+    if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
+      try {
+        let visualFunc = project.visualFunctions[slide.visual.type];
+        let func: Function;
+        
+        if (typeof visualFunc === 'string') {
+          const functionBody = visualFunc.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
+          func = new Function('ctx', 'param1', 'param2', 'param3', functionBody);
+        } else {
+          func = visualFunc;
+        }
+
+        // Save context and clip to visual area
+        ctx.save();
+        ctx.translate(200, 200);
+        ctx.beginPath();
+        ctx.rect(0, 0, 600, 400);
+        ctx.clip();
+
+        if (slide.visual.params && slide.visual.params.length > 0) {
+          func(ctx, ...slide.visual.params);
+        } else {
+          func(ctx);
+        }
+        
+        ctx.restore();
+      } catch (error) {
+        console.error('Error executing visual function:', error);
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Error in visual function', 500, 400);
+      }
+    }
+
+    drawAvatars(ctx, slide.speaker);
+    
+    return canvas.toDataURL('image/jpeg', 0.95);
+  };
+
+  const generatePDF = async () => {
+    if (!slides || slides.length === 0) {
+      alert('No slides to export');
+      return;
+    }
+
+    setIsGenerating(true);
+    setProgress(0);
 
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 20;
-      const contentWidth = pageWidth - margin * 2;
-
-      // --- Helper function implementations ---
-
-      const calculateTotalDuration = (): number => {
-        return slides.reduce((total, slide) => total + (slide.visualDuration || 0), 0);
-      };
-
-      const getUniqueVisualFunctions = (): string[] => {
-        const visualFuncs = slides
-          .map(slide => slide.visual?.type)
-          .filter((type): type is string => !!type);
-        return [...new Set(visualFuncs)];
-      };
-
-      const getProjectTitle = (): string => {
-        return project?.title || slides[0]?.title || 'Educational Script';
-      };
-
-      const addPDFFooter = (pageNumber: number, totalPages: number) => {
-        const footerY = pageHeight - 15;
-        pdf.setFontSize(8);
-        pdf.setTextColor(150, 150, 150);
-        
-        // Page number
-        const pageNumText = `Page ${pageNumber} of ${totalPages}`;
-        pdf.text(pageNumText, pageWidth - margin, footerY, { align: 'right' });
-
-        // Generated by text
-        pdf.text('Generated by Educational Video Generator', margin, footerY);
-      };
-
-      const drawInfoBox = (yPos: number) => {
-        const boxHeight = 40;
-        pdf.setLineWidth(0.5);
-        pdf.setDrawColor(220, 220, 220);
-        pdf.setFillColor(248, 249, 250);
-        pdf.rect(margin, yPos, contentWidth, boxHeight, 'FD');
-
-        yPos += 10;
-        pdf.setFontSize(11);
-        pdf.setFont('bold');
-        pdf.setTextColor(0, 0, 0);
-
-        const projectInfo = [
-          `Project ID: ${project?.projectId?.substring(0, 8) || 'N/A'}`,
-          `Total Slides: ${slides.length}`,
-          `Generated: ${new Date().toLocaleDateString()}`,
-          `Est. Duration: ${calculateTotalDuration()}s`
-        ];
-
-        projectInfo.forEach((info, index) => {
-          const x = margin + 10 + (index % 2) * (contentWidth / 2 - 10);
-          const y = yPos + Math.floor(index / 2) * 10;
-          pdf.text(info, x, y);
-        });
-      };
+      // Dynamic import of jsPDF
+      const { default: jsPDF } = await import('jspdf');
       
-      const addSpeakersSection = (yPos: number) => {
-        pdf.setFontSize(14);
-        pdf.setFont('bold');
-        pdf.text('Speakers', margin, yPos);
-        yPos += 10;
-        
-        pdf.setFontSize(11);
-        pdf.setFont('bold');
-
-        if (project?.speakers && Object.keys(project.speakers).length > 0) {
-          Object.entries(project.speakers).forEach(([key, speaker]) => {
-            pdf.text(`• ${speaker.name || key} (Voice: ${speaker.voice || 'default'})`, margin + 5, yPos);
-            yPos += 7;
-          });
-        } else {
-          pdf.text('• No speaker information available', margin + 5, yPos);
-        }
-      };
-
-      const addTitlePage = () => {
-        let yPos = 60;
-        const centerX = pageWidth / 2;
-
-        pdf.setFontSize(24);
-        pdf.setFont('bold');
-        pdf.text(getProjectTitle(), centerX, yPos, { align: 'center' });
-        yPos += 20;
-
-        pdf.setFontSize(16);
-        pdf.setFont('normal');
-        pdf.text('Educational Video Script', centerX, yPos, { align: 'center' });
-        yPos += 30;
-
-        drawInfoBox(yPos);
-        yPos += 60;
-
-        addSpeakersSection(yPos);
-      };
-
-      const checkPageEndAndAdd = (yPos: number, pageNum: number, totalPages: number): number => {
-          const requiredSpace = 30; // space for footer + a little margin
-          if (yPos > pageHeight - requiredSpace) {
-              addPDFFooter(pageNum, totalPages);
-              pdf.addPage();
-              return margin; // Reset yPos for the new page
-          }
-          return yPos;
-      };
-
-      const addTextSection = (yPos: number, title: string, text: string | undefined, options: { isItalic?: boolean } = {}): number => {
-        if (!text) return yPos;
-
-        let newY = yPos;
-        pdf.setFontSize(12);
-        pdf.setFont('bold');
-        pdf.text(title, margin, newY);
-        newY += 7;
-
-        pdf.setFontSize(11);
-        pdf.setFont(options.isItalic ? 'italic' : 'normal');
-        if(options.isItalic) pdf.setTextColor(60, 60, 60);
-
-        const lines = pdf.splitTextToSize(text, contentWidth - 5);
-        pdf.text(lines, margin + 5, newY);
-        newY += lines.length * 5.5 + 8;
-        
-        pdf.setTextColor(0, 0, 0); // Reset color
-        pdf.setFont('normal');
-        return newY;
-      }
-      
-      const addSlidePage = (slide: Slide, slideNumber: number, totalPages: number) => {
-        let yPos = margin;
-        
-        // Header
-        pdf.setFontSize(16);
-        pdf.setFont('bold');
-        pdf.setTextColor(26, 82, 118);
-        pdf.text(`Slide ${slideNumber}`, margin, yPos);
-
-        const speakerName = project?.speakers?.[slide.speaker]?.name || slide.speaker;
-        pdf.setFontSize(10);
-        pdf.setFont('normal');
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(`Speaker: ${speakerName}`, pageWidth - margin, yPos, { align: 'right' });
-        yPos += 15;
-        
-        pdf.setTextColor(0, 0, 0);
-
-        // Title
-        pdf.setFontSize(14);
-        pdf.setFont('bold');
-        const titleLines = pdf.splitTextToSize(slide.title || 'Untitled', contentWidth);
-        pdf.text(titleLines, margin, yPos);
-        yPos += titleLines.length * 7 + 10;
-        
-        yPos = checkPageEndAndAdd(yPos, slideNumber, totalPages);
-
-        // Content
-        yPos = addTextSection(yPos, 'Content:', slide.content);
-        yPos = addTextSection(yPos, 'Additional Content:', slide.content2);
-        yPos = addTextSection(yPos, 'Narration:', slide.narration, { isItalic: true });
-        
-        yPos = checkPageEndAndAdd(yPos, slideNumber, totalPages);
-
-        // Visual Info
-        if (slide.visual?.type) {
-            pdf.setFontSize(10);
-            pdf.setFont('bold');
-            pdf.setTextColor(231, 76, 60);
-            pdf.text('🎨 Visual Function:', margin, yPos);
-            yPos += 7;
-            
-            pdf.setFont('normal');
-            pdf.setTextColor(0, 0, 0);
-            const visualInfo = `${slide.visual.type}(${slide.visual.params ? slide.visual.params.join(', ') : ''})`;
-            const visualLines = pdf.splitTextToSize(visualInfo, contentWidth - 10);
-            pdf.text(visualLines, margin + 5, yPos);
-            yPos += visualLines.length * 5 + 8;
-        }
-
-        // Technical details line at the bottom
-        const footerY = pageHeight - 20;
-        pdf.setLineWidth(0.2);
-        pdf.setDrawColor(200, 200, 200);
-        pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
-
-        pdf.setFontSize(9);
-        pdf.setFont('normal');
-        pdf.setTextColor(100, 100, 100);
-        const techDetails = `Duration: ${slide.visualDuration || 'N/A'}s  |  Complex: ${slide.isComplex ? 'Yes' : 'No'}`;
-        pdf.text(techDetails, margin, footerY);
-      };
-      
-      const addSummaryPage = () => {
-        pdf.addPage();
-        let yPos = margin;
-        
-        pdf.setFontSize(18);
-        pdf.setFont('bold');
-        pdf.text('Script Summary & Statistics', pageWidth / 2, yPos, { align: 'center' });
-        yPos += 25;
-
-        // Statistics
-        const stats = [
-          `Total Slides: ${slides.length}`,
-          `Total Speakers: ${Object.keys(project?.speakers || {}).length}`,
-          `Unique Visual Functions: ${getUniqueVisualFunctions().length}`,
-          `Estimated Total Duration: ${calculateTotalDuration()}s`,
-          `Complex Slides: ${slides.filter(s => s.isComplex).length}`,
-          `Average Slide Duration: ${(slides.length > 0 ? calculateTotalDuration() / slides.length : 0).toFixed(1)}s`
-        ];
-        yPos = addTextSection(yPos, '📊 Project Statistics', stats.join('\n• '), {isItalic: false});
-        yPos += 10;
-        
-        // Visual Functions List
-        const visualFunctions = getUniqueVisualFunctions();
-        if (visualFunctions.length > 0) {
-            yPos = addTextSection(yPos, '🎨 Visual Functions Used', visualFunctions.join('\n• '));
-            yPos += 10;
-        }
-
-        // Speaker Breakdown
-        const speakerCounts: Record<string, number> = {};
-        slides.forEach(slide => {
-          speakerCounts[slide.speaker] = (speakerCounts[slide.speaker] || 0) + 1;
-        });
-        const breakdown = Object.entries(speakerCounts).map(([speaker, count]) => {
-          const speakerName = project?.speakers?.[speaker]?.name || speaker;
-          const percentage = ((count / slides.length) * 100).toFixed(1);
-          return `${speakerName}: ${count} slides (${percentage}%)`;
-        });
-
-        yPos = addTextSection(yPos, '👥 Speaker Breakdown', breakdown.join('\n• '));
-      };
-
-
-      // --- PDF Generation Logic ---
-      const totalPages = slides.length + 2; // Title + Slides + Summary
-
-      // 1. Add Title Page
-      addTitlePage();
-      addPDFFooter(1, totalPages);
-
-      // 2. Add Slide Pages
-      slides.forEach((slide, i) => {
-        pdf.addPage();
-        addSlidePage(slide, i + 1, totalPages);
-        addPDFFooter(i + 2, totalPages);
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
       });
 
-      // 3. Add Summary Page
-      addSummaryPage();
-      addPDFFooter(totalPages, totalPages);
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        throw new Error('Canvas not available');
+      }
 
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i];
+        
+        // Update progress
+        setProgress(Math.round(((i + 1) / slides.length) * 100));
+
+        // Add new page (except for first slide)
+        if (i > 0) {
+          pdf.addPage();
+        }
+
+        // Render slide to canvas
+        const slideImage = renderSlideToCanvas(slide, canvas);
+        
+        if (slideImage) {
+          // Add slide image to PDF (landscape A4: 297x210mm)
+          pdf.addImage(slideImage, 'JPEG', 10, 10, 277, 190);
+          
+          // Add slide number
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`Slide ${i + 1} of ${slides.length}`, 15, 205);
+          
+          // Add speaker info
+          const speakerName = project.speakers?.[slide.speaker]?.name || slide.speaker;
+          pdf.text(`Speaker: ${speakerName}`, 200, 205);
+        }
+
+        // Small delay to prevent UI blocking
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+      // Save PDF
       pdf.save(filename);
-
-    } catch (err) {
-      setError('Failed to generate PDF. Please try again.');
-      console.error(err);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please make sure jsPDF is installed.');
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
+      setProgress(0);
     }
-  }, [project, slides, filename]);
+  };
 
   return (
-    <div>
-      <button onClick={generateAndDownloadPDF} disabled={loading}>
-        {loading ? 'Generating PDF...' : 'Export to PDF'}
-      </button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <div className="space-y-4">
+      {/* Hidden canvas for slide rendering */}
+      <canvas 
+        ref={canvasRef} 
+        style={{ display: 'none' }}
+        className="hidden"
+      />
+
+      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-orange-800 flex items-center">
+              📄 Export to PDF
+            </h3>
+            <p className="text-sm text-orange-600 mt-1">
+              Generate a PDF with all slides and visuals
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-orange-600">
+              {slides?.length || 0} slides
+            </div>
+            <div className="text-xs text-orange-500">
+              {filename}
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        {isGenerating && (
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-orange-600 mb-2">
+              <span>Generating PDF...</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="w-full bg-orange-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Export Button */}
+        <button
+          onClick={generatePDF}
+          disabled={isGenerating || !slides || slides.length === 0}
+          className={`w-full px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+            isGenerating
+              ? 'bg-orange-400 cursor-not-allowed animate-pulse'
+              : slides && slides.length > 0
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 transform hover:scale-105 shadow-lg'
+                : 'bg-gray-300 cursor-not-allowed'
+          } text-white`}
+        >
+          {isGenerating ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Generating PDF... ({progress}%)
+            </span>
+          ) : (
+            '📄 Download PDF'
+          )}
+        </button>
+
+        <div className="mt-3 text-xs text-orange-600">
+          <strong>Note:</strong> Make sure to install jsPDF: <code className="bg-white px-1 rounded">npm install jspdf</code>
+        </div>
+      </div>
     </div>
   );
 };
