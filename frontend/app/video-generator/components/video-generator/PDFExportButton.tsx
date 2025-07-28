@@ -31,7 +31,6 @@ interface PDFExportButtonProps {
 }
 
 // Helper function to wrap text on a canvas
-// It handles splitting text into multiple lines based on a max width.
 const wrapText = (
     ctx: CanvasRenderingContext2D, 
     text: string, 
@@ -58,7 +57,6 @@ const wrapText = (
         }
     }
     ctx.fillText(line.trim(), x, currentY);
-    // Return the Y position for the next element, including line height for spacing
     return currentY + lineHeight;
 };
 
@@ -68,17 +66,15 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     const [progress, setProgress] = useState(0);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    // PDF dimensions (A4 landscape in mm)
+    // PDF dimensions
     const pageWidth = 297;
     const pageHeight = 210;
     const margin = 20;
-    const contentWidth = pageWidth - (margin * 2); // 257mm
-    const contentHeight = pageHeight - (margin * 2); // 170mm
+    const contentWidth = pageWidth - (margin * 2);
+    const contentHeight = pageHeight - (margin * 2);
 
-    // Set up the canvas dimensions once.
     useEffect(() => {
         if (canvasRef.current) {
-            // Set canvas size to match PDF content area (convert mm to pixels at 72 DPI)
             const dpi = 72;
             const mmToPx = dpi / 25.4;
             canvasRef.current.width = contentWidth * mmToPx;
@@ -97,12 +93,11 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
     const drawAvatars = (ctx: CanvasRenderingContext2D, activeSpeaker: string, canvasWidth: number, canvasHeight: number) => {
         if (!project.speakers) return;
-
         const speakerKeys = Object.keys(project.speakers);
-        const avatarSize = canvasWidth * 0.03; // 3% of canvas width
-        const startX = canvasWidth * 0.06; // Positioned on the left
-        const startY = canvasHeight * 0.35; // Start avatars below the main title area
-        const spacing = canvasHeight * 0.15; // Vertical spacing between avatars
+        const avatarSize = canvasWidth * 0.03;
+        const startX = canvasWidth * 0.06;
+        const startY = canvasHeight * 0.35;
+        const spacing = canvasHeight * 0.15;
 
         speakerKeys.forEach((speaker, index) => {
             const config = project.speakers[speaker];
@@ -110,7 +105,6 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             const x = startX;
             const y = startY + (index * spacing);
 
-            // Draw avatar circle
             ctx.beginPath();
             ctx.arc(x, y, avatarSize / 2, 0, Math.PI * 2);
             ctx.fillStyle = isActive ? '#a78bfa' : '#e5e7eb';
@@ -119,7 +113,6 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             ctx.lineWidth = isActive ? 3 : 1.5;
             ctx.stroke();
 
-            // Draw speaker name below the avatar
             ctx.fillStyle = isActive ? '#374151' : '#6b7280';
             ctx.font = `${isActive ? 'bold ' : ''}${Math.floor(canvasWidth * 0.015)}px Arial`;
             ctx.textAlign = 'center';
@@ -127,7 +120,8 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         });
     };
 
-    const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement): string | null => {
+    // The render function now accepts a flag to determine if it's the title slide
+    const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement, isTitleSlide: boolean): string | null => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
 
@@ -137,24 +131,24 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         // 1. Clear canvas with the slide's background color
         ctx.fillStyle = getBackgroundColor(slide.speaker);
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // 2. Draw global elements: Main Title and Avatars
-        // Main title - always "Introduction to Agentic AI"
-        ctx.fillStyle = '#1e40af';
-        ctx.font = `bold ${Math.floor(canvasWidth * 0.04)}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.fillText('Introduction to Agentic AI', canvasWidth / 2, canvasHeight * 0.10);
-
-        // Subtitle
-        ctx.fillStyle = '#6b7280';
-        ctx.font = `${Math.floor(canvasWidth * 0.025)}px Arial`;
-        ctx.fillText('Autonomous Intelligence Systems', canvasWidth / 2, canvasHeight * 0.16);
-        ctx.fillText('Beyond Traditional AI Automation', canvasWidth / 2, canvasHeight * 0.21);
         
-        // Draw speaker avatars on the left side. This is done early to ensure it's in the background layer.
+        // Draw speaker avatars on the left side for all slides
         drawAvatars(ctx, slide.speaker, canvasWidth, canvasHeight);
 
-        // 3. Define and draw the main content area on the right
+        // 2. Conditionally draw the main presentation title ONLY on the first slide
+        if (isTitleSlide) {
+            ctx.fillStyle = '#1e40af';
+            ctx.font = `bold ${Math.floor(canvasWidth * 0.04)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('Introduction to Agentic AI', canvasWidth / 2, canvasHeight * 0.10);
+
+            ctx.fillStyle = '#6b7280';
+            ctx.font = `${Math.floor(canvasWidth * 0.025)}px Arial`;
+            ctx.fillText('Autonomous Intelligence Systems', canvasWidth / 2, canvasHeight * 0.16);
+            ctx.fillText('Beyond Traditional AI Automation', canvasWidth / 2, canvasHeight * 0.21);
+        }
+
+        // 3. Define and draw the main content area for the slide's specific content
         const contentAreaX = canvasWidth * 0.22;
         const contentAreaY = canvasHeight * 0.30;
         const contentAreaWidth = canvasWidth * 0.75;
@@ -163,28 +157,24 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         const contentPadding = contentAreaWidth * 0.05;
         const contentInnerWidth = contentAreaWidth - (contentPadding * 2);
         
-        // Let's use a variable to track the vertical position of content
         let currentY = contentAreaY + contentPadding * 1.5;
 
-        // Draw content area border (optional, for visual separation)
         ctx.strokeStyle = '#e5e7eb';
         ctx.lineWidth = 1;
         ctx.strokeRect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight);
 
-        // 4. Draw content within the content area, using the wrapText helper
         const contentCenterX = contentAreaX + contentAreaWidth / 2;
 
-        // Slide title
+        // 4. Draw the slide's OWN title and content
         if (slide.title?.trim()) {
             ctx.fillStyle = '#1e40af';
             ctx.font = `bold ${Math.floor(canvasWidth * 0.03)}px Arial`;
             ctx.textAlign = 'center';
             currentY = wrapText(ctx, slide.title, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.05);
-            currentY += canvasHeight * 0.03; // Add extra space after title
+            currentY += canvasHeight * 0.03;
         }
 
-        // Content lines
-        ctx.fillStyle = '#374151'; // Darker text for better readability
+        ctx.fillStyle = '#374151';
         ctx.font = `${Math.floor(canvasWidth * 0.022)}px Arial`;
         ctx.textAlign = 'center';
 
@@ -192,16 +182,16 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             currentY = wrapText(ctx, slide.content, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.04);
         }
         if (slide.content2?.trim()) {
-            currentY += canvasHeight * 0.01; // Small space between content blocks
+            currentY += canvasHeight * 0.01;
             currentY = wrapText(ctx, slide.content2, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.04);
         }
         
-        // 5. Draw visual if available, in the remaining space
+        // 5. Draw visual if available
         if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
             const visualAreaY = currentY + canvasHeight * 0.02;
             const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
 
-            if (visualAreaHeight > canvasHeight * 0.1) { // Only draw if there's enough space
+            if (visualAreaHeight > canvasHeight * 0.1) {
                 try {
                     let visualFunc = project.visualFunctions[slide.visual.type];
                     let func: (ctx: CanvasRenderingContext2D, params: any[]) => void;
@@ -215,17 +205,11 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
                     if (typeof func === 'function') {
                         ctx.save();
-                        // Clip to the designated visual area
                         ctx.beginPath();
                         ctx.rect(contentAreaX + contentPadding, visualAreaY, contentInnerWidth, visualAreaHeight);
                         ctx.clip();
-                        
-                        // Center the visual drawing
                         ctx.translate(contentAreaX + contentPadding, visualAreaY);
-                        
-                        // Execute the drawing function
                         func(ctx, slide.visual.params || []);
-                        
                         ctx.restore();
                     }
                 } catch (error) {
@@ -243,7 +227,6 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
     const generatePDF = async () => {
         if (!slides || slides.length === 0) {
-            // Using a custom modal/alert is better than window.alert
             console.warn('No slides to export');
             return;
         }
@@ -252,7 +235,6 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         setProgress(0);
 
         try {
-            // Dynamic import of jsPDF
             const { default: jsPDF } = await import('jspdf');
 
             const pdf = new jsPDF({
@@ -268,20 +250,15 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
             for (let i = 0; i < slides.length; i++) {
                 const slide = slides[i];
-
-                // Add a new page for each slide except the first one
                 if (i > 0) {
                     pdf.addPage();
                 }
 
-                // Render the current slide to the canvas
-                const slideImage = renderSlideToCanvas(slide, canvas);
+                // Pass the flag to the render function. It's true only for the first slide (i === 0).
+                const slideImage = renderSlideToCanvas(slide, canvas, i === 0);
 
                 if (slideImage) {
-                    // Add the generated image to the PDF, fitting it within the margins
                     pdf.addImage(slideImage, 'JPEG', margin, margin, contentWidth, contentHeight);
-
-                    // Add footer with slide number and speaker info
                     pdf.setFontSize(9);
                     pdf.setTextColor(150, 150, 150);
                     pdf.text(`Slide ${i + 1} of ${slides.length}`, margin, pageHeight - 10);
@@ -292,19 +269,14 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     pdf.text(speakerText, pageWidth - margin - textWidth, pageHeight - 10);
                 }
                 
-                // Update progress after each slide is processed
                 setProgress(Math.round(((i + 1) / slides.length) * 100));
-
-                // A small delay to keep the UI responsive during generation
                 await new Promise(resolve => setTimeout(resolve, 50));
             }
 
-            // Save the final PDF
             pdf.save(filename);
 
         } catch (error) {
             console.error('Error generating PDF:', error);
-            // Consider a more user-friendly error display
         } finally {
             setIsGenerating(false);
             setProgress(0);
@@ -313,7 +285,6 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
 
     return (
         <div className="space-y-4">
-            {/* Hidden canvas used for rendering each slide before adding to PDF */}
             <canvas
                 ref={canvasRef}
                 style={{ display: 'none' }}
@@ -340,14 +311,12 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     </div>
                 </div>
 
-                {/* Preview Info */}
                 <div className="bg-orange-100 rounded-lg p-3 mb-4 text-xs text-orange-700">
                     <strong>Layout:</strong> A4 landscape (297×210mm) with 20mm margins<br />
-                    <strong>Content:</strong> Main title, slide title, content lines, visuals, and speaker avatars<br />
+                    <strong>Content:</strong> Main title on first slide, then individual slide content, visuals, and speaker avatars<br />
                     <strong>Position:</strong> Avatars on left, content area on right with proper spacing
                 </div>
 
-                {/* Progress Bar */}
                 {isGenerating && (
                     <div className="mb-4">
                         <div className="flex justify-between text-sm text-orange-600 mb-2">
@@ -363,7 +332,6 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     </div>
                 )}
 
-                {/* Export Button */}
                 <button
                     onClick={generatePDF}
                     disabled={isGenerating || !slides || slides.length === 0}
