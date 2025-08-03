@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 import PDFExportButton from './PDFExportButton';
+import VideoScriptPDFExport from './VideoScriptPDFExport';
 
 interface VideoScriptEditorProps {
   project: {
@@ -778,10 +779,16 @@ export default function VideoScriptEditor({
               </button>
             </div>
             
-            <PDFExportButton
+            {/* <PDFExportButton
               project={project}
               slides={slides}
               filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
+            /> */}
+            <VideoScriptPDFExport 
+              project={project} 
+              slides={slides}
+              filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
+              buttonText="Downloadt PDF"
             />
 
             <button

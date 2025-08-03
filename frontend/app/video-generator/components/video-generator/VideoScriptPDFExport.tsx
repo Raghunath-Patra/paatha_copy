@@ -35,7 +35,8 @@ interface Project {
   visualFunctions?: Record<string, string | Function>;
 }
 
-// Updated class implementing the simpler export logic from pdf-export.js
+// --- CORRECTED PDF EXPORTER CLASS ---
+// This class now precisely matches the logic of your original pdf-export.js file.
 class VideoScriptPDFExporter {
   private pdf: jsPDF | null;
   private currentProject: Project | null;
@@ -63,16 +64,18 @@ class VideoScriptPDFExporter {
       this.pdf = new jsPDF('p', 'mm', 'a4');
       console.log('📄 Starting PDF generation...');
 
-      // Generate PDF content following the simpler structure
       this.addTitlePage();
 
-      // Add a new page for each slide
-      this.slides.forEach((slide, index) => {
-        this.pdf!.addPage();
-        this.addSlidePage(slide, index + 1);
-      });
+      // This loop now exactly matches the logic of pdf-export.js
+      for (let i = 0; i < this.slides.length; i++) {
+        if (i > 0) {
+          this.pdf.addPage();
+        }
+        this.addSlidePage(this.slides[i], i + 1);
+      }
 
       this.addSummaryPage();
+      this.addPDFFooter();
 
       console.log('✅ PDF generation complete');
       return this.pdf;
@@ -89,7 +92,6 @@ class VideoScriptPDFExporter {
     const centerX = this.pageWidth / 2;
     let yPos = 60;
 
-    // Main title
     this.pdf.setFontSize(24);
     this.pdf.setFont('helvetica', 'bold');
     const title = this.getProjectTitle();
@@ -97,18 +99,13 @@ class VideoScriptPDFExporter {
 
     yPos += 20;
 
-    // Subtitle
     this.pdf.setFontSize(16);
     this.pdf.setFont('helvetica', 'normal');
     this.pdf.text('Educational Video Script', centerX, yPos, { align: 'center' });
 
     yPos += 40;
-
-    // Project information box
     this.drawInfoBox(yPos);
     yPos += 80;
-
-    // Speakers section
     this.addSpeakersSection(yPos);
   }
 
@@ -116,28 +113,18 @@ class VideoScriptPDFExporter {
     if (!this.pdf) return;
     let yPos = this.margin;
 
-    // Header with slide number and speaker
     this.addSlideHeader(slide, slideNumber, yPos);
     yPos += 20;
 
-    // Title
     yPos = this.addSlideTitle(slide, yPos);
-
-    // Content sections
     yPos = this.addSlideContent(slide, yPos);
-
-    // Narration
     yPos = this.addSlideNarration(slide, yPos);
-
-    // Technical details
     yPos = this.addSlideTechnicalDetails(slide, yPos);
 
-    // Visual information
     if (slide.visual?.type) {
       yPos = this.addSlideVisualInfo(slide, yPos);
     }
-
-    // Footer separator
+    
     this.addSlideFooter(yPos);
   }
 
@@ -146,61 +133,49 @@ class VideoScriptPDFExporter {
     this.pdf.addPage();
     let yPos = this.margin;
 
-    // Summary title
     this.pdf.setFontSize(18);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Script Summary & Statistics', this.pageWidth / 2, yPos, { align: 'center' });
 
     yPos += 25;
-
-    // Statistics
     yPos = this.addStatistics(yPos);
     yPos += 15;
-
-    // Visual functions used
     yPos = this.addVisualFunctionsList(yPos);
     yPos += 15;
-
-    // Speaker breakdown
-    yPos = this.addSpeakerBreakdown(yPos);
-
-    // Footer
-    this.addPDFFooter();
+    this.addSpeakerBreakdown(yPos);
   }
 
   // Helper Methods for PDF Content
   drawInfoBox(yPos: number) {
     if (!this.pdf) return;
-    const boxHeight = 40;
+    const boxHeight = 60; // Corrected height
 
-    // Draw border and background
     this.pdf.setLineWidth(0.5);
     this.pdf.setDrawColor(0, 0, 0);
     this.pdf.setFillColor(245, 245, 245);
     this.pdf.rect(this.margin, yPos, this.contentWidth, boxHeight, 'FD');
 
-    // Add content
     yPos += 15;
     this.pdf.setFontSize(12);
     this.pdf.setFont('helvetica', 'normal');
     this.pdf.setTextColor(0, 0, 0);
 
     const projectInfo = [
-      `Project ID: ${this.currentProject?.id?.substring(0, 12) || 'Unknown'}`,
+      `Project ID: ${this.currentProject?.id?.substring(0, 8) || 'Unknown'}`,
       `Generated: ${new Date().toLocaleDateString()}`,
       `Total Slides: ${this.slides.length}`,
-      `Est. Duration: ${this.calculateTotalDuration()}s`
+      `Estimated Duration: ${this.calculateTotalDuration()}s`
     ];
 
     projectInfo.forEach((info, index) => {
       const x = this.margin + 10 + (index % 2) * (this.contentWidth / 2);
-      const y = yPos + Math.floor(index / 2) * 10;
+      const y = yPos + Math.floor(index / 2) * 8; // Corrected spacing
       this.pdf!.text(info, x, y);
     });
   }
 
   addSpeakersSection(yPos: number) {
-    if (!this.pdf) return; // This guard clause is effective for a for...of loop.
+    if (!this.pdf) return;
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Speakers', this.margin, yPos);
@@ -210,7 +185,6 @@ class VideoScriptPDFExporter {
     this.pdf.setFont('helvetica', 'normal');
 
     if (this.currentProject?.speakers && Object.keys(this.currentProject.speakers).length > 0) {
-      // Replaced forEach with a for...of loop to resolve the type error.
       for (const [key, speaker] of Object.entries(this.currentProject.speakers)) {
         this.pdf.text(
           `• ${speaker.name || key} (Voice: ${speaker.voice || 'default'}, Gender: ${speaker.gender || 'unknown'})`,
@@ -225,21 +199,19 @@ class VideoScriptPDFExporter {
   }
 
   addSlideHeader(slide: Slide, slideNumber: number, yPos: number) {
-    if (!this.pdf) return;
-    // Slide number
+     if (!this.pdf) return;
     this.pdf.setFontSize(16);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.setTextColor(26, 82, 118); // Blue color
+    this.pdf.setTextColor(26, 82, 118);
     this.pdf.text(`Slide ${slideNumber}`, this.margin, yPos);
 
-    // Speaker info
     const speakerName = this.currentProject?.speakers?.[slide.speaker]?.name || slide.speaker;
     this.pdf.setFontSize(10);
     this.pdf.setFont('helvetica', 'normal');
     this.pdf.setTextColor(100, 100, 100);
     this.pdf.text(`Speaker: ${speakerName}`, this.pageWidth - this.margin, yPos, { align: 'right' });
 
-    this.pdf.setTextColor(0, 0, 0); // Reset to black
+    this.pdf.setTextColor(0, 0, 0);
   }
 
   addSlideTitle(slide: Slide, yPos: number): number {
@@ -248,7 +220,7 @@ class VideoScriptPDFExporter {
     this.pdf.setFont('helvetica', 'bold');
     const titleLines = this.pdf.splitTextToSize(slide.title || 'Untitled', this.contentWidth);
     this.pdf.text(titleLines, this.margin, yPos);
-    return yPos + (Array.isArray(titleLines) ? titleLines.length : 1) * 7 + 10;
+    return yPos + titleLines.length * 7 + 10;
   }
 
   addSlideContent(slide: Slide, yPos: number): number {
@@ -259,24 +231,21 @@ class VideoScriptPDFExporter {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Content:', this.margin, yPos);
       yPos += 7;
-
       this.pdf.setFont('helvetica', 'normal');
       const contentLines = this.pdf.splitTextToSize(slide.content, this.contentWidth - 10);
       this.pdf.text(contentLines, this.margin + 5, yPos);
-      yPos += (Array.isArray(contentLines) ? contentLines.length : 1) * 5 + 8;
+      yPos += contentLines.length * 5 + 8;
     }
 
     if (slide.content2) {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Additional Content:', this.margin, yPos);
       yPos += 7;
-
       this.pdf.setFont('helvetica', 'normal');
       const content2Lines = this.pdf.splitTextToSize(slide.content2, this.contentWidth - 10);
       this.pdf.text(content2Lines, this.margin + 5, yPos);
-      yPos += (Array.isArray(content2Lines) ? content2Lines.length : 1) * 5 + 8;
+      yPos += content2Lines.length * 5 + 8;
     }
-
     return yPos;
   }
 
@@ -287,15 +256,13 @@ class VideoScriptPDFExporter {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Narration:', this.margin, yPos);
       yPos += 7;
-
       this.pdf.setFont('helvetica', 'italic');
       this.pdf.setTextColor(60, 60, 60);
       const narrationLines = this.pdf.splitTextToSize(slide.narration, this.contentWidth - 10);
       this.pdf.text(narrationLines, this.margin + 5, yPos);
-      yPos += (Array.isArray(narrationLines) ? narrationLines.length : 1) * 5 + 8;
-
-      this.pdf.setTextColor(0, 0, 0); // Reset color
-      this.pdf.setFont('helvetica', 'normal'); // Reset font
+      yPos += narrationLines.length * 5 + 8;
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.setFont('helvetica', 'normal');
     }
     return yPos;
   }
@@ -310,36 +277,38 @@ class VideoScriptPDFExporter {
     const techDetails = [
       `Duration: ${slide.visualDuration || 'N/A'}s`,
       `Complex: ${slide.isComplex ? 'Yes' : 'No'}`,
-      `Speaker Key: ${slide.speaker}`
+      `Speaker: ${slide.speaker}` // Corrected label
     ].join(' | ');
 
     this.pdf.text(techDetails, this.margin, yPos);
-    this.pdf.setTextColor(0, 0, 0); // Reset color
+    this.pdf.setTextColor(0, 0, 0);
     return yPos + 10;
   }
 
   addSlideVisualInfo(slide: Slide, yPos: number): number {
-    if (!this.pdf) return yPos;
+    if (!this.pdf || !slide.visual) return yPos;
     this.pdf.setFontSize(10);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.setTextColor(231, 76, 60); // Red-orange color
+    this.pdf.setTextColor(231, 76, 60);
     this.pdf.text('🎨 Visual Function:', this.margin, yPos);
     yPos += 7;
 
     this.pdf.setFont('helvetica', 'normal');
     this.pdf.setTextColor(0, 0, 0);
-    const visualInfo = `${slide.visual!.type}(${slide.visual!.params ? slide.visual!.params.join(', ') : ''})`;
+    const visualInfo = `${slide.visual.type}(${slide.visual.params ? slide.visual.params.join(', ') : ''})`;
     const visualLines = this.pdf.splitTextToSize(visualInfo, this.contentWidth - 10);
     this.pdf.text(visualLines, this.margin + 5, yPos);
-
-    return yPos + (Array.isArray(visualLines) ? visualLines.length : 1) * 5 + 8;
+    return yPos + visualLines.length * 5 + 8;
   }
 
   addSlideFooter(yPos: number) {
-    if (!this.pdf || yPos > this.pageHeight - this.margin) return;
-    this.pdf.setLineWidth(0.3);
-    this.pdf.setDrawColor(200, 200, 200);
-    this.pdf.line(this.margin, this.pageHeight - this.margin, this.pageWidth - this.margin, this.pageHeight - this.margin);
+    if (!this.pdf) return;
+    // Corrected footer logic to match original
+    if (yPos < this.pageHeight - this.margin - 20) {
+        this.pdf.setLineWidth(0.3);
+        this.pdf.setDrawColor(200, 200, 200);
+        this.pdf.line(this.margin, yPos + 5, this.pageWidth - this.margin, yPos + 5);
+    }
   }
 
   addStatistics(yPos: number): number {
@@ -363,12 +332,12 @@ class VideoScriptPDFExporter {
 
     stats.forEach(stat => {
       this.pdf!.text(`• ${stat}`, this.margin + 5, yPos);
-      yPos += 7;
+      yPos += 6; // Corrected spacing
     });
 
     return yPos;
   }
-
+  
   addVisualFunctionsList(yPos: number): number {
     if (!this.pdf) return yPos;
     const visualFunctions = this.getUniqueVisualFunctions();
@@ -384,13 +353,12 @@ class VideoScriptPDFExporter {
 
       visualFunctions.forEach(func => {
         this.pdf!.text(`• ${func}`, this.margin + 5, yPos);
-        yPos += 7;
+        yPos += 6; // Corrected spacing
       });
     }
-
     return yPos;
   }
-
+  
   addSpeakerBreakdown(yPos: number): number {
     if (!this.pdf) return yPos;
     this.pdf.setFontSize(12);
@@ -410,38 +378,31 @@ class VideoScriptPDFExporter {
       const speakerName = this.currentProject?.speakers?.[speakerKey]?.name || speakerKey;
       const percentage = ((count / this.slides.length) * 100).toFixed(1);
       this.pdf!.text(`• ${speakerName}: ${count} slides (${percentage}%)`, this.margin + 5, yPos);
-      yPos += 7;
+      yPos += 6; // Corrected spacing
     });
 
     return yPos;
   }
-  
+
   addPDFFooter() {
     if (!this.pdf) return;
-    const pageCount = this.pdf.getNumberOfPages();
-    const footerY = this.pageHeight - 15;
-    
-    for (let i = 1; i <= pageCount; i++) {
-        this.pdf.setPage(i);
-        this.pdf.setFontSize(8);
-        this.pdf.setTextColor(100, 100, 100);
-        this.pdf.text(
-            `Page ${i} of ${pageCount} | Generated by Educational Video Generator`,
-            this.pageWidth / 2,
-            footerY,
-            { align: 'center' }
-        );
-        this.pdf.text(
-            `Export Date: ${new Date().toLocaleString()}`,
-            this.pageWidth / 2,
-            footerY + 5,
-            { align: 'center' }
-        );
-    }
+    const footerY = this.pageHeight - 20;
+    this.pdf.setFontSize(8);
+    this.pdf.setTextColor(100, 100, 100);
+    this.pdf.text(
+        'Generated by Educational Video Generator', 
+        this.pageWidth / 2, 
+        footerY, 
+        { align: 'center' }
+    );
+    this.pdf.text(
+        `Export Date: ${new Date().toLocaleString()}`, 
+        this.pageWidth / 2, 
+        footerY + 5, 
+        { align: 'center' }
+    );
   }
 
-
-  // Utility Methods
   getProjectTitle(): string {
     return this.currentProject?.title || this.slides[0]?.title || 'Educational Video Script';
   }
@@ -467,8 +428,8 @@ class VideoScriptPDFExporter {
   }
 }
 
-// --- React Component ---
-// The React component part remains largely the same, but the preview section is simplified.
+
+// --- REACT COMPONENT ---
 interface VideoScriptPDFExportProps {
   project?: Project | null;
   slides?: Slide[];
@@ -498,12 +459,11 @@ const VideoScriptPDFExport: React.FC<VideoScriptPDFExportProps> = ({
 
   const getFilename = (): string => {
     if (filename) return filename;
-    const projectTitle = project?.title || 'video-script';
+    const projectTitle = 'video-script';
     const timestamp = new Date().toISOString().split('T')[0];
     return `${projectTitle.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${timestamp}.pdf`;
   };
   
-  // Using a simplified default project and slides for the preview info
   const defaultProject: Project = { id: 'demo-id', title: 'Sample Project' };
   const defaultSlides: Slide[] = [{ title: 'Slide 1', speaker: 'teacher' }];
 
@@ -516,7 +476,6 @@ const VideoScriptPDFExport: React.FC<VideoScriptPDFExportProps> = ({
       setExportStatus({ type: 'info', message: 'Preparing PDF export...' });
       onExportStart();
 
-      // Simulate a quick progress for better UX
       await new Promise(resolve => setTimeout(resolve, 250));
       setExportProgress(50);
       setExportStatus({ type: 'info', message: 'Generating document...' });
@@ -538,7 +497,6 @@ const VideoScriptPDFExport: React.FC<VideoScriptPDFExportProps> = ({
       setExportStatus({ type: 'error', message: `Export failed: ${errorMessage}` });
       onExportError(error as Error);
     } finally {
-      // Reset state after a delay
       setTimeout(() => {
         setIsExporting(false);
         setExportProgress(0);
@@ -552,7 +510,6 @@ const VideoScriptPDFExport: React.FC<VideoScriptPDFExportProps> = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Export Button */}
       <button
         onClick={handleExport}
         disabled={disabled || isExporting}
@@ -594,7 +551,6 @@ const VideoScriptPDFExport: React.FC<VideoScriptPDFExportProps> = ({
         </div>
       )}
 
-      {/* Simplified Export Information */}
       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
         <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
           <BarChart3 className="w-4 h-4 mr-2" />
