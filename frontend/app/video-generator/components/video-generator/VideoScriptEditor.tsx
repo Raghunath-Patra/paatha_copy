@@ -779,17 +779,17 @@ export default function VideoScriptEditor({
               </button>
             </div>
             
-            {/* <PDFExportButton
+            <PDFExportButton
               project={project}
               slides={slides}
               filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
-            /> */}
-            <VideoScriptPDFExport 
+            />
+            {/* <VideoScriptPDFExport 
               project={project} 
               slides={slides}
               filename={`${project.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-script.pdf`}
               buttonText="Downloadt PDF"
-            />
+            /> */}
 
             <button
               onClick={() => setShowPdfExport(false)}

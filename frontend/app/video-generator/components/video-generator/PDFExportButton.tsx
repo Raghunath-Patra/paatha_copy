@@ -121,6 +121,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
     };
 
     const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement): string | null => {
+        // Clear canvas for each slide
         canvas.width = canvas.width;
 
         const ctx = canvas.getContext('2d');
@@ -129,6 +130,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         
+        // Set background for the entire slide
         ctx.fillStyle = getBackgroundColor(slide.speaker);
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         
@@ -144,12 +146,14 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         
         let currentY = contentAreaY + contentPadding;
 
+        // Draw content area border
         ctx.strokeStyle = '#e5e7eb';
         ctx.lineWidth = 1;
         ctx.strokeRect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight);
 
         const contentCenterX = contentAreaX + contentAreaWidth / 2;
 
+        // Draw Slide Title
         if (slide.title?.trim()) {
             ctx.fillStyle = '#1e40af';
             ctx.font = `bold ${Math.floor(canvasWidth * 0.03)}px Arial`;
@@ -158,6 +162,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             currentY += canvasHeight * 0.03;
         }
 
+        // Draw Slide Content
         ctx.fillStyle = '#374151';
         ctx.font = `${Math.floor(canvasWidth * 0.022)}px Arial`;
         ctx.textAlign = 'center';
@@ -170,6 +175,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             currentY = wrapText(ctx, slide.content2, contentCenterX, currentY, contentInnerWidth, canvasHeight * 0.04);
         }
         
+        // Draw Visual Function
         if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
             const visualAreaY = currentY + canvasHeight * 0.02;
             const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
@@ -187,8 +193,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     }
 
                     if (typeof func === 'function') {
-                        // ** THE DEFINITIVE FIX **
-                        // Use a save/restore block to completely isolate the visual drawing.
+                        // Use a save/restore block to isolate the visual drawing.
                         ctx.save();
                         
                         const visualRectX = contentAreaX + contentPadding;
@@ -196,25 +201,29 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                         const visualRectWidth = contentInnerWidth;
                         const visualRectHeight = visualAreaHeight;
 
-                        // 1. Clear the rectangle to ensure no old content is left.
-                        ctx.clearRect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
-
-                        // 2. Fill the rectangle with the background color to prevent black boxes.
+                        // 1. Fill with the background color to prevent transparency issues in the final JPEG.
                         ctx.fillStyle = getBackgroundColor(slide.speaker);
                         ctx.fillRect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
 
-                        // 3. Create a clipping path to constrain the drawing area.
+                        // ** 🟢 THE FIX 🟢 **
+                        // After setting the background, reset the fill and stroke styles to a default
+                        // visible color. Otherwise, the visual function would inherit the background
+                        // color from the fillRect above, making its drawings invisible.
+                        ctx.fillStyle = '#374151'; // Default dark color for drawing/text
+                        ctx.strokeStyle = '#6b7280'; // Default stroke color
+
+                        // 2. Create a clipping path to constrain the drawing to its area.
                         ctx.beginPath();
                         ctx.rect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
                         ctx.clip();
                         
-                        // 4. Translate the origin for the visual function.
+                        // 3. Translate the origin so the visual function can use local coordinates.
                         ctx.translate(visualRectX, visualRectY);
                         
-                        // 5. Call the function to draw the visual.
+                        // 4. Call the function to draw the visual.
                         func(ctx, slide.visual.params || []);
                         
-                        // 6. Restore the context to its original state, removing clip and translation.
+                        // 5. Restore the context, removing the clip, translation, and style changes.
                         ctx.restore();
                     }
                 } catch (error) {
