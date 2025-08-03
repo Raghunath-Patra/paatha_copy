@@ -10,7 +10,6 @@ interface Project {
     id: string;
     title: string;
     speakers: Record<string, SpeakerConfig>;
-    // The visual function now accepts width and height for proper scaling
     visualFunctions: Record<string, ((ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void) | string>;
 }
 
@@ -178,12 +177,10 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
             if (visualAreaHeight > canvasHeight * 0.1) {
                 try {
                     let visualFunc = project.visualFunctions[slide.visual.type];
-                    // The function signature now includes width and height
                     let func: (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
 
                     if (typeof visualFunc === 'string') {
                         const functionBody = visualFunc.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
-                        // Add width and height to the function constructor
                         func = new Function('ctx', 'params', 'width', 'height', functionBody) as (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
                     } else {
                         func = visualFunc;
@@ -197,22 +194,26 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                         const visualRectWidth = contentInnerWidth;
                         const visualRectHeight = visualAreaHeight;
 
-                        ctx.fillStyle = getBackgroundColor(slide.speaker);
-                        ctx.fillRect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
-
-                        ctx.fillStyle = '#374151';
-                        ctx.strokeStyle = '#6b7280';
-
+                        // 1. Isolate the visual area by clipping and translating
                         ctx.beginPath();
                         ctx.rect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
                         ctx.clip();
-                        
                         ctx.translate(visualRectX, visualRectY);
                         
-                        // ** 🟢 THE FIX 🟢 **
-                        // Pass the actual drawing dimensions (visualRectWidth, visualRectHeight)
-                        // to the visual function. This allows the function to know its bounds
-                        // and scale its content appropriately, preventing clipping.
+                        // ** 🟢 THE DEFINITIVE FIX 🟢 **
+                        // Completely reset the context to a default state for the visual function.
+                        // This prevents properties like `textAlign` from the main slide
+                        // from leaking into the visual function and causing positioning errors.
+                        ctx.fillStyle = getBackgroundColor(slide.speaker);
+                        ctx.fillRect(0, 0, visualRectWidth, visualRectHeight); // Fill background
+                        
+                        ctx.fillStyle = '#374151';    // Reset fill color
+                        ctx.strokeStyle = '#6b7280';  // Reset stroke color
+                        ctx.lineWidth = 1;            // Reset line width
+                        ctx.textAlign = 'left';       // 👈 Crucially, reset text alignment
+                        ctx.textBaseline = 'top';     // 👈 Reset text baseline for predictable layout
+                        
+                        // 2. Call the visual function, now with a clean slate and correct dimensions
                         func(ctx, slide.visual.params || [], visualRectWidth, visualRectHeight);
                         
                         ctx.restore();
