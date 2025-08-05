@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
-import RoleSelection from './RoleSelection';
 import Link from 'next/link';
 
 declare global {
@@ -26,17 +25,10 @@ interface RegisterFormData {
   password: string;
   confirmPassword: string;
   full_name?: string;
-  role?: 'student' | 'teacher';
-  // Teacher-specific fields
-  teaching_experience?: number;
-  qualification?: string;
-  subjects_taught?: string[];
-  institution_name?: string;
 }
 
 export default function RegisterForm() {
   const router = useRouter();
-  const [step, setStep] = useState<'basic' | 'role'>('basic');
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
     password: '',
@@ -161,8 +153,8 @@ export default function RegisterForm() {
     }
   };
 
-  // FIXED: Enhanced form submission with double-submission prevention (matching LoginForm)
-  const handleBasicFormSubmit = (e: React.FormEvent) => {
+  // Replace handleBasicFormSubmit with direct register call
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Prevent double submission
@@ -180,89 +172,30 @@ export default function RegisterForm() {
     
     try {
       setFormSubmissionInProgress(true);
-      console.log('Starting role selection step');
+      console.log('Starting registration process');
       
-      // FIXED: Cancel any pending Google One-tap before moving to role selection
+      // Cancel any pending Google One-tap
       if (window.google?.accounts?.id?.cancel) {
         window.google.accounts.id.cancel();
       }
       
-      // Basic validation passed, move to role selection
-      setStep('role');
-      
-    } finally {
-      // Reset form submission flag after a delay
-      setTimeout(() => {
-        setFormSubmissionInProgress(false);
-      }, 1000);
-    }
-  };
-
-  const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
-    // Prevent double submission
-    if (loading || formSubmissionInProgress) {
-      console.log('Registration already in progress, ignoring role selection');
-      return;
-    }
-
-    try {
-      setFormSubmissionInProgress(true);
-      console.log('Starting registration with role:', role);
-      
-      const registrationData = {
+      // Direct registration - no role selection step
+      await register({
         email: formData.email,
         password: formData.password,
-        full_name: formData.full_name || undefined,
-        role,
-        ...additionalData
-      };
-
-      await register(registrationData);
+        full_name: formData.full_name || undefined
+      });
+      
       console.log('Registration completed successfully');
       
-    } catch (err) {
-      console.error('Registration error:', err);
+    } catch (error) {
+      console.error('Registration error:', error);
     } finally {
-      // Reset form submission flag after a delay
       setTimeout(() => {
         setFormSubmissionInProgress(false);
       }, 1000);
     }
   };
-
-  // FIXED: Handle regular Google OAuth sign in (matching LoginForm)
-  const handleGoogleSignIn = async () => {
-    // FIXED: Skip if form submission is in progress or user already authenticated
-    if (formSubmissionInProgress || loading || user) {
-      console.log('Skipping Google OAuth - conditions not met');
-      return;
-    }
-
-    try {
-      setFormSubmissionInProgress(true);
-      console.log('Starting Google OAuth registration');
-      
-      // FIXED: Cancel any pending Google One-tap before OAuth
-      if (window.google?.accounts?.id?.cancel) {
-        window.google.accounts.id.cancel();
-      }
-      
-      await signInWithGoogle();
-      console.log('Google OAuth registration completed');
-      
-    } catch (err) {
-      console.error('Google OAuth registration error:', err);
-    } finally {
-      // Reset form submission flag after a delay
-      setTimeout(() => {
-        setFormSubmissionInProgress(false);
-      }, 1000);
-    }
-  };
-
-  if (step === 'role') {
-    return <RoleSelection onRoleSelect={handleRoleSelect} loading={loading || formSubmissionInProgress} />;
-  }
 
   // FIXED: Enhanced loading state - check both loading states (matching LoginForm)
   const isSubmitting = loading || formSubmissionInProgress;
@@ -309,7 +242,7 @@ export default function RegisterForm() {
         </div>
       </div>
       
-      <form onSubmit={handleBasicFormSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email Address <span className="text-red-500">*</span>
@@ -370,7 +303,7 @@ export default function RegisterForm() {
         </div>
         
         <p className="mt-2 text-sm text-gray-600">
-          Next, you'll choose whether you're a student or teacher to customize your experience.
+          After creating your account, you'll be able to choose your role and customize your experience.
         </p>
 
         {/* FIXED: Enhanced button with better loading state (matching LoginForm) */}
@@ -382,10 +315,10 @@ export default function RegisterForm() {
           {isSubmitting ? (
             <div className="flex items-center justify-center">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-              Processing...
+              Creating Account...
             </div>
           ) : (
-            'Continue'
+            'Create Account'
           )}
         </button>
 
