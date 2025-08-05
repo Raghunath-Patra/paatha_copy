@@ -217,7 +217,7 @@ export default function RegisterForm() {
       {/* FIXED: Google Sign Up button with loading protection */}
       <div className="mb-6">
         <button
-          onClick={handleGoogleSignIn}
+          onClick={() => signInWithGoogle()}
           disabled={isSubmitting}
           className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
