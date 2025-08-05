@@ -171,62 +171,72 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         }
         
         if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
-            const visualAreaY = currentY + canvasHeight * 0.02;
-            const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
+    const visualAreaY = currentY + canvasHeight * 0.02;
+    const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
 
-            if (visualAreaHeight > canvasHeight * 0.1) {
-                try {
-                    let visualFunc = project.visualFunctions[slide.visual.type];
-                    let func: (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
+    if (visualAreaHeight > canvasHeight * 0.1) {
+        // 1. Save the current canvas state before any transformations.
+        ctx.save(); 
+        
+        try {
+            let visualFunc = project.visualFunctions[slide.visual.type];
+            let func: (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
 
-                    if (typeof visualFunc === 'string') {
-                        const functionBody = visualFunc.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
-                        func = new Function('ctx', 'params', 'width', 'height', functionBody) as (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
-                    } else {
-                        func = visualFunc;
-                    }
-
-                    if (typeof func === 'function') {
-                        ctx.save();
-                        
-                        const visualRectX = contentAreaX + contentPadding;
-                        const visualRectY = visualAreaY;
-                        const visualRectWidth = contentInnerWidth;
-                        const visualRectHeight = visualAreaHeight;
-
-                        // 1. Isolate the visual area by clipping and translating
-                        ctx.beginPath();
-                        ctx.rect(visualRectX, visualRectY, visualRectWidth, visualRectHeight);
-                        ctx.clip();
-                        ctx.translate(visualRectX, visualRectY);
-                        
-                        // ** 🟢 THE DEFINITIVE FIX 🟢 **
-                        // Completely reset the context to a default state for the visual function.
-                        // This prevents properties like `textAlign` from the main slide
-                        // from leaking into the visual function and causing positioning errors.
-                        ctx.fillStyle = getBackgroundColor(slide.speaker);
-                        ctx.fillRect(0, 0, visualRectWidth, visualRectHeight); // Fill background
-                        
-                        ctx.fillStyle = '#374151';    // Reset fill color
-                        ctx.strokeStyle = '#6b7280';  // Reset stroke color
-                        ctx.lineWidth = 1;            // Reset line width
-                        ctx.textAlign = 'left';       // 👈 Crucially, reset text alignment
-                        ctx.textBaseline = 'top';     // 👈 Reset text baseline for predictable layout
-                        
-                        // 2. Call the visual function, now with a clean slate and correct dimensions
-                        func(ctx, slide.visual.params || [], visualRectWidth, visualRectHeight);
-                        
-                        ctx.restore();
-                    }
-                } catch (error) {
-                    console.error('Error executing visual function:', error);
-                    ctx.fillStyle = '#ef4444';
-                    ctx.font = `${Math.floor(canvasWidth * 0.02)}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Error rendering visual', contentCenterX, visualAreaY + visualAreaHeight / 2);
-                }
+            if (typeof visualFunc === 'string') {
+                const functionBody = visualFunc.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
+                func = new Function('ctx', 'params', 'width', 'height', functionBody) as (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
+            } else {
+                func = visualFunc;
             }
+
+            if (typeof func === 'function') {
+                const visualRectX = contentAreaX + contentPadding;
+                const visualRectY = visualAreaY;
+                const visualRectWidth = contentInnerWidth;
+                const visualRectHeight = visualAreaHeight;
+
+                // 2. Isolate the drawing area. It's more intuitive to translate first,
+                //    then clip relative to the new (0,0) origin.
+                ctx.translate(visualRectX, visualRectY);
+                ctx.beginPath();
+                ctx.rect(0, 0, visualRectWidth, visualRectHeight);
+                ctx.clip();
+                
+                // ** 🟢 THE DEFINITIVE FIX (IMPROVED) 🟢 **
+                // Reset context state for the isolated visual function.
+                // The background is now filled from (0,0) of the translated context.
+                ctx.fillStyle = getBackgroundColor(slide.speaker);
+                ctx.fillRect(0, 0, visualRectWidth, visualRectHeight); // Fill background
+                
+                ctx.fillStyle = '#374151';   // Reset fill color
+                ctx.strokeStyle = '#6b7280'; // Reset stroke color
+                ctx.lineWidth = 1;           // Reset line width
+                ctx.textAlign = 'left';      // Crucially, reset text alignment
+                ctx.textBaseline = 'top';    // Reset text baseline for predictable layout
+
+                // 3. Call the visual function with a clean, isolated context.
+                // Its world is now a canvas of size (visualRectWidth, visualRectHeight).
+                func(ctx, slide.visual.params || [], visualRectWidth, visualRectHeight);
+            }
+        } catch (error) {
+            console.error('Error executing visual function:', error);
+            // Error message is drawn in the original, untransformed coordinates
+            // because restore() in finally will fix the transform.
+            const visualRectX = contentAreaX + contentPadding;
+            const visualRectY = visualAreaY;
+            ctx.fillStyle = '#ef4444';
+            ctx.font = `${Math.floor(canvasWidth * 0.02)}px Arial`;
+            ctx.textAlign = 'center';
+            // We use the original visualRectY instead of contentCenterY to place the error correctly.
+            ctx.fillText('Error rendering visual', visualRectX + contentInnerWidth / 2, visualRectY + visualAreaHeight / 2);
+        } finally {
+            // 4. IMPORTANT: Always restore the canvas state.
+            // This undoes the clip and translate, ensuring the rest of the
+            // rendering is not affected, even if an error occurred.
+            ctx.restore();
         }
+    }
+}
 
         return canvas.toDataURL('image/jpeg', 0.95);
     };
