@@ -56,6 +56,7 @@ interface AuthContextType {
   resetPassword: (newPassword: string) => Promise<void>;
   signInWithGoogle: (credential?: string) => Promise<void>;
   setError: (error: string | null) => void;
+  signUpWithGoogle: (credential?: string) => Promise<void>;
 }
 
 interface RegisterData {
