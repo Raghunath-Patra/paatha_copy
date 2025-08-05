@@ -730,6 +730,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         requestPasswordReset,
         resetPassword,
         signInWithGoogle,
+        signUpWithGoogle,
         setError: (err: string | null) => setError(err)
       }}
     >
