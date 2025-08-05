@@ -679,15 +679,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         </div>
       )}
       
-      {/* Add Role Selection Popup */}
-      {showRoleSelection && (
-        <RoleSelectionPopup
-          isOpen={showRoleSelection}
+      {/* FIXED: Conditional rendering without passing incompatible props */}
+      {showRoleSelection && user && profile && (
+        <RoleSelectionPopup 
           onRoleSelect={handleRoleSelect}
-          onSkip={handleRoleSelect} // Since we must choose, onSkip does same as onRoleSelect for 'student'
           loading={roleUpdateLoading}
-          showSuccess={false}
-          successData={null}
         />
       )}
       
