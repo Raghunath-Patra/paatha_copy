@@ -646,6 +646,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
+  const handleCloseRoleSelection = () => {
+    // Optional: You might want to allow closing without selecting a role
+    // or redirect to a default page
+    setShowRoleSelection(false);
+    // You could redirect somewhere or show a message
+  };
+
   
   return (
     <SupabaseAuthContext.Provider
@@ -679,10 +686,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         </div>
       )}
       
-      {/* FIXED: Conditional rendering without passing incompatible props */}
+      {/* FIXED: Use correct props based on RoleSelectionPopup interface */}
       {showRoleSelection && user && profile && (
         <RoleSelectionPopup 
+          isOpen={showRoleSelection}
           onRoleSelect={handleRoleSelect}
+          onClose={handleCloseRoleSelection}
           loading={roleUpdateLoading}
         />
       )}
