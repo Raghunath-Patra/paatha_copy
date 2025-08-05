@@ -35,7 +35,7 @@ export default function RegisterForm() {
     confirmPassword: '',
     full_name: ''
   });
-  const { register, signInWithGoogle, loading, error, user } = useSupabaseAuth();
+  const { register, signInWithGoogle, signUpWithGoogle, loading, error, user } = useSupabaseAuth();
   const [passwordError, setPasswordError] = useState<string>('');
   
   // FIXED: Add submission tracking to prevent double submission (matching LoginForm)
@@ -214,7 +214,7 @@ export default function RegisterForm() {
         window.google.accounts.id.cancel();
       }
       
-      await signInWithGoogle();
+      await signUpWithGoogle();
       console.log('Google OAuth registration completed');
       
     } catch (err) {

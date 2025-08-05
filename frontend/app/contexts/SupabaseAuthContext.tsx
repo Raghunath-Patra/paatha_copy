@@ -428,6 +428,65 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
+  const signUpWithGoogle = async (credential?: string) => {
+    if (authOperationInProgress.current || manualLoginInProgress.current) {
+      setError('Another operation is in progress. Please try again.');
+      return;
+    }
+
+    try {
+      authOperationInProgress.current = true;
+      manualLoginInProgress.current = true;
+      setError(null);
+      setLoading(true);
+  
+      if (credential) {
+        // Handle Google One-tap sign in
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: credential,
+        });
+  
+        if (error) throw error;
+        if (data.user) {
+          setUser(data.user);
+          setSession(data.session);
+          const userProfile = await fetchProfile(data.user.id);
+          if (userProfile) {
+            setProfile(userProfile);
+            router.push('/login?registered=true');
+          }
+        }
+      } else {
+        // Handle regular Google OAuth
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent',
+            },
+          },
+        });
+  
+        if (error) throw error;
+        // For OAuth, we don't get the user immediately - the redirect will handle it
+      }
+    } catch (err) {
+      console.error('Google sign in error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during Google sign in');
+    } finally {
+      setLoading(false);
+      authOperationInProgress.current = false;
+      
+      // Reset manual login flag
+      setTimeout(() => {
+        manualLoginInProgress.current = false;
+      }, 2000);
+    }
+  };
+
   // FIXED: Enhanced Google sign in function
   const signInWithGoogle = async (credential?: string) => {
     if (authOperationInProgress.current || manualLoginInProgress.current) {
