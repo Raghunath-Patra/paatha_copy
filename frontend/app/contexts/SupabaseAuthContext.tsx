@@ -19,7 +19,7 @@ interface UserProfile {
   full_name?: string;
   board?: string;
   class_level?: string;
-  role?: 'student' | 'teacher';
+  role?: 'student' | 'teacher' | 'not_selected';
   institution_name?: string;
   phone_number?: string;
   mother_tongue?: string;
