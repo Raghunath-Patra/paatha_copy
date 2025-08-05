@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback } f
 import { useRouter } from 'next/navigation';
 import { supabase } from '../utils/supabase';
 import { User, Session } from '@supabase/supabase-js';
+import RoleSelectionPopup from '../components/auth/RoleSelectionPopup';
 
 // Constants for session management
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -79,10 +80,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const authOperationInProgress = useRef<boolean>(false);
   const lastRefreshAttempt = useRef<number>(0);
 
+  // Add these after your existing state declarations
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [roleUpdateLoading, setRoleUpdateLoading] = useState(false);
+
   // FIXED: Add tracking for manual login operations
   const manualLoginInProgress = useRef<boolean>(false);
 
-  // Fetch user profile from Supabase
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data: existingProfile, error: fetchError } = await supabase
@@ -101,6 +105,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             id: userId,
             email: currentUser?.email,
             full_name: currentUser?.user_metadata?.full_name,
+            role: 'not_selected', // This will trigger role selection modal
             is_active: true,
             is_verified: false
           };
@@ -295,6 +300,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
   }, [fetchProfile, loading, profile]);
 
+  useEffect(() => {
+    if (user && profile && !authOperationInProgress.current && !manualLoginInProgress.current) {
+      // Show modal if role hasn't been selected yet
+      if (profile.role === 'not_selected') {
+        setShowRoleSelection(true);
+      }
+    }
+  }, [user, profile]);
+
   // FIXED: Enhanced login function with better state management
   const login = async (email: string, password: string) => {
     if (authOperationInProgress.current || manualLoginInProgress.current) {
@@ -334,20 +348,20 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setProfile(userProfile);
       }
       
-      console.log('State set, preparing redirect');
+      // console.log('State set, preparing redirect');
       
-      // Handle redirect after everything is set up
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // // Handle redirect after everything is set up
+      // await new Promise(resolve => setTimeout(resolve, 100));
       
-      const originalPath = sessionStorage.getItem('originalPath');
-      if (originalPath && originalPath !== '/') {
-        sessionStorage.removeItem('originalPath');
-        console.log('Redirecting to original path:', originalPath);
-        window.location.href = originalPath;
-      } else {
-        console.log('Redirecting to home');
-        window.location.href = '/';
-      }
+      // const originalPath = sessionStorage.getItem('originalPath');
+      // if (originalPath && originalPath !== '/') {
+      //   sessionStorage.removeItem('originalPath');
+      //   console.log('Redirecting to original path:', originalPath);
+      //   window.location.href = originalPath;
+      // } else {
+      //   console.log('Redirecting to home');
+      //   window.location.href = '/';
+      // }
       
     } catch (err) {
       console.error('Login error:', err);
@@ -387,13 +401,14 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from registration');
 
-      // Create initial profile
+      // Create initial profile with role needing selection
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([{
           id: data.user.id,
           email: userData.email,
           full_name: userData.full_name,
+          role: 'not_selected', // Will trigger role selection after login
           is_active: true,
           is_verified: false,
           created_at: new Date().toISOString()
@@ -594,6 +609,44 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
+  const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
+    if (!user) return;
+    
+    try {
+      setRoleUpdateLoading(true);
+      
+      const updateData = {
+        role, // 'student' or 'teacher'
+        updated_at: new Date().toISOString(),
+        ...additionalData // teacher-specific data if needed
+      };
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      // Update local profile state
+      const updatedProfile = await fetchProfile(user.id);
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+      }
+      
+      // Close modal and redirect to home
+      setShowRoleSelection(false);
+      router.push('/');
+      
+    } catch (error) {
+      console.error('Error updating role:', error);
+      setError('Failed to update role. Please try again.');
+    } finally {
+      setRoleUpdateLoading(false);
+    }
+  };
+
+  
   return (
     <SupabaseAuthContext.Provider
       value={{
@@ -625,6 +678,19 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           </button>
         </div>
       )}
+      
+      {/* Add Role Selection Popup */}
+      {showRoleSelection && (
+        <RoleSelectionPopup
+          isOpen={showRoleSelection}
+          onRoleSelect={handleRoleSelect}
+          onSkip={handleRoleSelect} // Since we must choose, onSkip does same as onRoleSelect for 'student'
+          loading={roleUpdateLoading}
+          showSuccess={false}
+          successData={null}
+        />
+      )}
+      
       {children}
     </SupabaseAuthContext.Provider>
   );
