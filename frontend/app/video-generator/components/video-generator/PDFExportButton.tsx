@@ -6,11 +6,12 @@ interface SpeakerConfig {
     color?: string;
 }
 
+// Allow the visual function to be async
 interface Project {
     id: string;
     title: string;
     speakers: Record<string, SpeakerConfig>;
-    visualFunctions: Record<string, ((ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void) | string>;
+    visualFunctions: Record<string, ((ctx: CanvasRenderingContext2D, params: any[], width: number, height:number) => void | Promise<void>) | string>;
 }
 
 interface Slide {
@@ -120,7 +121,8 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         });
     };
 
-    const renderSlideToCanvas = (slide: Slide, canvas: HTMLCanvasElement): string | null => {
+    // ⭐️ CHANGE 1: Make the entire function ASYNC to handle await
+    const renderSlideToCanvas = async (slide: Slide, canvas: HTMLCanvasElement): Promise<string | null> => {
         canvas.width = canvas.width;
 
         const ctx = canvas.getContext('2d');
@@ -171,72 +173,58 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
         }
         
         if (slide.visual?.type && project.visualFunctions && project.visualFunctions[slide.visual.type]) {
-    const visualAreaY = currentY + canvasHeight * 0.02;
-    const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
+            const visualAreaY = currentY + canvasHeight * 0.02;
+            const visualAreaHeight = (contentAreaY + contentAreaHeight) - visualAreaY - contentPadding;
 
-    if (visualAreaHeight > canvasHeight * 0.1) {
-        // 1. Save the current canvas state before any transformations.
-        ctx.save(); 
-        
-        try {
-            let visualFunc = project.visualFunctions[slide.visual.type];
-            let func: (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
-
-            if (typeof visualFunc === 'string') {
-                const functionBody = visualFunc.replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
-                func = new Function('ctx', 'params', 'width', 'height', functionBody) as (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void;
-            } else {
-                func = visualFunc;
-            }
-
-            if (typeof func === 'function') {
+            if (visualAreaHeight > canvasHeight * 0.1) {
                 const visualRectX = contentAreaX + contentPadding;
                 const visualRectY = visualAreaY;
                 const visualRectWidth = contentInnerWidth;
                 const visualRectHeight = visualAreaHeight;
 
-                // 2. Isolate the drawing area. It's more intuitive to translate first,
-                //    then clip relative to the new (0,0) origin.
-                ctx.translate(visualRectX, visualRectY);
-                ctx.beginPath();
-                ctx.rect(0, 0, visualRectWidth, visualRectHeight);
-                ctx.clip();
+                ctx.save(); 
                 
-                // ** 🟢 THE DEFINITIVE FIX (IMPROVED) 🟢 **
-                // Reset context state for the isolated visual function.
-                // The background is now filled from (0,0) of the translated context.
-                ctx.fillStyle = getBackgroundColor(slide.speaker);
-                ctx.fillRect(0, 0, visualRectWidth, visualRectHeight); // Fill background
-                
-                ctx.fillStyle = '#374151';   // Reset fill color
-                ctx.strokeStyle = '#6b7280'; // Reset stroke color
-                ctx.lineWidth = 1;           // Reset line width
-                ctx.textAlign = 'left';      // Crucially, reset text alignment
-                ctx.textBaseline = 'top';    // Reset text baseline for predictable layout
+                try {
+                    let visualFunc = project.visualFunctions[slide.visual.type];
+                    let func: (ctx: CanvasRenderingContext2D, params: any[], width: number, height: number) => void | Promise<void>;
 
-                // 3. Call the visual function with a clean, isolated context.
-                // Its world is now a canvas of size (visualRectWidth, visualRectHeight).
-                func(ctx, slide.visual.params || [], visualRectWidth, visualRectHeight);
+                    if (typeof visualFunc === 'string') {
+                        const functionBody = visualFunc.replace(/^async\s+function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/^function\s+\w+\s*\([^)]*\)\s*\{/, '').replace(/\}$/, '');
+                        func = new Function('ctx', 'params', 'width', 'height', functionBody) as any;
+                    } else {
+                        func = visualFunc;
+                    }
+
+                    if (typeof func === 'function') {
+                        ctx.translate(visualRectX, visualRectY);
+                        ctx.beginPath();
+                        ctx.rect(0, 0, visualRectWidth, visualRectHeight);
+                        ctx.clip();
+                        
+                        ctx.fillStyle = getBackgroundColor(slide.speaker);
+                        ctx.fillRect(0, 0, visualRectWidth, visualRectHeight);
+                        
+                        ctx.fillStyle = '#374151';
+                        ctx.strokeStyle = '#6b7280';
+                        ctx.lineWidth = 1;
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'top';
+
+                        // ⭐️ CHANGE 2: AWAIT the visual function to allow it to complete before restoring state.
+                        await func(ctx, slide.visual.params || [], visualRectWidth, visualRectHeight);
+                    }
+                } catch (error) {
+                    console.error('Error executing visual function:', error);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.font = `${Math.floor(canvasWidth * 0.02)}px Arial`;
+                    ctx.textAlign = 'center';
+                    // This now correctly draws the error inside the transformed area
+                    ctx.fillText('Error rendering visual', visualRectWidth / 2, visualRectHeight / 2);
+                } finally {
+                    ctx.restore();
+                }
             }
-        } catch (error) {
-            console.error('Error executing visual function:', error);
-            // Error message is drawn in the original, untransformed coordinates
-            // because restore() in finally will fix the transform.
-            const visualRectX = contentAreaX + contentPadding;
-            const visualRectY = visualAreaY;
-            ctx.fillStyle = '#ef4444';
-            ctx.font = `${Math.floor(canvasWidth * 0.02)}px Arial`;
-            ctx.textAlign = 'center';
-            // We use the original visualRectY instead of contentCenterY to place the error correctly.
-            ctx.fillText('Error rendering visual', visualRectX + contentInnerWidth / 2, visualRectY + visualAreaHeight / 2);
-        } finally {
-            // 4. IMPORTANT: Always restore the canvas state.
-            // This undoes the clip and translate, ensuring the rest of the
-            // rendering is not affected, even if an error occurred.
-            ctx.restore();
         }
-    }
-}
 
         return canvas.toDataURL('image/jpeg', 0.95);
     };
@@ -270,7 +258,8 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                     pdf.addPage();
                 }
 
-                const slideImage = renderSlideToCanvas(slide, canvas);
+                // ⭐️ CHANGE 3: AWAIT the result of the now-async render function.
+                const slideImage = await renderSlideToCanvas(slide, canvas);
 
                 if (slideImage) {
                     pdf.addImage(slideImage, 'JPEG', margin, margin, contentWidth, contentHeight);
@@ -310,7 +299,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                 <div className="flex items-center justify-between mb-4">
                     <div>
                         <h3 className="text-lg font-semibold text-orange-800 flex items-center">
-                            📄 Export to PDF
+                            🖨️ Export to PDF
                         </h3>
                         <p className="text-sm text-orange-600 mt-1">
                             Generate a PDF of all slides in the presentation.
@@ -365,7 +354,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({ project, slides, file
                             Generating PDF... ({progress}%)
                         </span>
                     ) : (
-                        '📄 Download PDF'
+                        '🖨️ Download PDF'
                     )}
                 </button>
 
