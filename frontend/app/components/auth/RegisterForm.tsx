@@ -197,6 +197,36 @@ export default function RegisterForm() {
     }
   };
 
+  // FIXED: Handle regular Google OAuth sign in (matching LoginForm)
+  const handleGoogleSignIn = async () => {
+    // FIXED: Skip if form submission is in progress or user already authenticated
+    if (formSubmissionInProgress || loading || user) {
+      console.log('Skipping Google OAuth - conditions not met');
+      return;
+    }
+
+    try {
+      setFormSubmissionInProgress(true);
+      console.log('Starting Google OAuth registration');
+      
+      // FIXED: Cancel any pending Google One-tap before OAuth
+      if (window.google?.accounts?.id?.cancel) {
+        window.google.accounts.id.cancel();
+      }
+      
+      await signInWithGoogle();
+      console.log('Google OAuth registration completed');
+      
+    } catch (err) {
+      console.error('Google OAuth registration error:', err);
+    } finally {
+      // Reset form submission flag after a delay
+      setTimeout(() => {
+        setFormSubmissionInProgress(false);
+      }, 1000);
+    }
+  };
+
   // FIXED: Enhanced loading state - check both loading states (matching LoginForm)
   const isSubmitting = loading || formSubmissionInProgress;
 
@@ -217,7 +247,7 @@ export default function RegisterForm() {
       {/* FIXED: Google Sign Up button with loading protection */}
       <div className="mb-6">
         <button
-          onClick={() => signInWithGoogle()}
+          onClick={handleGoogleSignIn}
           disabled={isSubmitting}
           className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
