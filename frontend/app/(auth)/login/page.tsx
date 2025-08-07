@@ -64,6 +64,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const registered = searchParams?.get('registered');
   const resetSuccess = searchParams?.get('reset');
+  const verified = searchParams?.get('verified');
   const { loading } = useSupabaseAuth();
 
   useEffect(() => {
@@ -192,6 +193,21 @@ export default function LoginPage() {
                 <div className="font-medium mb-1">Password Reset Successful</div>
                 <div className="text-sm">
                   Your password has been reset successfully. Please log in with your new password.
+                </div>
+              </ThemedMessageCard>
+            )}
+            {verified && (
+              <ThemedMessageCard type="success">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="font-medium mb-1">Email Verified Successfully!</div>
+                <div className="text-sm">
+                  Your email has been verified. You can now log in to your account.
                 </div>
               </ThemedMessageCard>
             )}

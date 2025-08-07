@@ -242,23 +242,22 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           async (event, session) => {
             console.log('Auth state change:', event, !!session);
             
-            // FIXED: Skip listener updates during manual operations
-            if (manualLoginInProgress.current) {
-              console.log('Skipping auth listener - manual login in progress');
+            // Skip listener updates during manual operations
+            if (manualLoginInProgress.current || authOperationInProgress.current) {
+              console.log('Skipping auth listener - operation in progress');
               return;
             }
             
             if (event === 'SIGNED_IN' && session?.user) {
               console.log('Auth listener: handling SIGNED_IN');
+              
               setUser(session.user);
               setSession(session);
               
-              // Fetch profile only if we don't have it or it's different user
-              if (!profile || profile.id !== session.user.id) {
-                const userProfile = await fetchProfile(session.user.id);
-                if (userProfile) {
-                  setProfile(userProfile);
-                }
+              // Fetch profile
+              const userProfile = await fetchProfile(session.user.id);
+              if (userProfile) {
+                setProfile(userProfile);
               }
             } else if (event === 'SIGNED_OUT') {
               console.log('Auth listener: handling SIGNED_OUT');
@@ -303,8 +302,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (user && profile && !authOperationInProgress.current && !manualLoginInProgress.current) {
-      // Show modal if role hasn't been selected yet
-      if (profile.role === 'not_selected') {
+      const currentPath = window.location.pathname;
+      const isAuthPage = currentPath.startsWith('/login') || 
+                        currentPath.startsWith('/register') || 
+                        currentPath.startsWith('/auth/') ||
+                        currentPath.startsWith('/forgot-password') ||
+                        currentPath.startsWith('/reset-password');
+      
+      // Show modal if role hasn't been selected and not on auth pages
+      if (profile.role === 'not_selected' && !isAuthPage) {
         setShowRoleSelection(true);
       }
     }
