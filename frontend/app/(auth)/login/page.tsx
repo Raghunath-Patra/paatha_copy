@@ -1,79 +1,68 @@
+// app/(auth)/login/page.tsx - Enhanced with URL parameter handling
 'use client';
 
-import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import LoginForm from '../../components/auth/LoginForm';
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import EnhancedLogo from '../../components/common/EnhancedLogo';
 
-// Enhanced themed loading skeleton
-const ThemedAuthLoadingSkeleton = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-    {/* Animated background decorations */}
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
-           style={{animationDuration: '3s'}} />
-      <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
-           style={{animationDuration: '4s'}} />
-      <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
-           style={{animationDuration: '2s'}} />
-      <div className="absolute top-1/4 right-1/3 w-6 h-6 sm:w-10 sm:h-10 bg-red-100/40 rounded-full animate-pulse" 
-           style={{animationDuration: '3.5s', animationDelay: '2s'}} />
-      <div className="absolute bottom-1/3 left-1/6 w-4 h-4 sm:w-8 sm:h-8 bg-yellow-100/30 rounded-full animate-bounce" 
-           style={{animationDuration: '2.5s', animationDelay: '1.5s'}} />
-    </div>
-    
-    <div className="text-center relative z-10">
-      <div className="relative mb-8">
-        <div className="w-16 h-16 border-4 border-red-200 rounded-full animate-spin border-t-red-500 mx-auto"></div>
-        <div className="absolute inset-0 w-16 h-16 border-4 border-transparent rounded-full animate-ping border-t-red-300 mx-auto"></div>
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-center space-x-1">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
-          <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-        </div>
-        <p className="text-gray-600 animate-pulse">Preparing your learning journey...</p>
-      </div>
-    </div>
-  </div>
-);
-
-// Enhanced message cards
-const ThemedMessageCard = ({ type, children }: { type: 'info' | 'success', children: React.ReactNode }) => {
-  const bgColor = type === 'info' ? 'bg-blue-50/90' : 'bg-green-50/90';
-  const textColor = type === 'info' ? 'text-blue-700' : 'text-green-700';
-  const borderColor = type === 'info' ? 'border-blue-200' : 'border-green-200';
-  const gradientOverlay = type === 'info' 
-    ? 'bg-gradient-to-r from-blue-50/30 to-indigo-50/30' 
-    : 'bg-gradient-to-r from-green-50/30 to-emerald-50/30';
-  
-  return (
-    <div className={`mb-6 p-4 ${bgColor} backdrop-blur-sm ${textColor} rounded-xl max-w-md mx-auto border ${borderColor} shadow-lg relative overflow-hidden`}>
-      {/* Subtle gradient overlay */}
-      <div className={`absolute inset-0 ${gradientOverlay} opacity-50`}></div>
-      <div className="relative z-10 text-center">
-        {children}
-      </div>
-    </div>
-  );
-};
-
 export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const registered = searchParams?.get('registered');
-  const resetSuccess = searchParams?.get('reset');
-  const verified = searchParams?.get('verified');
-  const { loading } = useSupabaseAuth();
+  const [showMessage, setShowMessage] = useState<{type: 'success' | 'info' | 'error', message: string} | null>(null);
 
   useEffect(() => {
-    console.log('Login page mounted');  // Debug log
-  }, []);
+    const registered = searchParams.get('registered');
+    const verified = searchParams.get('verified');
+    const error = searchParams.get('error');
+    const reset = searchParams.get('reset');
 
-  if (loading) {
-    return <ThemedAuthLoadingSkeleton />;
-  }
+    // Show appropriate message based on URL parameters
+    if (verified === 'true') {
+      setShowMessage({
+        type: 'success',
+        message: 'Email verified successfully! You can now log in with your credentials.'
+      });
+    } else if (registered === 'true') {
+      setShowMessage({
+        type: 'info',
+        message: 'Registration successful! Please check your email to verify your account, then return here to log in.'
+      });
+    } else if (reset === 'success') {
+      setShowMessage({
+        type: 'success',
+        message: 'Password reset successful! You can now log in with your new password.'
+      });
+    } else if (error) {
+      const errorMessages: Record<string, string> = {
+        'auth_failed': 'Authentication failed. Please try again.',
+        'callback_failed': 'There was an issue processing your request. Please try again.',
+        'no_session': 'Unable to establish session. Please try logging in again.',
+        'invalid_credentials': 'Invalid email or password. Please check your credentials and try again.'
+      };
+      setShowMessage({
+        type: 'error',
+        message: errorMessages[error] || 'An error occurred. Please try again.'
+      });
+    }
+
+    // Clear URL parameters after showing message
+    if (registered || verified || error || reset) {
+      // Use setTimeout to allow message to be shown first
+      setTimeout(() => {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('registered');
+        newUrl.searchParams.delete('verified');
+        newUrl.searchParams.delete('error');
+        newUrl.searchParams.delete('reset');
+        
+        // Only push if URL actually changed
+        if (newUrl.toString() !== window.location.href) {
+          router.replace(newUrl.pathname);
+        }
+      }, 100);
+    }
+  }, [searchParams, router]);
 
   return (
     <>
@@ -100,11 +89,6 @@ export default function LoginPage() {
           50% { transform: translateY(-10px); }
         }
         
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        
         .animate-fade-in-up {
           animation: fadeInUp 0.8s ease-out forwards;
         }
@@ -117,127 +101,94 @@ export default function LoginPage() {
           animation: float 3s ease-in-out infinite;
         }
         
-        .animate-shimmer {
-          animation: shimmer 2s infinite;
-        }
-        
         .stagger-1 { animation-delay: 0.2s; }
         .stagger-2 { animation-delay: 0.4s; }
         .stagger-3 { animation-delay: 0.6s; }
-        
-        /* Gradient text effect */
-        .gradient-text {
-          background: linear-gradient(135deg, #dc2626, #ea580c, #d97706);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
       `}</style>
 
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative">
-        {/* Enhanced animated background decorations */}
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative">
+        {/* Animated background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-red-200/30 rounded-full animate-pulse" 
+          <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-blue-200/30 rounded-full animate-pulse" 
                style={{animationDuration: '3s'}} />
-          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-200/25 rounded-full animate-bounce" 
+          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-purple-200/25 rounded-full animate-bounce" 
                style={{animationDuration: '4s'}} />
-          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-orange-200/20 rounded-full animate-ping" 
+          <div className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 bg-indigo-200/20 rounded-full animate-ping" 
                style={{animationDuration: '2s'}} />
-          <div className="absolute top-1/4 right-1/3 w-6 h-6 sm:w-10 sm:h-10 bg-red-100/40 rounded-full animate-pulse animate-float" 
+          <div className="absolute top-1/4 right-1/3 w-6 h-6 sm:w-10 sm:h-10 bg-blue-100/40 rounded-full animate-pulse animate-float" 
                style={{animationDuration: '3.5s', animationDelay: '2s'}} />
-          <div className="absolute bottom-1/3 left-1/6 w-4 h-4 sm:w-8 sm:h-8 bg-yellow-100/30 rounded-full animate-bounce" 
+          <div className="absolute bottom-1/3 left-1/6 w-4 h-4 sm:w-8 sm:h-8 bg-purple-100/30 rounded-full animate-bounce" 
                style={{animationDuration: '2.5s', animationDelay: '1.5s'}} />
-          <div className="absolute top-3/4 right-1/6 w-5 h-5 sm:w-9 sm:h-9 bg-orange-100/25 rounded-full animate-ping" 
-               style={{animationDuration: '4.5s', animationDelay: '3s'}} />
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Enhanced Logo Section */}
-          <div className="text-center mb-12 sm:mb-16 opacity-0 animate-fade-in-up stagger-2">
-                <EnhancedLogo 
-                  className="h-12 w-12 sm:h-16 sm:w-16" 
-                  showText={true}
-                />
+          {/* Logo Section */}
+          <div className="text-center mb-8 opacity-0 animate-fade-in-up stagger-1">
+            <EnhancedLogo 
+              className="h-12 w-12 sm:h-16 sm:w-16" 
+              showText={true}
+            />
             <p className="text-sm sm:text-base text-gray-600 max-w-sm mx-auto">
-              Welcome back! Continue your learning journey with AI-powered education.
+              Welcome back! Sign in to continue your learning journey.
             </p>
           </div>
 
-          {/* Enhanced Message Cards */}
-          <div className="w-full max-w-md opacity-0 animate-fade-in stagger-2">
-            {registered && (
-              <ThemedMessageCard type="info">
-                <div className="flex items-center justify-center mb-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          {/* Message Display */}
+          {showMessage && (
+            <div className={`w-full max-w-md mb-6 p-4 rounded-lg border opacity-0 animate-fade-in-up stagger-2 ${
+              showMessage.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' :
+              showMessage.type === 'info' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+              'bg-red-50 text-red-800 border-red-200'
+            }`}>
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  {showMessage.type === 'success' && (
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                  </div>
-                </div>
-                <div className="font-medium mb-1">Check Your Email</div>
-                <div className="text-sm">
-                  A verification link has been sent to your email address. Please verify your email before logging in.
-                </div>
-              </ThemedMessageCard>
-            )}
-            
-            {resetSuccess === 'success' && (
-              <ThemedMessageCard type="success">
-                <div className="flex items-center justify-center mb-2">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  )}
+                  {showMessage.type === 'info' && (
+                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
-                  </div>
-                </div>
-                <div className="font-medium mb-1">Password Reset Successful</div>
-                <div className="text-sm">
-                  Your password has been reset successfully. Please log in with your new password.
-                </div>
-              </ThemedMessageCard>
-            )}
-            {verified && (
-              <ThemedMessageCard type="success">
-                <div className="flex items-center justify-center mb-2">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  )}
+                  {showMessage.type === 'error' && (
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
-                  </div>
+                  )}
                 </div>
-                <div className="font-medium mb-1">Email Verified Successfully!</div>
-                <div className="text-sm">
-                  Your email has been verified. You can now log in to your account.
+                <div className="ml-3">
+                  <p className="text-sm font-medium">{showMessage.message}</p>
                 </div>
-              </ThemedMessageCard>
-            )}
-          </div>
-
-          {/* Enhanced Login Form Container */}
-          <div className="w-full max-w-md opacity-0 animate-fade-in-up stagger-3">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border border-white/50 relative overflow-hidden">
-              {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-50/20 via-orange-50/20 to-yellow-50/20 opacity-50"></div>
-              
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
-              
-              <div className="relative z-10">
-                <LoginForm />
+                <div className="ml-auto pl-3">
+                  <button
+                    onClick={() => setShowMessage(null)}
+                    className="inline-flex text-gray-400 hover:text-gray-600"
+                  >
+                    <span className="sr-only">Dismiss</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* Login Form Container */}
+          <div className="w-full max-w-md opacity-0 animate-fade-in-up stagger-2">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border border-white/50">
+              <LoginForm />
             </div>
           </div>
 
-          {/* Enhanced Footer */}
+          {/* Footer */}
           <div className="mt-8 text-center opacity-0 animate-fade-in stagger-3">
             <p className="text-xs text-gray-500">
-              By continuing, you agree to our{' '}
-              <a href="/terms" className="text-orange-600 hover:text-orange-700 transition-colors">
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a href="/privacy" className="text-orange-600 hover:text-orange-700 transition-colors">
-                Privacy Policy
+              Don't have an account?{' '}
+              <a href="/register" className="text-indigo-600 hover:text-indigo-700 transition-colors">
+                Sign up here
               </a>
             </p>
           </div>
