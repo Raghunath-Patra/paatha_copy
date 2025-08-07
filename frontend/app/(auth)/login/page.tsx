@@ -34,15 +34,29 @@ export default function LoginPage() {
         message: 'Password reset successful! You can now log in with your new password.'
       });
     } else if (error) {
+      const details = searchParams.get('details');
       const errorMessages: Record<string, string> = {
         'auth_failed': 'Authentication failed. Please try again.',
         'callback_failed': 'There was an issue processing your request. Please try again.',
         'no_session': 'Unable to establish session. Please try logging in again.',
-        'invalid_credentials': 'Invalid email or password. Please check your credentials and try again.'
+        'invalid_credentials': 'Invalid email or password. Please check your credentials and try again.',
+        'verification_failed': 'Email verification failed. Please try clicking the verification link again.',
+        'no_user_returned': 'Verification completed but user data was not returned. Please try logging in.',
+        'code_exchange_failed': 'OAuth authentication failed. Please try again.',
+        'no_session_after_exchange': 'Authentication succeeded but session could not be established.',
+        'exchange_exception': 'An error occurred during authentication. Please try again.',
+        'verification_exception': 'An error occurred during email verification. Please try again.',
+        'missing_parameters': 'Invalid authentication link. Please try logging in normally.'
       };
+      
+      let message = errorMessages[error] || 'An error occurred. Please try again.';
+      if (details && details.length < 100) { // Only show details if they're reasonable length
+        message += ` (${details})`;
+      }
+      
       setShowMessage({
         type: 'error',
-        message: errorMessages[error] || 'An error occurred. Please try again.'
+        message
       });
     }
 
@@ -55,6 +69,7 @@ export default function LoginPage() {
         newUrl.searchParams.delete('verified');
         newUrl.searchParams.delete('error');
         newUrl.searchParams.delete('reset');
+        newUrl.searchParams.delete('details'); // Also clear error details
         
         // Only push if URL actually changed
         if (newUrl.toString() !== window.location.href) {

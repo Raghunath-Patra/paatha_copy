@@ -1,4 +1,4 @@
-// app/auth/callback/route.ts - FIXED VERSION
+// app/auth/callback/route.ts - DEBUG VERSION with detailed logging
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -8,64 +8,110 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code');
   const error = requestUrl.searchParams.get('error');
   const type = requestUrl.searchParams.get('type');
+  const token = requestUrl.searchParams.get('token');
 
-  console.log('Auth callback called with:', { code: !!code, error, type });
+  // DEBUG: Log all incoming parameters
+  console.log('=== AUTH CALLBACK DEBUG ===');
+  console.log('Full URL:', requestUrl.toString());
+  console.log('Parameters:', {
+    code: code ? 'present' : 'missing',
+    error,
+    type,
+    token: token ? 'present' : 'missing',
+    allParams: Object.fromEntries(requestUrl.searchParams.entries())
+  });
 
   // Handle error cases first
   if (error) {
-    console.error('Auth callback error:', error);
-    return NextResponse.redirect(new URL('/login?error=auth_failed', requestUrl.origin));
+    console.error('❌ Auth callback received error parameter:', error);
+    return NextResponse.redirect(new URL(`/login?error=auth_failed&details=${encodeURIComponent(error)}`, requestUrl.origin));
   }
 
+  // Handle email verification with token (PKCE flow)
+  if (token && type === 'signup') {
+    console.log('📧 Email verification detected (token + type=signup)');
+    
+    const supabase = createRouteHandlerClient({ cookies });
+    
+    try {
+      // For email verification, we need to verify the token
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'signup'
+      });
+
+      console.log('Token verification result:', {
+        hasSession: !!data.session,
+        hasUser: !!data.user,
+        error: error?.message
+      });
+
+      if (error) {
+        console.error('❌ Token verification failed:', error);
+        return NextResponse.redirect(new URL(`/login?error=verification_failed&details=${encodeURIComponent(error.message)}`, requestUrl.origin));
+      }
+
+      if (data.user) {
+        console.log('✅ Email verified successfully for user:', data.user.email);
+        
+        if (data.session) {
+          // User is now signed in after verification
+          console.log('🎉 User signed in after email verification');
+          return NextResponse.redirect(new URL('/', requestUrl.origin));
+        } else {
+          // Email verified but user not signed in
+          console.log('📝 Email verified, redirecting to login');
+          return NextResponse.redirect(new URL('/login?verified=true', requestUrl.origin));
+        }
+      } else {
+        console.error('❌ No user returned from token verification');
+        return NextResponse.redirect(new URL('/login?error=no_user_returned', requestUrl.origin));
+      }
+      
+    } catch (error) {
+      console.error('❌ Exception during token verification:', error);
+      return NextResponse.redirect(new URL(`/login?error=verification_exception&details=${encodeURIComponent(error.message)}`, requestUrl.origin));
+    }
+  }
+
+  // Handle OAuth code exchange
   if (code) {
+    console.log('🔐 OAuth code exchange detected');
+    
     const supabase = createRouteHandlerClient({ cookies });
     
     try {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       
-      if (error) {
-        console.error('Auth callback exchange error:', error);
-        return NextResponse.redirect(new URL('/login?error=auth_failed', requestUrl.origin));
-      }
-
-      console.log('Code exchange result:', { 
-        hasSession: !!data.session, 
+      console.log('Code exchange result:', {
+        hasSession: !!data.session,
         hasUser: !!data.user,
-        userEmailConfirmed: data.user?.email_confirmed_at 
+        userEmail: data.user?.email,
+        error: error?.message,
+        errorCode: error?.status
       });
-
-      // FIXED: Handle email verification properly
-      if (type === 'signup') {
-        console.log('Email verification flow detected');
-        
-        // For email verification, the user might or might not be signed in
-        if (data.session && data.user) {
-          // User is signed in after verification - go to home
-          console.log('User signed in after email verification, redirecting to home');
-          return NextResponse.redirect(new URL('/', requestUrl.origin));
-        } else {
-          // Email verified but user not signed in - go to login with success message
-          console.log('Email verified but user not signed in, redirecting to login');
-          return NextResponse.redirect(new URL('/login?verified=true', requestUrl.origin));
-        }
-      } else {
-        // OAuth login (Google, etc.) - user should be signed in
-        if (data.session && data.user) {
-          console.log('OAuth login successful, redirecting to home');
-          return NextResponse.redirect(new URL('/', requestUrl.origin));
-        } else {
-          console.log('OAuth callback but no session, redirecting to login');
-          return NextResponse.redirect(new URL('/login?error=no_session', requestUrl.origin));
-        }
+      
+      if (error) {
+        console.error('❌ Code exchange failed:', error);
+        return NextResponse.redirect(new URL(`/login?error=code_exchange_failed&details=${encodeURIComponent(error.message)}`, requestUrl.origin));
       }
+
+      if (!data.session || !data.user) {
+        console.error('❌ No session or user after successful code exchange');
+        return NextResponse.redirect(new URL('/login?error=no_session_after_exchange', requestUrl.origin));
+      }
+
+      // Successful OAuth login
+      console.log('✅ OAuth login successful for user:', data.user.email);
+      return NextResponse.redirect(new URL('/', requestUrl.origin));
       
     } catch (error) {
-      console.error('Callback processing error:', error);
-      return NextResponse.redirect(new URL('/login?error=callback_failed', requestUrl.origin));
+      console.error('❌ Exception during code exchange:', error);
+      return NextResponse.redirect(new URL(`/login?error=exchange_exception&details=${encodeURIComponent(error.message)}`, requestUrl.origin));
     }
   }
 
-  // No code parameter - redirect to login
-  console.log('No code parameter, redirecting to login');
-  return NextResponse.redirect(new URL('/login', requestUrl.origin));
+  // No code or token parameter
+  console.log('❓ No code or token parameter found, redirecting to login');
+  return NextResponse.redirect(new URL('/login?error=missing_parameters', requestUrl.origin));
 }
