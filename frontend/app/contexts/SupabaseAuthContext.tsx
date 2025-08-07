@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback } f
 import { useRouter } from 'next/navigation';
 import { supabase } from '../utils/supabase';
 import { User, Session } from '@supabase/supabase-js';
-import RoleSelectionPopup from '../components/auth/RoleSelectionPopup';
+//import RoleSelectionPopup from '../components/auth/RoleSelectionPopup';
 
 // Constants for session management
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -81,9 +81,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const authOperationInProgress = useRef<boolean>(false);
   const lastRefreshAttempt = useRef<number>(0);
 
-  // Add these after your existing state declarations
-  const [showRoleSelection, setShowRoleSelection] = useState(false);
-  const [roleUpdateLoading, setRoleUpdateLoading] = useState(false);
 
   // FIXED: Add tracking for manual login operations
   const manualLoginInProgress = useRef<boolean>(false);
@@ -299,22 +296,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       }
     };
   }, [fetchProfile, loading, profile]);
-
-  useEffect(() => {
-    if (user && profile && !authOperationInProgress.current && !manualLoginInProgress.current) {
-      const currentPath = window.location.pathname;
-      const isAuthPage = currentPath.startsWith('/login') || 
-                        currentPath.startsWith('/register') || 
-                        currentPath.startsWith('/auth/') ||
-                        currentPath.startsWith('/forgot-password') ||
-                        currentPath.startsWith('/reset-password');
-      
-      // Show modal if role hasn't been selected and not on auth pages
-      if (profile.role === 'not_selected' && !isAuthPage) {
-        setShowRoleSelection(true);
-      }
-    }
-  }, [user, profile]);
 
   // FIXED: Enhanced login function with better state management
   const login = async (email: string, password: string) => {
@@ -675,50 +656,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const handleRoleSelect = async (role: 'student' | 'teacher', additionalData?: any) => {
-    if (!user) return;
-    
-    try {
-      setRoleUpdateLoading(true);
-      
-      const updateData = {
-        role, // 'student' or 'teacher'
-        updated_at: new Date().toISOString(),
-        ...additionalData // teacher-specific data if needed
-      };
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      
-      // Update local profile state
-      const updatedProfile = await fetchProfile(user.id);
-      if (updatedProfile) {
-        setProfile(updatedProfile);
-      }
-      
-      // Close modal and redirect to home
-      setShowRoleSelection(false);
-      router.push('/');
-      
-    } catch (error) {
-      console.error('Error updating role:', error);
-      setError('Failed to update role. Please try again.');
-    } finally {
-      setRoleUpdateLoading(false);
-    }
-  };
-
-  const handleCloseRoleSelection = () => {
-    // Optional: You might want to allow closing without selecting a role
-    // or redirect to a default page
-    setShowRoleSelection(false);
-    // You could redirect somewhere or show a message
-  };
-
   
   return (
     <SupabaseAuthContext.Provider
@@ -751,16 +688,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             Refresh Session
           </button>
         </div>
-      )}
-      
-      {/* FIXED: Use correct props based on RoleSelectionPopup interface */}
-      {showRoleSelection && user && profile && (
-        <RoleSelectionPopup 
-          isOpen={showRoleSelection}
-          onRoleSelect={handleRoleSelect}
-          onClose={handleCloseRoleSelection}
-          loading={roleUpdateLoading}
-        />
       )}
       
       {children}

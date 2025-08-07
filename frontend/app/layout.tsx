@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import './globals.css';
 import AppUpdater from './components/common/AppUpdater';
+import RoleSelectionManager from './components/auth/RoleSelectionManager';
 
 const faviconVersion = '3';
 
@@ -70,6 +71,7 @@ export default function RootLayout({
             <div className="flex-grow flex flex-col">
               {children}
             </div>
+            <RoleSelectionManager />
             <Footer />
             <BottomNavigation />
           </ProtectedRoute>
