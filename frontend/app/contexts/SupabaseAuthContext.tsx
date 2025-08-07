@@ -427,14 +427,14 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       manualLoginInProgress.current = true;
       setError(null);
       setLoading(true);
-  
+
       if (credential) {
-        // Handle Google One-tap sign in
+        // Handle Google One-tap sign up
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: credential,
         });
-  
+
         if (error) throw error;
         if (data.user) {
           setUser(data.user);
@@ -442,7 +442,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           const userProfile = await fetchProfile(data.user.id);
           if (userProfile) {
             setProfile(userProfile);
-            router.push('/login?registered=true');
+            // ✅ Don't redirect to login - user is now signed in!
+            // Role selection modal will appear if needed
+            router.push('/');
           }
         }
       } else {
@@ -457,21 +459,20 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             },
           },
         });
-  
+
         if (error) throw error;
-        // For OAuth, we don't get the user immediately - the redirect will handle it
+        // For OAuth, the callback will handle the redirect
       }
     } catch (err) {
-      console.error('Google sign in error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during Google sign in');
+      console.error('Google sign up error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during Google sign up');
     } finally {
       setLoading(false);
       authOperationInProgress.current = false;
       
-      // Reset manual login flag
       setTimeout(() => {
         manualLoginInProgress.current = false;
-      }, 2000);
+      }, 1000);
     }
   };
 
@@ -487,14 +488,14 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       manualLoginInProgress.current = true;
       setError(null);
       setLoading(true);
-  
+
       if (credential) {
         // Handle Google One-tap sign in
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: credential,
         });
-  
+
         if (error) throw error;
         if (data.user) {
           setUser(data.user);
@@ -502,11 +503,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           const userProfile = await fetchProfile(data.user.id);
           if (userProfile) {
             setProfile(userProfile);
-            if (userProfile.board && userProfile.class_level) {
-              router.push(`/${userProfile.board}/${userProfile.class_level}`);
-            } else {
-              router.push('/');
-            }
+            // ✅ Go to home page - user is signed in
+            router.push('/');
           }
         }
       } else {
@@ -521,9 +519,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             },
           },
         });
-  
+
         if (error) throw error;
-        // For OAuth, we don't get the user immediately - the redirect will handle it
+        // For OAuth, the callback will handle the redirect
       }
     } catch (err) {
       console.error('Google sign in error:', err);
@@ -532,10 +530,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setLoading(false);
       authOperationInProgress.current = false;
       
-      // Reset manual login flag
       setTimeout(() => {
         manualLoginInProgress.current = false;
-      }, 2000);
+      }, 1000);
     }
   };
 
