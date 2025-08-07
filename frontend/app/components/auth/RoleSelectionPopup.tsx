@@ -330,13 +330,13 @@ const RoleSelectionPopup = ({
 
                 {/* Skip Option */}
                 <div className={`text-center mt-4 sm:mt-6 transition-all duration-500 ${animationPhase >= 3 ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
-                  <button
+                  {/* <button
                     onClick={onClose}
                     className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition-colors"
                     disabled={loading}
                   >
                     Skip for now (you can set this later in profile settings)
-                  </button>
+                  </button> */}
                 </div>
               </div>
             )}
