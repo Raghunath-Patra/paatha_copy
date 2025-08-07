@@ -70,7 +70,10 @@ export async function GET(request: Request) {
       
     } catch (error) {
       console.error('❌ Exception during token verification:', error);
-      return NextResponse.redirect(new URL(`/login?error=verification_exception&details=${encodeURIComponent(error.message)}`, requestUrl.origin));
+      const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as { message: unknown }).message)
+        : 'Unknown error';
+      return NextResponse.redirect(new URL(`/login?error=verification_exception&details=${encodeURIComponent(errorMessage)}`, requestUrl.origin));
     }
   }
 
@@ -107,7 +110,10 @@ export async function GET(request: Request) {
       
     } catch (error) {
       console.error('❌ Exception during code exchange:', error);
-      return NextResponse.redirect(new URL(`/login?error=exchange_exception&details=${encodeURIComponent(error.message)}`, requestUrl.origin));
+      const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as { message: unknown }).message)
+        : 'Unknown error';
+      return NextResponse.redirect(new URL(`/login?error=exchange_exception&details=${encodeURIComponent(errorMessage)}`, requestUrl.origin));
     }
   }
 
