@@ -339,17 +339,17 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       // console.log('State set, preparing redirect');
       
       // // Handle redirect after everything is set up
-      // await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // const originalPath = sessionStorage.getItem('originalPath');
-      // if (originalPath && originalPath !== '/') {
-      //   sessionStorage.removeItem('originalPath');
-      //   console.log('Redirecting to original path:', originalPath);
-      //   window.location.href = originalPath;
-      // } else {
-      //   console.log('Redirecting to home');
-      //   window.location.href = '/';
-      // }
+      const originalPath = sessionStorage.getItem('originalPath');
+      if (originalPath && originalPath !== '/') {
+        sessionStorage.removeItem('originalPath');
+        console.log('Redirecting to original path:', originalPath);
+        window.location.href = originalPath;
+      } else {
+        console.log('Redirecting to home');
+        window.location.href = '/';
+      }
       
     } catch (err) {
       console.error('Login error:', err);
