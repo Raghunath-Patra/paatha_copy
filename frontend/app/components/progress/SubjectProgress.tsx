@@ -198,7 +198,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
       
       // Create board-class key for mapping lookup
       const boardClassKey = `${board}-${classLevel}`;
-      const normalizedSubjectName = subject.toLowerCase().replace(/\s+/g, '-');
+      const normalizedSubjectName = subject.toLowerCase();
       
       // Get subject code from mapping or fallback to existing code or normalized name
       let subjectParam = subjectObj?.code; // Use existing code if available
@@ -309,7 +309,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
                       <div className="flex items-center justify-between">
                         <div 
                           className="flex-1 cursor-pointer group/click"
-                          onClick={() => handleChapterClick(subject.name, chapter.number)}
+                          onClick={() => handleChapterClick(subject, chapter.number)}
                         >
                           <div className="flex items-center mb-2 sm:mb-3">
                             <div className="flex items-center gap-2 sm:gap-3">
