@@ -33,6 +33,41 @@ interface Props {
   };
 }
 
+const SUBJECT_NAME_TO_CODE: Record<string, Record<string, string>> = {
+  // CBSE Class 8
+  'cbse-viii': {
+    'science': 'hesc1dd',
+    'mathematics': 'hemh1dd'
+  },
+  // CBSE Class 9  
+  'cbse-ix': {
+    'science': 'iesc1dd',
+    'mathematics': 'iemh1dd'
+  },
+  // CBSE Class 10
+  'cbse-x': {
+    'science': 'jesc1dd', 
+    'mathematics': 'jemh1dd'
+  },
+  // Karnataka PUC-1
+  'karnataka-puc-1': {
+    'mathematics': 'kemh1dd',
+    'physics': 'keph1dd',
+    'chemistry': 'kech1dd',
+    'biology': 'kebo1dd'
+  },
+  // Karnataka PUC-2  
+  'karnataka-puc-2': {
+    'physics (part i)': 'leph1dd',
+    'physics (part ii)': 'leph2dd',
+    'chemistry (part i)': 'lech1dd', 
+    'chemistry (part ii)': 'lech2dd',
+    'mathematics (part i)': 'lemh1dd',
+    'mathematics (part ii)': 'lemh2dd',
+    'biology': 'lebo1dd'
+  }
+};
+
 export default function SubjectProgress({ board, classLevel, subjects, progress }: Props) {
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [animateProgress, setAnimateProgress] = useState(false);
@@ -156,19 +191,30 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
     };
   }, [subjects, progress, board, classLevel]);
 
-  // ✅ FIXED: Simplified chapter click handler - no more question fetching
+  // Updated handleChapterClick function
   const handleChapterClick = async (subject: string, chapterNum: number) => {
     try {
-      // Get the subject code if available, otherwise use the display name
-      const normalizedSubject = subject.toLowerCase().replace(/\s+/g, '-');
       const subjectObj = subjects.find(s => s.name.toLowerCase() === subject.toLowerCase());
       
-      // Use code if available, otherwise use the normalized name
-      const subjectParam = subjectObj?.code || normalizedSubject;
+      // Create board-class key for mapping lookup
+      const boardClassKey = `${board}-${classLevel}`;
+      const normalizedSubjectName = subject.toLowerCase();
+      
+      // Get subject code from mapping or fallback to existing code or normalized name
+      let subjectParam = subjectObj?.code; // Use existing code if available
+      
+      // If no existing code, try to get from mapping
+      if (!subjectParam && SUBJECT_NAME_TO_CODE[boardClassKey]) {
+        subjectParam = SUBJECT_NAME_TO_CODE[boardClassKey][normalizedSubjectName];
+      }
+      
+      // Final fallback to normalized name
+      if (!subjectParam) {
+        subjectParam = normalizedSubjectName.replace(/\s+/g, '-');
+      }
       
       console.log(`✅ Navigating to chapter overview: ${subjectParam}, chapter ${chapterNum}`);
       
-      // ✅ FIXED: Direct navigation to chapter overview page (no question ID)
       const chapterUrl = `/${board}/${classLevel}/${subjectParam}/chapter-${chapterNum}`;
       
       console.log(`🔗 Chapter URL: ${chapterUrl}`);
