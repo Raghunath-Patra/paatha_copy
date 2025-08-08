@@ -198,7 +198,7 @@ export default function SubjectProgress({ board, classLevel, subjects, progress 
       
       // Create board-class key for mapping lookup
       const boardClassKey = `${board}-${classLevel}`;
-      const normalizedSubjectName = subject.toLowerCase();
+      const normalizedSubjectName = subject.toLowerCase().replace(/\s+/g, '-');
       
       // Get subject code from mapping or fallback to existing code or normalized name
       let subjectParam = subjectObj?.code; // Use existing code if available
