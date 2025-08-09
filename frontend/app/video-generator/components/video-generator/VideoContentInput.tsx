@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
+import { useCreditRefresh } from '../../hooks/useCreditRefresh';
 
 // Custom CSS styles for animations
 const styles = `
@@ -489,6 +490,8 @@ export default function VideoContentInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+  const { refreshCredits } = useCreditRefresh();
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -608,6 +611,8 @@ export default function VideoContentInput({
           headers: headers,
           body: JSON.stringify({ content }),
         });
+        
+        await refreshCredits(); 
 
         const scriptResult = await scriptResponse.json();
 
@@ -631,7 +636,8 @@ export default function VideoContentInput({
           });
 
           const videoResult = await videoResponse.json();
-
+          await refreshCredits();
+          
           clearInterval(progressInterval);
           setGenerationProgress(100);
 
