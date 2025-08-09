@@ -140,7 +140,7 @@ const RoleSelectionPopup = ({
                     <input
                       type="number"
                       min="0"
-                      value={teacherData.teaching_experience || ''}
+                      value={teacherData.teaching_experience ?? ''}
                       onChange={(e) => setTeacherData(prev => ({
                         ...prev,
                         teaching_experience: e.target.value ? parseInt(e.target.value) : undefined

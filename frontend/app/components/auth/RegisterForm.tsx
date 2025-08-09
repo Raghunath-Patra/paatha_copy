@@ -139,7 +139,7 @@ export default function RegisterForm() {
         console.log('Attempting sign up with Google credential');
         // For Google sign-up, we'll default to student role
         // Users can change this later in their profile
-        await signInWithGoogle(response.credential);
+        await signUpWithGoogle(response.credential);
         sessionStorage.setItem('isInitialLogin', 'true');
         console.log('Google One-tap registration completed');
       } else {

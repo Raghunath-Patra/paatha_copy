@@ -21,7 +21,7 @@ export default function LoginPage() {
     if (verified === 'true') {
       setShowMessage({
         type: 'success',
-        message: 'Email verified successfully! You can now log in with your credentials.'
+        message: 'Verified successfully! You can now log in with your credentials.'
       });
     } else if (registered === 'true') {
       setShowMessage({
