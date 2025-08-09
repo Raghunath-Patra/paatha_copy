@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import Navigation from '../../components/navigation/Navigation';
+import CreditDisplay from '../components/credits/CreditDisplay';
 import VideoWorkflowSelector from '../components/video-generator/VideoWorkflowSelector';
 import VideoContentInput from '../components/video-generator/VideoContentInput';
 
@@ -46,7 +47,11 @@ export default function CreateVideoPage() {
             </button>
             <h1 className="text-2xl font-bold text-gray-800">Create New Video</h1>
           </div>
-          <Navigation />
+          {/* Credits and Navigation side by side */}
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <CreditDisplay />
+            <Navigation />
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6">

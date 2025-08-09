@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useSupabaseAuth } from '../../../contexts/SupabaseAuthContext';
 import Navigation from '../../../components/navigation/Navigation';
+import CreditDisplay from '../../components/credits/CreditDisplay';
 import EnhancedSpinner from '../../../components/common/EnhancedSpinner';
 import { getAuthHeaders } from '../../../utils/auth';
 
@@ -380,7 +381,10 @@ export default function ContinueProjectPage() {
             </button>
             <h1 className="text-2xl font-bold text-gray-800">Continue: {project.title}</h1>
           </div>
-          <Navigation />
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <CreditDisplay />
+            <Navigation />
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
