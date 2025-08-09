@@ -9,6 +9,7 @@ import CreditDisplay from './components/credits/CreditDisplay';
 import EnhancedSpinner from '../components/common/EnhancedSpinner';
 import { getAuthHeaders } from '../utils/auth';
 import VideoProjectBrowser from './components/video-generator/VideoProjectBrowser';
+import { useCreditRefresh } from './hooks/useCreditRefresh';
 
 // Define the Project interface
 interface Project {
@@ -456,6 +457,7 @@ export default function VideoGeneratorPage() {
   const [claimingBonus, setClaimingBonus] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [successData, setSuccessData] = useState<{ credits_granted: number; message: string } | null>(null);
+  const { refreshCredits } = useCreditRefresh();
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -490,7 +492,7 @@ export default function VideoGeneratorPage() {
     };
 
     if (user && !authLoading) {
-      fetchUserBalance();
+      refreshCredits();
     }
   }, [user, authLoading, API_URL]);
 
@@ -603,7 +605,7 @@ export default function VideoGeneratorPage() {
             <div className="flex items-center space-x-3 sm:space-x-4">
               {/* Credits - hidden on mobile, shown on desktop */}
               <div className="hidden sm:block">
-                <CreditDisplay userBalance={userBalance} onClick={handleCreditsClick} />
+                <CreditDisplay />
               </div>
               <Navigation />
             </div>
@@ -611,7 +613,7 @@ export default function VideoGeneratorPage() {
           
           {/* Mobile only: Credits on second row, right-aligned */}
           <div className="flex justify-end sm:hidden">
-            <CreditDisplay userBalance={userBalance} onClick={handleCreditsClick} />
+            <CreditDisplay />
           </div>
         </div>
 
