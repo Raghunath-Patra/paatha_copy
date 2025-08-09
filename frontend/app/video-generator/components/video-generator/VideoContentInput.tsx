@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
+import { useCreditRefresh } from '../../hooks/useCreditRefresh';
 
 // Custom CSS styles for animations
 const styles = `
@@ -487,6 +488,7 @@ export default function VideoContentInput({
   const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { refreshCredits } = useCreditRefresh();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -618,6 +620,7 @@ export default function VideoContentInput({
         // Store project ID and show title popup immediately while generation continues
         setCurrentProjectId(scriptResult.project.id);
         setShowTitlePopup(true);
+        await refreshCredits();
 
         // For simple workflow, continue with video generation
         if (workflowMode === 'simple') {
@@ -637,6 +640,7 @@ export default function VideoContentInput({
 
           if (videoResult.success) {
             setStatus({ type: 'success', message: '🎉 Complete video generated successfully!' });
+            await refreshCredits();
             setTimeout(() => {
               onCompleteVideoGenerated(videoResult.projectId);
             }, 2000);

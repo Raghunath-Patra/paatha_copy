@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
 import PDFExportButton from './PDFExportButton';
 import VideoScriptPDFExport from './VideoScriptPDFExport';
+import { useCreditRefresh } from '../../hooks/useCreditRefresh';
 
 interface VideoScriptEditorProps {
   project: {
@@ -63,6 +64,7 @@ export default function VideoScriptEditor({
   } | null>(null);
 
   const [showPdfExport, setShowPdfExport] = useState(false);
+  const {refreshCredits} = useCreditRefresh();
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -329,7 +331,7 @@ export default function VideoScriptEditor({
         if (!response.ok) throw new Error(result.error || 'AI request failed');
 
         // Handle different types of AI responses based on backend response structure
-        
+        await refreshCredits();
         // Case 1: New visual was added (has both updatedSlide and newVisualFunction)
         if (result.newVisualAdded && result.newVisualFunction && result.updatedSlide) {
             const updatedSlide = result.updatedSlide;

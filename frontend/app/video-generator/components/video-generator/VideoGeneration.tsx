@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuthHeaders } from '../../../utils/auth';
+import { useCreditRefresh } from '../../hooks/useCreditRefresh';
 
 interface VideoGenerationProps {
   projectId: string;
@@ -385,6 +386,8 @@ export default function VideoGeneration({
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const videoLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const { refreshCredits } = useCreditRefresh();
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Check for existing video on component mount
@@ -517,6 +520,7 @@ export default function VideoGeneration({
 
       if (result.success) {
         // Handle different backend responses
+        await refreshCredits();
         if (result.useExisting) {
           // Video already existed and was up to date
           setStatus({ 
